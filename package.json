@@ -1,0 +1,25 @@
+{
+  "name": "3d-nft-veiwer",
+  "version": "1.0.1-0",
+  "description": "Display 3D NFTs using ThreeJS to render model stored on arweave and minted on DeSo",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/3DeSocial/3d-nft-viewer-npm.git"
+  },
+  "keywords": [
+    "NFT",
+    "arweave",
+    "3D",
+    "ThreeJS"
+  ],
+  "author": "Andrew van Duivenbode",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/3DeSocial/3d-nft-viewer-npm/issues"
+  },
+  "homepage": "https://github.com/3DeSocial/3d-nft-viewer-npm#readme"
+}

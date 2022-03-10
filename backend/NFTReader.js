@@ -9,7 +9,7 @@ class NFTReader {
   constructor(config) {
     let defaults = {
       nodeEndpoint: 'https://node.deso.org/api/v0/',
-      readerPublicKey: 'BC1YLh3GazkEWDVqMtCGv6gbU79HcMb1LKAgbYKiMzUoGDEsnnBSiw7',
+      readerPublicKey: '',
       modelStorageDir: 'public/models/'
     };
     this.config = {...defaults, ...config};
