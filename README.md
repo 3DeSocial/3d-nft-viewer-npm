@@ -10,6 +10,10 @@ Metadata about the 3D model including the URL are stored in a Post transaction o
 
 This repo contains front and back end code which can be used separately or in combination as in the demo.
 
+## NPM Installation 
+
+npm install 3d-nft-viewer
+
 ## Back End NodeJS Module
 ### Class: NFTReader
 #### Functionality
