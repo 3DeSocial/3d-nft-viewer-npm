@@ -11,10 +11,10 @@
         //Lets create a new Scene
         this.scene = new THREE.Scene();
         
-        let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
+     /*   let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
         let skyBoxNo = this.getRandomInt(0,4);
         let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
-        this.scene.background = skyBox;
+        this.scene.background = 'skyBox';*/
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/this.parentDivElHeight, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
