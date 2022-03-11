@@ -1,7 +1,7 @@
 'use strict';
 var axios = require('axios');
 
-class DeSoFeedReader {
+class FeedReader {
   constructor() {
     this.initDeSoClient();
   }
@@ -50,4 +50,4 @@ class DeSoFeedReader {
     }
  
 };
-module.exports = new DeSoFeedReader();
+module.exports = FeedReader;

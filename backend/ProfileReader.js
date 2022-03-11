@@ -1,7 +1,7 @@
 'use strict';
 var axios = require('axios');
 
-class DeSoProfileReader {
+class ProfileReader {
   constructor() {
     this.initDeSoClient();
   }
@@ -49,4 +49,4 @@ class DeSoProfileReader {
     }
  
 };
-module.exports = new DeSoProfileReader();
+module.exports = ProfileReader;
