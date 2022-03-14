@@ -47,6 +47,23 @@ class ProfileReader {
                 }
           });
     }
- 
+
+  async getUserInfo (PublicKeyBase58Check , userName = null) {
+        const payload = {
+            Username: userName
+        };
+        const payloadJson = JSON.stringify(payload);
+        const {data} = await this.desoNodeClient.post('/get-single-profile', payloadJson, {
+            headers: {
+                // Overwrite Axios's automatically set Content-Type
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        });
+
+        return data;
+        //await authClient.get("/csrf-token");
+        //await authClient.post("/modelinfo", payload);
+    }
 };
 module.exports = ProfileReader;
