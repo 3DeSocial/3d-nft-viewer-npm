@@ -1,20 +1,37 @@
- class Viewer {
-    constructor(parentDivEl) {
+ class D3DNFTViewer {
+    
+    constructor(config) {
 
+        let defaults = {
+                    el: document.body,
+                    ctrClass: 'data-nft', // Attribute of div containing nft preview area for a single nft
+                    nftsRoute: 'nfts', // Back end route to initialize NFTs
+                    modelsRoute: 'models' // Back end route to load models
+                };
+        
+        this.config = {
+            ...defaults,
+            ...config
+        };
+
+    }
+
+    initContainer(parentDivEl){
         //First lets create a parent DIV
         this.parentDivEl = parentDivEl;
 
         this.parentDivElWidth = this.parentDivEl.children[0].offsetWidth;
         this.parentDivElHeight = this.parentDivEl.children[0].offsetHeight;
 
-        this.parentDivEl.children[0].setAttribute('style','display:none;');
         //Lets create a new Scene
         this.scene = new THREE.Scene();
+        if(this.config.skyboxes !== false){
+            let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
+            let skyBoxNo = this.getRandomInt(0,4);
+            let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
+            this.scene.background = skyBox;
+        };
         
-     /*   let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
-        let skyBoxNo = this.getRandomInt(0,4);
-        let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
-        this.scene.background = 'skyBox';*/
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/this.parentDivElHeight, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
@@ -27,7 +44,7 @@
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         this.renderer.setClearColor( 0x000000, 1 );
-
+        this.renderer.domElement.setAttribute('style','display:none;');
         this.parentDivEl.appendChild(this.renderer.domElement);
 
         //Loader GLTF
@@ -37,15 +54,16 @@
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
 
         //Add lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 2);
         this.scene.add(ambientLight);
 
         //Add dirlights
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
         directionalLight.position.set(-4,15,10);
         this.scene.add(directionalLight);
 
-        this.onWindowResize();
+        this.parentDivEl.children[0].setAttribute('style','display:none;');
+        this.renderer.domElement.setAttribute('style','display:inline-block;');
 
         this.animate();
 
@@ -113,13 +131,15 @@
         return skybox;
     }
     onWindowResize() {
+        let that = this;
 
 
         window.addEventListener('resize', () => {
-            this.camera.aspect = this.parentDivElWidth/this.parentDivElHeight;
-            this.camera.updateProjectionMatrix();
 
-            this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
+            that.camera.aspect = that.parentDivElWidth/that.parentDivElHeight;
+            that.camera.updateProjectionMatrix();
+            that.renderer.setSize(that.parentDivElWidth, that.parentDivElHeight);
+            that.fitCameraToMesh(model.scene);
 
         })
 
@@ -128,17 +148,8 @@
     animate() {
 
         requestAnimationFrame(this.animate.bind(this));
-
         this.renderer.render(this.scene, this.camera);
 
-    }
-
-    createParentDivEl() {
-        let parentDivEl = document.createElement('div');
-        parentDivEl.id = "viewer3d";
-        parentDivEl.classList.add('viewer');
-        document.body.appendChild(parentDivEl);
-        return parentDivEl;
     }
 
      fitCameraToMesh(mesh, fitOffset = 1.2) {
@@ -172,98 +183,92 @@
     }
 
     load(modeURL) {
-        //TODO: Load's external files
 
         this.gltfLoader.load(modeURL, (model)=> {
-
             model.scene.updateMatrixWorld(true);
-
             this.fitCameraToMesh(model.scene);
-
             this.scene.add(model.scene);
         })
 
 
     }
-}
 
- (function() { 
+    updateUI = (el, modelUrl) => {
 
-	var camera, controls, scene, renderer;
+        let linkCtr = this.config.linkCtrCls;
 
-	var cameraFov = 60;
-
- 	updateUI = (el, modelUrl) => {
-		//console.log('showing button for '+modelUrl);
-		var a = document.createElement('a');
-      	var linkText = document.createTextNode("Click to View in 3D");
-			a.appendChild(linkText);
-			a.title = "View in 3D";
-			a.href = "#";
-            a.classList = "btn";
-		var viewerEl = el;
-			viewerEl.innerHTML ='';
-			viewerEl.appendChild(a);
+        var a = document.createElement('a');
+        var linkText = document.createTextNode(this.config.linkText);
+            a.appendChild(linkText);
+            a.title = "View in 3D";
+            a.href = "#";
+            a.classList = "btn view-3d-btn";
+        var viewerEl = el;
+            viewerEl.appendChild(a);
         el.setAttribute('model-status','available');
-		return a;			
- 	}
+        return a;           
+    }
 
 
 
- 	addClickListener = (el, modelUrl) => {
+    addClickListener = (ctr, el, modelUrl) => {
         let that = this;
-		//console.log('adding listener for '+modelUrl);
-		el.addEventListener("click", (e)=>{
-			e.preventDefault();
-			e.stopPropagation();
-            let parentLi = el.parentNode.parentNode;
-            console.log(parentLi.children);            
-           
+        let targetEl = this.findElFrom(ctr);
 
-            let container = parentLi.children[1];
-            console.log(container);
-  			let appInstance = new Viewer(container);
-    			appInstance.load(modelUrl);			
-		});		
- 	}
+        //console.log('adding listener for '+modelUrl);
+        el.addEventListener("click", (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            that.initContainer(targetEl)
+            that.load(modelUrl);         
+        });     
+    }
 
- 	initModel = (el) => {
- 		const that = this;
+    findElFrom = (ctr) =>{
+        let targetEl = null;
+        let matchedEls = ctr.getElementsByClassName(this.config.previewCtrCls);
+        if(matchedEls.length>0){
+            targetEl = matchedEls[0];
+        };
+        return targetEl;
+    }
+
+    initNFTs = (container)=>{
+        if(!container){
+            container = document.body;
+        };
+    
+        let nftContainers = Array.from(container.getElementsByClassName(this.config.ctrClass));
+
+        nftContainers.forEach(this.initModel);        
+    }
+
+    initModel = (el) => {
+        const that = this;
         let modelStatus = el.getAttribute('model-status');
         if(!modelStatus){
             modelStatus = 'requested';
             el.setAttribute('model-status',modelStatus);
         };
         if(modelStatus!=='available'){
-     		let nftPostHash = el.getAttribute('data-nft');
-     		let url = '/nfts/'+nftPostHash;
-     		fetch(url,{ method: "post"})
-     		.then(response => response.json())
-     		.then((data)=>{	
+            let nftPostHash = el.getAttribute(this.config.nftDataAttr);
+            let url = '/'+this.config.nftsRoute+'/'+nftPostHash;
+            fetch(url,{ method: "post"})
+            .then(response => response.json())
+            .then((data)=>{ 
 
-     			if(data !== undefined){
-     				let fullUrl = '/models/'+nftPostHash+data.modelUrl;
-     				let link = this.updateUI(el, fullUrl);
-     				this.addClickListener(link, fullUrl);
-     			};
+                if(data !== undefined){
+                    let fullUrl = '/'+that.config.modelsRoute+'/'+nftPostHash+data.modelUrl;
+                    let link = this.updateUI(el, fullUrl);
+                    this.addClickListener(el, link, fullUrl);
+                };
 
-     		}).catch(err => {
-     			console.log(err);
-     			console.log(response);
-     		});
+            }).catch(err => {
+                console.log(err);
+                console.log(response);
+            });
         };
 
- 	} 	
+    }    
+}
 
-    initNFTs = (container)=>{
-        if(!container){
-            container = document;
-        };
-    
-        let nfts = Array.from(container.getElementsByClassName('nft-viewer'));
-        nfts.forEach(this.initModel);        
-    }
-
-    this.initNFTs();
-
- })(this);
