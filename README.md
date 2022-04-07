@@ -76,10 +76,46 @@ module.exports = router;
 		<img class="nft-preview" src="https://images.deso.org/746201e0167a8176c3c0ca2b141b4ed2c92442a1d16a55ab999a558e8a831a28.gif"/>
 	</div>
 	<p class="nft-viewer" data-nft="0b88277db8b3ddac74537b3f5b10897865e0fea5edcc47c86547a36fd5cf6693">Loading...</p>
-	<script src="/js/three.min.js"></script> 
-    <script src="/js/OrbitControls.js"></script> 
-    <script src="/js/GLTFLoader.js"></script> 
-    <script src="/js/3dviewer.js"></script>
+
+  <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.skypack.dev/three"
+        }
+      }
+    </script>
+    <script type="module">
+      // Find the latest version by visiting https://cdn.skypack.dev/three.
+      import * as THREE from 'three';
+
+
+      import { OrbitControls } from 'https://unpkg.com/three@0.139.1/examples/jsm/controls/OrbitControls.js';
+      import { GLTFLoader } from 'https://unpkg.com/three@0.139.1/examples/jsm/loaders/GLTFLoader.js';
+      import { XRControllerModelFactory } from '/js/webxr/XRControllerModelFactory.js';
+
+      import { VRButton } from '/js/DSO_VRButton.js';
+
+      import { D3DNFTViewer } from '/js/3dviewer.js'
+
+            //initialize NFT viewer front end
+        let nftViewer = new D3DNFTViewer({
+            three: THREE,
+            GLTFLoader: GLTFLoader,
+            OrbitControls: OrbitControls,
+            XRControllerModelFactory: XRControllerModelFactory,
+            VRButton: VRButton,
+            ctrClass: 'nft-viewer', // class of div which has posthashhex attribute
+            nftDataAttr: 'data-nft', // Name of attribute of of div.ctrClass which contains posthashhex
+            nftsRoute: 'nfts', // Back end route to initialize NFTs
+            modelsRoute: 'models', // Back end route to load models
+            linkText: 'View in 3D',
+            previewCtrCls: 'container', //container element in which to create the preview
+            skyboxes: true
+        });
+        nftViewer.initNFTs();
+
+   </script>
   </body>
 </html>
 ```
