@@ -331,7 +331,7 @@ class D3DNFTViewerOverlay {
         render = () =>{
             if (this.renderer.xr.isPresenting === true) {
                 this.dollyMove();
-            }
+            };
             this.renderer.render(this.scene, this.camera);
         }
 
@@ -797,7 +797,13 @@ class D3DNFTViewerOverlay {
             .then((data)=>{ 
 
                 if(data !== undefined){
-                    let fullUrl = '/'+that.config.modelsRoute+'/'+nftPostHash+data.modelUrl;
+                    let fullUrl = '';
+                    if(that.config.modelsRoute.indexOf('http')===-1){
+                        // not a remote server so add a slash for local path
+                        fullUrl = '/'+that.config.modelsRoute+'/'+nftPostHash+data.modelUrl;
+                    } else {
+                        fullUrl = that.config.modelsRoute+'/'+nftPostHash+data.modelUrl;
+                    };
                     this.updateUI(el, fullUrl);
                 };
 
