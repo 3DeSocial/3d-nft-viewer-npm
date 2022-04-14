@@ -716,7 +716,7 @@ class D3DNFTViewerOverlay {
 
         const geometry = new THREE.PlaneGeometry( 20, 20  );
         geometry.rotateX(-Math.PI * 0.5);
-        let texture = new THREE.TextureLoader().load('images/textures/asphalt.jpg' );
+        let texture = new THREE.TextureLoader().load('/images/textures/asphalt.jpg' );
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set( 10, 10 );
