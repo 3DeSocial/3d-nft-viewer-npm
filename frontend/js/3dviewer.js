@@ -1,5 +1,11 @@
 export const name = 'd3dntfviewer';
-let THREE, GLTFLoader, OrbitControls, XRControllerModelFactory, VRButton;
+// Find the latest version by visiting https://cdn.skypack.dev/three.
+import * as THREE from 'three';
+
+import { OrbitControls } from 'https://unpkg.com/three@0.139.1/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://unpkg.com/three@0.139.1/examples/jsm/loaders/GLTFLoader.js';
+import { VRButton } from '/js/DSO_VRButton.js';
+import { VRControls } from '/js/D3D_VRControls.js';
 
 class D3DNFTViewerOverlay {
     constructor(config) {
@@ -53,6 +59,7 @@ class D3DNFTViewerOverlay {
         let defaults = {
                     el: document.body,
                     ctrClass: 'data-nft', // Attribute of div containing nft preview area for a single nft
+                    fitOffset: 1.25,
                     nftsRoute: 'nfts', // Back end route to initialize NFTs
                     modelsRoute: 'models'// Back end route to load models
                 };
@@ -61,19 +68,9 @@ class D3DNFTViewerOverlay {
             ...defaults,
             ...config
         };
-        THREE = this.config.three;
-        GLTFLoader = this.config.GLTFLoader;
-        OrbitControls = this.config.OrbitControls;
-        XRControllerModelFactory = this.config.XRControllerModelFactory;
-        VRButton = this.config.VRButton;
-
+       
         this.isFullScreen = false;
         this.floorPlane = null;
-        this.cameraVector = new THREE.Vector3();
-        this.dolly = null,
-        this.prevGamePads = new Map(),
-        this.speedFactor = [0.1, 0.1, 0.1, 0.1],
-        this.controllers = []
 
     }
     
@@ -165,6 +162,7 @@ class D3DNFTViewerOverlay {
 
     initLoaders = () =>{
         //Loader GLTF
+        console.log('init loader');
         this.gltfLoader = new GLTFLoader();        
     }
 
@@ -277,7 +275,6 @@ class D3DNFTViewerOverlay {
             if (document.webkitIsFullScreen || document.mozFullScreen || document.msFullscreenElement !== undefined) {
             console.log('enter full screen');
         } else {
-            console.log('exit full screen');
           var elem = this.renderer.domElement;
             elem.style.width = 'auto';
             elem.style.height = 'auto';
@@ -292,9 +289,7 @@ class D3DNFTViewerOverlay {
     resize = () =>{
         if (!this.renderer.xr.isPresenting) {
             this.resizeCanvas();
-        } else {
-        }
-        // this.render();
+        };
     }
     resizeCanvas = () =>{
         if(this.isFullScreen){
@@ -311,215 +306,24 @@ class D3DNFTViewerOverlay {
         this.fitCameraToMesh(this.nftMesh);        
     }
 
-        isIterable = (obj) =>{
-            // checks for null and undefined
-            if (obj == null) {
-                return false;
-            }
-            return typeof obj[Symbol.iterator] === 'function';
-        }
         
-        animate = () =>{
-            console.log('animate');
-            console.log('isPresenting: ' + this.renderer.xr.isPresenting);
-            this.renderer.setAnimationLoop(this.render);
-
-            //    this.renderer.render(this.scene, this.camera);
-            //requestAnimationFrame(this.animate);
-        }
         
-        render = () =>{
-            if (this.renderer.xr.isPresenting === true) {
-                this.dollyMove();
-            };
-            this.renderer.render(this.scene, this.camera);
-        }
+    animate = () =>{
+        console.log('animate');
+        console.log('isPresenting: ' + this.renderer.xr.isPresenting);
+        this.renderer.setAnimationLoop(this.render);
+    }
+    
+    render = () =>{
+        if (this.renderer.xr.isPresenting === true) {
+            this.vrControls.dollyMove();
+        };
+        this.renderer.render(this.scene, this.camera);
+    }
 
-        dollyMove = () =>{
-            var handedness = 'unknown';
-            var self = this;
-            //determine if we are in an xr session
-            const session = this.renderer.xr.getSession();
+    
 
-            if (session) {
-                var i = 0;
-                let xrCamera = this.renderer.xr.getCamera(this.camera);
-                if (!xrCamera) {
-                    return;
-                }
-                xrCamera.getWorldDirection(self.cameraVector);
-
-                //a check to prevent console errors if only one input source
-                if (this.isIterable(session.inputSources)) {
-                    for (const source of session.inputSources) {
-                        if (source && source.handedness) {
-                            handedness = source.handedness; //left or right controllers
-                        }
-                        if (!source.gamepad) continue;
-                        const controller = this.renderer.xr.getController(i++);
-                        const old = this.prevGamePads.get(source);
-                        const data = {
-                            handedness: handedness,
-                            buttons: source.gamepad.buttons.map((b) => b.value),
-                            axes: source.gamepad.axes.slice(0)
-                        };
-
-                        if (old) {
-                            data.buttons.forEach((value, i) => {
-                                //handlers for buttons
-                                if (value !== old.buttons[i] || Math.abs(value) > 0.8) {
-                                    //check if it is 'all the way pushed'
-                                    if (value === 1) {
-                                        //console.log("Button" + i + "Down");
-                                        if (data.handedness == 'left') {
-                                            //console.log("Left Paddle Down");
-                                            if (i == 1) {
-                                                self.dolly.rotateY(-THREE.Math.degToRad(1));
-                                            }
-                                            if (i == 3) {
-                                                //reset teleport to home position
-                                                self.dolly.position.x = 0;
-                                                self.dolly.position.y = 5;
-                                                self.dolly.position.z = 0;
-                                            }
-                                        } else {
-                                            //console.log("Right Paddle Down");
-                                            if (i == 1) {
-                                                self.dolly.rotateY(THREE.Math.degToRad(1));
-                                            }
-                                        }
-                                    } else {
-                                        // console.log("Button" + i + "Up");
-
-                                        if (i == 1) {
-                                            //use the paddle buttons to rotate
-                                            if (data.handedness == 'left') {
-                                                //console.log("Left Paddle Down");
-                                                self.dolly.rotateY(
-                                                    -THREE.Math.degToRad(Math.abs(value))
-                                                );
-                                            } else {
-                                                //console.log("Right Paddle Down");
-                                                self.dolly.rotateY(
-                                                    THREE.Math.degToRad(Math.abs(value))
-                                                );
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                            data.axes.forEach((value, i) => {
-                                //handlers for thumbsticks
-                                // console.log('axes: ',i);
-                                //if thumbstick axis has moved beyond the minimum threshold from center, windows mixed reality seems to wander up to about .17 with no input
-                                if (Math.abs(value) > 0.1) {
-                                    //set the speedFactor per axis, with acceleration when holding above threshold, up to a max speed
-                                    self.speedFactor[i] > 1
-                                        ? (self.speedFactor[i] = 1)
-                                        : (self.speedFactor[i] *= 1.001);
-                                    //  console.log(value, self.speedFactor[i], i);
-                                    if (i == 2) {
-                                        //   console.log('data.handedness: '+data.handedness);
-                                        //left and right axis on thumbsticks
-                                        if (data.handedness == 'left') {
-                                            //   (data.axes[2] > 0) ? console.log('left on left thumbstick') : console.log('right on left thumbstick')
-
-                                            //move our dolly
-                                            //we reverse the vectors 90degrees so we can do straffing side to side movement
-                                            self.dolly.position.x -=
-                                                self.cameraVector.z *
-                                                self.speedFactor[i] *
-                                                data.axes[2];
-                                            self.dolly.position.z +=
-                                                self.cameraVector.x *
-                                                self.speedFactor[i] *
-                                                data.axes[2];
-
-                                            //provide haptic feedback if available in browser
-                                            /*  if (
-                                        source.gamepad.hapticActuators &&
-                                        source.gamepad.hapticActuators[0]
-                                    ) {
-                                        var pulseStrength = Math.abs(data.axes[2]) + Math.abs(data.axes[3]);
-                                        if (pulseStrength > 0.75) {
-                                            pulseStrength = 0.75;
-                                        }
-
-                                        var didPulse = source.gamepad.hapticActuators[0].pulse(
-                                            pulseStrength,
-                                            100
-                                        );
-                                    }*/
-                                        } else {
-                                            //    console.log('RH ata.axes[2]: '+data.axes[2]);
-                                            //    (data.axes[2] > 0) ? console.log('left on right thumbstick') : console.log('right on right thumbstick'); // !!!THIS WORKS!!!
-                                            self.dolly.rotateY(-THREE.Math.degToRad(data.axes[2]));
-                                        }
-                                        // self.controls.update();
-                                    }
-
-                                    if (i == 3) {
-                                        //up and down axis on thumbsticks
-                                        if (data.handedness == 'left') {
-                                            // (data.axes[3] > 0) ? console.log('up on left thumbstick') : console.log('down on left thumbstick')
-                                            self.dolly.position.y -= self.speedFactor[i] * data.axes[3];
-                                            //provide haptic feedback if available in browser
-                                            /*  if (
-                                        source.gamepad.hapticActuators &&
-                                        source.gamepad.hapticActuators[0]
-                                    ) {
-                                        var pulseStrength = Math.abs(data.axes[3]);
-                                        if (pulseStrength > 0.75) {
-                                            pulseStrength = 0.75;
-                                        }
-                                        var didPulse = source.gamepad.hapticActuators[0].pulse(
-                                            pulseStrength,
-                                            100
-                                        );
-                                    }*/
-                                        } else {
-                                            // (data.axes[3] > 0) ? console.log('up on right thumbstick') : console.log('down on right thumbstick')
-                                            self.dolly.position.x -=
-                                                self.cameraVector.x *
-                                                self.speedFactor[i] *
-                                                data.axes[3];
-                                            self.dolly.position.z -=
-                                                self.cameraVector.z *
-                                                self.speedFactor[i] *
-                                                data.axes[3];
-
-                                            //provide haptic feedback if available in browser
-                                            /*    if (
-                                        source.gamepad.hapticActuators &&
-                                        source.gamepad.hapticActuators[0]
-                                    ) {
-                                        var pulseStrength = Math.abs(data.axes[2]) + Math.abs(data.axes[3]);
-                                        if (pulseStrength > 0.75) {
-                                            pulseStrength = 0.75;
-                                        }
-                                        var didPulse = source.gamepad.hapticActuators[0].pulse(
-                                            pulseStrength,
-                                            100
-                                        );
-                                    }*/
-                                            //self.controls.update();
-                                        }
-                                    }
-                                } else {
-                                    //axis below threshold - reset the speedFactor if it is greater than zero  or 0.025 but below our threshold
-                                    if (Math.abs(value) > 0.025) {
-                                        self.speedFactor[i] = 0.025;
-                                    }
-                                }
-                            });
-                        }
-                        this.prevGamePads.set(source, data);
-                    }
-                }
-            }
-        }
-
-     fitCameraToMesh(mesh, fitOffset = 0.75) {
+     fitCameraToMesh(mesh) {
 
         const box = new THREE.Box3().setFromObject(mesh);
         const center = new THREE.Vector3();
@@ -531,7 +335,9 @@ class D3DNFTViewerOverlay {
         const maxSize = Math.max(size.x, size.y, size.z);
         const fitHeightDistance = maxSize / (2 * Math.atan(Math.PI * this.camera.fov / 360));
         const fitWidthDistance = fitHeightDistance / this.camera.aspect;
-        const distance = fitOffset * Math.max(fitHeightDistance, fitWidthDistance);
+
+        const distance = this.config.fitOffset * Math.max(fitHeightDistance, fitWidthDistance);
+
 
         const direction = this.controls.target.clone()
             .sub(this.camera.position)
@@ -549,21 +355,85 @@ class D3DNFTViewerOverlay {
         this.controls.update();
     }
 
+    centerMeshInScene = (gltfScene) =>{
+        let firstMesh = null;
+
+        if(gltfScene.children.length === 1){
+            firstMesh = gltfScene.children[0];
+            firstMesh.geometry.center();
+            return firstMesh;            
+        } else {
+            gltfScene.traverse( c => {
+
+                if ( c.isMesh ) {
+
+                    firstMesh = c;
+                    firstMesh.geometry.center();
+                    return firstMesh;  
+                }
+
+            } );
+        }
+
+
+    }
+
     load(modeURL,cb) {
         let that = this;
 
         this.gltfLoader.load(modeURL, (model)=> {
 
+            if(that.shouldBeCentered(model.scene.children)){
+                model.scene.children[0].position.set(0,0,0);
+                let h = that.getImportedObjectSize(model.scene);
+                let heightOffset = h/2;
+                model.scene.position.set(0,heightOffset,0);            
+                that.centerMeshInScene(model.scene);                
+            };
+          
+            that.scene.add(model.scene);         
             model.scene.updateMatrixWorld(true);
-            that.scene.add(model.scene);            
-            that.fitCameraToMesh(model.scene);
             that.nftMesh = model.scene;
+            that.fitCameraToMesh(model.scene);
+
             that.parentDivEl.children[0].setAttribute('style','display:none;');
             that.renderer.domElement.setAttribute('style','display:inline-block;');
             if(cb){cb()};
         })
+    }
 
+    shouldBeCentered = (children) =>{
 
+        if(children.length>1){
+            return false;// dont center      
+        };        
+    
+        if(!children[0].isMesh){
+            return false; // dont center         
+        };
+        let mesh = children[0];
+        if(mesh.position.x!=0){
+            return true;
+        };
+    
+        if(mesh.position.z!=0){
+            return true;
+        };
+
+        return false;
+    }
+
+    getImportedObjectSize = (obj) =>{
+        let box = new THREE.Box3().setFromObject(obj);
+        let center = new THREE.Vector3();
+        let size = new THREE.Vector3();
+        let max = box.max;
+        let min = box.min;
+        let d = max.z - min.z;
+        let w = max.x - min.x;
+        let h = max.y - min.y;
+
+        return h;
     }
 
     updateUI = (el, modelUrl) => {
@@ -638,7 +508,9 @@ class D3DNFTViewerOverlay {
     addClickListener3D = (ctr, el, modelUrl) => {
         let that = this;
         let targetEl = this.findElFrom(this.config.previewCtrCls, ctr);
+        console.log('targetEl');
 
+        console.log(targetEl);
         //console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
@@ -651,79 +523,35 @@ class D3DNFTViewerOverlay {
                 el.parentNode.getElementsByClassName('view-vr-btn')[0].setAttribute('style','display:inline-block;');
                 that.addFloor();
                 that.showOverlay();
-                VRButton.registerSessionGrantedListener();        
-                let vrButtonEl = VRButton.createButton(that.renderer);
-                that.controllers = that.buildControllers();
+                that.initVR();
+
                 that.animate();
 
             });         
         });     
     }
 
-        buildControllers() {
-            // controllers
-            let controller1 = this.renderer.xr.getController(0);
-            controller1.name = 'left';
-            //controller1.addEventListener("selectstart", onSelectStart);
-            //controller1.addEventListener("selectend", onSelectEnd);
-            this.scene.add(controller1);
+    initVR = () =>{
+        
+        VRButton.registerSessionGrantedListener();        
+        
+        let vrButtonEl = VRButton.createButton(this.renderer);
 
-            let controller2 = this.renderer.xr.getController(1);
-            controller2.name = 'right';
-            //controller2.addEventListener("selectstart", onSelectStart);
-            //controller2.addEventListener("selectend", onSelectEnd);
-            this.scene.add(controller2);
-
-            var controllerModelFactory = new XRControllerModelFactory();
-
-            let controllerGrip1 = this.renderer.xr.getControllerGrip(0);
-            controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
-            this.scene.add(controllerGrip1);
-
-            let controllerGrip2 = this.renderer.xr.getControllerGrip(1);
-            controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
-            this.scene.add(controllerGrip2);
-
-            //Raycaster Geometry
-            var geometry = new THREE.BufferGeometry().setFromPoints([
-                new THREE.Vector3(0, 0, 0),
-                new THREE.Vector3(0, 0, -1)
-            ]);
-
-            var line = new THREE.Line(geometry);
-            line.name = 'line';
-            line.scale.z = 5;
-
-            controller1.add(line.clone());
-            controller2.add(line.clone());
-
-            //dolly for camera
-            let dolly = new THREE.Group();
-            dolly.position.set(0, 0, 0);
-            dolly.name = 'dolly';
-            this.scene.add(dolly);
-            dolly.add(this.camera);
-            //add the controls to the dolly also or they will not move with the dolly
-            dolly.add(controller1);
-            dolly.add(controller2);
-            dolly.add(controllerGrip1);
-            dolly.add(controllerGrip2);
-            this.dolly = dolly;
-        }
-
+            this.vrControls = new VRControls({scene:this.scene, renderer: this.renderer, camera: this.camera});
+            this.controllers = this.vrControls.buildControllers();        
+    }
 
     addFloor = () =>{
 
         const geometry = new THREE.PlaneGeometry( 20, 20  );
         geometry.rotateX(-Math.PI * 0.5);
-        let texture = new THREE.TextureLoader().load('/images/textures/asphalt.jpg' );
+        let texture = new THREE.TextureLoader().load('images/textures/asphalt.jpg' );
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set( 10, 10 );
         const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
         this.floorPlane = new THREE.Mesh( geometry, material );
         this.scene.add( this.floorPlane );           
-        
 
     }
 
