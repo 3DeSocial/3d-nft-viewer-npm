@@ -76,13 +76,235 @@ class VRControls {
         dolly.position.set(0, 0, 0);
         dolly.name = 'dolly';
         this.scene.add(dolly);
+        dolly.rotateY(0);
+
         dolly.add(this.camera);
+        this.camera.rotateY(0);
         //add the controls to the dolly also or they will not move with the dolly
         dolly.add(controller1);
         dolly.add(controller2);
         dolly.add(controllerGrip1);
         dolly.add(controllerGrip2);
         this.dolly = dolly;
+        return dolly;
+    }
+
+    checkControllers = () =>{
+            var handedness = 'unknown';
+            var self = this;
+            //determine if we are in an xr session
+            const session = this.renderer.xr.getSession();
+
+            if (session) {
+                var i = 0;
+                let xrCamera = this.renderer.xr.getCamera(this.camera);
+                if (!xrCamera) {
+                    return;
+                }
+                xrCamera.getWorldDirection(self.cameraVector);
+
+                //a check to prevent console errors if only one input source
+                if (this.isIterable(session.inputSources)) {
+                    for (const source of session.inputSources) {
+                        if (source && source.handedness) {
+                            handedness = source.handedness; //left or right controllers
+                        }
+                        if (!source.gamepad) continue;
+                        const controller = this.renderer.xr.getController(i++);
+                        const old = this.prevGamePads.get(source);
+                        const data = {
+                            handedness: handedness,
+                            buttons: source.gamepad.buttons.map((b) => b.value),
+                            axes: source.gamepad.axes.slice(0)
+                        };
+
+                        if (old) {
+                            data.buttons.forEach((value, i) => {
+                                //handlers for buttons
+                                if (value !== old.buttons[i] || Math.abs(value) > 0.8) {
+                                    //check if it is 'all the way pushed'
+                                    if (value === 1) {
+                                        //console.log("Button" + i + "Down");
+                                        if (data.handedness == 'left') {
+                                            //console.log("Left Paddle Down");
+                                            if (i == 1) {
+                                             //   self.player.rotateY(-THREE.Math.degToRad(1));
+                                            }
+                                            if (i == 3) {
+                                                //reset teleport to home position
+                                          //      self.dolly.position.x = 0;
+                                            //    self.dolly.position.y = 5;
+                                              //  self.dolly.position.z = 0;
+                                            }
+                                        } else {
+                                            //console.log("Right Paddle Down");
+                                            if (i == 1) {
+                                             //   self.player.rotateY(THREE.Math.degToRad(1));
+                                            }
+                                        }
+                                    } else {
+                                        // console.log("Button" + i + "Up");
+
+                                        if (i == 1) {
+                                            //use the paddle buttons to rotate
+                                            if (data.handedness == 'left') {
+                                                //console.log("Left Paddle Down");
+                                             //   self.player.rotateY(
+                                              //      -THREE.Math.degToRad(Math.abs(value))
+                                               // );
+                                            } else {
+                                                //console.log("Right Paddle Down");
+                                                //self.player.rotateY(
+                                                 //   THREE.Math.degToRad(Math.abs(value))
+                                                //);
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+
+                            data.axes.forEach((value, i) => {
+                                //handlers for thumbsticks
+                                // console.log('axes: ',i);
+                                //if thumbstick axis has moved beyond the minimum threshold from center, windows mixed reality seems to wander up to about .17 with no input
+                                if (Math.abs(value) > 0.5) {
+                                    //set the speedFactor per axis, with acceleration when holding above threshold, up to a max speed
+                                    self.speedFactor[i] > 1
+                                        ? (self.speedFactor[i] = 1)
+                                        : (self.speedFactor[i] *= 1.001);
+                                    //  console.log(value, self.speedFactor[i], i);
+                                    if (i == 2) {
+                                        //left and right axis on thumbsticks
+                                        if (data.handedness == 'left') {
+                                            this.handleLeftController(data);
+                                        } else {
+                                            this.handleRightController(data);
+
+                                        }
+                                    }
+                                    if (i == 3) {
+                                        //up and down axis on thumbsticks
+                                        if (data.handedness == 'left') {
+                                            this.handleLeftController(data);
+                                        } else {
+                                            this.handleRightController(data);
+                                        }
+                                    }
+                                } else {
+     
+                                }
+                            });
+                        }
+                        this.prevGamePads.set(source, data);
+                    }
+                }
+            }
+        }
+
+    handleLeftController = (data) =>{
+        this.handleLeftThumbstick('left',data);
+
+    }
+
+    handleRightController = (data) =>{
+        this.handleRightThumbstick('right',data);
+
+    }
+
+    handleLeftThumbstick = (hand, data) =>{
+        if(this.isOverMovementThreshold(data.axes[2])){
+            if (data.axes[2] > 0) {
+                //console.log(hand+ ' stick: right ',data.axes[2]);
+                this.moveRight(data);
+            } else if (data.axes[2] < 0) {
+                //console.log(hand+ ' stick: left',data.axes[2]);
+                this.moveLeft(data);
+            };
+        };
+
+        if(this.isOverMovementThreshold(data.axes[3])){
+            if(data.axes[3] > 0){
+                //console.log(hand+ ' stick: back',data.axes[3]);
+                this.moveDown(data);
+            } else if (data.axes[3] < 0){
+                //console.log(hand + ' stick: forward',data.axes[3]);
+                this.moveUp(data);
+            };
+        };
+
+    }
+
+    handleRightThumbstick = (hand, data) =>{
+        if(this.isOverMovementThreshold(data.axes[2])){
+            if (data.axes[2] > 0) {
+                console.log(hand+ ' stick: right ',data.axes[2]);
+                this.rotateRight(data);
+            } else if (data.axes[2] < 0) {
+                console.log(hand+ ' stick: left',data.axes[2]);
+
+                this.rotateLeft(data);
+            };
+        };
+
+        if(this.isOverMovementThreshold(data.axes[3])){
+            if(data.axes[3] > 0){
+                console.log(hand+ ' stick: back',data.axes[3]);
+                this.moveBackward(data);
+            } else if (data.axes[3] < 0){
+                console.log(hand + ' stick: forward',data.axes[3]);
+                this.moveForward(data);
+            };
+        };
+
+    }
+
+    isOverMovementThreshold = (value) =>{
+        if(Math.abs(value)>0.5){
+            return true;
+        };
+        return false;
+    }
+
+    moveForward = (data) => {
+console.log('moving forward');
+        this.config.moveForward(data);
+    }
+
+    moveBackward = (data) => {
+console.log('moving back');
+        this.config.moveBack(data);
+    }
+
+    moveLeft = (data) => {
+console.log('moving left');
+        this.config.moveLeft(data);
+    }
+
+    moveRight = (data) => {
+console.log('moving right');
+        this.config.moveRight(data);
+    }
+
+    moveUp = (data) => {
+        console.log('moving up');
+        this.config.moveUp(data);
+    }
+
+    moveDown = (data) => {
+console.log('moving down');
+        this.config.moveDown();
+        
+    }
+
+    rotateLeft = (data) => {
+console.log('rotate left');
+        this.config.rotateLeft();
+
+    }
+
+    rotateRight = (data) => {
+console.log('rotate right');
+        this.config.rotateRight();
     }
 
 	dollyMove = () =>{
