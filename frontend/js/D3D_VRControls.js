@@ -1,9 +1,5 @@
 export const name = 'D3D_VRControls';
 
-import * as THREE from 'three';
-
-import { XRControllerModelFactory } from '/js/webxr/XRControllerModelFactory.js';
-
 class VRControls {
 
 	   

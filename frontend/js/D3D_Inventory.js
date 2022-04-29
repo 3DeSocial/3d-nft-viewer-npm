@@ -1,12 +1,13 @@
 export const name = 'd3d-space-viewer';
-let THREE, GLTFLoader, OrbitControls, XRControllerModelFactory, VRButton;
+let THREE, loader, OrbitControls, XRControllerModelFactory, VRButton;
 
 class Item {
 
     constructor(config){
         let defaults = {
             modelUrl: '',
-            modelsRoute: 'models'
+            modelsRoute: 'models',
+            nftsRoute: 'nfts'            
         };
     
         this.config = {
@@ -15,13 +16,37 @@ class Item {
         };
         
         THREE = this.config.three;
-        this.gltfLoader = this.config.gltfLoader;
+        this.loader = this.config.loader;
         this.scene = this.config.scene;
         this.height = this.config.height;
         this.width = this.config.width;
         this.depth = this.config.depth;
-        this.modelURL = this.config.modelURL
+        this.modelURL = this.config.modelUrl;
+        this.mixer = null;
+        this.action = null;
 
+    }
+
+    placeModel = (pos, modelUrl) =>{
+
+        let that = this;
+
+        this.fetchModel(modelUrl)
+        .then((model)=>{
+            console.log('loaded: ',modelUrl);
+            console.log(model);
+            this.mesh = model;
+
+          //  that.setScale(model);
+
+         //   that.rotateItem();
+            that.addToScene(model);
+            that.positionItem(model, pos);
+
+        }).catch((err=>{
+            console.log( err);
+        }))
+    
     }
 
     place = (pos) =>{
@@ -29,21 +54,9 @@ class Item {
         let that = this;
 
         this.fetchModelURL()
-            .then((modelURL)=>{
-                console.log('placing item: ',modelURL)
-                this.fetchModel(modelURL)
-                .then((model)=>{
-
-                    this.mesh = model;
-
-                  //  that.setScale(model);
-
-                 //   that.rotateItem();
-                    that.addToScene(model);
-                    that.positionItem(model, pos);
-
-                })
-            });
+        .then((modelURL)=>{
+            that.placeModel(pos,modelURL);
+        });
     }
 
     centerMeshInScene = (gltfScene) =>{
@@ -74,11 +87,11 @@ class Item {
 
         return new Promise((resolve,reject)=>{
             // fetch from config if available
-            if(this.config.modelURL!==''){
-                console.log('returning config url: ',this.config.modelURL);
-                resolve(this.config.modelURL);
+            if(this.config.modelUrl!==''){
+                console.log('config url: ',this.config.modelUrl);
+                resolve(this.config.modelUrl);
             } else {
-                let url = '/nfts/'+that.config.nftPostHashHex;
+                let url = this.config.nftsRoute+that.config.nftPostHashHex;
                     console.log('fetchModelURL from: '+url);
 
                 fetch(url,{ method: "post"})
@@ -86,8 +99,11 @@ class Item {
                 .then((data)=>{ 
 
                     if(data !== undefined){
-                        let fullUrl = '/'+that.config.modelsRoute+'/'+that.config.nftPostHashHex+data.modelUrl;
-                        console.log('returning fetched url: ',this.config.modelURL);
+                        console.log('that.config.nftPostHashHex: '+that.config.nftPostHashHex);
+                        console.log('that.config.modelsRoute: '+that.config.modelsRoute);
+                        console.log('modelUrl: '+that.config.modelUrl);
+
+                        let fullUrl = that.config.modelsRoute+'/'+that.config.nftPostHashHex+data.modelUrl;
                         resolve(fullUrl);
                     } else {
                         reject();
@@ -122,13 +138,33 @@ class Item {
             let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
             let meshBounds = null;
 
-            that.gltfLoader.load(modelURL, (model)=> {
+            console.log('loader attempting load of: ',modelURL);
+            that.loader.load(modelURL, (model)=> {
 
                 let gltfMesh = null;
 
-                gltfMesh = model.scene;
+                if(model.scene){
+                   gltfMesh = model.scene;
+                } else {
+                    gltfMesh = model;
+                };
 
-                if(that.shouldBeCentered(model.scene.children)){
+console.log('anmiations found');
+                if(gltfMesh.animations){
+
+                    if(gltfMesh.animations[0]){
+                        that.mixer = new THREE.AnimationMixer( gltfMesh );
+                        that.action = that.mixer.clipAction( gltfMesh.animations[ 0 ] );
+                        that.action.play();
+                    } else {
+                        console.log('animations empty');
+                    }
+                } else {
+                    console.log('no animations: ');
+                    console.log(gltfMesh);
+                }
+
+      /*      if(that.shouldBeCentered(model.scene.children)){
                     let h = that.getImportedObjectSize(model.scene);
                     let heightOffset = h/2;                    
                     model.scene.children[0].position.setX(0);
@@ -136,7 +172,7 @@ class Item {
                     model.scene.children[0].position.setY(heightOffset);                       
                     that.centerMeshInScene(model.scene);                
                 };
-
+*/
                 let meshBounds = new THREE.Box3().setFromObject( gltfMesh );
 
 
@@ -261,6 +297,8 @@ class Item {
 
     addToScene = (model) =>{
         this.scene.add(model);
+        console.log('model added to scene');
+        console.log(this.scene);
     }
 
 }
@@ -280,7 +318,7 @@ class Item {
 
         THREE = this.config.three;
         this.scene = this.config.scene;
-        this.gltfLoader = this.config.gltfLoader;
+        this.loader = this.config.loader;
 
         this.items = [];
 
@@ -300,7 +338,7 @@ class Item {
         itemList.forEach((itemData)=>{
             itemData.three = THREE;
             itemData.scene = this.scene;
-            itemData.gltfLoader = this.gltfLoader;
+            itemData.loader = this.loader;
             let item = new Item(itemData);
             that.items.push(item);
 
