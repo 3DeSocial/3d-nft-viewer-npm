@@ -103,53 +103,53 @@ class D3DLoaders {
         this.loadingManager = new THREE.LoadingManager();
         // add handler for TGA textures
         this.loadingManager.addHandler( /\.tga$/i, new TGALoader() ); 
-        let params = {manager: this.loadingManager};
+
        switch(format){
-            case '3DM': return new Rhino3dmLoader(); break;
-            case '3MF': return new ThreeMFLoader(); break;
-            case 'AMF': return new AMFLoader(); break;
-            case 'BVH': return new BVHLoader(); break;
-            case 'BasisTexture': return new BasisTextureLoader(); break;
-            case 'Collada': return new ColladaLoader(); break;
-            case 'DDS': return new DDSLoader(); break;
-            case 'DRACO': return new DRACOLoader(); break;
-            case 'EXR': return new EXRLoader(); break;
-            case 'FBX': return new FBXLoader(params); break;
-            case 'Font': return new FontLoader(); break;
-            case 'GCode': return new GCodeLoader(); break;
-            case 'GLTF': return new GLTFLoader(); break;
-            case 'HDRCubeTexture': return new HDRCubeTextureLoader(); break;
-            case 'IFC': return new IFCLoader(); break;
-            case 'KMZ': return new KMZLoader(); break;
-            case 'KTX2': return new KTX2Loader(); break;
-            case 'LDraw': return new LDrawLoader(); break;
-            case 'LUT3dl': return new LUT3dlLoader(); break;
-            case 'LUTCube': return new LUTCubeLoader(); break;
-            case 'LWO': return new LWOLoader(); break;
-            case 'LogLuv': return new LogLuvLoader(); break;
-            case 'Lottie': return new LottieLoader(); break;
-            case 'MD2': return new MD2Loader(); break;
-            case 'MDD': return new MDDLoader(); break;
-            case 'MTL': return new MTLLoader(); break;
-            case 'NRRD': return new NRRDLoader(); break;
-            case 'OBJ': return new OBJLoader(); break;
-            case 'PCD': return new PCDLoader(); break;
-            case 'PDB': return new PDBLoader(); break;
-            case 'PLY': return new PLYLoader(); break;
-            case 'PRWM': return new PRWMLoader(); break;
-            case 'PVR': return new PVRLoader(); break;
-            case 'RGBE': return new RGBELoader(); break;
-            case 'RGBM': return new RGBMLoader(); break;
-            case 'STL': return new STLLoader(); break;
-            case 'SVG': return new SVGLoader(); break;
-            case 'TDS': return new TDSLoader(); break;
-            case 'TGA': return new TGALoader(); break;
-            case 'TTF': return new TTFLoader(); break;
-            case 'Tilt': return new TiltLoader(); break;
-            case 'VOX': return new VOXLoader(); break;
-            case 'VRML': return new VRMLLoader(); break;
-            case 'VTK': return new VTKLoader(); break;
-            case 'XYZ': return new XYZLoader(); break;
+            case '3DM': return new Rhino3dmLoader(this.loadingManager); break;
+            case '3MF': return new ThreeMFLoader(this.loadingManager); break;
+            case 'AMF': return new AMFLoader(this.loadingManager); break;
+            case 'BVH': return new BVHLoader(this.loadingManager); break;
+            case 'BasisTexture': return new BasisTextureLoader(this.loadingManager); break;
+            case 'Collada': return new ColladaLoader(this.loadingManager); break;
+            case 'DDS': return new DDSLoader(this.loadingManager); break;
+            case 'DRACO': return new DRACOLoader(this.loadingManager); break;
+            case 'EXR': return new EXRLoader(this.loadingManager); break;
+            case 'FBX': return new FBXLoader(this.loadingManager); break;
+            case 'Font': return new FontLoader(this.loadingManager); break;
+            case 'GCode': return new GCodeLoader(this.loadingManager); break;
+            case 'GLTF': return new GLTFLoader(this.loadingManager); break;
+            case 'HDRCubeTexture': return new HDRCubeTextureLoader(this.loadingManager); break;
+            case 'IFC': return new IFCLoader(this.loadingManager); break;
+            case 'KMZ': return new KMZLoader(this.loadingManager); break;
+            case 'KTX2': return new KTX2Loader(this.loadingManager); break;
+            case 'LDraw': return new LDrawLoader(this.loadingManager); break;
+            case 'LUT3dl': return new LUT3dlLoader(this.loadingManager); break;
+            case 'LUTCube': return new LUTCubeLoader(this.loadingManager); break;
+            case 'LWO': return new LWOLoader(this.loadingManager); break;
+            case 'LogLuv': return new LogLuvLoader(this.loadingManager); break;
+            case 'Lottie': return new LottieLoader(this.loadingManager); break;
+            case 'MD2': return new MD2Loader(this.loadingManager); break;
+            case 'MDD': return new MDDLoader(this.loadingManager); break;
+            case 'MTL': return new MTLLoader(this.loadingManager); break;
+            case 'NRRD': return new NRRDLoader(this.loadingManager); break;
+            case 'OBJ': return new OBJLoader(this.loadingManager); break;
+            case 'PCD': return new PCDLoader(this.loadingManager); break;
+            case 'PDB': return new PDBLoader(this.loadingManager); break;
+            case 'PLY': return new PLYLoader(this.loadingManager); break;
+            case 'PRWM': return new PRWMLoader(this.loadingManager); break;
+            case 'PVR': return new PVRLoader(this.loadingManager); break;
+            case 'RGBE': return new RGBELoader(this.loadingManager); break;
+            case 'RGBM': return new RGBMLoader(this.loadingManager); break;
+            case 'STL': return new STLLoader(this.loadingManager); break;
+            case 'SVG': return new SVGLoader(this.loadingManager); break;
+            case 'TDS': return new TDSLoader(this.loadingManager); break;
+            case 'TGA': return new TGALoader(this.loadingManager); break;
+            case 'TTF': return new TTFLoader(this.loadingManager); break;
+            case 'Tilt': return new TiltLoader(this.loadingManager); break;
+            case 'VOX': return new VOXLoader(this.loadingManager); break;
+            case 'VRML': return new VRMLLoader(this.loadingManager); break;
+            case 'VTK': return new VTKLoader(this.loadingManager); break;
+            case 'XYZ': return new XYZLoader(this.loadingManager); break;
             default: return false; break;
        }
 
@@ -582,7 +582,7 @@ class D3DLoaders {
 
           //  this.controls.update();
           if(this.loadedItem){
-              if((this.loadedItem.mixer !== null) && (this.loadedItem.action !== null )){
+              if((this.loadedItem.mixer !== null)){
                     this.loadedItem.mixer.update( delta );
                 };
             }
@@ -810,6 +810,8 @@ class D3DLoaders {
             nftsRoute: this.config.nftsRoute,
             format:format
         });
+        console.log('returned loadedItem')
+        console.log(this.loadedItem.mixer);
         return this.loadedItem;
 
     }

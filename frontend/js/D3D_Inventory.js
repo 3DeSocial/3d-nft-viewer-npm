@@ -149,13 +149,17 @@ class Item {
                     gltfMesh = model;
                 };
 
-console.log('anmiations found');
-                if(gltfMesh.animations){
 
-                    if(gltfMesh.animations[0]){
+                if(gltfMesh.animations){
+                    console.log('anmiations found');
+                    if(gltfMesh.animations[1]){
+                        console.log('gltfMesh.animations');
+                        console.log(gltfMesh.animations)
+
                         that.mixer = new THREE.AnimationMixer( gltfMesh );
-                        that.action = that.mixer.clipAction( gltfMesh.animations[ 0 ] );
+                        that.action = that.mixer.clipAction( gltfMesh.animations[ 1 ] );
                         that.action.play();
+                        console.log('animations playeing');
                     } else {
                         console.log('animations empty');
                     }
