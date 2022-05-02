@@ -291,6 +291,13 @@ class Item {
         return meshBounds;
     }
 
+    getPosition = () =>{
+        let copiedPos = new THREE.Vector3();
+            copiedPos.copy(this.mesh.position);
+            console.log('item pos: ', copiedPos);
+            return copiedPos;
+    }
+
     positionItem = (model, posVector) =>{
         model.position.copy(posVector);
     }

@@ -222,8 +222,9 @@ class D3DLoaders {
     initContainer(parentDivEl){
         //First lets create a parent DIV
         this.parentDivEl = parentDivEl;
-        console.log('parentDivEl');
+        console.log('parentDivEl child');
         console.log(this.parentDivEl.children[0]);
+        this.el = this.parentDivEl.children[0];
         this.parentDivElWidth = this.parentDivEl.children[0].offsetWidth;
         this.parentDivElHeight = this.parentDivEl.children[0].offsetHeight;
         this.initScene();
@@ -285,14 +286,16 @@ class D3DLoaders {
 
         this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         this.renderer.setClearColor( 0x000000, 1 );
-      //  this.renderer.domElement.setAttribute('style','display:none;');
-        this.parentDivEl.appendChild(this.renderer.domElement);
+
+        this.el.appendChild(this.renderer.domElement);
 
         this.pmremGenerator = new THREE.PMREMGenerator(this.renderer);
         this.pmremGenerator.compileEquirectangularShader();
 
         this.renderer.domElement.style.width = '100%';
-        this.renderer.domElement.style.height = '100%';        
+        this.renderer.domElement.style.height = '100%';     
+        console.log('show el: ',this.el);
+        this.el.setAttribute('style','display:inline-block;');
         console.log('initRenderer: complete');
     }
 
@@ -315,13 +318,8 @@ class D3DLoaders {
     }
 
     initLighting = () =>{
-        //Add lights
-        this.hlight = new THREE.AmbientLight(0xffffff);
-        this.scene.add(this.hlight);
-
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(-4, 15, 10);
-        this.scene.add(directionalLight);
+        this.lights = new D3D.Lighting({scene:this.scene,
+                                        createListeners: true});   
     }
 
     initLoaders = () =>{
@@ -754,8 +752,8 @@ class D3DLoaders {
 
     start3D = () =>{
 
-        // hide placeholder
-        this.parentDivEl.children[0].setAttribute('style','display:none;');                    
+        // start animation / controls
+        //this.parentDivEl.children[0].setAttribute('style','display:none;');                    
         this.renderer.domElement.setAttribute('style','display:inline-block;');            
         if(this.config.useShowroom){
            this.loadColliderEnvironment();
