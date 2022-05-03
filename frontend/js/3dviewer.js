@@ -604,7 +604,7 @@ class D3DLoaders {
         const fitWidthDistance = fitHeightDistance / this.camera.aspect;
 
         const distance = this.config.fitOffset * Math.max(fitHeightDistance, fitWidthDistance);
-
+        this.distance = distance;
 
         const direction = this.controls.target.clone()
             .sub(this.camera.position)
@@ -808,8 +808,6 @@ class D3DLoaders {
             nftsRoute: this.config.nftsRoute,
             format:format
         });
-        console.log('returned loadedItem')
-        console.log(this.loadedItem.mixer);
         return this.loadedItem;
 
     }

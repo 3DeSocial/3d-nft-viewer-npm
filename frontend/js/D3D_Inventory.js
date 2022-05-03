@@ -151,7 +151,7 @@ class Item {
 
 
                 if(gltfMesh.animations){
-                    console.log('anmiations found');
+                    this.animations = gltfMesh.animations;
                     if(gltfMesh.animations[1]){
                         console.log('gltfMesh.animations');
                         console.log(gltfMesh.animations)
