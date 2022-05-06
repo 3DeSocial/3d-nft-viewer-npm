@@ -1,8 +1,26 @@
 export const name = 'd3dntfviewer';
+import * as THREE from 'three';
 import D3DNFTViewer from './3dviewer.js';
 import gifshot from 'gifshot';
 
 class D3DAssetCreator extends D3DNFTViewer {
+
+    constructor(config) {
+        super(config);
+        this.initContainer(this.config.el);
+        this.start3D();
+        this.addButtonListeners();        
+    }
+
+    loadModel = (path, format)=>{
+        this.format = format;
+        this.setFormat(format);
+        let itemToEdit = this.initItemForModel(path, format);
+        let centerPos = new THREE.Vector3(0,-5,0);
+            itemToEdit.place(centerPos);
+        return itemToEdit;
+
+    }
 
     addButtonListeners = ()=>{
         this.addScreenShotListener();
@@ -37,6 +55,7 @@ class D3DAssetCreator extends D3DNFTViewer {
 
     addMeshLoadedListener = ()=>{
          document.body.addEventListener('loaded',(e)=>{
+            console.log('loaded mesh!');
             this.refreshAnimationOptions(e.detail.mesh);
         }, false);
     }
@@ -49,7 +68,7 @@ class D3DAssetCreator extends D3DNFTViewer {
         };
 
         let animationList = document.body.querySelector('ul#animations');
-
+        this.removeAllChildNodes(animationList);
         this.loadedItem.animations.forEach(function(anim, idx){
 
             let li = document.createElement('li');
@@ -82,6 +101,12 @@ class D3DAssetCreator extends D3DNFTViewer {
         });
 
         animationList.setAttribute('style','display: inline-block;');
+    }
+
+    removeAllChildNodes = (parent) => {
+        while (parent.firstChild) {
+            parent.removeChild(parent.firstChild);
+        }
     }
 
     addGifShotListener = ()=>{

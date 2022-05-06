@@ -209,6 +209,7 @@ export class D3DLoaders {
             throw('Error - No Loader Availble for File Format: '+format+' in D3DNFTViewer');
             return false;
         };
+        console.log('set loader');
         this.format = format;
         this.loader = loader;
     }
@@ -326,7 +327,7 @@ export class D3DLoaders {
     initLoaders = () =>{
         //Loader GLTF
    
-        this.loader = this.loaders.getLoaderForFormat('GLTF');        
+        this.loader = this.loaders.getLoaderForFormat(this.config.defaultLoader);        
     }
 
     addListeners = ()=>{
@@ -520,6 +521,8 @@ export class D3DLoaders {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(canvasWidth,canvasHeight);
         } else {
+            this.parentDivElWidth = this.parentDivEl.offsetWidth;
+            this.parentDivElHeight = this.parentDivEl.offsetHeight;            
             console.log('resizing');
             console.log('this.parentDivElWidth: ',this.parentDivElWidth);
             console.log('this.parentDivElHeight: ',this.parentDivElHeight);            
@@ -795,7 +798,7 @@ export class D3DLoaders {
 
     initItemForModel = (modelUrl, format) =>{
 
-        console.log('initItemForModel: this.format ',this.format);
+        console.log('initItemForModel: this.format ',format);
         console.log(this.loader);
         this.loadedItem = new Item({
             three: THREE,

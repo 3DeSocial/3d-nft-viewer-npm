@@ -21,7 +21,7 @@ export default class Item {
         this.height = this.config.height;
         this.width = this.config.width;
         this.depth = this.config.depth;
-        this.modelURL = this.config.modelUrl;
+        this.modelUrl = this.config.modelUrl;
         this.mixer = null;
         this.action = null;
         this.mesh = null;
@@ -48,14 +48,12 @@ export default class Item {
         this.meshPlacedEvent = new CustomEvent('placed', {detail: {mesh: this.mesh}});
     }
 
-    placeModel = (pos, modelUrl) =>{
+    placeModel = (pos) =>{
 
         let that = this;
 
-        this.fetchModel(modelUrl)
+        this.fetchModel(this.modelUrl)
         .then((model)=>{
-            console.log('loaded: ',modelUrl);
-            console.log(model);
             this.mesh = model;
             let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh}});
             document.body.dispatchEvent(loadedEvent);
@@ -75,9 +73,10 @@ export default class Item {
 
         let that = this;
 
-        this.fetchModelURL()
-        .then((modelURL)=>{
-            that.placeModel(pos,modelURL);
+        this.fetchmodelUrl()
+        .then((modelUrl)=>{
+            that.modelUrl = modelUrl;
+            that.placeModel(pos);
         });
     }
 
@@ -104,7 +103,7 @@ export default class Item {
 
     }
     
-    fetchModelURL = async() =>{
+    fetchmodelUrl = async() =>{
         let that = this;
 
         return new Promise((resolve,reject)=>{
@@ -114,7 +113,7 @@ export default class Item {
                 resolve(this.config.modelUrl);
             } else {
                 let url = this.config.nftsRoute+that.config.nftPostHashHex;
-                    console.log('fetchModelURL from: '+url);
+                    console.log('fetchmodelUrl from: '+url);
 
                 fetch(url,{ method: "post"})
                 .then(response => response.json())
@@ -136,7 +135,7 @@ export default class Item {
         
     }
 
-    fetchModel = async(modelURL) =>{
+    fetchModel = async(modelUrl) =>{
         
         let that = this;
 
@@ -160,8 +159,8 @@ export default class Item {
             let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
             let meshBounds = null;
 
-            console.log('loader attempting load of: ',modelURL);
-            that.loader.load(modelURL, (model)=> {
+            console.log('loader attempting load of: ',modelUrl);
+            that.loader.load(modelUrl, (model)=> {
 
                 let gltfMesh = null;
 
