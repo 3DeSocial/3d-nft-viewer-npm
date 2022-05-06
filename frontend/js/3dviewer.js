@@ -224,9 +224,11 @@ export class D3DLoaders {
     initContainer(parentDivEl){
         //First lets create a parent DIV
         this.parentDivEl = parentDivEl;
+        console.log('parentDivEl child');
+        console.log(this.parentDivEl.children[0]);
         this.el = this.parentDivEl.children[0];
-        this.parentDivElWidth = this.parentDivEl.offsetWidth;
-        this.parentDivElHeight = this.parentDivEl.offsetHeight;
+        this.parentDivElWidth = this.parentDivEl.children[0].offsetWidth;
+        this.parentDivElHeight = this.parentDivEl.children[0].offsetHeight;
         this.initScene();
         this.clock = new THREE.Clock();
         this.initSkybox();

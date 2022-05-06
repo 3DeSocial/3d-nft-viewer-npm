@@ -57,6 +57,7 @@ class D3DAssetCreator extends D3DNFTViewer {
          document.body.addEventListener('loaded',(e)=>{
             console.log('loaded mesh!');
             this.refreshAnimationOptions(e.detail.mesh);
+            this.resizeCanvas();
         }, false);
     }
 
