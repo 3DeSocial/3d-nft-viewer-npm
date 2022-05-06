@@ -1,8 +1,9 @@
-import * as D3DNFT from './frontend/js/3dviewer.js';
+import { D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer} from './frontend/js/3dviewer.js';
+import { D3DAssetCreator } from './frontend/js/D3D_AssetCreator.mjs';
 import { VRButton } from './frontend/js/DSO_VRButton.js';
 import { VRControls } from './frontend/js/D3D_VRControls.js';
-import { Item } from './frontend/js/D3D_Inventory.js';
-import { Lighting } from './frontend/js/D3D_Lighting.js';
+import { Item } from './frontend/js/D3D_Inventory.mjs';
+import { Lighting } from './frontend/js/D3D_Lighting.mjs';
 import { XRControllerModelFactory } from './frontend/webxr/XRControllerModelFactory.js';
 import { MeshBVH, acceleratedRaycast, MeshBVHVisualizer } from './frontend/webxr/index.module.js';
 let SupportedFormats = [
@@ -52,4 +53,4 @@ let SupportedFormats = [
 'VTK',
 'XYZ',
 ];
-export {SupportedFormats, D3DNFT, Lighting, VRButton, VRControls, Item, XRControllerModelFactory, MeshBVH, acceleratedRaycast, MeshBVHVisualizer}
+export {SupportedFormats, D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRButton, VRControls, Item, XRControllerModelFactory, MeshBVH, acceleratedRaycast, MeshBVHVisualizer}

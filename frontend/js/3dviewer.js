@@ -1,9 +1,7 @@
 export const name = 'd3dntfviewer';
 // Find the latest version by visiting https://cdn.skypack.dev/three.
 import * as THREE from 'three';
-import * as D3D from '3d-nft-viewer';
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
-import { loader } from "three/examples/jsm/loaders/loader.js";
 import { ColladaLoader } from "three/examples/jsm/loaders/ColladaLoader.js";
 import { DDSLoader } from "three/examples/jsm/loaders/DDSLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
@@ -14,6 +12,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
  
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+
+import Item from './D3D_Inventory.mjs';
+import Lighting from './D3D_Lighting.mjs';
 
 let clock, gui, stats, delta;
 let environment, collider, visualizer, player, controls, geometries;
@@ -83,7 +84,7 @@ export class D3DNFTViewerOverlay {
     }
 }
 
-class D3DLoaders {
+export class D3DLoaders {
 
     constructor(config) {
 
@@ -157,7 +158,7 @@ class D3DLoaders {
 
 }
 
- export class D3DNFTViewer {
+ export default class D3DNFTViewer {
     
     constructor(config) {
 
@@ -168,7 +169,7 @@ class D3DLoaders {
                     nftsRoute: 'nfts', // Back end route to initialize NFTs
                     modelsRoute: 'models',// Back end route to load models
                     sceneryPath: '/layouts/round_showroom/scene.gltf',
-                    skyboxPath: '/images/skyboxes/',
+                    skyboxPath: '',
                     controls: {
                         maxDistance:Infinity,
                         maxPolarAngle:Infinity
@@ -318,7 +319,7 @@ class D3DLoaders {
     }
 
     initLighting = () =>{
-        this.lights = new D3D.Lighting({scene:this.scene,
+        this.lights = new Lighting({scene:this.scene,
                                         createListeners: true});   
     }
 
@@ -796,7 +797,7 @@ class D3DLoaders {
 
         console.log('initItemForModel: this.format ',this.format);
         console.log(this.loader);
-        this.loadedItem = new D3D.Item({
+        this.loadedItem = new Item({
             three: THREE,
             loader: this.loader,
             scene: this.scene,
@@ -1277,3 +1278,4 @@ console.log('player reset');
 
     }    
 }
+export {D3DNFTViewer}

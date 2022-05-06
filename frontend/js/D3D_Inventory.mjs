@@ -1,7 +1,7 @@
 export const name = 'd3d-space-viewer';
 let THREE, loader, OrbitControls, XRControllerModelFactory, VRButton;
 
-class Item {
+export default class Item {
 
     constructor(config){
         let defaults = {
@@ -24,7 +24,28 @@ class Item {
         this.modelURL = this.config.modelUrl;
         this.mixer = null;
         this.action = null;
+        this.mesh = null;
+        this.initItemEvents();
 
+
+    }
+
+    hasAnimations = () =>{
+        if(!this.mesh.children[0]){
+            return false;
+        };
+        if(!this.mesh.children[0].animations){
+            return false;
+        };
+        if(this.mesh.children[0].animations.length===0){
+            return false;
+        };
+        this.animations = this.mesh.children[0].animations;
+        return true;
+    }
+
+    initItemEvents = () =>{
+        this.meshPlacedEvent = new CustomEvent('placed', {detail: {mesh: this.mesh}});
     }
 
     placeModel = (pos, modelUrl) =>{
@@ -36,13 +57,14 @@ class Item {
             console.log('loaded: ',modelUrl);
             console.log(model);
             this.mesh = model;
-
+            let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh}});
+            document.body.dispatchEvent(loadedEvent);
           //  that.setScale(model);
 
          //   that.rotateItem();
             that.addToScene(model);
             that.positionItem(model, pos);
-
+            document.body.dispatchEvent(this.meshPlacedEvent);
         }).catch((err=>{
             console.log( err);
         }))
@@ -150,24 +172,6 @@ class Item {
                 };
 
 
-                if(gltfMesh.animations){
-                    this.animations = gltfMesh.animations;
-                    if(gltfMesh.animations[1]){
-                        console.log('gltfMesh.animations');
-                        console.log(gltfMesh.animations)
-
-                        that.mixer = new THREE.AnimationMixer( gltfMesh );
-                        that.action = that.mixer.clipAction( gltfMesh.animations[ 1 ] );
-                        that.action.play();
-                        console.log('animations playeing');
-                    } else {
-                        console.log('animations empty');
-                    }
-                } else {
-                    console.log('no animations: ');
-                    console.log(gltfMesh);
-                }
-
       /*      if(that.shouldBeCentered(model.scene.children)){
                     let h = that.getImportedObjectSize(model.scene);
                     let heightOffset = h/2;                    
@@ -211,6 +215,33 @@ class Item {
 
         })
       
+    }
+
+    startAnimation = (animIndex) => {
+
+        if(this.animations){
+            if(this.animations[animIndex]){
+                this.mixer = new THREE.AnimationMixer( this.mesh );
+
+                let animation = this.animations[animIndex];
+                 
+                this.action = this.mixer.clipAction(animation);
+                this.action.setLoop(THREE.LoopOnce);
+                this.action.play();
+            } else {
+                console.log('animation', animIndex, 'doesnt exist');
+            }
+        } else {
+            console.log('no animations: ');
+            console.log(this.mesh);
+        }
+    }
+
+    stopAnimation = () =>{
+        if(this.action){
+           this.action.stop();
+           this.action = null;
+        }
     }
 
     shouldBeCentered = (children) =>{

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export class Lighting {
+export default class Lighting {
 
     constructor(config) {
 
@@ -140,3 +140,5 @@ export class Lighting {
     	this.dLighting[lightName].intensity = val;
     }    
 }
+
+export {Lighting}
