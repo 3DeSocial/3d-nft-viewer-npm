@@ -28,12 +28,25 @@ class D3DAssetCreator extends D3DNFTViewer {
         this.addMeshLoadedListener();
     }   
 
-    addAnimationStopListener = () =>{
+    addAnimationStopListener = (timer) =>{
+        let that = this;
         if(this.loadedItem){
             if(this.loadedItem.mixer){
                  this.loadedItem.mixer.addEventListener('finish',(e)=>{
-                   console.log('animation finish');
+                 console.log('animation finish');
+
+                    if(that.recordingTimer){
+                        clearInterval(that.recordingTimer);
+                        console.log('recordingTimer stopped.');
+                    } else {
+                        console.log('recordingTimer does not exist');
+                    };
                 }, false);
+
+                console.log('animation finish listener added');
+                console.log(that.recordingTimer);
+                console.log(this.recordingTimer);
+
             }
         }
     } 
@@ -123,20 +136,28 @@ class D3DAssetCreator extends D3DNFTViewer {
         btn.addEventListener('click',(e)=>{
             console.log('take gif clicked');
             that.takeGifScreenShots({frames: that.getFramesFromUI(),
-                                    rotate: that.getRotateFromUI()});
+                                    rotate: that.getRotateFromUI(),
+                                    animType:that.getAnimTypeFromUI()});
         }, false);        
       
     }
 
     getFramesFromUI = ()=>{
-        return document.getElementById('frames').value;
+        let frames = parseInt(document.getElementById('frames').value);
+        return frames;
     }
 
     getRotateFromUI = ()=>{
         let rotate = document.getElementById('gif-rotate').checked;
-        console.log('getRotateFromUI: ',rotate);
         return rotate;
     }
+
+    getAnimTypeFromUI = () =>{
+        let animType = document.getElementById('animation-type').value;
+        console.log('animType',animType);
+        return animType;
+    }
+    
 
     takeScreenShot = (opts) =>{
 
@@ -144,25 +165,29 @@ class D3DAssetCreator extends D3DNFTViewer {
             this.screenShots = [];
         };
 
+        //set output height and width
+        this.setScalingOptions();
+
         try {
             var strMime = 'image/jpeg';
             const imgData = this.renderer.domElement.toDataURL(strMime);
-            console.log(opts);
-            if(opts.appendTo){
-                console.log('appending');
-                this.appendScreenShotToContainer(imgData, opts.appendTo);
-            };
+            this.scaleImg(imgData, strMime).then((scaledImg)=>{
+                if(opts.appendTo){
+                    this.appendScreenShotToContainer(scaledImg, opts.appendTo);
+                };
 
-            if(opts.replacePreview){
-                this.replacePreviewWithScreenShot(imgData, opts.replacePreview);
-            }
+                if(opts.replacePreview){
+                    this.replacePreviewWithScreenShot(scaledImg, opts.replacePreview);
+                }
 
 
-            this.storeScreenshot(
-                imgData.replace(strMime, 'image/octet-stream'),
-                imgData,
-                'snapshot.jpg'
-            );
+                this.storeScreenshot(
+                    scaledImg.replace(strMime, 'image/octet-stream'),
+                    scaledImg,
+                    'snapshot.jpg'
+                );                
+            });
+            
         } catch (e) {
             console.log(e);
             return;
@@ -190,7 +215,7 @@ class D3DAssetCreator extends D3DNFTViewer {
     }
 
     appendScreenShotToContainer = (imgData, target, name) =>{
-        console.log('appendScreenShotToContainer:', target);
+
         let newEl = document.createElement('img');
             newEl.setAttribute('id',name);
             newEl.src = imgData;
@@ -262,8 +287,8 @@ class D3DAssetCreator extends D3DNFTViewer {
             gifshot.createGIF(
                 {
                     images: that.gifShots,
-                    gifWidth: that.gifWidth,
-                    gifHeight: this.gifHeight
+                    gifWidth: that.outputWidth,
+                    gifHeight: this.outputHeight
                 },
                 function (obj) {
                     if (!obj.error) {
@@ -282,93 +307,161 @@ class D3DAssetCreator extends D3DNFTViewer {
             let scaleHeight = parseInt(heightInput.value);
             let scaleWidth = parseInt(widthInput.value);
 
+            let currentWidth = document.getElementsByTagName('canvas')[0].width;
+            let currentHeight = document.getElementsByTagName('canvas')[0].height;
+            
             if(!isNaN(scaleHeight)){
                 console.log('scaling height to: ',scaleHeight);
-                if (this.gifHeight > scaleHeight) {
+                if (currentWidth > scaleHeight) {
                     // calculate dimensions if we reize to 600 height
-                    let reductionPercentage = (scaleHeight / this.gifHeight) * 100;
-                    var newWidth = this.gifWidth * (reductionPercentage / 100);
-                    this.gifHeight = scaleHeight;
-                    this.gifWidth = newWidth;
-                }                
+                    let reductionPercentage = (scaleHeight / currentHeight) * 100;
+                    var newWidth = currentWidth * (reductionPercentage / 100);
+                    this.outputHeight = scaleHeight;
+                    this.outputWidth = newWidth;
+                } else {
+                    this.outputHeight = currentHeight;
+                    this.outputWidth = currentWidth;                 
+                }
+            
             } else {
                 console.log('scaling width to: ',scaleWidth);
 
-                if (this.gifWidth > scaleWidth) {
+                if (currentWidth > scaleWidth) {
                     // calculate dimensions if we reize to 600 height
-                    let reductionPercentage = (scaleWidth / this.gifWidth) * 100;
-                    var newHeight = this.gifHeight * (reductionPercentage / 100);
-                    this.gifWidth = scaleWidth;
-                    this.gifHeight = newHeight;
-                }  
+                    let reductionPercentage = (scaleWidth / currentWidth) * 100;
+                    var newHeight = currentHeight * (reductionPercentage / 100);
+                    this.outputWidth = scaleWidth;
+                    this.outputHeight = newHeight;
+                } else {
+                    this.outputHeight = currentHeight;
+                    this.outputWidth = currentWidth;                 
+                }
+
+
             }
 
-            
         }
 
-    getCanvas = () =>{
-        let canvasSearch = document.getElementsByTagName('canvas');
-        if(!canvasSearch.length){
-            return false;
-        };
+        scaleImg = (imgData, strMime) =>{
+            let that = this;
+            return new Promise(( resolve, reject ) => {
+                var img = new Image;
+                    img.src = imgData;
+                    img.onload = () =>{
 
-        if(canvasSearch[0]){
-            return canvasSearch[0];
+                        // Dynamically create a canvas element of target size
+                        var canvas = document.createElement('canvas');
+                        canvas.width = that.outputWidth;
+                        canvas.height = that.outputHeight;
+
+                        //draw captured screenshot at desired scale
+                        var ctx = canvas.getContext("2d");
+                            ctx.drawImage(img, 0, 0, that.outputWidth, that.outputHeight);
+
+                        let capture = canvas.toDataURL(strMime);
+                        resolve(capture);
+                    };
+            });
+
         }
-        return false;
-    }
 
-    takeGifScreenShots = (opts) =>{
+        getCanvas = () =>{
+            let canvasSearch = document.querySelector('canvas');
+            if(!canvasSearch){
+                return false;
+            };
+
+            return canvasSearch;
+        }
+
+        takeGifScreenShots = (opts) =>{
 
             let frames = opts.frames;
             let rotate = opts.rotate;
-
+            let animType = opts.animType;
             let i = 0;
             let previewEl = document.getElementById('asset-previews');
 
             let gifName = this.generateGifName();
             let that = this;
+
             this.gifShots = [];
-            this.gifWidth = document.getElementsByTagName('canvas')[0].width;
-            this.gifHeight = document.getElementsByTagName('canvas')[0].height;
+            this.outputWidth = document.getElementsByTagName('canvas')[0].width;
+            this.outputHeight = document.getElementsByTagName('canvas')[0].height;
+
             let cameraDistance = this.camera.position.distanceTo(this.loadedItem.getPosition());
-            console.log('cameraDistance: ',cameraDistance);
-            let timer = window.setInterval(() => {
+            let previewImgTag = document.getElementById(gifName);
+            console.log('animType: ',animType);
+            if(animType==='animation'){
+                this.loadedItem.startCurrentAnimation();
+            };
+            let recordingTimer = window.setInterval(() => {
                 if(opts.rotate===true){
-                    const angle = (Math.PI / 18) * i;
-                    that.camera.position.x = Math.sin(angle) * cameraDistance;
-                    that.camera.position.z = Math.cos(angle) * cameraDistance;
-                    that.controls.update();
-                }
-                if (i === 37) {
-                    // 37 as we skip the 1st screenshot
-                    clearInterval(timer);
-                    
-                  console.log('screenShots taken for gif');
-                  that.createGifFromImages(gifName);
-                } else {
-                    if (i > 0) {
-                        // dont use first frame which has wrong angle
-                        
-                        let previewImgTag = document.getElementById(gifName);
+                    that.rotatePreview(i, frames, cameraDistance);
+                };
+                switch(animType){
+                    case 'animation':
+                        if(i===0){
+                            that.loadedItem.mixer.addEventListener('finish',(e)=>{
+                                 console.log('animation finish');
+
+                                    if(recordingTimer){
+                                        clearInterval(recordingTimer);
+                                        console.log('recordingTimer stopped.');
+                                    } else {
+                                        console.log('recordingTimer does not exist');
+                                    };
+                                }, false);
+                            console.log('stop event added for ',recordingTimer);
+                        };
+                        //record as many frames as needed until the anmiation completes
                         let imgData = that.takeGifShot({replacePreview:previewImgTag});
                         var strMime = 'image/jpeg';
                         this.storeGifScreenshot(
                             imgData.replace(strMime, 'image/octet-stream'),
                             imgData,
                             'snapshot.jpg'
-                        );                        
-                    } else {
-                        let gifShot = that.takeGifShot({appendTo:previewEl,
-                                                        gifName:gifName});
+                        );
+                    break;
+                    case 'frames':
+                        // record only x frames
+                        if (i === frames) {
+                            // 37 as we skip the 1st screenshot
+                            clearInterval(that.recordingTimer);
+                            that.createGifFromImages(gifName);
+                        } else {
+                            if (i > 0) {
+                                // dont use first frame which has wrong angle
+                                
+                                
+                                let imgData = that.takeGifShot({replacePreview:previewImgTag});
+                                var strMime = 'image/jpeg';
+                                this.storeGifScreenshot(
+                                    imgData.replace(strMime, 'image/octet-stream'),
+                                    imgData,
+                                    'snapshot.jpg'
+                                );                        
+                            } else {
+                                let gifShot = that.takeGifShot({appendTo:previewEl,
+                                                                gifName:gifName});
 
-                    }
-                   
+                            }
+                        }                        
+                    break;
                 }
+               
 
                 ++i;
             }, 100);
               
+    }
+
+    rotatePreview = (i, frames, cameraDistance) =>{
+
+        const angle = ((2*Math.PI) / frames) * i;
+        this.camera.position.x = Math.sin(angle) * cameraDistance;
+        this.camera.position.z = Math.cos(angle) * cameraDistance;
+        this.controls.update();
     }
 
     generateGifName = () =>{

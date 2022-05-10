@@ -216,8 +216,16 @@ export default class Item {
       
     }
 
-    startAnimation = (animIndex) => {
+    startAnimation = (animIndex) =>{
+        this.setCurrentAnimation(animIndex);
+        this.startCurrentAnimation();        
+    }
+    setCurrentAnimation = (animIndex) => {
+        this.currentAnimation = animIndex;
+    }
 
+    startCurrentAnimation = () => {
+        let animIndex = this.currentAnimation;
         if(this.animations){
             if(this.animations[animIndex]){
                 this.mixer = new THREE.AnimationMixer( this.mesh );
