@@ -28,29 +28,6 @@ class D3DAssetCreator extends D3DNFTViewer {
         this.addMeshLoadedListener();
     }   
 
-    addAnimationStopListener = (timer) =>{
-        let that = this;
-        if(this.loadedItem){
-            if(this.loadedItem.mixer){
-                 this.loadedItem.mixer.addEventListener('finish',(e)=>{
-                 console.log('animation finish');
-
-                    if(that.recordingTimer){
-                        clearInterval(that.recordingTimer);
-                        console.log('recordingTimer stopped.');
-                    } else {
-                        console.log('recordingTimer does not exist');
-                    };
-                }, false);
-
-                console.log('animation finish listener added');
-                console.log(that.recordingTimer);
-                console.log(this.recordingTimer);
-
-            }
-        }
-    } 
-
     addScreenShotListener = ()=>{
         let that = this;
         
@@ -101,8 +78,6 @@ class D3DAssetCreator extends D3DNFTViewer {
 
                     if(that.loadedItem.action === null){
                         that.loadedItem.startAnimation(idx);
-                        that.addAnimationStopListener();
-
                     } else {
                         that.loadedItem.stopAnimation();
                         li.setAttribute('style','background-color: #FFF;');
@@ -391,43 +366,42 @@ class D3DAssetCreator extends D3DNFTViewer {
 
             let cameraDistance = this.camera.position.distanceTo(this.loadedItem.getPosition());
             let previewImgTag = document.getElementById(gifName);
-            console.log('animType: ',animType);
+            console.log('gifName ',gifName);
             if(animType==='animation'){
                 this.loadedItem.startCurrentAnimation();
             };
+            console.log('animType: ',animType);
+            console.log('animRunning: ',this.loadedItem.animRunning);
+
             let recordingTimer = window.setInterval(() => {
                 if(opts.rotate===true){
                     that.rotatePreview(i, frames, cameraDistance);
                 };
                 switch(animType){
                     case 'animation':
-                        if(i===0){
-                            that.loadedItem.mixer.addEventListener('finish',(e)=>{
-                                 console.log('animation finish');
-
-                                    if(recordingTimer){
-                                        clearInterval(recordingTimer);
-                                        console.log('recordingTimer stopped.');
-                                    } else {
-                                        console.log('recordingTimer does not exist');
-                                    };
-                                }, false);
-                            console.log('stop event added for ',recordingTimer);
-                        };
+                        let imgData = null;
                         //record as many frames as needed until the anmiation completes
-                        let imgData = that.takeGifShot({replacePreview:previewImgTag});
+                        if(i===0){
+                            imgData = that.takeGifShot({appendTo:previewEl, gifName: gifName});
+                        } else {
+                            imgData = that.takeGifShot({replacePreview:previewImgTag, gifName: gifName});
+                        };
                         var strMime = 'image/jpeg';
                         this.storeGifScreenshot(
                             imgData.replace(strMime, 'image/octet-stream'),
                             imgData,
                             'snapshot.jpg'
                         );
+                        if(!this.loadedItem.animRunning){
+                            clearInterval(recordingTimer);
+                            that.createGifFromImages(gifName);
+                        };
                     break;
                     case 'frames':
                         // record only x frames
                         if (i === frames) {
                             // 37 as we skip the 1st screenshot
-                            clearInterval(that.recordingTimer);
+                            clearInterval(recordingTimer);
                             that.createGifFromImages(gifName);
                         } else {
                             if (i > 0) {

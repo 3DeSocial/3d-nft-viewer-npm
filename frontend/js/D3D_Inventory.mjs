@@ -25,6 +25,7 @@ export default class Item {
         this.mixer = null;
         this.action = null;
         this.mesh = null;
+        this.animRunning = false;
         this.initItemEvents();
 
 
@@ -225,6 +226,7 @@ export default class Item {
     }
 
     startCurrentAnimation = () => {
+        let that = this;
         let animIndex = this.currentAnimation;
         if(this.animations){
             if(this.animations[animIndex]){
@@ -235,6 +237,11 @@ export default class Item {
                 this.action = this.mixer.clipAction(animation);
                 this.action.setLoop(THREE.LoopOnce);
                 this.action.play();
+                this.animRunning = true;
+                this.mixer.addEventListener('finished',(e)=>{
+                    console.log('animation not running now');                    
+                    that.setAnimRunning(false);
+                }, false);
             } else {
                 console.log('animation', animIndex, 'doesnt exist');
             }
@@ -249,6 +256,12 @@ export default class Item {
            this.action.stop();
            this.action = null;
         }
+        this.animRunning = false;
+    }
+
+    setAnimRunning =(value)=>{
+        this.animRunning = value;
+        console.log('animation running set to: ',value);
     }
 
     shouldBeCentered = (children) =>{
