@@ -162,7 +162,10 @@ class D3DAssetCreator extends D3DNFTViewer {
                     videoBitsPerSecond: 25000000,
                     rotationAngles: that.getVideoFramesFromUI(), 
                     rotationDirection: that.getVideoRotateFromUI(),
-                    previewElement: 'asset-previews'
+                    animate: that.getAnimateFromUI(),
+                    previewElement: 'asset-previews',
+                    duration: that.getDurationFromUI(),
+                    timeslice: that.getTimesliceFromUI(),
                 };
 
                 opts = {...defaults,...opts};
@@ -215,8 +218,24 @@ class D3DAssetCreator extends D3DNFTViewer {
         let rotate = document.querySelector('input[name="video-rotate-direction"]:checked').value
         return rotate;
     }
+
+    getAnimateFromUI = ()=>{
+
+        let animate = document.querySelector('input[name="animate"]:checked').value
+        return animate;
+    }
+
+    getDurationFromUI = ()=>{
+        let duration = parseInt(document.getElementById('duration').value);
+        return duration;
+    }
+
+    getTimesliceFromUI = ()=>{
+        let timeslice = parseInt(document.getElementById('timeslice').value);
+        return timeslice;
+    }  
     captureScreenshot = (opts) =>{
-        console.log('captureScreenshot');
+
         if(typeof(this.screenShots)==='undefined'){
             this.screenShots = [];
         };
@@ -530,33 +549,37 @@ class D3DAssetCreator extends D3DNFTViewer {
         let previewImgTag = document.getElementById(gifName);
 
         this.calcOutputSize(opts.scaleToWidth,opts.scaleToHeight);        
+        if(parseInt(opts.animate)>0){
+            if(opts.animate===1){
+                this.loadedItem.startCurrentAnimation(THREE.LoopOnce);
+            } else {
+                this.loadedItem.startCurrentAnimation(THREE.LoopRepeat);
+            }
+        }
+        if(rotationDirection>0){
+            let rotationTimer = window.setInterval(() => {
 
-        let rotationTimer = window.setInterval(() => {
+                //rotate first
+                that.rotatePreview(i, angles, cameraDistance, rotationDirection);
 
-            //rotate first
-            that.rotatePreview(i, angles, cameraDistance, rotationDirection);
-
-            //if first shot, create and append image tag
-            if (i === angles) {
-                // 37 as we skip the 1st screenshot
-                clearInterval(rotationTimer);
-            };
-            ++i;
-        }, 100);
+                //if first shot, create and append image tag
+                if (i === angles) {
+                    // 37 as we skip the 1st screenshot
+                    clearInterval(rotationTimer);
+                };
+                ++i;
+            }, 100);
+        }
     }
 
     captureVideo = async (opts) =>{
 
         const video = await record(this.renderer.domElement, opts);
-        console.log('capture complete');
         const url = URL.createObjectURL(video);
-        console.log('url complete');
 
         let player = this.createPlayer(opts.previewElement);
-        player.src = url;
-                console.log('player udpated');
-
-
+            player.src = url;
+            player.controls = true;
     }
 
     rotatePreview = (i, angles, cameraDistance, rotationDirection) =>{
