@@ -225,7 +225,10 @@ export default class Item {
         this.currentAnimation = animIndex;
     }
 
-    startCurrentAnimation = () => {
+    startCurrentAnimation = (loopType) => {
+        if(!loopType){
+            loopType = THREE.LoopOnce
+        };
         let that = this;
         let animIndex = this.currentAnimation;
         if(this.animations){
@@ -235,7 +238,7 @@ export default class Item {
                 let animation = this.animations[animIndex];
                  
                 this.action = this.mixer.clipAction(animation);
-                this.action.setLoop(THREE.LoopOnce);
+                this.action.setLoop(loopType);
                 this.action.play();
                 this.animRunning = true;
                 this.mixer.addEventListener('finished',(e)=>{

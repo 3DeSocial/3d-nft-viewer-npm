@@ -180,7 +180,7 @@ export class D3DLoaders {
             ...defaults,
             ...config
         };
-       
+        this.el = this.config.el;
         this.playerVelocity = new THREE.Vector3();
         this.upVector = new THREE.Vector3( 0, 1, 0 );
         this.tempVector = new THREE.Vector3();
@@ -224,15 +224,17 @@ export class D3DLoaders {
     initContainer(parentDivEl){
         //First lets create a parent DIV
         this.parentDivEl = parentDivEl;
-        console.log('parentDivEl child');
-        console.log(this.parentDivEl.children[0]);
-        this.el = this.parentDivEl.children[0];
-        this.parentDivElWidth = this.parentDivEl.children[0].offsetWidth;
-        this.parentDivElHeight = this.parentDivEl.children[0].offsetHeight;
+        console.log('parentDivEl');
+        console.log(this.parentDivEl);
+        this.parentDivElWidth = this.parentDivEl.offsetWidth;
+        this.parentDivElHeight = this.parentDivEl.offsetHeight;
         this.initScene();
         this.clock = new THREE.Clock();
         this.initSkybox();
         this.initCamera();
+            console.log('parentDivEl');
+        console.log(this.parentDivEl);
+        console.log(this.el);  
         this.initRenderer();
         this.initLighting();
         this.initPlayer();
@@ -524,6 +526,7 @@ export class D3DLoaders {
             this.parentDivElWidth = this.parentDivEl.offsetWidth;
             this.parentDivElHeight = this.parentDivEl.offsetHeight;            
             console.log('resizing');
+            console.log('this.parentDivEl:',this.parentDivEl);
             console.log('this.parentDivElWidth: ',this.parentDivElWidth);
             console.log('this.parentDivElHeight: ',this.parentDivElHeight);            
             this.camera.aspect = this.parentDivElWidth/this.parentDivElHeight;
