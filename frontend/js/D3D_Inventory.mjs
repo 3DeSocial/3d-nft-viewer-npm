@@ -142,7 +142,6 @@ export default class Item {
 
         return new Promise((resolve,reject)=>{
 
-            console.log('create container:',that.config.width, that.config.height,that.config.depth);
             const geometry = new THREE.BoxGeometry(that.config.width, that.config.height,that.config.depth);
             
             if(!that.config.color){
