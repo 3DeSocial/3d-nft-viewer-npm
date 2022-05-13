@@ -165,11 +165,13 @@ export default class Item {
                 let gltfMesh = null;
 
                 if(model.scene){
+                    console.log('using scene');
                    gltfMesh = model.scene;
                 } else {
+                    console.log('using first mesh');
                     gltfMesh = model;
                 };
-
+                console.log('type:',gltfMesh.type);
 
       /*      if(that.shouldBeCentered(model.scene.children)){
                     let h = that.getImportedObjectSize(model.scene);
@@ -180,8 +182,19 @@ export default class Item {
                     that.centerMeshInScene(model.scene);                
                 };
 */
-                let meshBounds = new THREE.Box3().setFromObject( gltfMesh );
 
+                var meshBounds = null;
+                if(gltfMesh.type==='BufferGeometry'){
+                    console.log('use boundinbox');
+
+                    gltfMesh.computeBoundingBox();
+                    meshBounds = gltfMesh.boundingBox;
+                } else {
+                    console.log('create meshBounds');
+                    meshBounds = new THREE.Box3().setFromObject( gltfMesh );
+                };
+                console.log(meshBounds);
+                console.log(gltfMesh);
 
                 // Calculate side lengths of scene (cube) bounding box
                 let lengthSceneBounds = {
@@ -207,7 +220,9 @@ export default class Item {
                 let minRatio = Math.min(...lengthRatios);
                 boxMesh.add(gltfMesh);
                 // Use smallest ratio to scale the model
-                gltfMesh.scale.set(minRatio, minRatio, minRatio);
+                if(gltfMesh.scale.set){
+                   gltfMesh.scale.set(minRatio, minRatio, minRatio);
+                };
                 gltfMesh.position.set(0,0,0);        
                 resolve(boxMesh);
             });

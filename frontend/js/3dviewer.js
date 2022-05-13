@@ -1,15 +1,52 @@
 export const name = 'd3dntfviewer';
 // Find the latest version by visiting https://cdn.skypack.dev/three.
 import * as THREE from 'three';
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
+import { Rhino3dmLoader  } from 'three/examples/jsm/loaders/3DMLoader.js';
+import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
+import { AMFLoader } from 'three/examples/jsm/loaders/AMFLoader.js';
+import { BVHLoader } from 'three/examples/jsm/loaders/BVHLoader.js';
 import { ColladaLoader } from "three/examples/jsm/loaders/ColladaLoader.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { DDSLoader } from "three/examples/jsm/loaders/DDSLoader.js";
-import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
-import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
+import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader.js";
+import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
+import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
+import { GCodeLoader } from "three/examples/jsm/loaders/GCodeLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { HDRCubeTextureLoader } from "three/examples/jsm/loaders/HDRCubeTextureLoader.js";
+import { KMZLoader } from "three/examples/jsm/loaders/KMZLoader.js";
+import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
+import { KTXLoader } from "three/examples/jsm/loaders/KTXLoader.js";
+import { LDrawLoader } from "three/examples/jsm/loaders/LDrawLoader.js";
+import { LogLuvLoader } from "three/examples/jsm/loaders/LogLuvLoader.js";
+import { LottieLoader } from "three/examples/jsm/loaders/LottieLoader.js";
+import { LUT3dlLoader } from "three/examples/jsm/loaders/LUT3dlLoader.js";
+import { LUTCubeLoader } from "three/examples/jsm/loaders/LUTCubeLoader.js";
+import { LWOLoader } from "three/examples/jsm/loaders/LWOLoader.js";
+import { MD2Loader } from "three/examples/jsm/loaders/MD2Loader.js";
+import { MDDLoader } from "three/examples/jsm/loaders/MDDLoader.js";
+import { MMDLoader } from "three/examples/jsm/loaders/MMDLoader.js";
+import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
+import { NRRDLoader } from "three/examples/jsm/loaders/NRRDLoader.js";
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
+import { PCDLoader } from "three/examples/jsm/loaders/PCDLoader.js";
+import { PDBLoader } from "three/examples/jsm/loaders/PDBLoader.js";
+import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader.js";
+import { PRWMLoader } from "three/examples/jsm/loaders/PRWMLoader.js";
+import { PVRLoader } from "three/examples/jsm/loaders/PVRLoader.js";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
+import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
+import { TDSLoader } from "three/examples/jsm/loaders/TDSLoader.js";
 import { TGALoader } from "three/examples/jsm/loaders/TGALoader.js";
+import { TiltLoader } from "three/examples/jsm/loaders/TiltLoader.js";
+import { VOXLoader } from "three/examples/jsm/loaders/VOXLoader.js";
+import { VRMLLoader } from "three/examples/jsm/loaders/VRMLLoader.js";
+import { VRMLoader } from "three/examples/jsm/loaders/VRMLoader.js";
+import { VTKLoader } from "three/examples/jsm/loaders/VTKLoader.js";
+import { XYZLoader } from "three/examples/jsm/loaders/XYZLoader.js";
+
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
- 
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
@@ -100,57 +137,72 @@ export class D3DLoaders {
     }
 
     getLoaderForFormat = (format) =>{
+        if(!format){
+            throw "Loaders:getLoaderForFormat: Unknown format";
+        };
+        format = format.toLowerCase();
         console.log('getLoaderForFormat: ',format);
         this.loadingManager = new THREE.LoadingManager();
         // add handler for TGA textures
         this.loadingManager.addHandler( /\.tga$/i, new TGALoader() ); 
 
        switch(format){
-            case '3DM': return new Rhino3dmLoader(this.loadingManager); break;
-            case '3MF': return new ThreeMFLoader(this.loadingManager); break;
-            case 'AMF': return new AMFLoader(this.loadingManager); break;
-            case 'BVH': return new BVHLoader(this.loadingManager); break;
-            case 'BasisTexture': return new BasisTextureLoader(this.loadingManager); break;
-            case 'Collada': return new ColladaLoader(this.loadingManager); break;
-            case 'DDS': return new DDSLoader(this.loadingManager); break;
-            case 'DRACO': return new DRACOLoader(this.loadingManager); break;
-            case 'EXR': return new EXRLoader(this.loadingManager); break;
-            case 'FBX': return new FBXLoader(this.loadingManager); break;
-            case 'Font': return new FontLoader(this.loadingManager); break;
-            case 'GCode': return new GCodeLoader(this.loadingManager); break;
-            case 'GLTF': return new GLTFLoader(this.loadingManager); break;
-            case 'HDRCubeTexture': return new HDRCubeTextureLoader(this.loadingManager); break;
-            case 'IFC': return new IFCLoader(this.loadingManager); break;
-            case 'KMZ': return new KMZLoader(this.loadingManager); break;
-            case 'KTX2': return new KTX2Loader(this.loadingManager); break;
-            case 'LDraw': return new LDrawLoader(this.loadingManager); break;
-            case 'LUT3dl': return new LUT3dlLoader(this.loadingManager); break;
-            case 'LUTCube': return new LUTCubeLoader(this.loadingManager); break;
-            case 'LWO': return new LWOLoader(this.loadingManager); break;
-            case 'LogLuv': return new LogLuvLoader(this.loadingManager); break;
-            case 'Lottie': return new LottieLoader(this.loadingManager); break;
-            case 'MD2': return new MD2Loader(this.loadingManager); break;
-            case 'MDD': return new MDDLoader(this.loadingManager); break;
-            case 'MTL': return new MTLLoader(this.loadingManager); break;
-            case 'NRRD': return new NRRDLoader(this.loadingManager); break;
-            case 'OBJ': return new OBJLoader(this.loadingManager); break;
-            case 'PCD': return new PCDLoader(this.loadingManager); break;
-            case 'PDB': return new PDBLoader(this.loadingManager); break;
-            case 'PLY': return new PLYLoader(this.loadingManager); break;
-            case 'PRWM': return new PRWMLoader(this.loadingManager); break;
-            case 'PVR': return new PVRLoader(this.loadingManager); break;
-            case 'RGBE': return new RGBELoader(this.loadingManager); break;
-            case 'RGBM': return new RGBMLoader(this.loadingManager); break;
-            case 'STL': return new STLLoader(this.loadingManager); break;
-            case 'SVG': return new SVGLoader(this.loadingManager); break;
-            case 'TDS': return new TDSLoader(this.loadingManager); break;
-            case 'TGA': return new TGALoader(this.loadingManager); break;
-            case 'TTF': return new TTFLoader(this.loadingManager); break;
-            case 'Tilt': return new TiltLoader(this.loadingManager); break;
-            case 'VOX': return new VOXLoader(this.loadingManager); break;
-            case 'VRML': return new VRMLLoader(this.loadingManager); break;
-            case 'VTK': return new VTKLoader(this.loadingManager); break;
-            case 'XYZ': return new XYZLoader(this.loadingManager); break;
+            case '3dm': 
+                let loader = new Rhino3dmLoader(this.loadingManager);
+                    loader.setLibraryPath( 'https://cdn.jsdelivr.net/npm/rhino3dm@7.11.1/' );
+                    return loader;
+                break;
+            case '3ds': return new TDSLoader(this.loadingManager); break;
+            case '3mf': return new ThreeMFLoader(this.loadingManager); break;
+            case 'amf': return new AMFLoader(this.loadingManager); break;
+            case 'bvh': return new BVHLoader(this.loadingManager); break;
+            case 'basistexture': return new BasisTextureLoader(this.loadingManager); break;
+            case 'dae': return new ColladaLoader(this.loadingManager); break;
+            case 'dds': return new DDSLoader(this.loadingManager); break;
+            case 'drc': 
+                let dracoLoader = new DRACOLoader(this.loadingManager); 
+                    dracoLoader.setDecoderPath( '/libs/draco/' );
+                    dracoLoader.setDecoderConfig( { type: 'js' } );
+                    return dracoLoader;
+                break;
+            case '3xr': return new EXRLoader(this.loadingManager); break;
+            case 'fbx': return new FBXLoader(this.loadingManager); break;
+            case 'font': return new FontLoader(this.loadingManager); break;
+            case 'gcode': return new GCodeLoader(this.loadingManager); break;
+            case 'glb': return new GLTFLoader(this.loadingManager); break;
+            case 'gltf': return new GLTFLoader(this.loadingManager); break;
+            case 'hdrcubetexture': return new HDRCubeTextureLoader(this.loadingManager); break;
+            case 'ifc': return new IFCLoader(this.loadingManager); break;
+            case 'kmz': return new KMZLoader(this.loadingManager); break;
+            case 'ktx2': return new KTX2Loader(this.loadingManager); break;
+            case 'ldraw': return new LDrawLoader(this.loadingManager); break;
+            case 'lut3dl': return new LUT3dlLoader(this.loadingManager); break;
+            case 'lutcube': return new LUTCubeLoader(this.loadingManager); break;
+            case 'lwo': return new LWOLoader(this.loadingManager); break;
+            case 'logluv': return new LogLuvLoader(this.loadingManager); break;
+            case 'lottie': return new LottieLoader(this.loadingManager); break;
+            case 'md2': return new MD2Loader(this.loadingManager); break;
+            case 'mdd': return new MDDLoader(this.loadingManager); break;
+            case 'mtl': return new MTLLoader(this.loadingManager); break;
+            case 'nrrd': return new NRRDLoader(this.loadingManager); break;
+            case 'obj': return new OBJLoader(this.loadingManager); break;
+            case 'pcd': return new PCDLoader(this.loadingManager); break;
+            case 'pdb': return new PDBLoader(this.loadingManager); break;
+            case 'ply': return new PLYLoader(this.loadingManager); break;
+            case 'prwm': return new PRWMLoader(this.loadingManager); break;
+            case 'pvr': return new PVRLoader(this.loadingManager); break;
+            case 'rgbe': return new RGBELoader(this.loadingManager); break;
+            case 'rgbm': return new RGBMLoader(this.loadingManager); break;
+            case 'stl': return new STLLoader(this.loadingManager); break;
+            case 'svg': return new SVGLoader(this.loadingManager); break;
+            case 'tds': return new TDSLoader(this.loadingManager); break;
+            case 'tga': return new TGALoader(this.loadingManager); break;
+            case 'ttf': return new TTFLoader(this.loadingManager); break;
+            case 'tilt': return new TiltLoader(this.loadingManager); break;
+            case 'vox': return new VOXLoader(this.loadingManager); break;
+            case 'vrml': return new VRMLLoader(this.loadingManager); break;
+            case 'vtk': return new VTKLoader(this.loadingManager); break;
+            case 'xyz': return new XYZLoader(this.loadingManager); break;
             default: return false; break;
        }
 
@@ -203,7 +255,7 @@ export class D3DLoaders {
     }
 
     setFormat = (format) =>{
-    
+        console.log('setFormat: ',format);
         let loader = this.loaders.getLoaderForFormat(format);
         if(loader === false){
             throw('Error - No Loader Availble for File Format: '+format+' in D3DNFTViewer');
@@ -219,6 +271,36 @@ export class D3DLoaders {
         //Lets create a new Scene
         this.scene = new THREE.Scene();
 
+    }
+
+    clearScene = (cb) =>{
+        var obj = this.scene;
+        this.recursiveDestroy(this.scene,cb);
+    }
+
+    recursiveDestroy = (obj, cb) =>{
+        while(obj.children.length > 0){ 
+            this.recursiveDestroy(obj.children[0], cb);
+            obj.remove(obj.children[0]);
+        }
+        
+        if(obj.geometry) obj.geometry.dispose();
+
+        if(obj.material){ 
+            //in case of map, bumpMap, normalMap, envMap ...
+            Object.keys(obj.material).forEach(prop => {
+            if(!obj.material[prop])
+                return;
+
+            if(obj.material[prop] !== null && typeof obj.material[prop].dispose === 'function')                                  
+                obj.material[prop].dispose();                                                      
+            });
+
+            obj.material.dispose();
+        }
+        if(obj.children.length===0){
+            cb()
+        }
     }
 
     initContainer(parentDivEl){
@@ -242,6 +324,7 @@ export class D3DLoaders {
         this.addListeners();
 
     }
+
 
     initCamera = () =>{
  
@@ -328,7 +411,7 @@ export class D3DLoaders {
 
     initLoaders = () =>{
         //Loader GLTF
-   
+    console.log('initLoaders: ',this.config.defaultLoader);
         this.loader = this.loaders.getLoaderForFormat(this.config.defaultLoader);        
     }
 
