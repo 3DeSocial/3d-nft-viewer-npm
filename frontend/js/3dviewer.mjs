@@ -174,7 +174,7 @@ export class D3DLoaders {
                         gltfLoader = new GLTFLoader(this.loadingManager); 
                     
                         dracoLoader = new DRACOLoader(this.loadingManager); 
-                        dracoLoader.setDecoderPath( '/libs/draco/' );
+                        dracoLoader.setDecoderPath( './libs/draco/' );
                         dracoLoader.setDecoderConfig( { type: 'js' } );
                     
                         gltfLoader.setDRACOLoader(dracoLoader);
@@ -185,16 +185,15 @@ export class D3DLoaders {
                     return gltfLoader;
 
                 break;
-            case 'gltf': return new GLTFLoader(this.loadingManager); break;
             case 'hdrcubetexture': return new HDRCubeTextureLoader(this.loadingManager); break;
             case 'ifc': 
                 let ifcLoader = new IFCLoader(this.loadingManager);
-                    ifcLoader.ifcManager.setWasmPath( '/loaders/ifc/' );
+                    ifcLoader.ifcManager.setWasmPath( './libs/ifc/' );
                 return ifcLoader;
             break;
             case 'kmz': return new KMZLoader(this.loadingManager); break;
             case 'ktx2': return new KTX2Loader(this.loadingManager); break;
-            case 'ldraw': return new LDrawLoader(this.loadingManager); break;
+            case 'ldraw','mpd': return new LDrawLoader(this.loadingManager); break;
             case 'lut3dl': return new LUT3dlLoader(this.loadingManager); break;
             case 'lutcube': return new LUTCubeLoader(this.loadingManager); break;
             case 'lwo': return new LWOLoader(this.loadingManager); break;
@@ -202,6 +201,10 @@ export class D3DLoaders {
             case 'lottie': return new LottieLoader(this.loadingManager); break;
             case 'md2': return new MD2Loader(this.loadingManager); break;
             case 'mdd': return new MDDLoader(this.loadingManager); break;
+            case 'mmd': return new MMDLoader(this.loadingManager); break
+            case 'pmd': return new MMDLoader(this.loadingManager); break
+            case 'vmd': return new MMDLoader(this.loadingManager); break
+            case 'vpd': return new MMDLoader(this.loadingManager); break;
             case 'mtl': return new MTLLoader(this.loadingManager); break;
             case 'nrrd': return new NRRDLoader(this.loadingManager); break;
             case 'obj': return new OBJLoader(this.loadingManager); break;

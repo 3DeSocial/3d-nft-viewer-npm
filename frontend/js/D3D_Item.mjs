@@ -248,7 +248,7 @@ onErrorCallback = (e)=> {
         let material, vertexColors, geometry;
         console.log('loaded type: ',loadedType);
         switch(loadedType){
-            case 'Object3D':
+            case 'Object3D','Mesh':
                 return loadedItem;
             break;
             case 'BufferGeometry':
