@@ -14,6 +14,7 @@ import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 import { GCodeLoader } from "three/examples/jsm/loaders/GCodeLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { HDRCubeTextureLoader } from "three/examples/jsm/loaders/HDRCubeTextureLoader.js";
+import { IFCLoader } from "three/examples/jsm/loaders/IFCLoader.js";
 import { KMZLoader } from "three/examples/jsm/loaders/KMZLoader.js";
 import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { KTXLoader } from "three/examples/jsm/loaders/KTXLoader.js";
@@ -42,7 +43,6 @@ import { TGALoader } from "three/examples/jsm/loaders/TGALoader.js";
 import { TiltLoader } from "three/examples/jsm/loaders/TiltLoader.js";
 import { VOXLoader } from "three/examples/jsm/loaders/VOXLoader.js";
 import { VRMLLoader } from "three/examples/jsm/loaders/VRMLLoader.js";
-import { VRMLoader } from "three/examples/jsm/loaders/VRMLoader.js";
 import { VTKLoader } from "three/examples/jsm/loaders/VTKLoader.js";
 import { XYZLoader } from "three/examples/jsm/loaders/XYZLoader.js";
 
@@ -50,7 +50,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-import Item from './D3D_Inventory.mjs';
+import Item from './D3D_Item.mjs';
 import Lighting from './D3D_Lighting.mjs';
 
 let clock, gui, stats, delta;
@@ -61,13 +61,13 @@ let fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = fal
 const params = {
 
     firstPerson: true,
-
     displayCollider: false,
     displayBVH: false,
     visualizeDepth: 10,
     gravity: - 30,
     playerSpeed: 10,
-    physicsSteps: 5
+    physicsSteps: 5,
+    useShowroom: true
 
 };
 
@@ -145,7 +145,7 @@ export class D3DLoaders {
         this.loadingManager = new THREE.LoadingManager();
         // add handler for TGA textures
         this.loadingManager.addHandler( /\.tga$/i, new TGALoader() ); 
-
+        let dracoLoader, ddsLoader, ktx2Loader, gltfLoader;
        switch(format){
             case '3dm': 
                 let loader = new Rhino3dmLoader(this.loadingManager);
@@ -160,7 +160,7 @@ export class D3DLoaders {
             case 'dae': return new ColladaLoader(this.loadingManager); break;
             case 'dds': return new DDSLoader(this.loadingManager); break;
             case 'drc': 
-                let dracoLoader = new DRACOLoader(this.loadingManager); 
+                    dracoLoader = new DRACOLoader(this.loadingManager); 
                     dracoLoader.setDecoderPath( '/libs/draco/' );
                     dracoLoader.setDecoderConfig( { type: 'js' } );
                     return dracoLoader;
@@ -169,10 +169,29 @@ export class D3DLoaders {
             case 'fbx': return new FBXLoader(this.loadingManager); break;
             case 'font': return new FontLoader(this.loadingManager); break;
             case 'gcode': return new GCodeLoader(this.loadingManager); break;
-            case 'glb': return new GLTFLoader(this.loadingManager); break;
+            case 'glb':
+            case 'gltf':
+                        gltfLoader = new GLTFLoader(this.loadingManager); 
+                    
+                        dracoLoader = new DRACOLoader(this.loadingManager); 
+                        dracoLoader.setDecoderPath( '/libs/draco/' );
+                        dracoLoader.setDecoderConfig( { type: 'js' } );
+                    
+                        gltfLoader.setDRACOLoader(dracoLoader);
+                    
+                        ktx2Loader = new KTX2Loader(this.loadingManager);
+
+                        gltfLoader.setKTX2Loader(ktx2Loader);
+                    return gltfLoader;
+
+                break;
             case 'gltf': return new GLTFLoader(this.loadingManager); break;
             case 'hdrcubetexture': return new HDRCubeTextureLoader(this.loadingManager); break;
-            case 'ifc': return new IFCLoader(this.loadingManager); break;
+            case 'ifc': 
+                let ifcLoader = new IFCLoader(this.loadingManager);
+                    ifcLoader.ifcManager.setWasmPath( '/loaders/ifc/' );
+                return ifcLoader;
+            break;
             case 'kmz': return new KMZLoader(this.loadingManager); break;
             case 'ktx2': return new KTX2Loader(this.loadingManager); break;
             case 'ldraw': return new LDrawLoader(this.loadingManager); break;
@@ -200,7 +219,7 @@ export class D3DLoaders {
             case 'ttf': return new TTFLoader(this.loadingManager); break;
             case 'tilt': return new TiltLoader(this.loadingManager); break;
             case 'vox': return new VOXLoader(this.loadingManager); break;
-            case 'vrml': return new VRMLLoader(this.loadingManager); break;
+            case 'vrml': case 'wrl': return new VRMLLoader(this.loadingManager); break;
             case 'vtk': return new VTKLoader(this.loadingManager); break;
             case 'xyz': return new XYZLoader(this.loadingManager); break;
             default: return false; break;
@@ -306,17 +325,15 @@ export class D3DLoaders {
     initContainer(parentDivEl){
         //First lets create a parent DIV
         this.parentDivEl = parentDivEl;
-        console.log('parentDivEl');
-        console.log(this.parentDivEl);
         this.parentDivElWidth = this.parentDivEl.offsetWidth;
         this.parentDivElHeight = this.parentDivEl.offsetHeight;
         this.initScene();
         this.clock = new THREE.Clock();
         this.initSkybox();
+        if(this.config.useShowroom){
+           this.loadColliderEnvironment();
+        };
         this.initCamera();
-            console.log('parentDivEl');
-        console.log(this.parentDivEl);
-        console.log(this.el);  
         this.initRenderer();
         this.initLighting();
         this.initPlayer();
@@ -341,10 +358,7 @@ export class D3DLoaders {
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.restrictCameraToRoom();
         this.controls.addEventListener('change', this.render);
-        this.controls.update();    
-        console.log('initControls ok');
-        console.log(this.controls);
-        console.log(this.renderer.domElement);
+        this.controls.update();
     }
 
     restrictCameraToRoom = () => {
@@ -411,7 +425,6 @@ export class D3DLoaders {
 
     initLoaders = () =>{
         //Loader GLTF
-    console.log('initLoaders: ',this.config.defaultLoader);
         this.loader = this.loaders.getLoaderForFormat(this.config.defaultLoader);        
     }
 
@@ -616,8 +629,8 @@ export class D3DLoaders {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         };
-        if(this.nftMesh){
-           this.fitCameraToMesh(this.nftMesh);        
+        if(this.loadedItem){
+           this.fitCameraToMesh(this.loadedItem);        
         }
     }
 
@@ -680,9 +693,10 @@ export class D3DLoaders {
 
     
 
-     fitCameraToMesh(mesh) {
+     fitCameraToMesh(loadedItem) {
 
-        const box = new THREE.Box3().setFromObject(mesh);
+        console.log('fitCameraToMesh: ', loadedItem);
+        const box = new THREE.Box3().setFromObject(loadedItem.mesh);
         const center = new THREE.Vector3();
         const size = new THREE.Vector3();
 
@@ -829,7 +843,7 @@ export class D3DLoaders {
             that.updateLink(el,'Loading..');
             that.initContainer(targetEl);
             let item = that.initItemForModel(modelUrl);
-            that.nftMesh = item.model;
+            that.mesh = item.model;
             let newPos = new THREE.Vector3(0,1.2,0);
             item.place(newPos);
             el.setAttribute('style','display:none;');
@@ -845,9 +859,7 @@ export class D3DLoaders {
         // start animation / controls
         //this.parentDivEl.children[0].setAttribute('style','display:none;');                    
         this.renderer.domElement.setAttribute('style','display:inline-block;');            
-        if(this.config.useShowroom){
-           this.loadColliderEnvironment();
-        };
+
         //this.showOverlay();
         //this.initVR();
         this.animate();        
@@ -882,10 +894,10 @@ export class D3DLoaders {
 
     }
 
-    initItemForModel = (modelUrl, format) =>{
-
-        console.log('initItemForModel: this.format ',format);
-        console.log(this.loader);
+    initItemForModel = (modelUrl) =>{
+        let urlParts = modelUrl.split('.');
+        let extension = urlParts[urlParts.length-1];
+        console.log('init item format ',extension);
         this.loadedItem = new Item({
             three: THREE,
             loader: this.loader,
@@ -896,7 +908,7 @@ export class D3DLoaders {
             modelUrl: modelUrl,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
-            format:format
+            format:extension
         });
         return this.loadedItem;
 

@@ -13,6 +13,27 @@ class D3DAssetCreator extends D3DNFTViewer {
         this.addButtonListeners();        
     }
 
+    clearScene = (obj)=>{
+        while(obj.children.length > 0){ 
+            this.clearScene(obj.children[0])
+            obj.remove(obj.children[0]);
+        }
+        if(obj.geometry) obj.geometry.dispose()
+
+        if(obj.material){ 
+            //in case of map, bumpMap, normalMap, envMap ...
+            Object.keys(obj.material).forEach(prop => {
+            if(!obj.material[prop])
+                return         
+            if(obj.material[prop] !== null && typeof obj.material[prop].dispose === 'function')                                  
+                obj.material[prop].dispose()                                                        
+            })
+            if(obj.material.dispose){
+               obj.material.dispose()
+            }
+        }
+    }   
+
     loadModel = (path, format)=>{
         this.format = format;
         this.setFormat(format);
@@ -24,11 +45,27 @@ class D3DAssetCreator extends D3DNFTViewer {
     }
 
     addButtonListeners = ()=>{
+        this.addClearSceneListener();
         this.addScreenShotListener();
         this.addGifShotListener();
         this.addVideoListener();        
         this.addMeshLoadedListener();
     }   
+
+    addClearSceneListener =()=>{
+        let that = this;
+        
+        let btn = document.body.querySelector('button#clear-scene');
+        
+        if(!btn){
+            return false;
+        };
+
+        btn.addEventListener('click',(e)=>{
+            that.clearScene(that.scene);
+            this.initLighting();
+        }, false);
+    }
 
     addScreenShotListener = ()=>{
         let that = this;

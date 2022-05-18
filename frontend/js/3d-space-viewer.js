@@ -6,17 +6,17 @@ let environment, collider, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
 let fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = false;
 
-import * as BufferGeometryUtils from 'https://unpkg.com/three@0.139.1/examples/jsm/utils/BufferGeometryUtils.js';
 
-import { OrbitControls } from 'https://unpkg.com/three@0.139.1/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'https://unpkg.com/three@0.139.1/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { XRControllerModelFactory } from '/js/webxr/XRControllerModelFactory.js';
-import { RoundedBoxGeometry } from 'https://unpkg.com/three@0.139.1/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { MeshBVH, acceleratedRaycast, MeshBVHVisualizer } from '/js/index.module.js';
 import { LayoutBuilder } from '/js/DSO_LayoutBuilder.js'
 import { D3DInventory } from '/js/D3D_Inventory.js'
 import { VRButton } from '/js/DSO_VRButton.js';
 import { VRControls } from '/js/D3D_VRControls.js';
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const params = {
 

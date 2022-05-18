@@ -1,6 +1,4 @@
-( function () {
-
-	/**
+/**
  * === IFFParser ===
  * - Parses data from the IFF buffer.
  * - LWO3 files are in IFF format and can contain the following data types, referred to by shorthand codes
@@ -34,1115 +32,1187 @@
  *
  **/
 
-	function IFFParser() {
+import { LoaderUtils } from 'three';
+import { LWO2Parser } from './LWO2Parser.js';
+import { LWO3Parser } from './LWO3Parser.js';
 
-		this.debugger = new Debugger(); // this.debugger.enable(); // un-comment to log IFF hierarchy.
+function IFFParser( ) {
 
-	}
+	this.debugger = new Debugger();
+	// this.debugger.enable(); // un-comment to log IFF hierarchy.
 
-	IFFParser.prototype = {
-		constructor: IFFParser,
-		parse: function ( buffer ) {
+}
 
-			this.reader = new DataViewReader( buffer );
-			this.tree = {
-				materials: {},
-				layers: [],
-				tags: [],
-				textures: []
-			}; // start out at the top level to add any data before first layer is encountered
+IFFParser.prototype = {
 
-			this.currentLayer = this.tree;
-			this.currentForm = this.tree;
-			this.parseTopForm();
-			if ( this.tree.format === undefined ) return;
+	constructor: IFFParser,
 
-			if ( this.tree.format === 'LWO2' ) {
+	parse: function ( buffer ) {
 
-				this.parser = new THREE.LWO2Parser( this );
+		this.reader = new DataViewReader( buffer );
 
-				while ( ! this.reader.endOfFile() ) this.parser.parseBlock();
+		this.tree = {
+			materials: {},
+			layers: [],
+			tags: [],
+			textures: [],
+		};
 
-			} else if ( this.tree.format === 'LWO3' ) {
+		// start out at the top level to add any data before first layer is encountered
+		this.currentLayer = this.tree;
+		this.currentForm = this.tree;
 
-				this.parser = new THREE.LWO3Parser( this );
+		this.parseTopForm();
 
-				while ( ! this.reader.endOfFile() ) this.parser.parseBlock();
+		if ( this.tree.format === undefined ) return;
 
-			}
+		if ( this.tree.format === 'LWO2' ) {
 
-			this.debugger.offset = this.reader.offset;
-			this.debugger.closeForms();
-			return this.tree;
+			this.parser = new LWO2Parser( this );
+			while ( ! this.reader.endOfFile() ) this.parser.parseBlock();
 
-		},
+		} else if ( this.tree.format === 'LWO3' ) {
 
-		parseTopForm() {
+			this.parser = new LWO3Parser( this );
+			while ( ! this.reader.endOfFile() ) this.parser.parseBlock();
 
-			this.debugger.offset = this.reader.offset;
-			var topForm = this.reader.getIDTag();
+		}
 
-			if ( topForm !== 'FORM' ) {
+		this.debugger.offset = this.reader.offset;
+		this.debugger.closeForms();
 
-				console.warn( 'LWOLoader: Top-level FORM missing.' );
-				return;
+		return this.tree;
 
-			}
+	},
 
-			var length = this.reader.getUint32();
-			this.debugger.dataOffset = this.reader.offset;
-			this.debugger.length = length;
-			var type = this.reader.getIDTag();
+	parseTopForm() {
 
-			if ( type === 'LWO2' ) {
+		this.debugger.offset = this.reader.offset;
 
-				this.tree.format = type;
+		var topForm = this.reader.getIDTag();
 
-			} else if ( type === 'LWO3' ) {
+		if ( topForm !== 'FORM' ) {
 
-				this.tree.format = type;
-
-			}
-
-			this.debugger.node = 0;
-			this.debugger.nodeID = type;
-			this.debugger.log();
+			console.warn( 'LWOLoader: Top-level FORM missing.' );
 			return;
 
-		},
+		}
 
-		///
-		// FORM PARSING METHODS
-		///
-		// Forms are organisational and can contain any number of sub chunks and sub forms
-		// FORM ::= 'FORM'[ID4], length[U4], type[ID4], ( chunk[CHUNK] | form[FORM] ) * }
-		parseForm( length ) {
+		var length = this.reader.getUint32();
 
-			var type = this.reader.getIDTag();
+		this.debugger.dataOffset = this.reader.offset;
+		this.debugger.length = length;
 
-			switch ( type ) {
+		var type = this.reader.getIDTag();
 
-				// SKIPPED FORMS
-				// if skipForm( length ) is called, the entire form and any sub forms and chunks are skipped
-				case 'ISEQ': // Image sequence
+		if ( type === 'LWO2' ) {
 
-				case 'ANIM': // plug in animation
+			this.tree.format = type;
 
-				case 'STCC': // Color-cycling Still
+		} else if ( type === 'LWO3' ) {
 
-				case 'VPVL':
-				case 'VPRM':
-				case 'NROT':
-				case 'WRPW': // image wrap w ( for cylindrical and spherical projections)
+			this.tree.format = type;
 
-				case 'WRPH': // image wrap h
+		}
 
-				case 'FUNC':
-				case 'FALL':
-				case 'OPAC':
-				case 'GRAD': // gradient texture
+		this.debugger.node = 0;
+		this.debugger.nodeID = type;
+		this.debugger.log();
 
-				case 'ENVS':
-				case 'VMOP':
-				case 'VMBG': // Car Material FORMS
+		return;
 
-				case 'OMAX':
-				case 'STEX':
-				case 'CKBG':
-				case 'CKEY':
-				case 'VMLA':
-				case 'VMLB':
-					this.debugger.skipped = true;
-					this.skipForm( length ); // not currently supported
+	},
 
-					break;
-					// if break; is called directly, the position in the lwoTree is not created
-					// any sub chunks and forms are added to the parent form instead
 
-				case 'META':
-				case 'NNDS':
-				case 'NODS':
-				case 'NDTA':
-				case 'ADAT':
-				case 'AOVS':
-				case 'BLOK': // used by texture nodes
+	///
+	// FORM PARSING METHODS
+	///
 
-				case 'IBGC': // imageBackgroundColor
+	// Forms are organisational and can contain any number of sub chunks and sub forms
+	// FORM ::= 'FORM'[ID4], length[U4], type[ID4], ( chunk[CHUNK] | form[FORM] ) * }
+	parseForm( length ) {
 
-				case 'IOPC': // imageOpacity
+		var type = this.reader.getIDTag();
 
-				case 'IIMG': // hold reference to image path
+		switch ( type ) {
 
-				case 'TXTR':
-					// this.setupForm( type, length );
-					this.debugger.length = 4;
-					this.debugger.skipped = true;
-					break;
+			// SKIPPED FORMS
+			// if skipForm( length ) is called, the entire form and any sub forms and chunks are skipped
 
-				case 'IFAL': // imageFallof
+			case 'ISEQ': // Image sequence
+			case 'ANIM': // plug in animation
+			case 'STCC': // Color-cycling Still
+			case 'VPVL':
+			case 'VPRM':
+			case 'NROT':
+			case 'WRPW': // image wrap w ( for cylindrical and spherical projections)
+			case 'WRPH': // image wrap h
+			case 'FUNC':
+			case 'FALL':
+			case 'OPAC':
+			case 'GRAD': // gradient texture
+			case 'ENVS':
+			case 'VMOP':
+			case 'VMBG':
 
-				case 'ISCL': // imageScale
+			// Car Material FORMS
+			case 'OMAX':
+			case 'STEX':
+			case 'CKBG':
+			case 'CKEY':
+			case 'VMLA':
+			case 'VMLB':
+				this.debugger.skipped = true;
+				this.skipForm( length ); // not currently supported
+				break;
 
-				case 'IPOS': // imagePosition
+			// if break; is called directly, the position in the lwoTree is not created
+			// any sub chunks and forms are added to the parent form instead
+			case 'META':
+			case 'NNDS':
+			case 'NODS':
+			case 'NDTA':
+			case 'ADAT':
+			case 'AOVS':
+			case 'BLOK':
 
-				case 'IROT': // imageRotation
+			// used by texture nodes
+			case 'IBGC': // imageBackgroundColor
+			case 'IOPC': // imageOpacity
+			case 'IIMG': // hold reference to image path
+			case 'TXTR':
+				// this.setupForm( type, length );
+				this.debugger.length = 4;
+				this.debugger.skipped = true;
+				break;
 
-				case 'IBMP':
-				case 'IUTD':
-				case 'IVTD':
-					this.parseTextureNodeAttribute( type );
-					break;
+			case 'IFAL': // imageFallof
+			case 'ISCL': // imageScale
+			case 'IPOS': // imagePosition
+			case 'IROT': // imageRotation
+			case 'IBMP':
+			case 'IUTD':
+			case 'IVTD':
+				this.parseTextureNodeAttribute( type );
+				break;
 
-				case 'ENVL':
-					this.parseEnvelope( length );
-					break;
-					// CLIP FORM AND SUB FORMS
+			case 'ENVL':
+				this.parseEnvelope( length );
+				break;
 
-				case 'CLIP':
-					if ( this.tree.format === 'LWO2' ) {
+				// CLIP FORM AND SUB FORMS
 
-						this.parseForm( length );
+			case 'CLIP':
+				if ( this.tree.format === 'LWO2' ) {
 
-					} else {
+					this.parseForm( length );
 
-						this.parseClip( length );
+				} else {
 
-					}
+					this.parseClip( length );
 
-					break;
+				}
 
-				case 'STIL':
-					this.parseImage();
-					break;
+				break;
 
-				case 'XREF':
-					// clone of another STIL
-					this.reader.skip( 8 ); // unknown
+			case 'STIL':
+				this.parseImage();
+				break;
 
-					this.currentForm.referenceTexture = {
-						index: this.reader.getUint32(),
-						refName: this.reader.getString() // internal unique ref
+			case 'XREF': // clone of another STIL
+				this.reader.skip( 8 ); // unknown
+				this.currentForm.referenceTexture = {
+					index: this.reader.getUint32(),
+					refName: this.reader.getString() // internal unique ref
+				};
+				break;
 
-					};
-					break;
-					// Not in spec, used by texture nodes
+				// Not in spec, used by texture nodes
 
-				case 'IMST':
-					this.parseImageStateForm( length );
-					break;
-					// SURF FORM AND SUB FORMS
+			case 'IMST':
+				this.parseImageStateForm( length );
+				break;
 
-				case 'SURF':
-					this.parseSurfaceForm( length );
-					break;
+				// SURF FORM AND SUB FORMS
 
-				case 'VALU':
-					// Not in spec
-					this.parseValueForm( length );
-					break;
+			case 'SURF':
+				this.parseSurfaceForm( length );
+				break;
 
-				case 'NTAG':
-					this.parseSubNode( length );
-					break;
+			case 'VALU': // Not in spec
+				this.parseValueForm( length );
+				break;
 
-				case 'ATTR': // BSDF Node Attributes
+			case 'NTAG':
+				this.parseSubNode( length );
+				break;
 
-				case 'SATR':
-					// Standard Node Attributes
-					this.setupForm( 'attributes', length );
-					break;
+			case 'ATTR': // BSDF Node Attributes
+			case 'SATR': // Standard Node Attributes
+				this.setupForm( 'attributes', length );
+				break;
 
-				case 'NCON':
-					this.parseConnections( length );
-					break;
+			case 'NCON':
+				this.parseConnections( length );
+				break;
 
-				case 'SSHA':
-					this.parentForm = this.currentForm;
-					this.currentForm = this.currentSurface;
-					this.setupForm( 'surfaceShader', length );
-					break;
+			case 'SSHA':
+				this.parentForm = this.currentForm;
+				this.currentForm = this.currentSurface;
+				this.setupForm( 'surfaceShader', length );
+				break;
 
-				case 'SSHD':
-					this.setupForm( 'surfaceShaderData', length );
-					break;
+			case 'SSHD':
+				this.setupForm( 'surfaceShaderData', length );
+				break;
 
-				case 'ENTR':
-					// Not in spec
-					this.parseEntryForm( length );
-					break;
-					// Image Map Layer
+			case 'ENTR': // Not in spec
+				this.parseEntryForm( length );
+				break;
 
-				case 'IMAP':
-					this.parseImageMap( length );
-					break;
+				// Image Map Layer
 
-				case 'TAMP':
-					this.parseXVAL( 'amplitude', length );
-					break;
-					//Texture Mapping Form
+			case 'IMAP':
+				this.parseImageMap( length );
+				break;
 
-				case 'TMAP':
-					this.setupForm( 'textureMap', length );
-					break;
+			case 'TAMP':
+				this.parseXVAL( 'amplitude', length );
+				break;
 
-				case 'CNTR':
-					this.parseXVAL3( 'center', length );
-					break;
+				//Texture Mapping Form
 
-				case 'SIZE':
-					this.parseXVAL3( 'scale', length );
-					break;
+			case 'TMAP':
+				this.setupForm( 'textureMap', length );
+				break;
 
-				case 'ROTA':
-					this.parseXVAL3( 'rotation', length );
-					break;
+			case 'CNTR':
+				this.parseXVAL3( 'center', length );
+				break;
 
-				default:
-					this.parseUnknownForm( type, length );
+			case 'SIZE':
+				this.parseXVAL3( 'scale', length );
+				break;
+
+			case 'ROTA':
+				this.parseXVAL3( 'rotation', length );
+				break;
+
+			default:
+				this.parseUnknownForm( type, length );
+
+		}
+
+		this.debugger.node = 0;
+		this.debugger.nodeID = type;
+		this.debugger.log();
+
+	},
+
+	setupForm( type, length ) {
+
+		if ( ! this.currentForm ) this.currentForm = this.currentNode;
+
+		this.currentFormEnd = this.reader.offset + length;
+		this.parentForm = this.currentForm;
+
+		if ( ! this.currentForm[ type ] ) {
+
+			this.currentForm[ type ] = {};
+			this.currentForm = this.currentForm[ type ];
+
+
+		} else {
+
+			// should never see this unless there's a bug in the reader
+			console.warn( 'LWOLoader: form already exists on parent: ', type, this.currentForm );
+
+			this.currentForm = this.currentForm[ type ];
+
+		}
+
+
+	},
+
+	skipForm( length ) {
+
+		this.reader.skip( length - 4 );
+
+	},
+
+	parseUnknownForm( type, length ) {
+
+		console.warn( 'LWOLoader: unknown FORM encountered: ' + type, length );
+
+		printBuffer( this.reader.dv.buffer, this.reader.offset, length - 4 );
+		this.reader.skip( length - 4 );
+
+	},
+
+	parseSurfaceForm( length ) {
+
+		this.reader.skip( 8 ); // unknown Uint32 x2
+
+		var name = this.reader.getString();
+
+		var surface = {
+			attributes: {}, // LWO2 style non-node attributes will go here
+			connections: {},
+			name: name,
+			inputName: name,
+			nodes: {},
+			source: this.reader.getString(),
+		};
+
+		this.tree.materials[ name ] = surface;
+		this.currentSurface = surface;
+
+		this.parentForm = this.tree.materials;
+		this.currentForm = surface;
+		this.currentFormEnd = this.reader.offset + length;
+
+	},
+
+	parseSurfaceLwo2( length ) {
+
+		var name = this.reader.getString();
+
+		var surface = {
+			attributes: {}, // LWO2 style non-node attributes will go here
+			connections: {},
+			name: name,
+			nodes: {},
+			source: this.reader.getString(),
+		};
+
+		this.tree.materials[ name ] = surface;
+		this.currentSurface = surface;
+
+		this.parentForm = this.tree.materials;
+		this.currentForm = surface;
+		this.currentFormEnd = this.reader.offset + length;
+
+	},
+
+	parseSubNode( length ) {
+
+		// parse the NRNM CHUNK of the subnode FORM to get
+		// a meaningful name for the subNode
+		// some subnodes can be renamed, but Input and Surface cannot
+
+		this.reader.skip( 8 ); // NRNM + length
+		var name = this.reader.getString();
+
+		var node = {
+			name: name
+		};
+		this.currentForm = node;
+		this.currentNode = node;
+
+		this.currentFormEnd = this.reader.offset + length;
+
+
+	},
+
+	// collect attributes from all nodes at the top level of a surface
+	parseConnections( length ) {
+
+		this.currentFormEnd = this.reader.offset + length;
+		this.parentForm = this.currentForm;
+
+		this.currentForm = this.currentSurface.connections;
+
+	},
+
+	// surface node attribute data, e.g. specular, roughness etc
+	parseEntryForm( length ) {
+
+		this.reader.skip( 8 ); // NAME + length
+		var name = this.reader.getString();
+		this.currentForm = this.currentNode.attributes;
+
+		this.setupForm( name, length );
+
+	},
+
+	// parse values from material - doesn't match up to other LWO3 data types
+	// sub form of entry form
+	parseValueForm() {
+
+		this.reader.skip( 8 ); // unknown + length
+
+		var valueType = this.reader.getString();
+
+		if ( valueType === 'double' ) {
+
+			this.currentForm.value = this.reader.getUint64();
+
+		} else if ( valueType === 'int' ) {
+
+			this.currentForm.value = this.reader.getUint32();
+
+		} else if ( valueType === 'vparam' ) {
+
+			this.reader.skip( 24 );
+			this.currentForm.value = this.reader.getFloat64();
+
+		} else if ( valueType === 'vparam3' ) {
+
+			this.reader.skip( 24 );
+			this.currentForm.value = this.reader.getFloat64Array( 3 );
+
+		}
+
+	},
+
+	// holds various data about texture node image state
+	// Data other thanmipMapLevel unknown
+	parseImageStateForm() {
+
+		this.reader.skip( 8 ); // unknown
+
+		this.currentForm.mipMapLevel = this.reader.getFloat32();
+
+	},
+
+	// LWO2 style image data node OR LWO3 textures defined at top level in editor (not as SURF node)
+	parseImageMap( length ) {
+
+		this.currentFormEnd = this.reader.offset + length;
+		this.parentForm = this.currentForm;
+
+		if ( ! this.currentForm.maps ) this.currentForm.maps = [];
+
+		var map = {};
+		this.currentForm.maps.push( map );
+		this.currentForm = map;
+
+		this.reader.skip( 10 ); // unknown, could be an issue if it contains a VX
+
+	},
+
+	parseTextureNodeAttribute( type ) {
+
+		this.reader.skip( 28 ); // FORM + length + VPRM + unknown + Uint32 x2 + float32
+
+		this.reader.skip( 20 ); // FORM + length + VPVL + float32 + Uint32
+
+		switch ( type ) {
+
+			case 'ISCL':
+				this.currentNode.scale = this.reader.getFloat32Array( 3 );
+				break;
+			case 'IPOS':
+				this.currentNode.position = this.reader.getFloat32Array( 3 );
+				break;
+			case 'IROT':
+				this.currentNode.rotation = this.reader.getFloat32Array( 3 );
+				break;
+			case 'IFAL':
+				this.currentNode.falloff = this.reader.getFloat32Array( 3 );
+				break;
+
+			case 'IBMP':
+				this.currentNode.amplitude = this.reader.getFloat32();
+				break;
+			case 'IUTD':
+				this.currentNode.uTiles = this.reader.getFloat32();
+				break;
+			case 'IVTD':
+				this.currentNode.vTiles = this.reader.getFloat32();
+				break;
+
+		}
+
+		this.reader.skip( 2 ); // unknown
+
+
+	},
+
+	// ENVL forms are currently ignored
+	parseEnvelope( length ) {
+
+		this.reader.skip( length - 4 ); // skipping  entirely for now
+
+	},
+
+	///
+	// CHUNK PARSING METHODS
+	///
+
+	// clips can either be defined inside a surface node, or at the top
+	// level and they have a different format in each case
+	parseClip( length ) {
+
+		var tag = this.reader.getIDTag();
+
+		// inside surface node
+		if ( tag === 'FORM' ) {
+
+			this.reader.skip( 16 );
+
+			this.currentNode.fileName = this.reader.getString();
+
+			return;
+
+		}
+
+		// otherwise top level
+		this.reader.setOffset( this.reader.offset - 4 );
+
+		this.currentFormEnd = this.reader.offset + length;
+		this.parentForm = this.currentForm;
+
+		this.reader.skip( 8 ); // unknown
+
+		var texture = {
+			index: this.reader.getUint32()
+		};
+		this.tree.textures.push( texture );
+		this.currentForm = texture;
+
+	},
+
+	parseClipLwo2( length ) {
+
+		var texture = {
+			index: this.reader.getUint32(),
+			fileName: ''
+		};
+
+		// seach STIL block
+		while ( true ) {
+
+			var tag = this.reader.getIDTag();
+			var n_length = this.reader.getUint16();
+			if ( tag === 'STIL' ) {
+
+				texture.fileName = this.reader.getString();
+				break;
 
 			}
 
-			this.debugger.node = 0;
-			this.debugger.nodeID = type;
-			this.debugger.log();
+			if ( n_length >= length ) {
 
-		},
-
-		setupForm( type, length ) {
-
-			if ( ! this.currentForm ) this.currentForm = this.currentNode;
-			this.currentFormEnd = this.reader.offset + length;
-			this.parentForm = this.currentForm;
-
-			if ( ! this.currentForm[ type ] ) {
-
-				this.currentForm[ type ] = {};
-				this.currentForm = this.currentForm[ type ];
-
-			} else {
-
-				// should never see this unless there's a bug in the reader
-				console.warn( 'LWOLoader: form already exists on parent: ', type, this.currentForm );
-				this.currentForm = this.currentForm[ type ];
+				break;
 
 			}
 
-		},
+		}
 
-		skipForm( length ) {
+		this.tree.textures.push( texture );
+		this.currentForm = texture;
+
+	},
+
+	parseImage() {
+
+		this.reader.skip( 8 ); // unknown
+		this.currentForm.fileName = this.reader.getString();
+
+	},
+
+	parseXVAL( type, length ) {
+
+		var endOffset = this.reader.offset + length - 4;
+		this.reader.skip( 8 );
+
+		this.currentForm[ type ] = this.reader.getFloat32();
+
+		this.reader.setOffset( endOffset ); // set end offset directly to skip optional envelope
+
+	},
+
+	parseXVAL3( type, length ) {
+
+		var endOffset = this.reader.offset + length - 4;
+		this.reader.skip( 8 );
+
+		this.currentForm[ type ] = {
+			x: this.reader.getFloat32(),
+			y: this.reader.getFloat32(),
+			z: this.reader.getFloat32(),
+		};
+
+		this.reader.setOffset( endOffset );
+
+	},
+
+	// Tags associated with an object
+	// OTAG { type[ID4], tag-string[S0] }
+	parseObjectTag() {
+
+		if ( ! this.tree.objectTags ) this.tree.objectTags = {};
+
+		this.tree.objectTags[ this.reader.getIDTag() ] = {
+			tagString: this.reader.getString()
+		};
+
+	},
+
+	// Signals the start of a new layer. All the data chunks which follow will be included in this layer until another layer chunk is encountered.
+	// LAYR: number[U2], flags[U2], pivot[VEC12], name[S0], parent[U2]
+	parseLayer( length ) {
+
+		var layer = {
+			number: this.reader.getUint16(),
+			flags: this.reader.getUint16(), // If the least significant bit of flags is set, the layer is hidden.
+			pivot: this.reader.getFloat32Array( 3 ), // Note: this seems to be superflous, as the geometry is translated when pivot is present
+			name: this.reader.getString(),
+		};
+
+		this.tree.layers.push( layer );
+		this.currentLayer = layer;
+
+		var parsedLength = 16 + stringOffset( this.currentLayer.name ); // index ( 2 ) + flags( 2 ) + pivot( 12 ) + stringlength
+
+		// if we have not reached then end of the layer block, there must be a parent defined
+		this.currentLayer.parent = ( parsedLength < length ) ? this.reader.getUint16() : - 1; // omitted or -1 for no parent
+
+	},
+
+	// VEC12 * ( F4 + F4 + F4 ) array of x,y,z vectors
+	// Converting from left to right handed coordinate system:
+	// x -> -x and switch material FrontSide -> BackSide
+	parsePoints( length ) {
+
+		this.currentPoints = [];
+		for ( var i = 0; i < length / 4; i += 3 ) {
+
+			// z -> -z to match three.js right handed coords
+			this.currentPoints.push( this.reader.getFloat32(), this.reader.getFloat32(), - this.reader.getFloat32() );
+
+		}
+
+	},
+
+	// parse VMAP or VMAD
+	// Associates a set of floating-point vectors with a set of points.
+	// VMAP: { type[ID4], dimension[U2], name[S0], ( vert[VX], value[F4] # dimension ) * }
+
+	// VMAD Associates a set of floating-point vectors with the vertices of specific polygons.
+	// Similar to VMAP UVs, but associates with polygon vertices rather than points
+	// to solve to problem of UV seams:  VMAD chunks are paired with VMAPs of the same name,
+	// if they exist. The vector values in the VMAD will then replace those in the
+	// corresponding VMAP, but only for calculations involving the specified polygons.
+	// VMAD { type[ID4], dimension[U2], name[S0], ( vert[VX], poly[VX], value[F4] # dimension ) * }
+	parseVertexMapping( length, discontinuous ) {
+
+		var finalOffset = this.reader.offset + length;
+
+		var channelName = this.reader.getString();
+
+		if ( this.reader.offset === finalOffset ) {
+
+			// then we are in a texture node and the VMAP chunk is just a reference to a UV channel name
+			this.currentForm.UVChannel = channelName;
+			return;
+
+		}
+
+		// otherwise reset to initial length and parse normal VMAP CHUNK
+		this.reader.setOffset( this.reader.offset - stringOffset( channelName ) );
+
+		var type = this.reader.getIDTag();
+
+		this.reader.getUint16(); // dimension
+		var name = this.reader.getString();
+
+		var remainingLength = length - 6 - stringOffset( name );
+
+		switch ( type ) {
+
+			case 'TXUV':
+				this.parseUVMapping( name, finalOffset, discontinuous );
+				break;
+			case 'MORF':
+			case 'SPOT':
+				this.parseMorphTargets( name, finalOffset, type ); // can't be discontinuous
+				break;
+			// unsupported VMAPs
+			case 'APSL':
+			case 'NORM':
+			case 'WGHT':
+			case 'MNVW':
+			case 'PICK':
+			case 'RGB ':
+			case 'RGBA':
+				this.reader.skip( remainingLength );
+				break;
+			default:
+				console.warn( 'LWOLoader: unknown vertex map type: ' + type );
+				this.reader.skip( remainingLength );
+
+		}
+
+	},
+
+	parseUVMapping( name, finalOffset, discontinuous ) {
+
+		var uvIndices = [];
+		var polyIndices = [];
+		var uvs = [];
+
+		while ( this.reader.offset < finalOffset ) {
+
+			uvIndices.push( this.reader.getVariableLengthIndex() );
+
+			if ( discontinuous ) polyIndices.push( this.reader.getVariableLengthIndex() );
+
+			uvs.push( this.reader.getFloat32(), this.reader.getFloat32() );
+
+		}
+
+		if ( discontinuous ) {
+
+			if ( ! this.currentLayer.discontinuousUVs ) this.currentLayer.discontinuousUVs = {};
+
+			this.currentLayer.discontinuousUVs[ name ] = {
+				uvIndices: uvIndices,
+				polyIndices: polyIndices,
+				uvs: uvs,
+			};
+
+		} else {
+
+			if ( ! this.currentLayer.uvs ) this.currentLayer.uvs = {};
+
+			this.currentLayer.uvs[ name ] = {
+				uvIndices: uvIndices,
+				uvs: uvs,
+			};
+
+		}
+
+	},
+
+	parseMorphTargets( name, finalOffset, type ) {
+
+		var indices = [];
+		var points = [];
+
+		type = ( type === 'MORF' ) ? 'relative' : 'absolute';
+
+		while ( this.reader.offset < finalOffset ) {
+
+			indices.push( this.reader.getVariableLengthIndex() );
+			// z -> -z to match three.js right handed coords
+			points.push( this.reader.getFloat32(), this.reader.getFloat32(), - this.reader.getFloat32() );
+
+		}
+
+		if ( ! this.currentLayer.morphTargets ) this.currentLayer.morphTargets = {};
+
+		this.currentLayer.morphTargets[ name ] = {
+			indices: indices,
+			points: points,
+			type: type,
+		};
+
+	},
+
+	// A list of polygons for the current layer.
+	// POLS { type[ID4], ( numvert+flags[U2], vert[VX] # numvert ) * }
+	parsePolygonList( length ) {
+
+		var finalOffset = this.reader.offset + length;
+		var type = this.reader.getIDTag();
+
+		var indices = [];
+
+		// hold a list of polygon sizes, to be split up later
+		var polygonDimensions = [];
+
+		while ( this.reader.offset < finalOffset ) {
+
+			var numverts = this.reader.getUint16();
+
+			//var flags = numverts & 64512; // 6 high order bits are flags - ignoring for now
+			numverts = numverts & 1023; // remaining ten low order bits are vertex num
+			polygonDimensions.push( numverts );
+
+			for ( var j = 0; j < numverts; j ++ ) indices.push( this.reader.getVariableLengthIndex() );
+
+		}
+
+		var geometryData = {
+			type: type,
+			vertexIndices: indices,
+			polygonDimensions: polygonDimensions,
+			points: this.currentPoints
+		};
+
+		// Note: assuming that all polys will be lines or points if the first is
+		if ( polygonDimensions[ 0 ] === 1 ) geometryData.type = 'points';
+		else if ( polygonDimensions[ 0 ] === 2 ) geometryData.type = 'lines';
+
+		this.currentLayer.geometry = geometryData;
+
+	},
+
+	// Lists the tag strings that can be associated with polygons by the PTAG chunk.
+	// TAGS { tag-string[S0] * }
+	parseTagStrings( length ) {
+
+		this.tree.tags = this.reader.getStringArray( length );
+
+	},
+
+	// Associates tags of a given type with polygons in the most recent POLS chunk.
+	// PTAG { type[ID4], ( poly[VX], tag[U2] ) * }
+	parsePolygonTagMapping( length ) {
+
+		var finalOffset = this.reader.offset + length;
+		var type = this.reader.getIDTag();
+		if ( type === 'SURF' ) this.parseMaterialIndices( finalOffset );
+		else { //PART, SMGP, COLR not supported
 
 			this.reader.skip( length - 4 );
 
-		},
+		}
 
-		parseUnknownForm( type, length ) {
+	},
 
-			console.warn( 'LWOLoader: unknown FORM encountered: ' + type, length );
-			printBuffer( this.reader.dv.buffer, this.reader.offset, length - 4 );
-			this.reader.skip( length - 4 );
+	parseMaterialIndices( finalOffset ) {
 
-		},
+		// array holds polygon index followed by material index
+		this.currentLayer.geometry.materialIndices = [];
 
-		parseSurfaceForm( length ) {
+		while ( this.reader.offset < finalOffset ) {
 
-			this.reader.skip( 8 ); // unknown Uint32 x2
+			var polygonIndex = this.reader.getVariableLengthIndex();
+			var materialIndex = this.reader.getUint16();
 
-			var name = this.reader.getString();
-			var surface = {
-				attributes: {},
-				// LWO2 style non-node attributes will go here
-				connections: {},
-				name: name,
-				inputName: name,
-				nodes: {},
-				source: this.reader.getString()
-			};
-			this.tree.materials[ name ] = surface;
-			this.currentSurface = surface;
-			this.parentForm = this.tree.materials;
-			this.currentForm = surface;
-			this.currentFormEnd = this.reader.offset + length;
-
-		},
-
-		parseSurfaceLwo2( length ) {
-
-			var name = this.reader.getString();
-			var surface = {
-				attributes: {},
-				// LWO2 style non-node attributes will go here
-				connections: {},
-				name: name,
-				nodes: {},
-				source: this.reader.getString()
-			};
-			this.tree.materials[ name ] = surface;
-			this.currentSurface = surface;
-			this.parentForm = this.tree.materials;
-			this.currentForm = surface;
-			this.currentFormEnd = this.reader.offset + length;
-
-		},
-
-		parseSubNode( length ) {
-
-			// parse the NRNM CHUNK of the subnode FORM to get
-			// a meaningful name for the subNode
-			// some subnodes can be renamed, but Input and Surface cannot
-			this.reader.skip( 8 ); // NRNM + length
-
-			var name = this.reader.getString();
-			var node = {
-				name: name
-			};
-			this.currentForm = node;
-			this.currentNode = node;
-			this.currentFormEnd = this.reader.offset + length;
-
-		},
-
-		// collect attributes from all nodes at the top level of a surface
-		parseConnections( length ) {
-
-			this.currentFormEnd = this.reader.offset + length;
-			this.parentForm = this.currentForm;
-			this.currentForm = this.currentSurface.connections;
-
-		},
-
-		// surface node attribute data, e.g. specular, roughness etc
-		parseEntryForm( length ) {
-
-			this.reader.skip( 8 ); // NAME + length
-
-			var name = this.reader.getString();
-			this.currentForm = this.currentNode.attributes;
-			this.setupForm( name, length );
-
-		},
-
-		// parse values from material - doesn't match up to other LWO3 data types
-		// sub form of entry form
-		parseValueForm() {
-
-			this.reader.skip( 8 ); // unknown + length
-
-			var valueType = this.reader.getString();
-
-			if ( valueType === 'double' ) {
-
-				this.currentForm.value = this.reader.getUint64();
-
-			} else if ( valueType === 'int' ) {
-
-				this.currentForm.value = this.reader.getUint32();
-
-			} else if ( valueType === 'vparam' ) {
-
-				this.reader.skip( 24 );
-				this.currentForm.value = this.reader.getFloat64();
-
-			} else if ( valueType === 'vparam3' ) {
-
-				this.reader.skip( 24 );
-				this.currentForm.value = this.reader.getFloat64Array( 3 );
-
-			}
-
-		},
-
-		// holds various data about texture node image state
-		// Data other thanmipMapLevel unknown
-		parseImageStateForm() {
-
-			this.reader.skip( 8 ); // unknown
-
-			this.currentForm.mipMapLevel = this.reader.getFloat32();
-
-		},
-
-		// LWO2 style image data node OR LWO3 textures defined at top level in editor (not as SURF node)
-		parseImageMap( length ) {
-
-			this.currentFormEnd = this.reader.offset + length;
-			this.parentForm = this.currentForm;
-			if ( ! this.currentForm.maps ) this.currentForm.maps = [];
-			var map = {};
-			this.currentForm.maps.push( map );
-			this.currentForm = map;
-			this.reader.skip( 10 ); // unknown, could be an issue if it contains a VX
-
-		},
-
-		parseTextureNodeAttribute( type ) {
-
-			this.reader.skip( 28 ); // FORM + length + VPRM + unknown + Uint32 x2 + float32
-
-			this.reader.skip( 20 ); // FORM + length + VPVL + float32 + Uint32
-
-			switch ( type ) {
-
-				case 'ISCL':
-					this.currentNode.scale = this.reader.getFloat32Array( 3 );
-					break;
-
-				case 'IPOS':
-					this.currentNode.position = this.reader.getFloat32Array( 3 );
-					break;
-
-				case 'IROT':
-					this.currentNode.rotation = this.reader.getFloat32Array( 3 );
-					break;
-
-				case 'IFAL':
-					this.currentNode.falloff = this.reader.getFloat32Array( 3 );
-					break;
-
-				case 'IBMP':
-					this.currentNode.amplitude = this.reader.getFloat32();
-					break;
-
-				case 'IUTD':
-					this.currentNode.uTiles = this.reader.getFloat32();
-					break;
-
-				case 'IVTD':
-					this.currentNode.vTiles = this.reader.getFloat32();
-					break;
-
-			}
-
-			this.reader.skip( 2 ); // unknown
-
-		},
-
-		// ENVL forms are currently ignored
-		parseEnvelope( length ) {
-
-			this.reader.skip( length - 4 ); // skipping  entirely for now
-
-		},
-
-		///
-		// CHUNK PARSING METHODS
-		///
-		// clips can either be defined inside a surface node, or at the top
-		// level and they have a different format in each case
-		parseClip( length ) {
-
-			var tag = this.reader.getIDTag(); // inside surface node
-
-			if ( tag === 'FORM' ) {
-
-				this.reader.skip( 16 );
-				this.currentNode.fileName = this.reader.getString();
-				return;
-
-			} // otherwise top level
-
-
-			this.reader.setOffset( this.reader.offset - 4 );
-			this.currentFormEnd = this.reader.offset + length;
-			this.parentForm = this.currentForm;
-			this.reader.skip( 8 ); // unknown
-
-			var texture = {
-				index: this.reader.getUint32()
-			};
-			this.tree.textures.push( texture );
-			this.currentForm = texture;
-
-		},
-
-		parseClipLwo2( length ) {
-
-			var texture = {
-				index: this.reader.getUint32(),
-				fileName: ''
-			}; // seach STIL block
-
-			while ( true ) {
-
-				var tag = this.reader.getIDTag();
-				var n_length = this.reader.getUint16();
-
-				if ( tag === 'STIL' ) {
-
-					texture.fileName = this.reader.getString();
-					break;
-
-				}
-
-				if ( n_length >= length ) {
-
-					break;
-
-				}
-
-			}
-
-			this.tree.textures.push( texture );
-			this.currentForm = texture;
-
-		},
-
-		parseImage() {
-
-			this.reader.skip( 8 ); // unknown
-
-			this.currentForm.fileName = this.reader.getString();
-
-		},
-
-		parseXVAL( type, length ) {
-
-			var endOffset = this.reader.offset + length - 4;
-			this.reader.skip( 8 );
-			this.currentForm[ type ] = this.reader.getFloat32();
-			this.reader.setOffset( endOffset ); // set end offset directly to skip optional envelope
-
-		},
-
-		parseXVAL3( type, length ) {
-
-			var endOffset = this.reader.offset + length - 4;
-			this.reader.skip( 8 );
-			this.currentForm[ type ] = {
-				x: this.reader.getFloat32(),
-				y: this.reader.getFloat32(),
-				z: this.reader.getFloat32()
-			};
-			this.reader.setOffset( endOffset );
-
-		},
-
-		// Tags associated with an object
-		// OTAG { type[ID4], tag-string[S0] }
-		parseObjectTag() {
-
-			if ( ! this.tree.objectTags ) this.tree.objectTags = {};
-			this.tree.objectTags[ this.reader.getIDTag() ] = {
-				tagString: this.reader.getString()
-			};
-
-		},
-
-		// Signals the start of a new layer. All the data chunks which follow will be included in this layer until another layer chunk is encountered.
-		// LAYR: number[U2], flags[U2], pivot[VEC12], name[S0], parent[U2]
-		parseLayer( length ) {
-
-			var layer = {
-				number: this.reader.getUint16(),
-				flags: this.reader.getUint16(),
-				// If the least significant bit of flags is set, the layer is hidden.
-				pivot: this.reader.getFloat32Array( 3 ),
-				// Note: this seems to be superflous, as the geometry is translated when pivot is present
-				name: this.reader.getString()
-			};
-			this.tree.layers.push( layer );
-			this.currentLayer = layer;
-			var parsedLength = 16 + stringOffset( this.currentLayer.name ); // index ( 2 ) + flags( 2 ) + pivot( 12 ) + stringlength
-			// if we have not reached then end of the layer block, there must be a parent defined
-
-			this.currentLayer.parent = parsedLength < length ? this.reader.getUint16() : - 1; // omitted or -1 for no parent
-
-		},
-
-		// VEC12 * ( F4 + F4 + F4 ) array of x,y,z vectors
-		// Converting from left to right handed coordinate system:
-		// x -> -x and switch material FrontSide -> BackSide
-		parsePoints( length ) {
-
-			this.currentPoints = [];
-
-			for ( var i = 0; i < length / 4; i += 3 ) {
-
-				// z -> -z to match three.js right handed coords
-				this.currentPoints.push( this.reader.getFloat32(), this.reader.getFloat32(), - this.reader.getFloat32() );
-
-			}
-
-		},
-
-		// parse VMAP or VMAD
-		// Associates a set of floating-point vectors with a set of points.
-		// VMAP: { type[ID4], dimension[U2], name[S0], ( vert[VX], value[F4] # dimension ) * }
-		// VMAD Associates a set of floating-point vectors with the vertices of specific polygons.
-		// Similar to VMAP UVs, but associates with polygon vertices rather than points
-		// to solve to problem of UV seams:  VMAD chunks are paired with VMAPs of the same name,
-		// if they exist. The vector values in the VMAD will then replace those in the
-		// corresponding VMAP, but only for calculations involving the specified polygons.
-		// VMAD { type[ID4], dimension[U2], name[S0], ( vert[VX], poly[VX], value[F4] # dimension ) * }
-		parseVertexMapping( length, discontinuous ) {
-
-			var finalOffset = this.reader.offset + length;
-			var channelName = this.reader.getString();
-
-			if ( this.reader.offset === finalOffset ) {
-
-				// then we are in a texture node and the VMAP chunk is just a reference to a UV channel name
-				this.currentForm.UVChannel = channelName;
-				return;
-
-			} // otherwise reset to initial length and parse normal VMAP CHUNK
-
-
-			this.reader.setOffset( this.reader.offset - stringOffset( channelName ) );
-			var type = this.reader.getIDTag();
-			this.reader.getUint16(); // dimension
-
-			var name = this.reader.getString();
-			var remainingLength = length - 6 - stringOffset( name );
-
-			switch ( type ) {
-
-				case 'TXUV':
-					this.parseUVMapping( name, finalOffset, discontinuous );
-					break;
-
-				case 'MORF':
-				case 'SPOT':
-					this.parseMorphTargets( name, finalOffset, type ); // can't be discontinuous
-
-					break;
-					// unsupported VMAPs
-
-				case 'APSL':
-				case 'NORM':
-				case 'WGHT':
-				case 'MNVW':
-				case 'PICK':
-				case 'RGB ':
-				case 'RGBA':
-					this.reader.skip( remainingLength );
-					break;
-
-				default:
-					console.warn( 'LWOLoader: unknown vertex map type: ' + type );
-					this.reader.skip( remainingLength );
-
-			}
-
-		},
-
-		parseUVMapping( name, finalOffset, discontinuous ) {
-
-			var uvIndices = [];
-			var polyIndices = [];
-			var uvs = [];
-
-			while ( this.reader.offset < finalOffset ) {
-
-				uvIndices.push( this.reader.getVariableLengthIndex() );
-				if ( discontinuous ) polyIndices.push( this.reader.getVariableLengthIndex() );
-				uvs.push( this.reader.getFloat32(), this.reader.getFloat32() );
-
-			}
-
-			if ( discontinuous ) {
-
-				if ( ! this.currentLayer.discontinuousUVs ) this.currentLayer.discontinuousUVs = {};
-				this.currentLayer.discontinuousUVs[ name ] = {
-					uvIndices: uvIndices,
-					polyIndices: polyIndices,
-					uvs: uvs
-				};
-
-			} else {
-
-				if ( ! this.currentLayer.uvs ) this.currentLayer.uvs = {};
-				this.currentLayer.uvs[ name ] = {
-					uvIndices: uvIndices,
-					uvs: uvs
-				};
-
-			}
-
-		},
-
-		parseMorphTargets( name, finalOffset, type ) {
-
-			var indices = [];
-			var points = [];
-			type = type === 'MORF' ? 'relative' : 'absolute';
-
-			while ( this.reader.offset < finalOffset ) {
-
-				indices.push( this.reader.getVariableLengthIndex() ); // z -> -z to match three.js right handed coords
-
-				points.push( this.reader.getFloat32(), this.reader.getFloat32(), - this.reader.getFloat32() );
-
-			}
-
-			if ( ! this.currentLayer.morphTargets ) this.currentLayer.morphTargets = {};
-			this.currentLayer.morphTargets[ name ] = {
-				indices: indices,
-				points: points,
-				type: type
-			};
-
-		},
-
-		// A list of polygons for the current layer.
-		// POLS { type[ID4], ( numvert+flags[U2], vert[VX] # numvert ) * }
-		parsePolygonList( length ) {
-
-			var finalOffset = this.reader.offset + length;
-			var type = this.reader.getIDTag();
-			var indices = []; // hold a list of polygon sizes, to be split up later
-
-			var polygonDimensions = [];
-
-			while ( this.reader.offset < finalOffset ) {
-
-				var numverts = this.reader.getUint16(); //var flags = numverts & 64512; // 6 high order bits are flags - ignoring for now
-
-				numverts = numverts & 1023; // remaining ten low order bits are vertex num
-
-				polygonDimensions.push( numverts );
-
-				for ( var j = 0; j < numverts; j ++ ) indices.push( this.reader.getVariableLengthIndex() );
-
-			}
-
-			var geometryData = {
-				type: type,
-				vertexIndices: indices,
-				polygonDimensions: polygonDimensions,
-				points: this.currentPoints
-			}; // Note: assuming that all polys will be lines or points if the first is
-
-			if ( polygonDimensions[ 0 ] === 1 ) geometryData.type = 'points'; else if ( polygonDimensions[ 0 ] === 2 ) geometryData.type = 'lines';
-			this.currentLayer.geometry = geometryData;
-
-		},
-
-		// Lists the tag strings that can be associated with polygons by the PTAG chunk.
-		// TAGS { tag-string[S0] * }
-		parseTagStrings( length ) {
-
-			this.tree.tags = this.reader.getStringArray( length );
-
-		},
-
-		// Associates tags of a given type with polygons in the most recent POLS chunk.
-		// PTAG { type[ID4], ( poly[VX], tag[U2] ) * }
-		parsePolygonTagMapping( length ) {
-
-			var finalOffset = this.reader.offset + length;
-			var type = this.reader.getIDTag();
-			if ( type === 'SURF' ) this.parseMaterialIndices( finalOffset ); else {
-
-				//PART, SMGP, COLR not supported
-				this.reader.skip( length - 4 );
-
-			}
-
-		},
-
-		parseMaterialIndices( finalOffset ) {
-
-			// array holds polygon index followed by material index
-			this.currentLayer.geometry.materialIndices = [];
-
-			while ( this.reader.offset < finalOffset ) {
-
-				var polygonIndex = this.reader.getVariableLengthIndex();
-				var materialIndex = this.reader.getUint16();
-				this.currentLayer.geometry.materialIndices.push( polygonIndex, materialIndex );
-
-			}
-
-		},
-
-		parseUnknownCHUNK( blockID, length ) {
-
-			console.warn( 'LWOLoader: unknown chunk type: ' + blockID + ' length: ' + length ); // print the chunk plus some bytes padding either side
-			// printBuffer( this.reader.dv.buffer, this.reader.offset - 20, length + 40 );
-
-			var data = this.reader.getString( length );
-			this.currentForm[ blockID ] = data;
+			this.currentLayer.geometry.materialIndices.push( polygonIndex, materialIndex );
 
 		}
 
-	};
+	},
 
-	function DataViewReader( buffer ) {
+	parseUnknownCHUNK( blockID, length ) {
 
-		this.dv = new DataView( buffer );
-		this.offset = 0;
+		console.warn( 'LWOLoader: unknown chunk type: ' + blockID + ' length: ' + length );
+
+		// print the chunk plus some bytes padding either side
+		// printBuffer( this.reader.dv.buffer, this.reader.offset - 20, length + 40 );
+
+		var data = this.reader.getString( length );
+
+		this.currentForm[ blockID ] = data;
 
 	}
 
-	DataViewReader.prototype = {
-		constructor: DataViewReader,
-		size: function () {
+};
 
-			return this.dv.buffer.byteLength;
+function DataViewReader( buffer ) {
 
-		},
+	this.dv = new DataView( buffer );
+	this.offset = 0;
 
-		setOffset( offset ) {
+}
 
-			if ( offset > 0 && offset < this.dv.buffer.byteLength ) {
+DataViewReader.prototype = {
 
-				this.offset = offset;
+	constructor: DataViewReader,
 
-			} else {
+	size: function () {
 
-				console.error( 'LWOLoader: invalid buffer offset' );
+		return this.dv.buffer.byteLength;
 
-			}
+	},
 
-		},
+	setOffset( offset ) {
 
-		endOfFile: function () {
+		if ( offset > 0 && offset < this.dv.buffer.byteLength ) {
 
-			if ( this.offset >= this.size() ) return true;
-			return false;
+			this.offset = offset;
 
-		},
-		skip: function ( length ) {
+		} else {
 
-			this.offset += length;
+			console.error( 'LWOLoader: invalid buffer offset' );
 
-		},
-		getUint8: function () {
+		}
 
-			var value = this.dv.getUint8( this.offset );
-			this.offset += 1;
-			return value;
+	},
 
-		},
-		getUint16: function () {
+	endOfFile: function () {
 
-			var value = this.dv.getUint16( this.offset );
-			this.offset += 2;
-			return value;
+		if ( this.offset >= this.size() ) return true;
+		return false;
 
-		},
-		getInt32: function () {
+	},
 
-			var value = this.dv.getInt32( this.offset, false );
-			this.offset += 4;
-			return value;
+	skip: function ( length ) {
 
-		},
-		getUint32: function () {
+		this.offset += length;
 
-			var value = this.dv.getUint32( this.offset, false );
-			this.offset += 4;
-			return value;
+	},
 
-		},
-		getUint64: function () {
+	getUint8: function () {
 
-			var low, high;
-			high = this.getUint32();
-			low = this.getUint32();
-			return high * 0x100000000 + low;
+		var value = this.dv.getUint8( this.offset );
+		this.offset += 1;
+		return value;
 
-		},
-		getFloat32: function () {
+	},
 
-			var value = this.dv.getFloat32( this.offset, false );
-			this.offset += 4;
-			return value;
+	getUint16: function () {
 
-		},
-		getFloat32Array: function ( size ) {
+		var value = this.dv.getUint16( this.offset );
+		this.offset += 2;
+		return value;
 
-			var a = [];
+	},
+
+	getInt32: function () {
+
+		var value = this.dv.getInt32( this.offset, false );
+		this.offset += 4;
+		return value;
+
+	},
+
+	getUint32: function () {
+
+		var value = this.dv.getUint32( this.offset, false );
+		this.offset += 4;
+		return value;
+
+	},
+
+	getUint64: function () {
+
+		var low, high;
+
+		high = this.getUint32();
+		low = this.getUint32();
+		return high * 0x100000000 + low;
+
+	},
+
+	getFloat32: function () {
+
+		var value = this.dv.getFloat32( this.offset, false );
+		this.offset += 4;
+		return value;
+
+	},
+
+	getFloat32Array: function ( size ) {
+
+		var a = [];
+
+		for ( var i = 0; i < size; i ++ ) {
+
+			a.push( this.getFloat32() );
+
+		}
+
+		return a;
+
+	},
+
+	getFloat64: function () {
+
+		var value = this.dv.getFloat64( this.offset, this.littleEndian );
+		this.offset += 8;
+		return value;
+
+	},
+
+	getFloat64Array: function ( size ) {
+
+		var a = [];
+
+		for ( var i = 0; i < size; i ++ ) {
+
+			a.push( this.getFloat64() );
+
+		}
+
+		return a;
+
+	},
+
+	// get variable-length index data type
+	// VX ::= index[U2] | (index + 0xFF000000)[U4]
+	// If the index value is less than 65,280 (0xFF00),then VX === U2
+	// otherwise VX === U4 with bits 24-31 set
+	// When reading an index, if the first byte encountered is 255 (0xFF), then
+	// the four-byte form is being used and the first byte should be discarded or masked out.
+	getVariableLengthIndex() {
+
+		var firstByte = this.getUint8();
+
+		if ( firstByte === 255 ) {
+
+			return this.getUint8() * 65536 + this.getUint8() * 256 + this.getUint8();
+
+		}
+
+		return firstByte * 256 + this.getUint8();
+
+	},
+
+	// An ID tag is a sequence of 4 bytes containing 7-bit ASCII values
+	getIDTag() {
+
+		return this.getString( 4 );
+
+	},
+
+	getString: function ( size ) {
+
+		if ( size === 0 ) return;
+
+		// note: safari 9 doesn't support Uint8Array.indexOf; create intermediate array instead
+		var a = [];
+
+		if ( size ) {
 
 			for ( var i = 0; i < size; i ++ ) {
 
-				a.push( this.getFloat32() );
+				a[ i ] = this.getUint8();
 
 			}
 
-			return a;
+		} else {
 
-		},
-		getFloat64: function () {
+			var currentChar;
+			var len = 0;
 
-			var value = this.dv.getFloat64( this.offset, this.littleEndian );
-			this.offset += 8;
-			return value;
+			while ( currentChar !== 0 ) {
 
-		},
-		getFloat64Array: function ( size ) {
-
-			var a = [];
-
-			for ( var i = 0; i < size; i ++ ) {
-
-				a.push( this.getFloat64() );
+				currentChar = this.getUint8();
+				if ( currentChar !== 0 ) a.push( currentChar );
+				len ++;
 
 			}
 
-			return a;
-
-		},
-
-		// get variable-length index data type
-		// VX ::= index[U2] | (index + 0xFF000000)[U4]
-		// If the index value is less than 65,280 (0xFF00),then VX === U2
-		// otherwise VX === U4 with bits 24-31 set
-		// When reading an index, if the first byte encountered is 255 (0xFF), then
-		// the four-byte form is being used and the first byte should be discarded or masked out.
-		getVariableLengthIndex() {
-
-			var firstByte = this.getUint8();
-
-			if ( firstByte === 255 ) {
-
-				return this.getUint8() * 65536 + this.getUint8() * 256 + this.getUint8();
-
-			}
-
-			return firstByte * 256 + this.getUint8();
-
-		},
-
-		// An ID tag is a sequence of 4 bytes containing 7-bit ASCII values
-		getIDTag() {
-
-			return this.getString( 4 );
-
-		},
-
-		getString: function ( size ) {
-
-			if ( size === 0 ) return; // note: safari 9 doesn't support Uint8Array.indexOf; create intermediate array instead
-
-			var a = [];
-
-			if ( size ) {
-
-				for ( var i = 0; i < size; i ++ ) {
-
-					a[ i ] = this.getUint8();
-
-				}
-
-			} else {
-
-				var currentChar;
-				var len = 0;
-
-				while ( currentChar !== 0 ) {
-
-					currentChar = this.getUint8();
-					if ( currentChar !== 0 ) a.push( currentChar );
-					len ++;
-
-				}
-
-				if ( ! isEven( len + 1 ) ) this.getUint8(); // if string with terminating nullbyte is uneven, extra nullbyte is added
-
-			}
-
-			return THREE.LoaderUtils.decodeText( new Uint8Array( a ) );
-
-		},
-		getStringArray: function ( size ) {
-
-			var a = this.getString( size );
-			a = a.split( '\0' );
-			return a.filter( Boolean ); // return array with any empty strings removed
+			if ( ! isEven( len + 1 ) ) this.getUint8(); // if string with terminating nullbyte is uneven, extra nullbyte is added
 
 		}
-	}; // ************** DEBUGGER  **************
 
-	function Debugger() {
+		return LoaderUtils.decodeText( new Uint8Array( a ) );
 
-		this.active = false;
-		this.depth = 0;
-		this.formList = [];
+	},
+
+	getStringArray: function ( size ) {
+
+		var a = this.getString( size );
+		a = a.split( '\0' );
+
+		return a.filter( Boolean ); // return array with any empty strings removed
 
 	}
 
-	Debugger.prototype = {
-		constructor: Debugger,
-		enable: function () {
+};
 
-			this.active = true;
+// ************** DEBUGGER  **************
 
-		},
-		log: function () {
+function Debugger( ) {
 
-			if ( ! this.active ) return;
-			var nodeType;
+	this.active = false;
+	this.depth = 0;
+	this.formList = [];
 
-			switch ( this.node ) {
+}
 
-				case 0:
-					nodeType = 'FORM';
-					break;
+Debugger.prototype = {
 
-				case 1:
-					nodeType = 'CHK';
-					break;
+	constructor: Debugger,
 
-				case 2:
-					nodeType = 'S-CHK';
-					break;
+	enable: function () {
 
-			}
+		this.active = true;
 
-			console.log( '| '.repeat( this.depth ) + nodeType, this.nodeID, `( ${this.offset} ) -> ( ${this.dataOffset + this.length} )`, this.node == 0 ? ' {' : '', this.skipped ? 'SKIPPED' : '', this.node == 0 && this.skipped ? '}' : '' );
+	},
 
-			if ( this.node == 0 && ! this.skipped ) {
+	log: function () {
 
-				this.depth += 1;
-				this.formList.push( this.dataOffset + this.length );
+		if ( ! this.active ) return;
 
-			}
+		var nodeType;
 
-			this.skipped = false;
+		switch ( this.node ) {
 
-		},
-		closeForms: function () {
+			case 0:
+				nodeType = 'FORM';
+				break;
 
-			if ( ! this.active ) return;
+			case 1:
+				nodeType = 'CHK';
+				break;
 
-			for ( var i = this.formList.length - 1; i >= 0; i -- ) {
+			case 2:
+				nodeType = 'S-CHK';
+				break;
 
-				if ( this.offset >= this.formList[ i ] ) {
+		}
 
-					this.depth -= 1;
-					console.log( '| '.repeat( this.depth ) + '}' );
-					this.formList.splice( - 1, 1 );
+		console.log(
+			'| '.repeat( this.depth ) +
+			nodeType,
+			this.nodeID,
+			`( ${this.offset} ) -> ( ${this.dataOffset + this.length} )`,
+			( ( this.node == 0 ) ? ' {' : '' ),
+			( ( this.skipped ) ? 'SKIPPED' : '' ),
+			( ( this.node == 0 && this.skipped ) ? '}' : '' )
+		);
 
-				}
+		if ( this.node == 0 && ! this.skipped ) {
+
+			this.depth += 1;
+			this.formList.push( this.dataOffset + this.length );
+
+		}
+
+		this.skipped = false;
+
+	},
+
+	closeForms: function () {
+
+		if ( ! this.active ) return;
+
+		for ( var i = this.formList.length - 1; i >= 0; i -- ) {
+
+			if ( this.offset >= this.formList[ i ] ) {
+
+				this.depth -= 1;
+				console.log( '| '.repeat( this.depth ) + '}' );
+				this.formList.splice( - 1, 1 );
 
 			}
 
 		}
-	}; // ************** UTILITY FUNCTIONS **************
-
-	function isEven( num ) {
-
-		return num % 2;
-
-	} // calculate the length of the string in the buffer
-	// this will be string.length + nullbyte + optional padbyte to make the length even
-
-
-	function stringOffset( string ) {
-
-		return string.length + 1 + ( isEven( string.length + 1 ) ? 1 : 0 );
-
-	} // for testing purposes, dump buffer to console
-	// printBuffer( this.reader.dv.buffer, this.reader.offset, length );
-
-
-	function printBuffer( buffer, from, to ) {
-
-		console.log( THREE.LoaderUtils.decodeText( new Uint8Array( buffer, from, to ) ) );
 
 	}
 
-	THREE.IFFParser = IFFParser;
+};
 
-} )();
+// ************** UTILITY FUNCTIONS **************
+
+function isEven( num ) {
+
+	return num % 2;
+
+}
+
+// calculate the length of the string in the buffer
+// this will be string.length + nullbyte + optional padbyte to make the length even
+function stringOffset( string ) {
+
+	return string.length + 1 + ( isEven( string.length + 1 ) ? 1 : 0 );
+
+}
+
+// for testing purposes, dump buffer to console
+// printBuffer( this.reader.dv.buffer, this.reader.offset, length );
+function printBuffer( buffer, from, to ) {
+
+	console.log( LoaderUtils.decodeText( new Uint8Array( buffer, from, to ) ) );
+
+}
+
+export { IFFParser };
