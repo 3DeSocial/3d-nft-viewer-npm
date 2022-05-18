@@ -176,7 +176,8 @@ class D3DAssetCreator extends D3DNFTViewer {
                     opts = {
                     ...targetSize,
                     ...opts};
-
+                    console.log('capture gif');
+                    console.log(opts);
                 that.captureRotatingGif(opts);
             }, false);    
         };
@@ -620,15 +621,13 @@ class D3DAssetCreator extends D3DNFTViewer {
     }
 
     rotatePreview = (i, angles, cameraDistance, rotationDirection) =>{
-        
-        if(parseInt(rotationDirection)===0){
-            return false;
-        };
-
-        let angle = ((2*Math.PI) / angles) * i;
+        let angle;
+       // console.log('rotatePreview: ', i, angles, cameraDistance, rotationDirection);
+        angle = ((2*Math.PI) / angles) * i;
         if(parseInt(rotationDirection)===1){
             angle = -(angle);
         };
+       
 
         this.camera.position.x = Math.sin(angle) * cameraDistance;
         this.camera.position.z = Math.cos(angle) * cameraDistance;
