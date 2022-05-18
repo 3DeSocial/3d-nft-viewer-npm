@@ -244,7 +244,8 @@ export class D3DLoaders {
                     controls: {
                         maxDistance:Infinity,
                         maxPolarAngle:Infinity
-                    }
+                    },
+                    useOwnHandlers: false
                 };
         
         this.config = {
