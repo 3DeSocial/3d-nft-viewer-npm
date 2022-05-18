@@ -1,6 +1,6 @@
 export const name = 'd3dntfviewer';
 import * as THREE from 'three';
-import D3DNFTViewer from './3dviewer.js';
+import D3DNFTViewer from './3dviewer.mjs';
 import gifshot from 'gifshot';
 import record from 'canvas-to-video';
 
