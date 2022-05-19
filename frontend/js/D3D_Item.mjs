@@ -1,5 +1,5 @@
 let THREE;
-
+import { VOXMesh } from "three/examples/jsm/loaders/VOXLoader.js";
 export default class Item {
 
     constructor(config){
@@ -156,6 +156,7 @@ export default class Item {
                     loadedItem = root.scene;
                 } else {
                     console.log('using root object');
+                    console.log(root);
                     loadedItem = root;
                 };
 
@@ -267,22 +268,40 @@ onErrorCallback = (e)=> {
                         material = new THREE.MeshLambertMaterial( { color: 0xff0000 } );
                         loadedItem = new THREE.Mesh( geometry, material );
                     break;
-                    default:
-                    console.log('BufferGeometry with extension: ',this.config.format);
-                    loadedItem = false;
-                    break;
+
                 };
                
                 return loadedItem;
             break;
-
+            case 'Scene':
+                return loadedItem;
+            break; 
             case 'Group':
                 return loadedItem;
-            break;            
+            break;   
+            case undefined:
+
+                switch(this.config.format){
+                    case 'vox':
+                    let scene = new THREE.Scene()
+                        for ( let i = 0; i < loadedItem.length; i ++ ) {
+
+                            const chunk = loadedItem[ i ];
+
+                            // displayPalette( chunk.palette );
+
+                            const mesh = new VOXMesh( chunk );
+                            mesh.scale.setScalar( 0.0015 );
+                            scene.add( mesh );
+
+                        };
+                        return scene;
+                    break;
+                }
+            break;
             default: 
                 console.log('unknown type: ',loadedType);
-                return false;
-            break;
+            return false;
         };
 
     }
