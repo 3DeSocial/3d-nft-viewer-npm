@@ -338,7 +338,7 @@ export class D3DLoaders {
            this.loadColliderEnvironment();
         };
         this.initCamera();
-        this.initRenderer();
+        this.initRenderer(parentDivEl);
         this.initLighting();
         this.initPlayer();
         this.initControls();
@@ -377,7 +377,7 @@ export class D3DLoaders {
         this.controls.update();
     }
 
-    initRenderer = () =>{
+    initRenderer = (el) =>{
         //Create a WebGLRenderer
         this.renderer = new THREE.WebGLRenderer({antialias: true,
                 alpha: true,
@@ -391,9 +391,14 @@ export class D3DLoaders {
 
         this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         this.renderer.setClearColor( 0x000000, 1 );
+        if(el){
+           el.appendChild(this.renderer.domElement);
+           el.querySelector('img').setAttribute('style', 'display: none');
+        } else {
+                        console.log('appending to body');
 
-        this.el.appendChild(this.renderer.domElement);
-
+            this.el.appendChild(this.renderer.domElement);
+        };
         this.pmremGenerator = new THREE.PMREMGenerator(this.renderer);
         this.pmremGenerator.compileEquirectangularShader();
 
@@ -1176,7 +1181,12 @@ console.log('added environment');
         };
         if(modelStatus!=='available'){
             let nftPostHash = el.getAttribute(this.config.nftDataAttr);
-            let url = '/'+this.config.nftsRoute+'/'+nftPostHash;
+            let url = '';
+            if(that.config.modelsRoute.indexOf('http')===-1){
+                url = '/'+this.config.nftsRoute+'/'+nftPostHash;
+            } else {
+                url = this.config.nftsRoute+'/'+nftPostHash;
+            };
             fetch(url,{ method: "post"})
             .then(response => response.json())
             .then((data)=>{ 
