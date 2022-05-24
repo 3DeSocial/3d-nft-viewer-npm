@@ -775,19 +775,22 @@ export class D3DLoaders {
     updateUI = (el, modelUrl) => {
 
         let linkCtr = this.config.linkCtrCls;
+            linkCtr = document.querySelector('.'+linkCtr);
+
         let linkView3D = this.createLinkView3D();
-        this.addClickListener3D(el, linkView3D, modelUrl);
+        this.addClickListener3D(linkCtr, linkView3D, modelUrl);
 
         let linkViewFull = this.createLinkFullScreen()
-        this.addClickListenerFullScreen(el, linkViewFull, modelUrl);
+        this.addClickListenerFullScreen(linkCtr, linkViewFull, modelUrl);
 
         let linkViewVR = this.createLinkVR()
-        this.addClickListenerVR(el, linkViewVR, modelUrl)
+        this.addClickListenerVR(linkCtr, linkViewVR, modelUrl)
 
-        var viewerEl = el;
-            viewerEl.appendChild(linkView3D);
-            viewerEl.appendChild(linkViewFull);
-            viewerEl.appendChild(linkViewVR);
+        var viewerEl = linkCtr;
+        viewerEl.innerHTML = '';
+        viewerEl.appendChild(linkView3D);
+        viewerEl.appendChild(linkViewFull);
+        viewerEl.appendChild(linkViewVR);
 
         el.setAttribute('model-status','available');
     }
@@ -843,8 +846,9 @@ export class D3DLoaders {
 
     addClickListener3D = (ctr, el, modelUrl) => {
         let that = this;
-        let targetEl = this.findElFrom(this.config.previewCtrCls, ctr);
-
+console.log('ctr', ctr,'this.config.previewCtrCls', this.config.previewCtrCls);        
+        let targetEl = document.querySelector('.'+this.config.previewCtrCls);
+console.log('targetEl', targetEl);
         //console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
@@ -854,7 +858,9 @@ export class D3DLoaders {
             let item = that.initItemForModel(modelUrl);
             that.mesh = item.model;
             let newPos = new THREE.Vector3(0,1.2,0);
-            item.place(newPos);
+            item.place(newPos).then((model,pos)=>{
+                that.resizeCanvas();
+            });
             el.setAttribute('style','display:none;');
             el.parentNode.getElementsByClassName('view-fullscreen-btn')[0].setAttribute('style','display:inline-block;');
             el.parentNode.getElementsByClassName('view-vr-btn')[0].setAttribute('style','display:inline-block;');
