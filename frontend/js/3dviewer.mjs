@@ -50,7 +50,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import Item from './D3D_Item.mjs';import Lighting from './D3D_Lighting.mjs';
-import {MeshBVH} from '3d-nft-viewer';
+import {MeshBVH, VRButton, VRControls} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, collider, visualizer, player, controls, geometries;
@@ -390,12 +390,12 @@ export class D3DLoaders {
 
         this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         this.renderer.setClearColor( 0x000000, 1 );
+        this.renderer.domElement.style.display = 'none';
+
         if(el){
            el.appendChild(this.renderer.domElement);
-           el.querySelector('img').setAttribute('style', 'display: none');
         } else {
-                        console.log('appending to body');
-
+            this.renderer.domElement.style.display = 'none';
             this.el.appendChild(this.renderer.domElement);
         };
         this.pmremGenerator = new THREE.PMREMGenerator(this.renderer);
@@ -403,9 +403,6 @@ export class D3DLoaders {
 
         this.renderer.domElement.style.width = '100%';
         this.renderer.domElement.style.height = '100%';     
-        console.log('show el: ',this.el);
-        this.el.setAttribute('style','display:inline-block;');
-        console.log('initRenderer: complete');
     }
 
 
@@ -845,10 +842,9 @@ export class D3DLoaders {
 
     addClickListener3D = (ctr, el, modelUrl) => {
         let that = this;
-console.log('ctr', ctr,'this.config.previewCtrCls', this.config.previewCtrCls);        
         let targetEl = document.querySelector('.'+this.config.previewCtrCls);
-console.log('targetEl', targetEl);
-        //console.log('adding listener for '+modelUrl);
+        let previewImg = targetEl.querySelector('img');
+        console.log('previewImg',previewImg);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
@@ -859,6 +855,8 @@ console.log('targetEl', targetEl);
             let newPos = new THREE.Vector3(0,1.2,0);
             item.place(newPos).then((model,pos)=>{
                 that.resizeCanvas();
+                previewImg.style.display = 'none';
+                this.renderer.domElement.style.display = 'inline-block';
             });
             el.setAttribute('style','display:none;');
             el.parentNode.getElementsByClassName('view-fullscreen-btn')[0].setAttribute('style','display:inline-block;');
@@ -872,10 +870,10 @@ console.log('targetEl', targetEl);
 
         // start animation / controls
         //this.parentDivEl.children[0].setAttribute('style','display:none;');                    
-        this.renderer.domElement.setAttribute('style','display:inline-block;');            
+      //  this.renderer.domElement.setAttribute('style','display:inline-block;');            
 
         //this.showOverlay();
-        //this.initVR();
+        this.initVR();
         this.animate();        
     }
 
