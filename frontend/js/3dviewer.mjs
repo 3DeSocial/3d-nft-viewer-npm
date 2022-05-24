@@ -49,9 +49,8 @@ import { XYZLoader } from "three/examples/jsm/loaders/XYZLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-
-import Item from './D3D_Item.mjs';
-import Lighting from './D3D_Lighting.mjs';
+import Item from './D3D_Item.mjs';import Lighting from './D3D_Lighting.mjs';
+import {MeshBVH} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, collider, visualizer, player, controls, geometries;
@@ -890,17 +889,14 @@ console.log('targetEl', targetEl);
     }
 
     initItem = (nftPostHashHex) =>{
-        console.log('initItem: '+nftPostHashHex);
-        console.log('nftsRoute: '+this.config.nftsRoute);
-        console.log('modelsRoute: '+this.config.modelsRoute);        
 
         return new D3D.Item({
             three: THREE,
             loader: this.loader,
             scene: this.scene,
-            height: this.config.height,
-            width: this.config.width,
-            depth: this.config.depth,
+            height: this.config.scaleModelToHeight,
+            width: this.config.scaleModelToWidth,
+            depth: this.config.scaleModelToDepth,
             nftPostHashHex: nftPostHashHex,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute
@@ -912,14 +908,14 @@ console.log('targetEl', targetEl);
     initItemForModel = (modelUrl) =>{
         let urlParts = modelUrl.split('.');
         let extension = urlParts[urlParts.length-1];
-        console.log('init item format ',extension);
+       
         this.loadedItem = new Item({
             three: THREE,
             loader: this.loader,
             scene: this.scene,
-            height: this.config.height,
-            width: this.config.width,
-            depth: this.config.depth,
+            height: this.config.scaleModelToHeight,
+            width: this.config.scaleModelToWidth,
+            depth: this.config.scaleModelToDepth,
             modelUrl: modelUrl,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
@@ -1105,20 +1101,6 @@ console.log('added environment');
 
         })
     }
-/*
-   addScenery = () =>{
-
-        const geometry = new THREE.PlaneGeometry( 20, 20  );
-        geometry.rotateX(-Math.PI * 0.5);
-        let texture = new THREE.TextureLoader().load('images/textures/asphalt.jpg' );
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set( 10, 10 );
-        const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
-        this.floorPlane = new THREE.Mesh( geometry, material );
-        this.scene.add( this.floorPlane );           
-
-    }*/
 
     removeFloor = () =>{
         if(this.sceneryMesh){
@@ -1250,7 +1232,7 @@ initPlayer = () => {
         // move the this.player
         //const angle = this.controls.getAzimuthalAngle(); // directio camera looking
         const angle = this.player.rotation.y;
-     console.log('x',this.player.rotation.x,'y',this.player.rotation.y,'z',this.player.rotation.z);
+    // console.log('x',this.player.rotation.x,'y',this.player.rotation.y,'z',this.player.rotation.z);
         if ( fwdPressed ) {
 
             //this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
