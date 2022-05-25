@@ -866,6 +866,61 @@ export class D3DLoaders {
         });     
     }
 
+    loadModel = (opts) =>{
+
+        let that = this;
+        return new Promise((resolve,reject)=>{
+
+            let hideElOnLoad = opts.hideElOnLoad;
+            let modelUrl = opts.modelUrl;
+            let containerId = opts.containerId;
+            let container = document.getElementById(containerId);
+            
+            that.initContainer(container);
+           
+            let item = that.initItemForModel(modelUrl);
+                that.mesh = item.model;
+            let newPos = new THREE.Vector3(0,1.2,0);
+            
+            item.place(newPos).then((model,pos)=>{
+                that.resizeCanvas();
+                let img = document.querySelector('#'+hideElOnLoad);
+                img.style.display = 'none';
+                this.renderer.domElement.style.display = 'inline-block';
+                resolve(item, model, pos);
+            });
+        });
+
+    }
+
+    loadNFT = () =>{
+        // load an item which is a minted nft
+        let that = this;
+        return new Promise((resolve,reject)=>{
+
+            let hideElOnLoad = opts.hideElOnLoad;
+            let nftPostHash = opts.nftPostHash;
+            let containerId = opts.containerId;
+            let container = document.getElementById(containerId);
+            
+            that.initContainer(container);
+           
+            let item = that.initItemForModel(modelUrl);
+                that.mesh = item.model;
+            let newPos = new THREE.Vector3(0,1.2,0);
+            
+            item.place(newPos).then((model,pos)=>{
+                that.resizeCanvas();
+                let img = document.querySelector('#'+hideElOnLoad);
+                img.style.display = 'none';
+                this.renderer.domElement.style.display = 'inline-block';
+                resolve(item, model, pos);
+            });
+        });
+
+
+    }
+
     start3D = () =>{
 
         // start animation / controls
