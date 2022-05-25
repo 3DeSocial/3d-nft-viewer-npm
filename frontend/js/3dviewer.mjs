@@ -893,7 +893,7 @@ export class D3DLoaders {
 
     }
 
-    loadNFT = () =>{
+    loadNFT = (opts) =>{
         // load an item which is a minted nft
         let that = this;
         return new Promise((resolve,reject)=>{
@@ -905,7 +905,7 @@ export class D3DLoaders {
             
             that.initContainer(container);
            
-            let item = that.initItemForModel(modelUrl);
+            let item = that.initItem(nftPostHash);
                 that.mesh = item.model;
             let newPos = new THREE.Vector3(0,1.2,0);
             
@@ -943,7 +943,7 @@ export class D3DLoaders {
 
     initItem = (nftPostHashHex) =>{
 
-        return new D3D.Item({
+        this.loadedItem = new Item({
             three: THREE,
             loader: this.loader,
             scene: this.scene,
@@ -954,7 +954,7 @@ export class D3DLoaders {
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute
         });
-
+        return this.loadedItem;
 
     }
 
