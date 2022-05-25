@@ -1,5 +1,8 @@
-export const name = 'D3D_VRControls';
+import * as THREE from 'three';
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
+import {XRControllerModelFactory} from '3d-nft-viewer';
+export const name = 'D3D_VRControls';
 class VRControls {
 
 	   
@@ -44,7 +47,7 @@ class VRControls {
         //controller2.addEventListener("selectend", onSelectEnd);
         this.scene.add(controller2);
 
-        var controllerModelFactory = new XRControllerModelFactory();
+        var controllerModelFactory = new XRControllerModelFactory(new GLTFLoader());
 
         let controllerGrip1 = this.renderer.xr.getControllerGrip(0);
         controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
@@ -277,29 +280,23 @@ console.log('moving left');
     }
 
     moveRight = (data) => {
-console.log('moving right');
         this.config.moveRight(data);
     }
 
     moveUp = (data) => {
-        console.log('moving up');
         this.config.moveUp(data);
     }
 
     moveDown = (data) => {
-console.log('moving down');
         this.config.moveDown();
         
     }
 
     rotateLeft = (data) => {
-console.log('rotate left');
         this.config.rotateLeft();
-
     }
 
     rotateRight = (data) => {
-console.log('rotate right');
         this.config.rotateRight();
     }
 

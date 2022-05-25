@@ -49,34 +49,39 @@ export default class Item {
     }
 
     placeModel = (pos) =>{
-
         let that = this;
+        return new Promise((resolve,reject)=>{
+            this.fetchModel(this.modelUrl)
+            .then((model)=>{
+                this.mesh = model;
+                let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh}});
+                document.body.dispatchEvent(loadedEvent);
+              //  that.setScale(model);
 
-        this.fetchModel(this.modelUrl)
-        .then((model)=>{
-            this.mesh = model;
-            let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh}});
-            document.body.dispatchEvent(loadedEvent);
-          //  that.setScale(model);
-
-         //   that.rotateItem();
-            that.addToScene(model);
-            that.positionItem(model, pos);
-            document.body.dispatchEvent(this.meshPlacedEvent);
-        }).catch((err=>{
-            console.log( err);
-        }))
+             //   that.rotateItem();
+                that.addToScene(model);
+                that.positionItem(model, pos);
+                document.body.dispatchEvent(this.meshPlacedEvent);
+                resolve(model, pos);
+            }).catch((err=>{
+                console.log( err);
+            }))
+        })
     
     }
 
     place = (pos) =>{
-
         let that = this;
 
-        this.fetchmodelUrl()
-        .then((modelUrl)=>{
-            that.modelUrl = modelUrl;
-            that.placeModel(pos);
+        return new Promise((resolve,reject)=>{
+            this.fetchModelUrl()
+            .then((modelUrl)=>{
+                that.modelUrl = modelUrl;
+                that.placeModel(pos)
+                .then((model, pos)=>{
+                    resolve(model, pos);
+                })
+            });
         });
     }
 
@@ -103,7 +108,7 @@ export default class Item {
 
     }
     
-    fetchmodelUrl = async() =>{
+    fetchModelUrl = async() =>{
         let that = this;
 
         return new Promise((resolve,reject)=>{
@@ -112,8 +117,8 @@ export default class Item {
                 console.log('config url: ',this.config.modelUrl);
                 resolve(this.config.modelUrl);
             } else {
-                let url = this.config.nftsRoute+that.config.nftPostHashHex;
-                    console.log('fetchmodelUrl from: '+url);
+                let url = this.config.nftsRoute+'/'+that.config.nftPostHashHex;
+                    console.log('fetchModelUrl from: '+url);
 
                 fetch(url,{ method: "post"})
                 .then(response => response.json())

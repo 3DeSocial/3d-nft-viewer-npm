@@ -5,7 +5,7 @@ import {
 	SphereGeometry,
 } from 'three';
 
-import { GLTFLoader } from 'https://unpkg.com/three@0.139.1/examples/jsm/loaders/GLTFLoader.js';
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 import {
 	Constants as MotionControllerConstants,

@@ -36,16 +36,6 @@ class D3DAssetCreator extends D3DNFTViewer {
         }
     }   
 
-    loadModel = (path, format)=>{
-        this.format = format;
-        this.setFormat(format);
-        let itemToEdit = this.initItemForModel(path, format);
-        let centerPos = new THREE.Vector3(0,-5,0);
-            itemToEdit.place(centerPos);
-        return itemToEdit;
-
-    }
-
     addButtonListeners = ()=>{
         this.addClearSceneListener();
         this.addScreenShotListener();

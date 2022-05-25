@@ -49,9 +49,8 @@ import { XYZLoader } from "three/examples/jsm/loaders/XYZLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-
-import Item from './D3D_Item.mjs';
-import Lighting from './D3D_Lighting.mjs';
+import Item from './D3D_Item.mjs';import Lighting from './D3D_Lighting.mjs';
+import {MeshBVH, VRButton, VRControls} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, collider, visualizer, player, controls, geometries;
@@ -391,12 +390,12 @@ export class D3DLoaders {
 
         this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         this.renderer.setClearColor( 0x000000, 1 );
+        this.renderer.domElement.style.display = 'none';
+
         if(el){
            el.appendChild(this.renderer.domElement);
-           el.querySelector('img').setAttribute('style', 'display: none');
         } else {
-                        console.log('appending to body');
-
+            this.renderer.domElement.style.display = 'none';
             this.el.appendChild(this.renderer.domElement);
         };
         this.pmremGenerator = new THREE.PMREMGenerator(this.renderer);
@@ -404,9 +403,6 @@ export class D3DLoaders {
 
         this.renderer.domElement.style.width = '100%';
         this.renderer.domElement.style.height = '100%';     
-        console.log('show el: ',this.el);
-        this.el.setAttribute('style','display:inline-block;');
-        console.log('initRenderer: complete');
     }
 
 
@@ -522,7 +518,7 @@ export class D3DLoaders {
         let skybox ='';
 
         const loader = new THREE.CubeTextureLoader();
-        let skyboxPath = this.config.skyboxPath+boxname+'/';
+        let skyboxPath = this.config.skyboxPath+'/'+boxname+'/';
         loader.setPath(skyboxPath);
 
         switch(boxname){
@@ -775,19 +771,22 @@ export class D3DLoaders {
     updateUI = (el, modelUrl) => {
 
         let linkCtr = this.config.linkCtrCls;
+            linkCtr = document.querySelector('.'+linkCtr);
+
         let linkView3D = this.createLinkView3D();
-        this.addClickListener3D(el, linkView3D, modelUrl);
+        this.addClickListener3D(linkCtr, linkView3D, modelUrl);
 
         let linkViewFull = this.createLinkFullScreen()
-        this.addClickListenerFullScreen(el, linkViewFull, modelUrl);
+        this.addClickListenerFullScreen(linkCtr, linkViewFull, modelUrl);
 
         let linkViewVR = this.createLinkVR()
-        this.addClickListenerVR(el, linkViewVR, modelUrl)
+        this.addClickListenerVR(linkCtr, linkViewVR, modelUrl)
 
-        var viewerEl = el;
-            viewerEl.appendChild(linkView3D);
-            viewerEl.appendChild(linkViewFull);
-            viewerEl.appendChild(linkViewVR);
+        var viewerEl = linkCtr;
+        viewerEl.innerHTML = '';
+        viewerEl.appendChild(linkView3D);
+        viewerEl.appendChild(linkViewFull);
+        viewerEl.appendChild(linkViewVR);
 
         el.setAttribute('model-status','available');
     }
@@ -843,9 +842,9 @@ export class D3DLoaders {
 
     addClickListener3D = (ctr, el, modelUrl) => {
         let that = this;
-        let targetEl = this.findElFrom(this.config.previewCtrCls, ctr);
-
-        //console.log('adding listener for '+modelUrl);
+        let targetEl = document.querySelector('.'+this.config.previewCtrCls);
+        let previewImg = targetEl.querySelector('img');
+        console.log('previewImg',previewImg);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
@@ -854,7 +853,11 @@ export class D3DLoaders {
             let item = that.initItemForModel(modelUrl);
             that.mesh = item.model;
             let newPos = new THREE.Vector3(0,1.2,0);
-            item.place(newPos);
+            item.place(newPos).then((model,pos)=>{
+                that.resizeCanvas();
+                previewImg.style.display = 'none';
+                this.renderer.domElement.style.display = 'inline-block';
+            });
             el.setAttribute('style','display:none;');
             el.parentNode.getElementsByClassName('view-fullscreen-btn')[0].setAttribute('style','display:inline-block;');
             el.parentNode.getElementsByClassName('view-vr-btn')[0].setAttribute('style','display:inline-block;');
@@ -863,14 +866,69 @@ export class D3DLoaders {
         });     
     }
 
+    loadModel = (opts) =>{
+
+        let that = this;
+        return new Promise((resolve,reject)=>{
+
+            let hideElOnLoad = opts.hideElOnLoad;
+            let modelUrl = opts.modelUrl;
+            let containerId = opts.containerId;
+            let container = document.getElementById(containerId);
+            
+            that.initContainer(container);
+           
+            let item = that.initItemForModel(modelUrl);
+                that.mesh = item.model;
+            let newPos = new THREE.Vector3(0,1.2,0);
+            
+            item.place(newPos).then((model,pos)=>{
+                that.resizeCanvas();
+                let img = document.querySelector('#'+hideElOnLoad);
+                img.style.display = 'none';
+                this.renderer.domElement.style.display = 'inline-block';
+                resolve(item, model, pos);
+            });
+        });
+
+    }
+
+    loadNFT = (opts) =>{
+        // load an item which is a minted nft
+        let that = this;
+        return new Promise((resolve,reject)=>{
+
+            let hideElOnLoad = opts.hideElOnLoad;
+            let nftPostHash = opts.nftPostHash;
+            let containerId = opts.containerId;
+            let container = document.getElementById(containerId);
+            
+            that.initContainer(container);
+           
+            let item = that.initItem(nftPostHash);
+                that.mesh = item.model;
+            let newPos = new THREE.Vector3(0,1.2,0);
+            
+            item.place(newPos).then((model,pos)=>{
+                that.resizeCanvas();
+                let img = document.querySelector('#'+hideElOnLoad);
+                img.style.display = 'none';
+                this.renderer.domElement.style.display = 'inline-block';
+                resolve(item, model, pos);
+            });
+        });
+
+
+    }
+
     start3D = () =>{
 
         // start animation / controls
         //this.parentDivEl.children[0].setAttribute('style','display:none;');                    
-        this.renderer.domElement.setAttribute('style','display:inline-block;');            
+      //  this.renderer.domElement.setAttribute('style','display:inline-block;');            
 
         //this.showOverlay();
-        //this.initVR();
+        this.initVR();
         this.animate();        
     }
 
@@ -884,36 +942,33 @@ export class D3DLoaders {
     }
 
     initItem = (nftPostHashHex) =>{
-        console.log('initItem: '+nftPostHashHex);
-        console.log('nftsRoute: '+this.config.nftsRoute);
-        console.log('modelsRoute: '+this.config.modelsRoute);        
 
-        return new D3D.Item({
+        this.loadedItem = new Item({
             three: THREE,
             loader: this.loader,
             scene: this.scene,
-            height: this.config.height,
-            width: this.config.width,
-            depth: this.config.depth,
+            height: this.config.scaleModelToHeight,
+            width: this.config.scaleModelToWidth,
+            depth: this.config.scaleModelToDepth,
             nftPostHashHex: nftPostHashHex,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute
         });
-
+        return this.loadedItem;
 
     }
 
     initItemForModel = (modelUrl) =>{
         let urlParts = modelUrl.split('.');
         let extension = urlParts[urlParts.length-1];
-        console.log('init item format ',extension);
+       
         this.loadedItem = new Item({
             three: THREE,
             loader: this.loader,
             scene: this.scene,
-            height: this.config.height,
-            width: this.config.width,
-            depth: this.config.depth,
+            height: this.config.scaleModelToHeight,
+            width: this.config.scaleModelToWidth,
+            depth: this.config.scaleModelToDepth,
             modelUrl: modelUrl,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
@@ -1099,20 +1154,6 @@ console.log('added environment');
 
         })
     }
-/*
-   addScenery = () =>{
-
-        const geometry = new THREE.PlaneGeometry( 20, 20  );
-        geometry.rotateX(-Math.PI * 0.5);
-        let texture = new THREE.TextureLoader().load('images/textures/asphalt.jpg' );
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set( 10, 10 );
-        const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
-        this.floorPlane = new THREE.Mesh( geometry, material );
-        this.scene.add( this.floorPlane );           
-
-    }*/
 
     removeFloor = () =>{
         if(this.sceneryMesh){
@@ -1244,7 +1285,7 @@ initPlayer = () => {
         // move the this.player
         //const angle = this.controls.getAzimuthalAngle(); // directio camera looking
         const angle = this.player.rotation.y;
-     console.log('x',this.player.rotation.x,'y',this.player.rotation.y,'z',this.player.rotation.z);
+    // console.log('x',this.player.rotation.x,'y',this.player.rotation.y,'z',this.player.rotation.z);
         if ( fwdPressed ) {
 
             //this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
