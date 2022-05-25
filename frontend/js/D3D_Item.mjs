@@ -117,7 +117,7 @@ export default class Item {
                 console.log('config url: ',this.config.modelUrl);
                 resolve(this.config.modelUrl);
             } else {
-                let url = this.config.nftsRoute+that.config.nftPostHashHex;
+                let url = this.config.nftsRoute+'/'+that.config.nftPostHashHex;
                     console.log('fetchModelUrl from: '+url);
 
                 fetch(url,{ method: "post"})

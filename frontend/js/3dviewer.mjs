@@ -518,7 +518,7 @@ export class D3DLoaders {
         let skybox ='';
 
         const loader = new THREE.CubeTextureLoader();
-        let skyboxPath = this.config.skyboxPath+boxname+'/';
+        let skyboxPath = this.config.skyboxPath+'/'+boxname+'/';
         loader.setPath(skyboxPath);
 
         switch(boxname){
