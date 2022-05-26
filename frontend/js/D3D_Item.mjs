@@ -51,16 +51,12 @@ export default class Item {
     placeModel = (pos) =>{
         let that = this;
         return new Promise((resolve,reject)=>{
-            this.fetchModel(this.modelUrl)
+            this.fetchModel(this.modelUrl, pos)
             .then((model)=>{
                 this.mesh = model;
                 let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh}});
                 document.body.dispatchEvent(loadedEvent);
-              //  that.setScale(model);
 
-             //   that.rotateItem();
-                that.addToScene(model);
-                that.positionItem(model, pos);
                 document.body.dispatchEvent(this.meshPlacedEvent);
                 resolve(model, pos);
             }).catch((err=>{
@@ -140,12 +136,12 @@ export default class Item {
         
     }
 
-    fetchModel = async(modelUrl) =>{
+    fetchModel = async(modelUrl, posVector) =>{
         
         let that = this;
-        let boxMesh = this.addContainerBoxToScene();
+        let boxMesh = this.addContainerBoxToScene(posVector);
         let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
-
+        let targetFloorYCoord = this.getFloorYCoord(posVector);
         return new Promise((resolve,reject)=>{
 
 
@@ -171,7 +167,8 @@ export default class Item {
                     return false;
                 };
 
-      /*      if(that.shouldBeCentered(root.scene.children)){
+
+              /* if(that.shouldBeCentered(root.scene.children)){
                     let h = that.getImportedObjectSize(model.scene);
                     let heightOffset = h/2;                    
                     root.scene.children[0].position.setX(0);
@@ -179,8 +176,8 @@ export default class Item {
                     root.scene.children[0].position.setY(heightOffset);                       
                     that.centerMeshInScene(model.scene);                
                 };
-*/
 
+*/
               
                  meshBounds = new THREE.Box3().setFromObject( obj3D );
                 
@@ -194,12 +191,16 @@ export default class Item {
                   z: Math.abs(sceneBounds.max.z - sceneBounds.min.z),
                 };   
 
+
+
+
                 // Calculate side lengths of glb-model bounding box
                 let lengthMeshBounds = {
                   x: Math.abs(meshBounds.max.x - meshBounds.min.x),
                   y: Math.abs(meshBounds.max.y - meshBounds.min.y),
                   z: Math.abs(meshBounds.max.z - meshBounds.min.z),
                 };
+                console.log('height before scale: ',lengthMeshBounds.y);
 
                 // Calculate length ratios
                 let lengthRatios = [
@@ -209,14 +210,31 @@ export default class Item {
                 ];
 
                 let minRatio = Math.min(...lengthRatios);
-                boxMesh.add(obj3D);
                 // Use smallest ratio to scale the model
                 if(obj3D.scale.set){
-                   obj3D.scale.set(minRatio, minRatio, minRatio);
+                    obj3D.scale.set(minRatio, minRatio, minRatio);
+                    obj3D.updateWorldMatrix();
                 };
-                obj3D.position.set(0,0,0);        
+                let newMeshBounds = new THREE.Box3().setFromObject( obj3D );
+
+                let newLengthMeshBounds = {
+                  x: Math.abs(newMeshBounds.max.x - newMeshBounds.min.x),
+                  y: Math.abs(newMeshBounds.max.y - newMeshBounds.min.y),
+                  z: Math.abs(newMeshBounds.max.z - newMeshBounds.min.z),
+                };
+
+                console.log('height after scale: ',newLengthMeshBounds.y);
+
+
+                this.postionMeshOnFLoor(obj3D, targetFloorYCoord, newLengthMeshBounds.y);
+                         
+               
+                this.scene.add(obj3D);
+               
+
+                console.log('obj3D.position',obj3D.position);
                 this.mesh = obj3D;
-                resolve(boxMesh);
+                resolve(obj3D);
             },
             this.onProgressCallback,
             this.onErrorCallback);
@@ -230,22 +248,55 @@ onErrorCallback = (e)=> {
     console.log('loading error');
     console.log(e);
 }
+    getFloorYCoord = (posVector) =>{
+        let boxmeshFloor = posVector.y-(this.config.height/2);
+        return boxmeshFloor;
+    }
 
-    addContainerBoxToScene = () =>{
+    postionMeshOnFLoor = (mesh, destY, scaledMeshHeight) =>{
+        let yOffset = scaledMeshHeight/2;
+        let y = destY + yOffset;
+        if(mesh.geometry){
+            mesh.geometry.center();
+        };        
+        if(mesh.children.length===1){
+            if(mesh.children[0].geometry){
+                mesh.children[0].geometry.center();
+            };
+            mesh.children[0].position.setX(0);
+            mesh.children[0].position.setY(0);
+            mesh.children[0].position.setZ(0);
+        };
+        mesh.position.setY(y);
+        console.log('set Object3D center position to ',y);
+
+    }
+
+    addPlaneAtPos = (posVector) =>{
+        var geo = new THREE.PlaneBufferGeometry(10, 10);
+        var mat = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
+        var plane = new THREE.Mesh(geo, mat);
+        plane.rotateX( - Math.PI / 2);
+        plane.position.copy(posVector);
+        this.scene.add(plane);
+
+    }
+
+    addContainerBoxToScene = (posVector) =>{
         const geometry = new THREE.BoxGeometry(this.config.width, this.config.height,this.config.depth);
         
         if(!this.config.color){
-            this.config.color = 0xfffff;
+            this.config.color = 0xff3333;
         };
         
         const material = new THREE.MeshPhongMaterial({
             color: this.config.color,
-            opacity: 0,
+            opacity: 0.5,
             transparent: true
         });
 
         let boxMesh = new THREE.Mesh( geometry, material );
-        this.scene.add(boxMesh);        
+        boxMesh.position.copy(posVector);
         return boxMesh;
     }
 

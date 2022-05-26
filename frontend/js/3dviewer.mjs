@@ -254,6 +254,7 @@ export class D3DLoaders {
             ...defaults,
             ...config
         };
+        this.containerInitialized = false;
         this.el = this.config.el;
         this.playerVelocity = new THREE.Vector3();
         this.upVector = new THREE.Vector3( 0, 1, 0 );
@@ -300,6 +301,12 @@ export class D3DLoaders {
         this.recursiveDestroy(this.scene,cb);
     }
 
+    clearMesh = (obj, cb) =>{
+        obj = this.loadedItem.mesh;
+        console.log('clearMesh: ',this.loadedItem.mesh);
+        this.recursiveDestroy(obj,cb);
+    }
+
     recursiveDestroy = (obj, cb) =>{
         while(obj.children.length > 0){ 
             this.recursiveDestroy(obj.children[0], cb);
@@ -326,6 +333,11 @@ export class D3DLoaders {
     }
 
     initContainer(parentDivEl){
+        console.log('container el: ',parentDivEl);
+
+        if(this.containerInitialized){
+            return true;
+        };
         //First lets create a parent DIV
         this.parentDivEl = parentDivEl;
         this.parentDivElWidth = this.parentDivEl.offsetWidth;
@@ -334,7 +346,8 @@ export class D3DLoaders {
         this.clock = new THREE.Clock();
         this.initSkybox();
         if(this.config.useShowroom){
-           this.loadColliderEnvironment();
+            this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
+            this.loadColliderEnvironment();
         };
         this.initCamera();
         this.initRenderer(parentDivEl);
@@ -342,6 +355,7 @@ export class D3DLoaders {
         this.initPlayer();
         this.initControls();
         this.addListeners();
+        this.containerInitialized = true;
 
     }
 
@@ -430,7 +444,7 @@ export class D3DLoaders {
 
     initLoaders = () =>{
         //Loader GLTF
-        this.loader = this.loaders.getLoaderForFormat(this.config.defaultLoader);        
+        this.loader = this.loaders.getLoaderForFormat(this.config.defaultLoader);      
     }
 
     addListeners = ()=>{
@@ -852,7 +866,7 @@ export class D3DLoaders {
             that.initContainer(targetEl);
             let item = that.initItemForModel(modelUrl);
             that.mesh = item.model;
-            let newPos = new THREE.Vector3(0,1.2,0);
+            let newPos = new THREE.Vector3(0,3.7,0);
             item.place(newPos).then((model,pos)=>{
                 that.resizeCanvas();
                 previewImg.style.display = 'none';
@@ -875,17 +889,19 @@ export class D3DLoaders {
             let modelUrl = opts.modelUrl;
             let containerId = opts.containerId;
             let container = document.getElementById(containerId);
-            
+                 
             that.initContainer(container);
            
             let item = that.initItemForModel(modelUrl);
                 that.mesh = item.model;
-            let newPos = new THREE.Vector3(0,1.2,0);
+            let newPos = new THREE.Vector3(0,3.7,0);
             
             item.place(newPos).then((model,pos)=>{
                 that.resizeCanvas();
-                let img = document.querySelector('#'+hideElOnLoad);
-                img.style.display = 'none';
+                let loadingElement = document.querySelector('#'+hideElOnLoad);
+                if(loadingElement){
+                    loadingElement.style.display = 'none';              
+                };
                 this.renderer.domElement.style.display = 'inline-block';
                 resolve(item, model, pos);
             });
@@ -945,7 +961,6 @@ export class D3DLoaders {
 
         this.loadedItem = new Item({
             three: THREE,
-            loader: this.loader,
             scene: this.scene,
             height: this.config.scaleModelToHeight,
             width: this.config.scaleModelToWidth,
@@ -961,10 +976,10 @@ export class D3DLoaders {
     initItemForModel = (modelUrl) =>{
         let urlParts = modelUrl.split('.');
         let extension = urlParts[urlParts.length-1];
-       
+
         this.loadedItem = new Item({
             three: THREE,
-            loader: this.loader,
+            loader: this.loaders.getLoaderForFormat(extension),
             scene: this.scene,
             height: this.config.scaleModelToHeight,
             width: this.config.scaleModelToWidth,
@@ -1022,7 +1037,7 @@ export class D3DLoaders {
 
     loadColliderEnvironment =() =>{
         var that = this;
-        this.loader.load(this.config.sceneryPath, res => {
+        this.sceneryLoader.load(this.config.sceneryPath, res => {
 
             const gltfScene = res.scene;
             console.log('gltfScene');

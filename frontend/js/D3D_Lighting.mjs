@@ -78,30 +78,30 @@ export default class Lighting {
 
     initLights = () =>{
 //Add lights
-        this.aLight = new THREE.AmbientLight(0xffffff, 1);
+        this.aLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(this.aLight);
 
         const aboveLight = new THREE.DirectionalLight(0xffffff, 1);
         aboveLight.position.set(0, 20, 0);
         this.scene.add(aboveLight);
 
-        const belowLight = new THREE.DirectionalLight(0xffffff, 1);
+        const belowLight = new THREE.DirectionalLight(0xffffff, 0.5);
         belowLight.position.set(0, -20, 0);
         this.scene.add(belowLight);
 
-        const leftLight = new THREE.DirectionalLight(0xffffff, 1);
+        const leftLight = new THREE.DirectionalLight(0xffffff, 0);
         leftLight.position.set(-20, 0, 0);
         this.scene.add(leftLight);
 
-        const rightLight = new THREE.DirectionalLight(0xffffff, 1);
+        const rightLight = new THREE.DirectionalLight(0xffffff, 0);
         rightLight.position.set(20, 0, 0);
         this.scene.add(rightLight);
 
-        const frontLight = new THREE.DirectionalLight(0xffffff, 1);
+        const frontLight = new THREE.DirectionalLight(0xffffff, 0);
         frontLight.position.set(0, 0, -20,);
         this.scene.add(frontLight);
 
-        const backLight = new THREE.DirectionalLight(0xffffff, 1);
+        const backLight = new THREE.DirectionalLight(0xffffff, 0);
         backLight.position.set(0, 0, 20);
         this.scene.add(backLight);
 

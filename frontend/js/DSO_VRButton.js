@@ -21,7 +21,11 @@ class VRButton {
     } else {
       button = document.createElement( 'button' );
       button.textContent = 'View In VR';
-      document.getElementById(options.btnCtr).append(button);
+      let btnContainer = document.getElementById(options.btnCtr);
+      if(btnContainer){
+        btnContainer.append(button);
+      }
+
     };
 
     function showEnterVR( /*device*/ ) {

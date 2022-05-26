@@ -54,8 +54,10 @@ class D3DAssetCreator extends D3DNFTViewer {
         };
 
         btn.addEventListener('click',(e)=>{
-            that.clearScene(that.scene);
-            this.initLighting();
+            that.clearMesh(that.mesh, ()=>{
+                console.log('mehs removed');
+            });
+            this.initContainer(that.config.el);
         }, false);
     }
 
