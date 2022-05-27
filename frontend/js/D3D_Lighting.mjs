@@ -43,8 +43,6 @@ export default class Lighting {
 
     	input.addEventListener('change',(e)=>{
     		let val = e.target.value;
-            console.log('setIntensity, ','ambient', val);
-
     		that.setIntensity('ambient',val);
     	}, false);
     }
@@ -72,7 +70,6 @@ export default class Lighting {
     	let light = this.dLighting[lightName];
     	input.addEventListener('change',(e)=>{
     		let val = e.target.value;
-            console.log('setIntensity, ',lightName, val);
     		that.setIntensity(lightName, val);
     	}, false);
 
@@ -150,7 +147,7 @@ export default class Lighting {
     	if(lightName==='ambient'){
     		this.setIntensityAmb(val);
     	} else {
-    		this.setIntensityDLight(val);
+    		this.setIntensityDLight(lightName, val);
     	};
     }
     setIntensityAmb(val){
@@ -158,9 +155,6 @@ export default class Lighting {
     }
 
     setIntensityDLight(lightName, val){
-        console.log(this.dLighting.left);
-        console.log(this.dLighting['left']);
-
     	this.dLighting[lightName].intensity = val;
     }    
 }
