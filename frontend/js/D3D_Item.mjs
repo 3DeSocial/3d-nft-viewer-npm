@@ -247,9 +247,6 @@ export default class Item {
                 // this.addPlaneAtPos(planePos)
                
                 this.scene.add(obj3D);
-               
-
-                console.log('obj3D.position',obj3D.position);
                 this.mesh = obj3D;
                 resolve(obj3D);
             },
