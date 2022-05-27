@@ -10,7 +10,7 @@ class D3DAssetCreator extends D3DNFTViewer {
         super(config);
         this.initContainer(this.config.el);
         this.start3D();
-        if(this.config.useOwnHandlers == false){
+        if(this.config.useOwnHandlers === false){
             this.addButtonListeners();        
         }
     }

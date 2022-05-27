@@ -6,7 +6,8 @@ export default class Item {
         let defaults = {
             modelUrl: '',
             modelsRoute: 'models',
-            nftsRoute: 'nfts'            
+            nftsRoute: 'nfts',
+            castShadow: true     
         };
     
         this.config = {
@@ -30,18 +31,33 @@ export default class Item {
 
     }
 
-    hasAnimations = () =>{
-        if(!this.mesh.children[0]){
+    hasAnimations = (obj) =>{
+        if(!obj){
+            obj = this.root;
+        };
+        if(obj.animations){
+            if(obj.animations.length>0){
+                this.animations = obj.animations;
+                return true;
+            };            
+        }
+
+        if(!obj.children){
+            return false;
+        }
+       
+        if(!obj.children[0]){
             return false;
         };
-        if(!this.mesh.children[0].animations){
-            return false;
+
+        if(obj.children[0].animations){
+            if(obj.children[0].animations.length>0){
+                this.animations = obj.children[0].animations;
+                return true;
+            };          
         };
-        if(this.mesh.children[0].animations.length===0){
-            return false;
-        };
-        this.animations = this.mesh.children[0].animations;
-        return true;
+
+        return false;
     }
 
     initItemEvents = () =>{
@@ -149,15 +165,15 @@ export default class Item {
 
             console.log('loader attempting load of: ',modelUrl);
             that.loader.load(modelUrl, (root)=> {
-
+                this.root = root;
                 let loadedItem = null;
 
                 if(root.scene){
-                    console.log('using scene');
+                    console.log('NOT using root');
                     loadedItem = root.scene;
                 } else {
-                    console.log('using root object');
-                    console.log(root);
+                                        console.log('using root');
+
                     loadedItem = root;
                 };
 
@@ -227,7 +243,8 @@ export default class Item {
 
 
                 this.postionMeshOnFLoor(obj3D, targetFloorYCoord, newLengthMeshBounds.y);
-                         
+                //et planePos = new THREE.Vector3(0,targetFloorYCoord,0);
+                // this.addPlaneAtPos(planePos)
                
                 this.scene.add(obj3D);
                
@@ -273,8 +290,8 @@ onErrorCallback = (e)=> {
     }
 
     addPlaneAtPos = (posVector) =>{
-        var geo = new THREE.PlaneBufferGeometry(10, 10);
-        var mat = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
+        var geo = new THREE.PlaneBufferGeometry(20, 20);
+        var mat = new THREE.MeshPhongMaterial({ color: 0x99FFFF, side: THREE.DoubleSide });
         var plane = new THREE.Mesh(geo, mat);
         plane.rotateX( - Math.PI / 2);
         plane.position.copy(posVector);
@@ -306,7 +323,6 @@ onErrorCallback = (e)=> {
         console.log('loaded type: ',loadedType);
         switch(loadedType){
             case 'Object3D','Mesh':
-                return loadedItem;
             break;
             case 'BufferGeometry':
                 loadedItem.center();
@@ -327,13 +343,10 @@ onErrorCallback = (e)=> {
 
                 };
                
-                return loadedItem;
             break;
             case 'Scene':
-                return loadedItem;
             break; 
             case 'Group':
-                return loadedItem;
             break;   
             case undefined:
 
@@ -359,7 +372,13 @@ onErrorCallback = (e)=> {
                 console.log('unknown type: ',loadedType);
             return false;
         };
+        return this.configureImportedObject(loadedItem);
 
+    }
+
+    configureImportedObject = (object3d) =>{
+        object3d.castShadow = true;
+        return object3d;
     }
 
     startAnimation = (animIndex) =>{

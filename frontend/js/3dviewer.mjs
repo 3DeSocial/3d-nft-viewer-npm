@@ -125,7 +125,8 @@ export class D3DLoaders {
     constructor(config) {
 
         let defaults = {
-                    defaultLoader: 'gltf'
+                    defaultLoader: 'gltf',
+                    useOwnHandlers: false
                 };
         
         this.config = {
@@ -392,9 +393,11 @@ export class D3DLoaders {
 
     initRenderer = (el) =>{
         //Create a WebGLRenderer
-        this.renderer = new THREE.WebGLRenderer({antialias: true,
+        this.renderer = new THREE.WebGLRenderer({
+                antialias: true,
                 alpha: true,
-                preserveDrawingBuffer: true});
+                preserveDrawingBuffer: true
+            });
 
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.renderer.shadowMap.enabled = true;
@@ -943,7 +946,7 @@ export class D3DLoaders {
         //this.parentDivEl.children[0].setAttribute('style','display:none;');                    
       //  this.renderer.domElement.setAttribute('style','display:inline-block;');            
 
-        //this.showOverlay();
+      //  this.showOverlay();
         this.initVR();
         this.animate();        
     }
@@ -1040,7 +1043,6 @@ export class D3DLoaders {
         this.sceneryLoader.load(this.config.sceneryPath, res => {
 
             const gltfScene = res.scene;
-            console.log('gltfScene');
             gltfScene.scale.set(0.2,0.2,0.2);    
 
             console.log(gltfScene);
@@ -1057,6 +1059,8 @@ export class D3DLoaders {
 
                 if ( c.isMesh ) {
                     console.log('mesh found');
+                    c.castShadow = false;
+                    c.receiveShadow = true;
                     const hex = c.material.color.getHex();
                     toMerge[ hex ] = toMerge[ hex ] || [];
                     toMerge[ hex ].push( c );
@@ -1145,7 +1149,8 @@ export class D3DLoaders {
            //gltfScene.position.set(0,-11.5,0)
             gltfScene.position.set(0,0,0); 
 
-            this.scene.add(gltfScene);
+            that.scene.add(gltfScene);
+            that.sceneryMesh = gltfScene;
 
 console.log('added environment');
         } );
@@ -1156,24 +1161,42 @@ console.log('added environment');
         let that = this;
         if(this.sceneryMesh){
             this.scene.add(this.sceneryMesh);
-        }
-        let modelURL = this.config.sceneryPath;
-        that.loader.load(modelURL, (model)=> {
-            let gltfMesh = null;
-            gltfMesh = model.scene;
-            gltfMesh.position.set(0,0,0); 
-            gltfMesh.scale.set(0.2,0.2,0.2);    
-            that.sceneryMesh = gltfMesh;
-            that.scene.add(that.sceneryMesh);
-            this.restrictCameraToRoom();
+        } else {
+            let modelURL = this.config.sceneryPath;
+            that.loader = this.loaders.getLoaderForFormat('gltf');
+            that.loader.load(modelURL, (model)=> {
+                let gltfMesh = null;
+                gltfMesh = model.scene;
+                gltfMesh.position.set(0,0,0); 
+                gltfMesh.scale.set(0.2,0.2,0.2);    
+                that.sceneryMesh = gltfMesh;
+                that.scene.add(that.sceneryMesh);
+                this.restrictCameraToRoom();
 
-        })
+            })            
+        }
+        
     }
+
+    removeScenery = () =>{
+        if(this.sceneryMesh){
+            this.scene.remove(this.sceneryMesh);
+                    console.log('removeScenery: OK');
+
+            this.unRestrictCamera();
+        }else {
+            console.log('no scenerymesh to remove');
+        }
+    }    
 
     removeFloor = () =>{
         if(this.sceneryMesh){
+                    console.log('removeScenery: OK');
+
             this.scene.remove(this.sceneryMesh);
             this.unRestrictCamera();
+        } else {
+            console.log('no scenerymesh to remove');
         }
     }
 
