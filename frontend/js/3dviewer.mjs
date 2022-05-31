@@ -453,7 +453,12 @@ export class D3DLoaders {
     }
 
     setBgColor = (color)=>{
-        this.scene.background = color;
+        if(color instanceof THREE.Color){
+            this.scene.background = color;
+        } else {
+            color = new THREE.Color('#'+color);
+            this.scene.background = color;
+        }
     }
     removeSky = () => {
         this.scene.background = null;
