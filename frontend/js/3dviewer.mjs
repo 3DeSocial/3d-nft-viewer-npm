@@ -237,6 +237,7 @@ export class D3DLoaders {
     constructor(config) {
 
         let defaults = {
+                    bgColor: 0x000000,
                     el: document.body,
                     ctrClass: 'data-nft', // Attribute of div containing nft preview area for a single nft
                     fitOffset: 1.25,
@@ -334,7 +335,6 @@ export class D3DLoaders {
     }
 
     initContainer(parentDivEl){
-        console.log('container el: ',parentDivEl);
 
         if(this.containerInitialized){
             return true;
@@ -346,6 +346,9 @@ export class D3DLoaders {
         this.initScene();
         this.clock = new THREE.Clock();
         this.initSkybox();
+        if(this.config.bgColor){
+            this.setBgColor(this.config.bgColor);
+        };
         if(this.config.useShowroom){
             this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
             this.loadColliderEnvironment();
@@ -436,6 +439,9 @@ export class D3DLoaders {
         this.scene.background = skyBox;        
     }
 
+    setBgColor = (color)=>{
+        this.scene.background = color;
+    }
     removeSky = () => {
         this.scene.background = null;
     }
