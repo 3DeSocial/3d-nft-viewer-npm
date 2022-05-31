@@ -50,7 +50,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import Item from './D3D_Item.mjs';import Lighting from './D3D_Lighting.mjs';
-import {MeshBVH, VRButton, VRControls} from '3d-nft-viewer';
+import {MeshBVH, VRButton, VRControls, SkyBoxLoader} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, collider, visualizer, player, controls, geometries;
@@ -245,6 +245,8 @@ export class D3DLoaders {
                     modelsRoute: 'models',// Back end route to load models
                     sceneryPath: '/layouts/round_showroom/scene.gltf',
                     skyboxPath: '',
+                    skyBoxList: ['blue','bluecloud','browncloud','lightblue','yellowcloud'],
+                    skyBox: 'blue',
                     controls: {
                         maxDistance:Infinity,
                         maxPolarAngle:Infinity
@@ -428,15 +430,26 @@ export class D3DLoaders {
 
     initSkybox = ()=>{
         if(this.config.skyboxes !== false){
-            this.addSky();
+            this.skyBoxLoader = new SkyBoxLoader({
+                scene: this.scene,
+                skyBoxPath: this.config.skyboxPath,
+                skyBoxList: this.config.skyBoxList
+            });
+            if(this.config.skyBox){
+                this.skyBoxLoader.setSkyBox(this.config.skyBox);
+            } else {
+                this.skyBoxLoader.setRandomSkyBox();
+            }
         };
     }
 
+
     addSky = () =>{
-        let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
-        let skyBoxNo = this.getRandomInt(0,4);
-        let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
-        this.scene.background = skyBox;        
+        this.skyBoxLoader.setRandomSkyBox();
+    }
+
+    setSkyBox = (skyBoxName) =>{
+        this.skyBoxLoader.setSkyBox(skyBoxName);
     }
 
     setBgColor = (color)=>{
@@ -529,71 +542,7 @@ export class D3DLoaders {
         })        
     }
 
-    getRandomInt (min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
 
-    loadSkyBox(boxname){
-        if(this.config.skyboxPath===''){
-            return false;
-        };
-
-        let skybox ='';
-
-        const loader = new THREE.CubeTextureLoader();
-        let skyboxPath = this.config.skyboxPath+'/'+boxname+'/';
-        loader.setPath(skyboxPath);
-
-        switch(boxname){
-            case 'bluecloud':
-                skybox = loader.load([
-                            'bluecloud_ft.jpg',
-                            'bluecloud_bk.jpg',
-                            'bluecloud_up.jpg',
-                            'bluecloud_dn.jpg',
-                            'bluecloud_rt.jpg',
-                            'bluecloud_lf.jpg']);
-            break;
-            case 'yellowcloud':
-                skybox = loader.load([
-                            'yellowcloud_ft.jpg',
-                            'yellowcloud_bk.jpg',
-                            'yellowcloud_up.jpg',
-                            'yellowcloud_dn.jpg',
-                            'yellowcloud_rt.jpg',
-                            'yellowcloud_lf.jpg']);
-            break;
-            case 'browncloud':
-                skybox = loader.load([
-                            'browncloud_ft.jpg',
-                            'browncloud_bk.jpg',
-                            'browncloud_up.jpg',
-                            'browncloud_dn.jpg',
-                            'browncloud_rt.jpg',
-                            'browncloud_lf.jpg']);
-            break;
-            case 'lightblue':
-                skybox = loader.load([
-                            'right.png',
-                            'left.png',
-                            'top.png',
-                            'bot.png',
-                            'front.png',
-                            'back.png']);
-            break;             
-            case 'blue':
-                skybox = loader.load([
-                            'bkg1_right.png',
-                            'bkg1_left.png',
-                            'bkg1_top.png',
-                            'bkg1_bot.png',
-                            'bkg1_front.png',
-                            'bkg1_back.png']);
-            break;
-        }
-        
-        return skybox;
-    }
 
     addEventListenerResize = () =>{
 
