@@ -1,4 +1,5 @@
 import { D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer} from './frontend/js/3dviewer.mjs';
+import { D3DSpcaeViewer} from './frontend/js/3d-space-viewer.mjs';
 import { D3DAssetCreator } from './frontend/js/D3D_AssetCreator.mjs';
 import { VRButton } from './frontend/js/DSO_VRButton.js';
 import { VRControls } from './frontend/js/D3D_VRControls.js';
