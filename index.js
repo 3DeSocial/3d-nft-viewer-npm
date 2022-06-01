@@ -1,5 +1,6 @@
 import { D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer} from './frontend/js/3dviewer.mjs';
 import { D3DSpaceViewer} from './frontend/js/3d-space-viewer.mjs';
+import { SceneryLoader} from './frontend/js/SceneryLoader.mjs';
 import { D3DAssetCreator } from './frontend/js/D3D_AssetCreator.mjs';
 import { VRButton } from './frontend/js/DSO_VRButton.js';
 import { VRControls } from './frontend/js/D3D_VRControls.js';
@@ -54,4 +55,4 @@ let SupportedFormats = [
 'VTK',
 'XYZ',
 ];
-export {SupportedFormats, D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRButton, VRControls, Item, XRControllerModelFactory, MeshBVH, acceleratedRaycast, MeshBVHVisualizer}
+export {D3DSpaceViewer, SupportedFormats, D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRButton, VRControls, Item, XRControllerModelFactory, MeshBVH, acceleratedRaycast, MeshBVHVisualizer, SceneryLoader}

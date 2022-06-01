@@ -31,3 +31,17 @@ ul li{
 img{
 	max-width: 100%;
 }
+button#VRButton {
+	cursor: pointer;
+	padding: 1em;
+	margin: 0 0 .5em;
+	box-sizing: border-box;
+	border-radius: 4px;
+	font-weight: 700;
+	border: 1px solid transparent;
+	letter-spacing: .5px;
+	position: absolute;
+	bottom: 4em;
+	left: 50%;
+  	transform: translate(-50%, -50%);	
+}

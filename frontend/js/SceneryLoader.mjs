@@ -1,4 +1,8 @@
 import * as THREE from 'three';
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import {MeshBVH} from '3d-nft-viewer';
+let visualizer, geometries;
 
 export default class SceneryLoader {
 
@@ -17,34 +21,38 @@ export default class SceneryLoader {
             ...config
         };
         
-        THREE = this.config.three;
         this.loader = this.config.loader;
         this.scene = this.config.scene;
         this.height = this.config.height;
         this.width = this.config.width;
         this.depth = this.config.depth;
-        this.modelUrl = this.config.modelUrl;
-        this.mixer = null;
-        this.action = null;
-        this.mesh = null;
-        this.animRunning = false;
-        this.initItemEvents();
 
 
     }
 
 	loadScenery = () =>{
-        var that = this;
-        this.sceneryLoader.load(this.config.sceneryPath, (res) => {
+        let that = this;
 
-        	that.scaleScene(res.scene);
-            that.centerScene(res.scene);
-        	that.collider = that.createCollider(res.scene);
-        });
+        return new Promise((resolve, reject) => {
+            var that = this;
+            this.gltfLoader = new GLTFLoader();
+
+            this.gltfLoader.load(this.config.sceneryPath, (res) => {
+                console.log('gltf loaded');
+            	that.scaleScene(res.scene);
+                console.log('gltf scaled');
+
+                that.centerScene(res.scene);
+                console.log('gltf centered');
+
+                console.log('collider added');
+                resolve(res);
+            });
+       });
 	}
 
     scaleScene = (scene) =>{
-		const gltfScene = res.scene;
+		const gltfScene = scene;
         gltfScene.scale.set(0.2,0.2,0.2);    
     }
 
@@ -55,7 +63,7 @@ export default class SceneryLoader {
         scene.updateMatrixWorld( true );        
     }
 
-    createCollider = (scene) =>{
+    createCollider = (gltfScene) =>{
 			// visual geometry setup
         const toMerge = {};
         gltfScene.traverse( c => {
@@ -72,7 +80,7 @@ export default class SceneryLoader {
 
         } );
 
-        environment = new THREE.Group();
+        let environment = new THREE.Group();
         for ( const hex in toMerge ) {
 
             const arr = toMerge[ hex ];
@@ -137,13 +145,14 @@ export default class SceneryLoader {
         const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries( geometries, false );
         mergedGeometry.boundsTree = new MeshBVH( mergedGeometry, { lazyGeneration: false } );
 
-        collider = new THREE.Mesh( mergedGeometry );
-        collider.material.wireframe = false;
-        collider.material.opacity = 0;
-        collider.material.transparent = true;
+        let collider = new THREE.Mesh( mergedGeometry );
+            collider.material.wireframe = false;
+            collider.material.opacity = 0.5;
+            collider.material.transparent = true;
         return collider;
      //   visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
 
     }
 
 }
+export {SceneryLoader}

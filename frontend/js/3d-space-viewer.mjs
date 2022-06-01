@@ -2,14 +2,14 @@ export const name = 'd3dspaceviewer';
 // Find the latest version by visiting https://cdn.skypack.dev/three.
 import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import Item from './D3D_Item.mjs';import Lighting from './D3D_Lighting.mjs';
-import {MeshBVH, VRButton, VRControls, D3DLoaders, D3DNFTViewerOverlay} from '3d-nft-viewer';
+import {MeshBVH, VRButton, VRControls, D3DLoaders, D3DNFTViewerOverlay, SceneryLoader} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
-let environment, collider, visualizer, player, controls, geometries;
+let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
 let fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = false;
 
@@ -67,11 +67,42 @@ const params = {
         this.controllers = [];
         this.loaders = new D3DLoaders({defaultLoader:this.defaultLoader});
         this.initLoaders();
+        this.clock = new THREE.Clock();
         environment = null;
-        collider = null;
+        this.collider = null;
 
     }
 
+    initSpace = () =>{
+        let that = this;
+        console.log(this.config.el);
+        this.getContainer(this.config.el);
+        this.initScene();
+        this.initRenderer(this.config.el);
+        this.initCamera();
+        this.initLighting();        
+        this.initControls();
+        this.resizeCanvas();
+
+
+        this.sceneryLoader = new SceneryLoader({
+            sceneryPath: 'http://localhost:3000/layouts/round_showroom/scene.gltf'
+        });
+        this.sceneryLoader.loadScenery()
+        .then((gltf)=>{
+            const root = gltf.scene;
+            this.scene.add(root);          
+            that.collider = this.sceneryLoader.createCollider(root); 
+            console.log('new scene created');
+            this.scene.add(that.collider);
+            console.log('this.collider added');
+            this.initPlayer();
+
+            this.start3D();
+            this.addListeners();
+        })
+
+    }
     setFormat = (format) =>{
         console.log('setFormat: ',format);
         let loader = this.loaders.getLoaderForFormat(format);
@@ -84,6 +115,12 @@ const params = {
         this.loader = loader;
     }
     
+    getContainer = (parentDivEl) =>{
+        //First lets create a parent DIV
+        this.parentDivEl = parentDivEl;
+        this.parentDivElWidth = this.parentDivEl.offsetWidth;
+        this.parentDivElHeight = this.parentDivEl.offsetHeight;        
+    }
     initScene = () =>{
 
         //Lets create a new Scene
@@ -137,13 +174,10 @@ const params = {
         this.parentDivEl = parentDivEl;
         this.parentDivElWidth = this.parentDivEl.offsetWidth;
         this.parentDivElHeight = this.parentDivEl.offsetHeight;
-        this.initScene();
-        this.clock = new THREE.Clock();
-        this.initSkybox();
-        if(this.config.useShowroom){
-            this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
-            this.loadColliderEnvironment();
-        };
+       // this.initScene();
+        
+      //  this.initSkybox();
+
         this.initCamera();
         this.initRenderer(parentDivEl);
         this.initLighting();
@@ -168,7 +202,7 @@ const params = {
     initControls = () =>{
         //Controls
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.restrictCameraToRoom();
+       // this.restrictCameraToRoom();
         this.controls.addEventListener('change', this.render);
         this.controls.update();
     }
@@ -201,7 +235,7 @@ const params = {
 
         this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         this.renderer.setClearColor( 0x000000, 1 );
-        this.renderer.domElement.style.display = 'none';
+      //  this.renderer.domElement.style.display = 'none';
 
         if(el){
            el.appendChild(this.renderer.domElement);
@@ -248,16 +282,14 @@ const params = {
         this.addEventListenerResize();
         this.addEventListenerContextLost();
         this.addEventListenerExitFullScreen();
-       // this.addEventListenerKeys();
+       this.addEventListenerKeys();
     }    
 
     addEventListenerKeys = ()=>{
         let that = this;
-       // this.addEventListenerResize();
-      // this.addEventListenerExitFullScreen();
 
         window.addEventListener( 'keydown', function ( e ) {
-
+            console.log('keydown pressed');
                 switch ( e.code ) {
 
                     case 'KeyW': fwdPressed = true; break;
@@ -453,6 +485,11 @@ const params = {
         
         
     animate = () =>{
+        console.log('start animation loop');
+        console.log(this.scene);
+        console.log(this.camera);       
+        console.log(this.renderer);       
+
         this.renderer.setAnimationLoop(this.render);
     }
     
@@ -477,9 +514,9 @@ const params = {
 */
             }
 
-              if ( collider ) {
-//console.log('got collider');
-                collider.visible = params.displayCollider;
+              if ( this.collider ) {
+//console.log('got this.collider');
+                this.collider.visible = params.displayCollider;
              //   visualizer.visible = params.displayBVH;
 
                 const physicsSteps = params.physicsSteps;
@@ -491,10 +528,10 @@ const params = {
                 }
 
             } else {
-  //              console.log('no collider');
+  //              console.log('no this.collider');
             }
 
-            // TODO: limit the camera movement based on the collider
+            // TODO: limit the camera movement based on the this.collider
             // raycast in direction of camera and move it if it's further than the closest point
 
           //  this.controls.update();
@@ -796,7 +833,7 @@ const params = {
         
         VRButton.registerSessionGrantedListener();        
         
-        let vrButtonEl = VRButton.createButton(this.renderer);
+        let vrButtonEl = VRButton.createButton(this.renderer, {btnCtr: 'space-ctr'});
 
         this.vrControls = new VRControls({  scene:this.scene,
                                             renderer: this.renderer,
@@ -829,7 +866,8 @@ const params = {
                                                 that.dolly.rotateY(-THREE.Math.degToRad(1));
                                             }
                                         });
-            this.dolly = this.vrControls.buildControllers();        
+            this.dolly = this.vrControls.buildControllers();     
+            console.log(this.dolly);
     }
 
     loadColliderEnvironment =() =>{
@@ -928,16 +966,16 @@ const params = {
             const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries( geometries, false );
             mergedGeometry.boundsTree = new MeshBVH( mergedGeometry, { lazyGeneration: false } );
 
-            collider = new THREE.Mesh( mergedGeometry );
-            collider.material.wireframe = false;
-            collider.material.opacity = 0;
-            collider.material.transparent = true;
+            this.collider = new THREE.Mesh( mergedGeometry );
+            this.collider.material.wireframe = false;
+            this.collider.material.opacity = 1;
+            this.collider.material.transparent = true;
 
-         //   visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
+         //   visualizer = new MeshBVHVisualizer( this.collider, params.visualizeDepth );
 
-            collider.position.set(0,3,0);   
+            this.collider.position.set(0,0,0);   
          //   this.scene.add( visualizer );
-            this.scene.add( collider );
+            this.scene.add( this.collider );
             //environment.position.set(0,0,0);    
          //   this.scene.add( environment );
            //gltfScene.position.set(0,-11.5,0)
@@ -1085,13 +1123,12 @@ console.log('added environment');
 
 initPlayer = () => {
         // character
-
         let mat = new THREE.MeshStandardMaterial();
-            mat.opacity = 0;
-            mat.transparent = true;
+            mat.opacity = 1;
+            mat.transparent = false;
 
         this.player = new THREE.Mesh(
-            new THREE.BoxGeometry( 1, 1, 1),
+            new RoundedBoxGeometry( 1, 1, 1),
             mat
         );
 
@@ -1104,13 +1141,12 @@ initPlayer = () => {
         this.player.material.shadowSide = 2;*/
         this.player.rotateY(0);
     
-        this.player.position.set(0, 4, 6);
+        this.player.position.set(0, 2, 0);
         this.scene.add( this.player );        
-      /*  this.reset();*/
+        this.reset();
     }
 
     updatePlayer = (delta) =>{
-
         this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
         this.player.position.addScaledVector( this.playerVelocity, delta );
 
@@ -1141,17 +1177,19 @@ initPlayer = () => {
            // this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
             this.player.translateX(params.playerSpeed * delta );
         }
-  //      this.camera.position.set(this.player.position);
+
+
 
         this.player.updateMatrixWorld();
+
 
         // adjust this.player position based on collisions
         const capsuleInfo = this.player.capsuleInfo;
         this.tempBox.makeEmpty();
-        this.tempMat.copy( collider.matrixWorld ).invert();
+        this.tempMat.copy( this.collider.matrixWorld ).invert();
         this.tempSegment.copy( capsuleInfo.segment );
 
-        // get the position of the capsule in the local space of the collider
+        // get the position of the capsule in the local space of the this.collider
         this.tempSegment.start.applyMatrix4( this.player.matrixWorld ).applyMatrix4( this.tempMat );
         this.tempSegment.end.applyMatrix4( this.player.matrixWorld ).applyMatrix4( this.tempMat );
 
@@ -1162,7 +1200,7 @@ initPlayer = () => {
         this.tempBox.min.addScalar( - capsuleInfo.radius );
         this.tempBox.max.addScalar( capsuleInfo.radius );
 
-        collider.geometry.boundsTree.shapecast( {
+        this.collider.geometry.boundsTree.shapecast( {
 
             intersectsBounds: box => box.intersectsBox( this.tempBox ),
 
@@ -1188,13 +1226,13 @@ initPlayer = () => {
 
         } );
 
-        // get the adjusted position of the capsule collider in world space after checking
+        // get the adjusted position of the capsule this.collider in world space after checking
         // triangle collisions and moving it. capsuleInfo.segment.start is assumed to be
         // the origin of the this.player model.
         const newPosition = this.tempVector;
-        newPosition.copy( this.tempSegment.start ).applyMatrix4( collider.matrixWorld );
+        newPosition.copy( this.tempSegment.start ).applyMatrix4( this.collider.matrixWorld );
 
-        // check how much the collider was moved
+        // check how much the this.collider was moved
         const deltaVector = this.tempVector2;
         deltaVector.subVectors( newPosition, this.player.position );
 
@@ -1217,7 +1255,7 @@ initPlayer = () => {
             this.playerVelocity.set( 0, 0, 0 );
 
         }
-        if (this.renderer.xr.isPresenting) {
+     //   if (this.renderer.xr.isPresenting) {
             if(this.player.position){
                 
                 if(this.player.position.x){
@@ -1234,7 +1272,7 @@ initPlayer = () => {
                 //this.camera.position.set(playerPos);
             }
             };
-        };
+       // };
 
 
         // adjust the this.camerainit
