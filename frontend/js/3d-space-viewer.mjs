@@ -79,7 +79,7 @@ const params = {
         this.getContainer(this.config.el);
         this.initScene();
         this.initRenderer(this.config.el);
-        this.initCamera();
+        this.initCameraPlayer();
         this.initLighting();        
         this.initControls();
         this.resizeCanvas();
@@ -187,7 +187,13 @@ const params = {
         this.containerInitialized = true;
 
     }
-
+    initCameraPlayer = () =>{
+        // camera setup
+        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+        this.camera.position.set( 10, 10, - 10 );
+        this.camera.far = 100;
+        this.camera.updateProjectionMatrix();        
+    }
 
     initCamera = () =>{
  
@@ -203,7 +209,7 @@ const params = {
         //Controls
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
        // this.restrictCameraToRoom();
-        this.controls.addEventListener('change', this.render);
+      //  this.controls.addEventListener('change', this.render);
         this.controls.update();
     }
 
@@ -1122,175 +1128,146 @@ console.log('added environment');
     }
 
 initPlayer = () => {
-        // character
-        let mat = new THREE.MeshStandardMaterial();
-            mat.opacity = 1;
-            mat.transparent = false;
+// character
+    this.player = new THREE.Mesh(
+        new RoundedBoxGeometry( 1.0, 2.0, 1.0, 10, 0.5 ),
+        new THREE.MeshStandardMaterial()
+    );
+    this.player.geometry.translate( 0, - 0.5, 0 );
+    this.player.capsuleInfo = {
+        radius: 0.5,
+        segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
+    };
+    this.player.castShadow = true;
+    this.player.receiveShadow = true;
+    this.player.material.shadowSide = 2;
+    this.scene.add( this.player );
+    this.reset();
+    }
 
-        this.player = new THREE.Mesh(
-            new RoundedBoxGeometry( 1, 1, 1),
-            mat
-        );
+ updatePlayer = ( delta )=> {
 
-        this.player.capsuleInfo = {
-            radius: 0.75,
-            segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
-        };
-     /*   this.player.castShadow = true;
-        this.player.receiveShadow = true;
-        this.player.material.shadowSide = 2;*/
-        this.player.rotateY(0);
-    
-        this.player.position.set(0, 2, 0);
-        this.scene.add( this.player );        
+    this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
+    this.player.position.addScaledVector( this.playerVelocity, delta );
+
+    // move the player
+    const angle = this.controls.getAzimuthalAngle();
+    if ( fwdPressed ) {
+
+        this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
+        this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
+
+    }
+
+    if ( bkdPressed ) {
+
+        this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
+        this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
+
+    }
+
+    if ( lftPressed ) {
+
+        this.tempVector.set( - 1, 0, 0 ).applyAxisAngle(  this.upVector, angle );
+        this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
+
+    }
+
+    if ( rgtPressed ) {
+
+        this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
+        this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
+
+    }
+
+    this.player.updateMatrixWorld();
+
+    // adjust player position based on collisions
+    const capsuleInfo = this.player.capsuleInfo;
+    this.tempBox.makeEmpty();
+    this.tempMat.copy( this.collider.matrixWorld ).invert();
+    this.tempSegment.copy( capsuleInfo.segment );
+
+    // get the position of the capsule in the local space of the this.collider
+    this.tempSegment.start.applyMatrix4( this.player.matrixWorld ).applyMatrix4( this.tempMat );
+    this.tempSegment.end.applyMatrix4( this.player.matrixWorld ).applyMatrix4( this.tempMat );
+
+    // get the axis aligned bounding box of the capsule
+    this.tempBox.expandByPoint( this.tempSegment.start );
+    this.tempBox.expandByPoint( this.tempSegment.end );
+
+    this.tempBox.min.addScalar( - capsuleInfo.radius );
+    this.tempBox.max.addScalar( capsuleInfo.radius );
+
+    this.collider.geometry.boundsTree.shapecast( {
+
+        intersectsBounds: box => box.intersectsBox( this.tempBox ),
+
+        intersectsTriangle: tri => {
+
+            // check if the triangle is intersecting the capsule and adjust the
+            // capsule position if it is.
+            const triPoint = this.tempVector;
+            const capsulePoint = this.tempVector2;
+
+            const distance = tri.closestPointToSegment( this.tempSegment, triPoint, capsulePoint );
+            if ( distance < capsuleInfo.radius ) {
+
+                const depth = capsuleInfo.radius - distance;
+                const direction = capsulePoint.sub( triPoint ).normalize();
+
+                this.tempSegment.start.addScaledVector( direction, depth );
+                this.tempSegment.end.addScaledVector( direction, depth );
+
+            }
+
+        }
+
+    } );
+
+    // get the adjusted position of the capsule this.collider in world space after checking
+    // triangle collisions and moving it. capsuleInfo.segment.start is assumed to be
+    // the origin of the player model.
+    const newPosition = this.tempVector;
+    newPosition.copy( this.tempSegment.start ).applyMatrix4( this.collider.matrixWorld );
+
+    // check how much the this.collider was moved
+    const deltaVector = this.tempVector2;
+    deltaVector.subVectors( newPosition, this.player.position );
+
+    // if the player was primarily adjusted vertically we assume it's on something we should consider ground
+    this.playerIsOnGround = deltaVector.y > Math.abs( delta * this.playerVelocity.y * 0.25 );
+
+    const offset = Math.max( 0.0, deltaVector.length() - 1e-5 );
+    deltaVector.normalize().multiplyScalar( offset );
+
+    // adjust the player model
+    this.player.position.add( deltaVector );
+
+    if ( ! this.playerIsOnGround ) {
+
+        deltaVector.normalize();
+        this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
+
+    } else {
+
+        this.playerVelocity.set( 0, 0, 0 );
+
+    }
+
+    // adjust the camera
+    this.camera.position.sub( this.controls.target );
+    this.controls.target.copy( this.player.position );
+    this.camera.position.add( this.player.position );
+
+    // if the player has fallen too far below the level reset their position to the start
+    if ( this.player.position.y < - 25 ) {
+
         this.reset();
+
     }
 
-    updatePlayer = (delta) =>{
-        this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
-        this.player.position.addScaledVector( this.playerVelocity, delta );
-
-        // move the this.player
-        //const angle = this.controls.getAzimuthalAngle(); // directio camera looking
-        const angle = this.player.rotation.y;
-    // console.log('x',this.player.rotation.x,'y',this.player.rotation.y,'z',this.player.rotation.z);
-        if ( fwdPressed ) {
-
-            //this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateZ(-params.playerSpeed * delta );
-        }
-
-        if ( bkdPressed ) {
-
-            //this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateZ(params.playerSpeed * delta );
-        }
-
-        if ( lftPressed ) {
-
-         //   this.tempVector.set( - 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateX(-params.playerSpeed * delta );
-        }
-
-        if ( rgtPressed ) {
-
-           // this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateX(params.playerSpeed * delta );
-        }
-
-
-
-        this.player.updateMatrixWorld();
-
-
-        // adjust this.player position based on collisions
-        const capsuleInfo = this.player.capsuleInfo;
-        this.tempBox.makeEmpty();
-        this.tempMat.copy( this.collider.matrixWorld ).invert();
-        this.tempSegment.copy( capsuleInfo.segment );
-
-        // get the position of the capsule in the local space of the this.collider
-        this.tempSegment.start.applyMatrix4( this.player.matrixWorld ).applyMatrix4( this.tempMat );
-        this.tempSegment.end.applyMatrix4( this.player.matrixWorld ).applyMatrix4( this.tempMat );
-
-        // get the axis aligned bounding box of the capsule
-        this.tempBox.expandByPoint( this.tempSegment.start );
-        this.tempBox.expandByPoint( this.tempSegment.end );
-
-        this.tempBox.min.addScalar( - capsuleInfo.radius );
-        this.tempBox.max.addScalar( capsuleInfo.radius );
-
-        this.collider.geometry.boundsTree.shapecast( {
-
-            intersectsBounds: box => box.intersectsBox( this.tempBox ),
-
-            intersectsTriangle: tri => {
-
-                // check if the triangle is intersecting the capsule and adjust the
-                // capsule position if it is.
-                const triPoint = this.tempVector;
-                const capsulePoint = this.tempVector2;
-
-                const distance = tri.closestPointToSegment( this.tempSegment, triPoint, capsulePoint );
-                if ( distance < capsuleInfo.radius ) {
-
-                    const depth = capsuleInfo.radius - distance;
-                    const direction = capsulePoint.sub( triPoint ).normalize();
-
-                    this.tempSegment.start.addScaledVector( direction, depth );
-                    this.tempSegment.end.addScaledVector( direction, depth );
-
-                }
-
-            }
-
-        } );
-
-        // get the adjusted position of the capsule this.collider in world space after checking
-        // triangle collisions and moving it. capsuleInfo.segment.start is assumed to be
-        // the origin of the this.player model.
-        const newPosition = this.tempVector;
-        newPosition.copy( this.tempSegment.start ).applyMatrix4( this.collider.matrixWorld );
-
-        // check how much the this.collider was moved
-        const deltaVector = this.tempVector2;
-        deltaVector.subVectors( newPosition, this.player.position );
-
-        // if the this.player was primarily adjusted vertically we assume it's on something we should consider ground
-        this.playerIsOnGround = deltaVector.y > Math.abs( delta * this.playerVelocity.y * 0.25 );
-
-        const offset = Math.max( 0.0, deltaVector.length() - 1e-5 );
-        deltaVector.normalize().multiplyScalar( offset );
-
-        // adjust the this.player model
-        this.player.position.add( deltaVector );
-
-        if ( ! this.playerIsOnGround ) {
-
-            deltaVector.normalize();
-            this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
-
-        } else {
-
-            this.playerVelocity.set( 0, 0, 0 );
-
-        }
-     //   if (this.renderer.xr.isPresenting) {
-            if(this.player.position){
-                
-                if(this.player.position.x){
-               let playerx = this.player.position.x;
-               let playery = this.player.position.y;
-               let playerz = this.player.position.z;
-
-            //   console.log('playerpos');
-              // console.log(playerx,playery,playerz);
-             
-                this.dolly.position.set(playerx,(playery+0.15),playerz);
-
-              // playerPos.y = playerPos.y + 1.5;
-                //this.camera.position.set(playerPos);
-            }
-            };
-       // };
-
-
-        // adjust the this.camerainit
-    //    this.camera.position.sub( this.controls.target );
-      //  this.controls.target.copy( this.player.position );
-        //this.camera.position.add( this.player.position );
-
-        // if the this.player has fallen too far below the level reset their position to the start
-        if ( this.player.position.y < - 25 ) {
-
-            this.reset();
-
-        }
-        fwdPressed = false;
-        bkdPressed = false;
-        rgtPressed = false;
-        lftPressed = false;
-    }
+}
 
     reset = ()=> {
 console.log('player reset');
