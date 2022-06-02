@@ -273,7 +273,8 @@ class D3DAssetCreator extends D3DNFTViewer {
         };
 
         //set output height and width
-        this.calcOutputSize();
+        let targetSize = this.getTargetSizeFromUI();
+        this.calcOutputSize(targetSize.scaleToWidth, targetSize.scaleToHeight);
 
         try {
             var strMime = 'image/jpeg';
