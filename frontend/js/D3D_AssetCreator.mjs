@@ -202,8 +202,6 @@ class D3DAssetCreator extends D3DNFTViewer {
 
                 opts = {...defaults,...opts};
 
-                // get an object with the sccaleToHeight and scaleToWidth values
-                let targetSize = this.getTargetSizeFromUI();
                 that.setVideoOptions(opts);
                 that.captureVideo(opts);
             })
@@ -397,6 +395,7 @@ class D3DAssetCreator extends D3DNFTViewer {
         if(that.gifShots.length===0){
             throw('Error: no screenShots taken');
         };
+
         gifshot.createGIF(
             {
                 images: that.gifShots,
@@ -478,8 +477,8 @@ class D3DAssetCreator extends D3DNFTViewer {
         let previewEl = document.getElementById(opts.previewElement);
 
         let gifName = this.generateGifName();
-        this.calcOutputSize(opts.scaleToWidth,opts.scaleToHeight);
-
+        let targetSize = this.getTargetSizeFromUI();
+        this.calcOutputSize(targetSize.scaleToWidth, targetSize.scaleToHeight);
 
         let strMime = 'image/jpeg';
             this.loadedItem.startCurrentAnimation();
@@ -526,7 +525,8 @@ class D3DAssetCreator extends D3DNFTViewer {
         let previewEl = document.getElementById(opts.previewElement);
 
         let gifName = this.generateGifName();
-        this.calcOutputSize(opts.scaleToWidth,opts.scaleToHeight);        
+        let targetSize = this.getTargetSizeFromUI();
+        this.calcOutputSize(targetSize.scaleToWidth,targetSize.scaleToHeight);        
 
         this.gifShots = [];
 
@@ -581,7 +581,9 @@ class D3DAssetCreator extends D3DNFTViewer {
         let cameraDistance = this.camera.position.distanceTo(this.loadedItem.getPosition());
         let previewImgTag = document.getElementById(gifName);
 
-        this.calcOutputSize(opts.scaleToWidth,opts.scaleToHeight);        
+        let targetSize = this.getTargetSizeFromUI();
+        this.calcOutputSize(targetSize.scaleToWidth, targetSize.scaleToHeight);
+
         if(parseInt(opts.animate)>0){
             if(opts.animate===1){
                 this.loadedItem.startCurrentAnimation(THREE.LoopOnce);
