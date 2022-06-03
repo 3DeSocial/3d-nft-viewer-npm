@@ -351,10 +351,7 @@ export class D3DLoaders {
         if(this.config.bgColor){
             this.setBgColor(this.config.bgColor);
         };
-        if(this.config.useShowroom){
-            this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
-            this.loadColliderEnvironment();
-        };
+
         this.initCamera();
         this.initRenderer(parentDivEl);
         this.initLighting();
@@ -857,21 +854,37 @@ export class D3DLoaders {
                  
             that.initContainer(container);
            
-            let item = that.initItemForModel(modelUrl);
-            let newPos = new THREE.Vector3(0,0,0);
-            
-            item.place(newPos).then((model,pos)=>{
-                that.mesh = model;
-                console.log(that.mesh);
 
-                that.resizeCanvas();
-                let loadingElement = document.querySelector('#'+hideElOnLoad);
-                if(loadingElement){
-                    loadingElement.style.display = 'none';              
-                };
-                this.renderer.domElement.style.display = 'inline-block';
-                resolve(item, model, pos);
-            });
+            that.initContainer(container);
+            if(this.config.useShowroom){
+                this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
+                this.loadColliderEnvironment()
+                .then(()=>{
+                    let item = that.initItemForModel(modelUrl); 
+                    let newPos = new THREE.Vector3(0,this.floorY,0);
+            
+                    item.place(newPos).then((model,pos)=>{
+                        that.mesh = model;
+                        that.resizeCanvas();
+                        let img = document.querySelector('#'+hideElOnLoad);
+                        img.style.display = 'none';
+                        this.renderer.domElement.style.display = 'inline-block';
+                        resolve(item, model, pos);
+                    });
+                })
+            } else {
+                let item = that.initItemForModel(modelUrl);
+                let newPos = new THREE.Vector3(0,this.floorY,0);
+        
+                item.place(newPos).then((model,pos)=>{
+                    that.mesh = model;
+                    that.resizeCanvas();
+                    let img = document.querySelector('#'+hideElOnLoad);
+                    img.style.display = 'none';
+                    this.renderer.domElement.style.display = 'inline-block';
+                    resolve(item, model, pos);
+                });
+            }
         });
 
     }
@@ -887,18 +900,36 @@ export class D3DLoaders {
             let container = document.getElementById(containerId);
             
             that.initContainer(container);
-           
-            let item = that.initItem(nftPostHash);
-            let newPos = new THREE.Vector3(0,0,0);
+            if(this.config.useShowroom){
+                this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
+                this.loadColliderEnvironment()
+                .then(()=>{
+                    let item = that.initItem(nftPostHash);
+                    let newPos = new THREE.Vector3(0,this.floorY,0);
             
-            item.place(newPos).then((model,pos)=>{
-                that.mesh = model;
-                that.resizeCanvas();
-                let img = document.querySelector('#'+hideElOnLoad);
-                img.style.display = 'none';
-                this.renderer.domElement.style.display = 'inline-block';
-                resolve(item, model, pos);
-            });
+                    item.place(newPos).then((model,pos)=>{
+                        that.mesh = model;
+                        that.resizeCanvas();
+                        let img = document.querySelector('#'+hideElOnLoad);
+                        img.style.display = 'none';
+                        this.renderer.domElement.style.display = 'inline-block';
+                        resolve(item, model, pos);
+                    });
+                })
+            } else {
+                let item = that.initItem(nftPostHash);
+                let newPos = new THREE.Vector3(0,this.floorY,0);
+        
+                item.place(newPos).then((model,pos)=>{
+                    that.mesh = model;
+                    that.resizeCanvas();
+                    let img = document.querySelector('#'+hideElOnLoad);
+                    img.style.display = 'none';
+                    this.renderer.domElement.style.display = 'inline-block';
+                    resolve(item, model, pos);
+                });
+            }
+           
         });
 
 
@@ -1005,6 +1036,8 @@ export class D3DLoaders {
 
     loadColliderEnvironment =() =>{
         var that = this;
+        return new Promise((resolve,reject)=>{
+
         this.sceneryLoader.load(this.config.sceneryPath, res => {
 
             const gltfScene = res.scene;
@@ -1104,15 +1137,15 @@ export class D3DLoaders {
             collider.material.opacity = 1;
             collider.material.transparent = false;
 
-           visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
+        //   visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
 
           //  collider.position.set(0,3,0);   
-            this.scene.add( visualizer );
+          //  this.scene.add( visualizer );
             this.scene.add( collider );
             collider.updateMatrixWorld();
             //environment.position.set(0,0,0);    
-            this.scene.add( environment );
-            environment.updateMatrixWorld()
+          //  this.scene.add( environment );
+          //  environment.updateMatrixWorld()
 
            //gltfScene.position.set(0,-11.5,0)
            // gltfScene.position.set(0,0,0); 
@@ -1121,10 +1154,13 @@ export class D3DLoaders {
             gltfScene.updateMatrixWorld()
             that.sceneryMesh = gltfScene;
             that.collider = collider;
-            let floorY = that.getFloorLevel(collider);
-            console.log('floorY: ',floorY);
+            this.floorY = that.getFloorLevel(collider);
+            console.log('floorY: ',this.floorY);
 console.log('added environment');
-        } );
+            resolve(gltfScene);
+            });
+
+        })
 
     }
     getFloorLevel = (meshToCheck) =>{

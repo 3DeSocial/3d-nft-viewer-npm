@@ -238,10 +238,7 @@ export default class Item {
 
                 console.log('height after scale: ',newLengthMeshBounds.y);
 
-        let targetFloorYCoord = this.getFloorYCoord(posVector);
-
-                this.postionMeshOnFLoor(obj3D, targetFloorYCoord, newLengthMeshBounds.y);
-                 let planePos = new THREE.Vector3(0,targetFloorYCoord,0);
+                this.postionMeshOnFLoor(obj3D, posVector, newLengthMeshBounds.y);
                //  this.addPlaneAtPos(planePos)
                 that.mesh = obj3D;
                 that.scene.add(that.mesh);
@@ -264,7 +261,8 @@ onErrorCallback = (e)=> {
         return boxmeshFloor;
     }
 
-    postionMeshOnFLoor = (mesh, destY, scaledMeshHeight) =>{
+    postionMeshOnFLoor = (mesh, posVector, scaledMeshHeight) =>{
+        let destY = posVector.y;
         let yOffset = scaledMeshHeight/2;
         let y = destY + yOffset;
         if(mesh.geometry){
@@ -278,8 +276,8 @@ onErrorCallback = (e)=> {
             mesh.children[0].position.setY(0);
             mesh.children[0].position.setZ(0);
         };
-        mesh.position.setY(y);
-        console.log('set Object3D center position to ',y);
+        mesh.position.copy(posVector);
+
 
     }
 
