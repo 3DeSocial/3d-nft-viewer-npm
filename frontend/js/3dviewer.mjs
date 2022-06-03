@@ -1098,7 +1098,7 @@ export class D3DLoaders {
             // create the merged geometry
             const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries( geometries, false );
             mergedGeometry.boundsTree = new MeshBVH( mergedGeometry, { lazyGeneration: false } );
-
+            this.bvh = mergedGeometry.boundsTree;
             collider = new THREE.Mesh( mergedGeometry );
             collider.material.wireframe = false;
             collider.material.opacity = 1;
@@ -1109,31 +1109,52 @@ export class D3DLoaders {
           //  collider.position.set(0,3,0);   
             this.scene.add( visualizer );
             this.scene.add( collider );
+            collider.updateMatrixWorld();
             //environment.position.set(0,0,0);    
             this.scene.add( environment );
+            environment.updateMatrixWorld()
+
            //gltfScene.position.set(0,-11.5,0)
            // gltfScene.position.set(0,0,0); 
 
             that.scene.add(gltfScene);
+            gltfScene.updateMatrixWorld()
             that.sceneryMesh = gltfScene;
             that.collider = collider;
-            let floorY = that.getFloorLevel();
+            let floorY = that.getFloorLevel(collider);
+            console.log('floorY: ',floorY);
 console.log('added environment');
         } );
 
     }
-    getFloorLevel = () =>{
-        let origin = new THREE.Vector3(0,1000,0);
-        let dest = new THREE.Vector3(0,1000,0);
+    getFloorLevel = (meshToCheck) =>{
+        const invMat = new THREE.Matrix4();
+        invMat.copy( this.sceneryMesh.matrixWorld ).invert();
+
+        let origin = new THREE.Vector3(0,100,0);
+        let dest = new THREE.Vector3(0,-100,0);
         let dir = new THREE.Vector3();
         dir.subVectors( dest, origin ).normalize();
         let raycaster = new THREE.Raycaster();
+        raycaster.ray.applyMatrix4( invMat );
         raycaster.set(origin,dir);
-this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, 100, Math.random() * 0xffffff ));
-      //  let intersects = raycaster.intersectObjects(this.visualizer, true);
-        console.log('intersects');
+        const hit = this.bvh.raycastFirst( raycaster.ray );
+        console.log(hit);
+       // hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
+                 let planePos = new THREE.Vector3(0,hit.point.y,0);
+                 this.addPlaneAtPos(planePos);
+this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, 200, Math.random() * 0xffffff ));
+        return hit.point.y;
 
-//console.log(intersects);
+    }
+
+    addPlaneAtPos = (posVector) =>{
+        var geo = new THREE.PlaneBufferGeometry(20, 20);
+        var mat = new THREE.MeshPhongMaterial({ color: 0x99FFFF, side: THREE.DoubleSide });
+        var plane = new THREE.Mesh(geo, mat);
+        plane.rotateX( - Math.PI / 2);
+        plane.position.copy(posVector);
+        this.scene.add(plane);
 
     }
     addScenery = () =>{
