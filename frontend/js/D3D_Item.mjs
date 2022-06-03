@@ -69,11 +69,6 @@ export default class Item {
         return new Promise((resolve,reject)=>{
             this.fetchModel(this.modelUrl, pos)
             .then((model)=>{
-                this.mesh = model;
-                let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh}});
-                document.body.dispatchEvent(loadedEvent);
-
-                document.body.dispatchEvent(this.meshPlacedEvent);
                 resolve(model, pos);
             }).catch((err=>{
                 console.log( err);
@@ -91,6 +86,9 @@ export default class Item {
                 that.modelUrl = modelUrl;
                 that.placeModel(pos)
                 .then((model, pos)=>{
+                    let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh}});
+                    document.body.dispatchEvent(loadedEvent);
+                    document.body.dispatchEvent(this.meshPlacedEvent);
                     resolve(model, pos);
                 })
             });
@@ -157,7 +155,6 @@ export default class Item {
         let that = this;
         let boxMesh = this.addContainerBoxToScene(posVector);
         let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
-        let targetFloorYCoord = this.getFloorYCoord(posVector);
         return new Promise((resolve,reject)=>{
 
 
@@ -241,13 +238,13 @@ export default class Item {
 
                 console.log('height after scale: ',newLengthMeshBounds.y);
 
+        let targetFloorYCoord = this.getFloorYCoord(posVector);
 
                 this.postionMeshOnFLoor(obj3D, targetFloorYCoord, newLengthMeshBounds.y);
-                //et planePos = new THREE.Vector3(0,targetFloorYCoord,0);
-                // this.addPlaneAtPos(planePos)
-               
-                this.scene.add(obj3D);
-                this.mesh = obj3D;
+                 let planePos = new THREE.Vector3(0,targetFloorYCoord,0);
+               //  this.addPlaneAtPos(planePos)
+                that.mesh = obj3D;
+                that.scene.add(that.mesh);
                 resolve(obj3D);
             },
             this.onProgressCallback,
@@ -263,7 +260,7 @@ onErrorCallback = (e)=> {
     console.log(e);
 }
     getFloorYCoord = (posVector) =>{
-        let boxmeshFloor = posVector.y-(this.config.height/2);
+        let boxmeshFloor = posVector.y;
         return boxmeshFloor;
     }
 

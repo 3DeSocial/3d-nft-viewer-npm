@@ -50,7 +50,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import Item from './D3D_Item.mjs';import Lighting from './D3D_Lighting.mjs';
-import {MeshBVH, VRButton, VRControls, SkyBoxLoader} from '3d-nft-viewer';
+import {MeshBVH, VRButton, VRControls, SkyBoxLoader, MeshBVHVisualizer} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, collider, visualizer, player, controls, geometries;
@@ -678,6 +678,9 @@ export class D3DLoaders {
      fitCameraToMesh(loadedItem) {
 
         console.log('fitCameraToMesh: ', loadedItem);
+        if(!loadedItem.mesh){
+            return false;
+        };
         const box = new THREE.Box3().setFromObject(loadedItem.mesh);
         const center = new THREE.Vector3();
         const size = new THREE.Vector3();
@@ -828,7 +831,6 @@ export class D3DLoaders {
             that.updateLink(el,'Loading..');
             that.initContainer(targetEl);
             let item = that.initItemForModel(modelUrl);
-            that.mesh = item.model;
             let newPos = new THREE.Vector3(0,3.7,0);
             item.place(newPos).then((model,pos)=>{
                 that.resizeCanvas();
@@ -856,10 +858,12 @@ export class D3DLoaders {
             that.initContainer(container);
            
             let item = that.initItemForModel(modelUrl);
-                that.mesh = item.model;
-            let newPos = new THREE.Vector3(0,3.7,0);
+            let newPos = new THREE.Vector3(0,0,0);
             
             item.place(newPos).then((model,pos)=>{
+                that.mesh = model;
+                console.log(that.mesh);
+
                 that.resizeCanvas();
                 let loadingElement = document.querySelector('#'+hideElOnLoad);
                 if(loadingElement){
@@ -885,10 +889,10 @@ export class D3DLoaders {
             that.initContainer(container);
            
             let item = that.initItem(nftPostHash);
-                that.mesh = item.model;
-            let newPos = new THREE.Vector3(0,1.2,0);
+            let newPos = new THREE.Vector3(0,0,0);
             
             item.place(newPos).then((model,pos)=>{
+                that.mesh = model;
                 that.resizeCanvas();
                 let img = document.querySelector('#'+hideElOnLoad);
                 img.style.display = 'none';
@@ -928,6 +932,7 @@ export class D3DLoaders {
             height: this.config.scaleModelToHeight,
             width: this.config.scaleModelToWidth,
             depth: this.config.scaleModelToDepth,
+            loader: this.loader,
             nftPostHashHex: nftPostHashHex,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute
@@ -1096,27 +1101,41 @@ export class D3DLoaders {
 
             collider = new THREE.Mesh( mergedGeometry );
             collider.material.wireframe = false;
-            collider.material.opacity = 0;
-            collider.material.transparent = true;
+            collider.material.opacity = 1;
+            collider.material.transparent = false;
 
-         //   visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
+           visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
 
-            collider.position.set(0,3,0);   
-         //   this.scene.add( visualizer );
+          //  collider.position.set(0,3,0);   
+            this.scene.add( visualizer );
             this.scene.add( collider );
             //environment.position.set(0,0,0);    
-         //   this.scene.add( environment );
+            this.scene.add( environment );
            //gltfScene.position.set(0,-11.5,0)
-            gltfScene.position.set(0,0,0); 
+           // gltfScene.position.set(0,0,0); 
 
             that.scene.add(gltfScene);
             that.sceneryMesh = gltfScene;
-
+            that.collider = collider;
+            let floorY = that.getFloorLevel();
 console.log('added environment');
         } );
 
     }
+    getFloorLevel = () =>{
+        let origin = new THREE.Vector3(0,1000,0);
+        let dest = new THREE.Vector3(0,1000,0);
+        let dir = new THREE.Vector3();
+        dir.subVectors( dest, origin ).normalize();
+        let raycaster = new THREE.Raycaster();
+        raycaster.set(origin,dir);
+this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, 100, Math.random() * 0xffffff ));
+      //  let intersects = raycaster.intersectObjects(this.visualizer, true);
+        console.log('intersects');
 
+//console.log(intersects);
+
+    }
     addScenery = () =>{
         let that = this;
         if(this.sceneryMesh){
