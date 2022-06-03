@@ -867,7 +867,9 @@ export class D3DLoaders {
                         that.mesh = model;
                         that.resizeCanvas();
                         let img = document.querySelector('#'+hideElOnLoad);
-                        img.style.display = 'none';
+                        if(img){
+                            img.style.display = 'none';
+                        };
                         this.renderer.domElement.style.display = 'inline-block';
                         resolve(item, model, pos);
                     });
@@ -880,7 +882,9 @@ export class D3DLoaders {
                     that.mesh = model;
                     that.resizeCanvas();
                     let img = document.querySelector('#'+hideElOnLoad);
-                    img.style.display = 'none';
+                    if(img){
+                        img.style.display = 'none';
+                    };
                     this.renderer.domElement.style.display = 'inline-block';
                     resolve(item, model, pos);
                 });
@@ -910,8 +914,10 @@ export class D3DLoaders {
                     item.place(newPos).then((model,pos)=>{
                         that.mesh = model;
                         that.resizeCanvas();
-                        let img = document.querySelector('#'+hideElOnLoad);
+let img = document.querySelector('#'+hideElOnLoad);
+                    if(img){
                         img.style.display = 'none';
+                    };
                         this.renderer.domElement.style.display = 'inline-block';
                         resolve(item, model, pos);
                     });
@@ -923,8 +929,10 @@ export class D3DLoaders {
                 item.place(newPos).then((model,pos)=>{
                     that.mesh = model;
                     that.resizeCanvas();
-                    let img = document.querySelector('#'+hideElOnLoad);
-                    img.style.display = 'none';
+let img = document.querySelector('#'+hideElOnLoad);
+                    if(img){
+                        img.style.display = 'none';
+                    };
                     this.renderer.domElement.style.display = 'inline-block';
                     resolve(item, model, pos);
                 });
@@ -956,7 +964,7 @@ export class D3DLoaders {
     }
 
     initItem = (nftPostHashHex) =>{
-
+        
         this.loadedItem = new Item({
             three: THREE,
             scene: this.scene,
@@ -972,13 +980,17 @@ export class D3DLoaders {
 
     }
 
-    initItemForModel = (modelUrl) =>{
-        let urlParts = modelUrl.split('.');
-        let extension = urlParts[urlParts.length-1];
+    initItemForModel = (modelUrl, format) =>{
+
+        if(typeof(format)==='undefined'){
+            let urlParts = modelUrl.split('.');
+            format = urlParts[urlParts.length-1];            
+        };
+
 
         this.loadedItem = new Item({
             three: THREE,
-            loader: this.loaders.getLoaderForFormat(extension),
+            loader: this.loaders.getLoaderForFormat(format),
             scene: this.scene,
             height: this.config.scaleModelToHeight,
             width: this.config.scaleModelToWidth,
@@ -986,7 +998,7 @@ export class D3DLoaders {
             modelUrl: modelUrl,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
-            format:extension
+            format:format
         });
         return this.loadedItem;
 
@@ -1178,15 +1190,15 @@ console.log('added environment');
         console.log(hit);
        // hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
                  let planePos = new THREE.Vector3(0,hit.point.y,0);
-                 this.addPlaneAtPos(planePos);
-this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, 200, Math.random() * 0xffffff ));
+             //   this.addPlaneAtPos(planePos);
+//this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, 200, Math.random() * 0xffffff ));
         return hit.point.y;
 
     }
 
     addPlaneAtPos = (posVector) =>{
         var geo = new THREE.PlaneBufferGeometry(20, 20);
-        var mat = new THREE.MeshPhongMaterial({ color: 0x99FFFF, side: THREE.DoubleSide });
+        var mat = new THREE.MeshPhongMaterial({ color: 0xFF6666, side: THREE.DoubleSide });
         var plane = new THREE.Mesh(geo, mat);
         plane.rotateX( - Math.PI / 2);
         plane.position.copy(posVector);
