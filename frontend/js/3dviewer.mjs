@@ -276,6 +276,7 @@ export class D3DLoaders {
         this.controllers = [];
         this.loaders = new D3DLoaders({defaultLoader:this.defaultLoader});
         this.initLoaders();
+        this.showroomLoaded = false;
         environment = null;
         collider = null;
 
@@ -853,10 +854,7 @@ export class D3DLoaders {
             let container = document.getElementById(containerId);
                  
             that.initContainer(container);
-           
-
-            that.initContainer(container);
-            if(this.config.useShowroom){
+                if(this.config.useShowroom && !this.showroomLoaded){
                 this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
                 this.loadColliderEnvironment()
                 .then(()=>{
@@ -904,7 +902,7 @@ export class D3DLoaders {
             let container = document.getElementById(containerId);
             
             that.initContainer(container);
-            if(this.config.useShowroom){
+            if(this.config.useShowroom && !this.showroomLoaded){
                 this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
                 this.loadColliderEnvironment()
                 .then(()=>{
@@ -1048,6 +1046,7 @@ let img = document.querySelector('#'+hideElOnLoad);
 
     loadColliderEnvironment =() =>{
         var that = this;
+        this.showroomLoaded = true;
         return new Promise((resolve,reject)=>{
 
         this.sceneryLoader.load(this.config.sceneryPath, res => {
@@ -1055,7 +1054,6 @@ let img = document.querySelector('#'+hideElOnLoad);
             const gltfScene = res.scene;
             gltfScene.scale.set(0.2,0.2,0.2);    
 
-            console.log(gltfScene);
          //   gltfScene.scale.setScalar( .01 );
 
             const box = new THREE.Box3();
@@ -1147,7 +1145,7 @@ let img = document.querySelector('#'+hideElOnLoad);
             collider = new THREE.Mesh( mergedGeometry );
             collider.material.wireframe = false;
             collider.material.opacity = 1;
-            collider.material.transparent = false;
+            collider.material.transparent = true;
 
         //   visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
 
@@ -1167,8 +1165,6 @@ let img = document.querySelector('#'+hideElOnLoad);
             that.sceneryMesh = gltfScene;
             that.collider = collider;
             this.floorY = that.getFloorLevel(collider);
-            console.log('floorY: ',this.floorY);
-console.log('added environment');
             resolve(gltfScene);
             });
 
