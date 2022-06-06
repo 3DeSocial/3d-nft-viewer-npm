@@ -284,16 +284,16 @@ class VRControls {
     }
 
     moveDown = (data) => {
-        this.config.moveDown();
+        this.config.moveDown(data);
         
     }
 
     rotateLeft = (data) => {
-        this.config.rotateLeft();
+        this.config.rotateLeft(data);
     }
 
     rotateRight = (data) => {
-        this.config.rotateRight();
+        this.config.rotateRight(data);
     }
 
 	dollyMove = () =>{

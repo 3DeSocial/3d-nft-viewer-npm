@@ -1039,12 +1039,16 @@ let img = document.querySelector('#'+hideElOnLoad);
 
                                             },
                                             rotateLeft: function(){
-                                                that.player.rotateY(THREE.Math.degToRad(2));
-                                                that.dolly.rotateY(THREE.Math.degToRad(2));
+                                                let rot = THREE.Math.degToRad(1);
+
+                                                that.player.rotateY(rot);
+                                                that.dolly.rotateY(rot);
                                             },
                                             rotateRight: function(){
-                                                that.player.rotateY(-THREE.Math.degToRad(2));
-                                                that.dolly.rotateY(-THREE.Math.degToRad(2));
+                                                let rot = -(THREE.Math.degToRad(1));
+                                                
+                                                that.player.rotateY(rot);
+                                                that.dolly.rotateY(rot);
                                             }
                                         });
             this.dolly = this.vrControls.buildControllers();        
