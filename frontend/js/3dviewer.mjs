@@ -1028,19 +1028,19 @@ let img = document.querySelector('#'+hideElOnLoad);
                                                 rgtPressed = true;
                                             },
                                             moveForward: function(){
-                                                console.log('fwd detecte');
                                                 fwdPressed = true;
                                             },
                                             moveBack: function(){
                                                 bkdPressed = true;
+
                                             },
                                             rotateLeft: function(){
-                                                that.player.rotateY(THREE.Math.degToRad(1));
-                                                that.dolly.rotateY(THREE.Math.degToRad(1));
+                                                that.player.rotateY(THREE.Math.degToRad(2));
+                                                that.dolly.rotateY(THREE.Math.degToRad(2));
                                             },
                                             rotateRight: function(){
-                                                that.player.rotateY(-THREE.Math.degToRad(1));
-                                                that.dolly.rotateY(-THREE.Math.degToRad(1));
+                                                that.player.rotateY(-THREE.Math.degToRad(2));
+                                                that.dolly.rotateY(-THREE.Math.degToRad(2));
                                             }
                                         });
             this.dolly = this.vrControls.buildControllers();        
@@ -1358,7 +1358,7 @@ initPlayer = () => {
         this.player.material.shadowSide = 2;*/
         this.player.rotateY(0);
     
-        this.player.position.set(0, 4, 6);
+        this.player.position.set(0, 0, 6);
         this.scene.add( this.player );        
       /*  this.reset();*/
     }
@@ -1367,11 +1367,6 @@ initPlayer = () => {
 
         this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
         this.player.position.addScaledVector( this.playerVelocity, delta );
-
-        // move the this.player
-        //const angle = this.controls.getAzimuthalAngle(); // directio camera looking
-        const angle = this.player.rotation.y;
-    // console.log('x',this.player.rotation.x,'y',this.player.rotation.y,'z',this.player.rotation.z);
         if ( fwdPressed ) {
 
             //this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
@@ -1395,8 +1390,6 @@ initPlayer = () => {
            // this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
             this.player.translateX(params.playerSpeed * delta );
         }
-  //      this.camera.position.set(this.player.position);
-
         this.player.updateMatrixWorld();
 
         // adjust this.player position based on collisions

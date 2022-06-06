@@ -138,7 +138,7 @@ class VRControls {
                                         } else {
                                             //console.log("Right Paddle Down");
                                             if (i == 1) {
-                                             //   self.player.rotateY(THREE.Math.degToRad(1));
+                                                self.player.rotateY(THREE.Math.degToRad(1));
                                             }
                                         }
                                     } else {
@@ -153,9 +153,9 @@ class VRControls {
                                                // );
                                             } else {
                                                 //console.log("Right Paddle Down");
-                                                //self.player.rotateY(
-                                                 //   THREE.Math.degToRad(Math.abs(value))
-                                                //);
+                                           //     self.player.rotateY(
+                                             //      THREE.Math.degToRad(Math.abs(value))
+                                               // );
                                             }
                                         }
                                     }
@@ -236,21 +236,20 @@ class VRControls {
     handleRightThumbstick = (hand, data) =>{
         if(this.isOverMovementThreshold(data.axes[2])){
             if (data.axes[2] > 0) {
-                console.log(hand+ ' stick: right ',data.axes[2]);
+              //  console.log(hand+ ' stick: right ',data.axes[2]);
                 this.rotateRight(data);
             } else if (data.axes[2] < 0) {
-                console.log(hand+ ' stick: left',data.axes[2]);
-
+                //console.log(hand+ ' stick: left',data.axes[2]);
                 this.rotateLeft(data);
             };
         };
 
         if(this.isOverMovementThreshold(data.axes[3])){
             if(data.axes[3] > 0){
-                console.log(hand+ ' stick: back',data.axes[3]);
+             //   console.log(hand+ ' stick: back',data.axes[3]);
                 this.moveBackward(data);
             } else if (data.axes[3] < 0){
-                console.log(hand + ' stick: forward',data.axes[3]);
+             //   console.log(hand + ' stick: forward',data.axes[3]);
                 this.moveForward(data);
             };
         };
@@ -265,17 +264,14 @@ class VRControls {
     }
 
     moveForward = (data) => {
-console.log('moving forward');
         this.config.moveForward(data);
     }
 
     moveBackward = (data) => {
-console.log('moving back');
         this.config.moveBack(data);
     }
 
     moveLeft = (data) => {
-console.log('moving left');
         this.config.moveLeft(data);
     }
 
