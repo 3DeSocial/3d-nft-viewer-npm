@@ -86,7 +86,8 @@ export default class Item {
                 that.modelUrl = modelUrl;
                 that.placeModel(pos)
                 .then((model, pos)=>{
-                    let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh}});
+                    that.mesh = model;
+                    let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
                     document.body.dispatchEvent(loadedEvent);
                     document.body.dispatchEvent(this.meshPlacedEvent);
                     resolve(model, pos);
@@ -195,7 +196,7 @@ export default class Item {
                  meshBounds = new THREE.Box3().setFromObject( obj3D );
                 
                 console.log(meshBounds);
-                console.log(obj3D);
+
 
                 // Calculate side lengths of scene (cube) bounding box
                 let lengthSceneBounds = {
@@ -213,7 +214,6 @@ export default class Item {
                   y: Math.abs(meshBounds.max.y - meshBounds.min.y),
                   z: Math.abs(meshBounds.max.z - meshBounds.min.z),
                 };
-                console.log('height before scale: ',lengthMeshBounds.y);
 
                 // Calculate length ratios
                 let lengthRatios = [
