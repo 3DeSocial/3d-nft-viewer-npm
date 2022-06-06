@@ -1364,8 +1364,9 @@ initPlayer = () => {
     }
 
     updatePlayer = (delta) =>{
-
-        this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
+        if(this.showroomLoaded){
+            this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
+        };
         this.player.position.addScaledVector( this.playerVelocity, delta );
         if ( fwdPressed ) {
 
@@ -1457,7 +1458,9 @@ initPlayer = () => {
         if ( ! this.playerIsOnGround ) {
 
             deltaVector.normalize();
-            this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
+            if(this.showroomLoaded){
+               this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
+            };
 
         } else {
 
@@ -1494,7 +1497,7 @@ initPlayer = () => {
 
             this.reset();
 
-        }
+        };
         fwdPressed = false;
         bkdPressed = false;
         rgtPressed = false;
@@ -1502,7 +1505,6 @@ initPlayer = () => {
     }
 
     reset = ()=> {
-console.log('player reset');
         this.playerVelocity.set( 0, 0, 0 );
         this.player.position.set( 0, 5, 5 );
         this.camera.position.set(0, 6.5, 5);
