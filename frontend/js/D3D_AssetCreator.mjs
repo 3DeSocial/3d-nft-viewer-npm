@@ -389,12 +389,16 @@ class D3DAssetCreator extends D3DNFTViewer {
             throw('Error: no screenShots taken');
         };
 
-        gifshot.createGIF(
-            {
+        let params = {
                 images: that.gifShots,
                 gifWidth: that.outputWidth,
                 gifHeight: this.outputHeight
-            },
+            };
+
+        console.log('gif params: ',params);
+
+        gifshot.createGIF(
+            params,
             function (obj) {
                 if (!obj.error) {
                     var image = obj.image;
@@ -410,8 +414,7 @@ class D3DAssetCreator extends D3DNFTViewer {
         let currentHeight = document.getElementsByTagName('canvas')[0].height;
         
         if(!isNaN(scaleHeight)){
-            console.log('scaling height to: ',scaleHeight);
-            if (currentWidth > scaleHeight) {
+            if (currentHeight > scaleHeight) {
                 // calculate dimensions if we reize to 600 height
                 let reductionPercentage = (scaleHeight / currentHeight) * 100;
                 var newWidth = currentWidth * (reductionPercentage / 100);
