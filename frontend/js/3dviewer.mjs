@@ -307,9 +307,12 @@ export class D3DLoaders {
     }
 
     clearMesh = (obj, cb) =>{
-        obj = this.loadedItem.mesh;
-        console.log('clearMesh: ',this.loadedItem.mesh);
-        this.recursiveDestroy(obj,cb);
+        if(this.loadedItem){
+            if(this.loadedItem.mesh){
+                obj = this.loadedItem.mesh;
+                this.recursiveDestroy(obj,cb);                
+            }
+        }
     }
 
     recursiveDestroy = (obj, cb) =>{
@@ -553,13 +556,12 @@ export class D3DLoaders {
     }
 
     addEventListenerContextLost = () =>{
-
-//        this.renderer.context.canvas.addEventListener("webglcontextlost", this.onLostContext);
+        this.renderer.context.canvas.addEventListener("webglcontextlost", this.onLostContext);
     }
 
     onLostContext = (e)=>{
         e.preventDefault();
-        console.log('lost!', e);
+        console.log('lost Context!', e);
         this.renderer.setAnimationLoop(null);
     }
 
@@ -1066,7 +1068,6 @@ let img = document.querySelector('#'+hideElOnLoad);
             gltfScene.traverse( c => {
 
                 if ( c.isMesh ) {
-                    console.log('mesh found');
                     c.castShadow = false;
                     c.receiveShadow = true;
                     const hex = c.material.color.getHex();
@@ -1149,16 +1150,19 @@ let img = document.querySelector('#'+hideElOnLoad);
 
         //   visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
 
-          //  collider.position.set(0,3,0);   
+            collider.position.setX(0);
+            collider.position.setZ(0);  
           //  this.scene.add( visualizer );
             this.scene.add( collider );
             collider.updateMatrixWorld();
+
             //environment.position.set(0,0,0);    
           //  this.scene.add( environment );
           //  environment.updateMatrixWorld()
 
            //gltfScene.position.set(0,-11.5,0)
-           // gltfScene.position.set(0,0,0); 
+            gltfScene.position.setX(0); 
+            gltfScene.position.setZ(0); 
 
             that.scene.add(gltfScene);
             gltfScene.updateMatrixWorld()

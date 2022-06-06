@@ -528,6 +528,12 @@ class D3DAssetCreator extends D3DNFTViewer {
         let previewImgTag = document.getElementById(gifName);
 
         let strMime = 'image/jpeg';
+        let noRotations = angles+2;
+
+        this.camera.position.x = Math.sin(0) * cameraDistance;
+        this.camera.position.z = Math.cos(0) * cameraDistance;
+
+        this.controls.update();
 
         let recordingTimer = window.setInterval(() => {
 
@@ -541,7 +547,10 @@ class D3DAssetCreator extends D3DNFTViewer {
 
                 imgData = that.takeGifShot({appendTo:previewEl, gifName: gifName});
                 this.displayGifShot({appendTo:previewEl, gifName: gifName, imgData:imgData})
-
+                this.storeGifScreenshot(
+                    imgData.replace(strMime, 'image/octet-stream'),
+                    imgData,
+                    'snapshot.jpg');
             } else {
                 // dont use first frame which has wrong angle                                
                 let imgData = that.takeGifShot({replacePreview:previewImgTag, gifName: gifName});
@@ -552,7 +561,7 @@ class D3DAssetCreator extends D3DNFTViewer {
                 );
 
                 // stop when all angles are covered
-                if (i === angles) {
+                if (i > noRotations) {
                     // 37 as we skip the 1st screenshot
                     clearInterval(recordingTimer);
                     that.createGifFromImages(gifName);
@@ -560,7 +569,7 @@ class D3DAssetCreator extends D3DNFTViewer {
             }
 
             ++i;
-        }, 100);
+        }, noRotations);
               
     }
 
