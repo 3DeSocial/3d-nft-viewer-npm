@@ -556,8 +556,8 @@ export class D3DLoaders {
     }
 
     addEventListenerContextLost = () =>{
-        if(this.renderer.context.canvas){
-            if(this.renderer.context){
+        if(this.renderer.context){
+            if(this.renderer.context.canvas){
                this.renderer.context.canvas.addEventListener("webglcontextlost", this.onLostContext);
             }
         }
