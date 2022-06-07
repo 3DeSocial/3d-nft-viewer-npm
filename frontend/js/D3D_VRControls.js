@@ -138,7 +138,7 @@ class VRControls {
                                         } else {
                                             //console.log("Right Paddle Down");
                                             if (i == 1) {
-                                                self.player.rotateY(THREE.Math.degToRad(1));
+                                               // self.player.rotateY(THREE.Math.degToRad(1));
                                             }
                                         }
                                     } else {

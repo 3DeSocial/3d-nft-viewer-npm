@@ -1019,36 +1019,47 @@ let img = document.querySelector('#'+hideElOnLoad);
         this.vrControls = new VRControls({  scene:this.scene,
                                             renderer: this.renderer,
                                             camera: this.camera,
-                                            moveUp: function(){
-
+                                            moveUp: (data)=>{
+                                                return;
                                             },
-                                            moveDown: function(){
-
+                                            moveDown:(data)=>{
+                                                return;
                                             },
-                                            moveLeft: function(){
+                                            moveLeft:(data)=>{
                                                 lftPressed = true;
                                             },
-                                            moveRight: function(){
+                                            moveRight:(data)=>{
                                                 rgtPressed = true;
+                                                return;
                                             },
-                                            moveForward: function(){
+                                            moveForward:(data)=>{
                                                 fwdPressed = true;
+                                                return;
                                             },
-                                            moveBack: function(){
+                                            moveBack:(data)=>{
                                                 bkdPressed = true;
+                                                return;
 
                                             },
-                                            rotateLeft: function(){
-                                                let rot = THREE.Math.degToRad(1);
-
-                                                that.player.rotateY(rot);
-                                                that.dolly.rotateY(rot);
+                                            rotateLeft: (data)=>{
+                                                try{
+                                                    let rot =  0.017453;
+                                                    that.player.rotateY(rot);
+                                                    that.dolly.rotateY(rot);
+                                                } catch(err) {
+                                                    console.log(err);
+                                                };
+                                                return;
                                             },
-                                            rotateRight: function(){
-                                                let rot = -(THREE.Math.degToRad(1));
-                                                
+                                            rotateRight: (data)=>{
+                                                try{
+                                                let rot = -0.017453;
                                                 that.player.rotateY(rot);
                                                 that.dolly.rotateY(rot);
+                                                } catch(err) {
+                                                    console.log(err);
+                                                };
+                                                return;
                                             }
                                         });
             this.dolly = this.vrControls.buildControllers();        
