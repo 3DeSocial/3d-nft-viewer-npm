@@ -80,7 +80,6 @@ class D3DAssetCreator extends D3DNFTViewer {
 
     addMeshLoadedListener = ()=>{
          document.body.addEventListener('loaded',(e)=>{
-            console.log('loaded mesh!');
             this.refreshAnimationOptions(e.detail.mesh);
             this.resizeCanvas();
         }, false);
@@ -89,7 +88,6 @@ class D3DAssetCreator extends D3DNFTViewer {
     refreshAnimationOptions = (mesh) =>{
         let that = this;
         if(!this.loadedItem.hasAnimations()){
-            console.log('Item has no animations');
             return false;
         };
 
@@ -163,9 +161,7 @@ class D3DAssetCreator extends D3DNFTViewer {
                     opts.rotationAngles = that.getFramesFromUI(),
                     opts.rotationDirection = that.getRotateFromUI(),
                     opts.previewElement = 'asset-previews';
-
-                    console.log(opts);
-                that.captureRotatingGif(opts);
+                    that.captureRotatingGif(opts);
             }, false);    
         };
     }
@@ -264,7 +260,7 @@ class D3DAssetCreator extends D3DNFTViewer {
         if(typeof(this.screenShots)==='undefined'){
             this.screenShots = [];
         };
-
+        opts = this.validateScaleOptions(opts);
         this.calcOutputSize(opts.scaleToWidth, opts.scaleToHeight);
 
         try {
@@ -351,7 +347,6 @@ class D3DAssetCreator extends D3DNFTViewer {
 
 
     appendGifShotToContainer = (imgData, target, name) =>{
-        console.log('appendGifShotToContainer:', target);
         let newEl = document.createElement('img');
             newEl.setAttribute('class',name);
             newEl.src = imgData;
@@ -409,6 +404,7 @@ class D3DAssetCreator extends D3DNFTViewer {
     }
 
     calcOutputSize = (scaleWidth, scaleHeight) =>{
+        console.log('calcOutputSize',scaleWidth, scaleHeight);
 
         let currentWidth = document.getElementsByTagName('canvas')[0].width;
         let currentHeight = document.getElementsByTagName('canvas')[0].height;
@@ -420,19 +416,28 @@ class D3DAssetCreator extends D3DNFTViewer {
                 var newWidth = currentWidth * (reductionPercentage / 100);
                 this.outputHeight = scaleHeight;
                 this.outputWidth = newWidth;
+                console.log('calculate reductionPercentage:',reductionPercentage);
             } else {
+                console.log('currentHeight < scaleHeight: no scaling required.');
+                
+                // dont scale larger or it will stretch
                 this.outputHeight = currentHeight;
                 this.outputWidth = currentWidth;                 
             }
         
         } else {
             if (currentWidth > scaleWidth) {
+
                 // calculate dimensions if we reize to 600 height
                 let reductionPercentage = (scaleWidth / currentWidth) * 100;
                 var newHeight = currentHeight * (reductionPercentage / 100);
                 this.outputWidth = scaleWidth;
                 this.outputHeight = newHeight;
+                console.log('calculate newHeight:',newHeight);
             } else {
+                console.log('currentWidth < scaleWidth: no scaling required.');
+
+                // dont scale larger or it will stretch
                 this.outputHeight = currentHeight;
                 this.outputWidth = currentWidth;                 
             }
@@ -473,6 +478,8 @@ class D3DAssetCreator extends D3DNFTViewer {
         let previewEl = document.getElementById(opts.previewElement);
 
         let gifName = this.generateGifName();
+
+        opts = this.validateScaleOptions(opts);
         this.calcOutputSize(opts.scaleToWidth, opts.scaleToHeight);
 
         let strMime = 'image/jpeg';
@@ -520,6 +527,7 @@ class D3DAssetCreator extends D3DNFTViewer {
         let previewEl = document.getElementById(opts.previewElement);
 
         let gifName = this.generateGifName();
+
         this.calcOutputSize(opts.scaleToWidth,opts.scaleToHeight);        
 
         this.gifShots = [];
@@ -573,6 +581,29 @@ class D3DAssetCreator extends D3DNFTViewer {
               
     }
 
+    validateScaleOptions = (opts) =>{
+        console.log('validateScaleOptions',opts);
+        if(!isNaN(parseInt(opts.scaleToWidth))&&!isNaN(parseInt(opts.scaleToHeight))){
+            // we have width and height instead of just one
+            if(parseInt(opts.scaleToWidth)>parseInt(opts.scaleToHeight)){
+                delete opts.scaleToWidth;
+                return opts;
+            };
+
+            if (parseInt(opts.scaleToWidth)<parseInt(opts.scaleToHeight)){
+                delete opts.scaleToHeight;
+                return opts;
+            };
+
+           if (parseInt(opts.scaleToWidth) === parseInt(opts.scaleToHeight)){
+                delete opts.scaleToWidth;
+                return opts;
+            };
+        } else {
+            return opts;
+        }
+    }
+
     setVideoOptions = (opts)=>{
 
         let that = this;
@@ -583,7 +614,7 @@ class D3DAssetCreator extends D3DNFTViewer {
         let gifName = this.generateGifName();
         let cameraDistance = this.camera.position.distanceTo(this.loadedItem.getPosition());
         let previewImgTag = document.getElementById(gifName);
-
+        opts = this.validateScaleOptions(opts);
         this.calcOutputSize(opts.scaleToWidth, opts.scaleToHeight);
 
         if(parseInt(opts.animate)>0){

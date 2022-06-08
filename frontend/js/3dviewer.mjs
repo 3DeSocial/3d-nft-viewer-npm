@@ -372,7 +372,7 @@ export class D3DLoaders {
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/600, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
-        this.camera.position.set(10, 8, 40);
+        this.camera.position.set(0, 4, 12);
         this.camera.lookAt(0,0,0);
 
     }
@@ -386,6 +386,7 @@ export class D3DLoaders {
     }
 
     restrictCameraToRoom = () => {
+        console.log('restrictCameraToRoom', this.config.controls);
         this.controls.maxDistance = this.config.controls.maxDistance;
         this.controls.maxPolarAngle = this.config.controls.maxPolarAngle;
         this.controls.update();  
@@ -918,7 +919,7 @@ export class D3DLoaders {
                     item.place(newPos).then((model,pos)=>{
                         that.mesh = model;
                         that.resizeCanvas();
-let img = document.querySelector('#'+hideElOnLoad);
+                    let img = document.querySelector('#'+hideElOnLoad);
                     if(img){
                         img.style.display = 'none';
                     };
@@ -1183,7 +1184,6 @@ let img = document.querySelector('#'+hideElOnLoad);
             gltfScene.position.setX(0); 
             gltfScene.position.setZ(0); 
 
-            that.scene.add(gltfScene);
             gltfScene.updateMatrixWorld()
             that.sceneryMesh = gltfScene;
             that.collider = collider;
@@ -1206,7 +1206,6 @@ let img = document.querySelector('#'+hideElOnLoad);
         raycaster.ray.applyMatrix4( invMat );
         raycaster.set(origin,dir);
         const hit = this.bvh.raycastFirst( raycaster.ray );
-        console.log(hit);
        // hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
                  let planePos = new THREE.Vector3(0,hit.point.y,0);
              //   this.addPlaneAtPos(planePos);
@@ -1227,20 +1226,26 @@ let img = document.querySelector('#'+hideElOnLoad);
     addScenery = () =>{
         let that = this;
         if(this.sceneryMesh){
-            this.scene.add(this.sceneryMesh);
-        } else {
-            let modelURL = this.config.sceneryPath;
-            that.loader = this.loaders.getLoaderForFormat('gltf');
-            that.loader.load(modelURL, (model)=> {
-                let gltfMesh = null;
-                gltfMesh = model.scene;
-                gltfMesh.position.set(0,0,0); 
-                gltfMesh.scale.set(0.2,0.2,0.2);    
-                that.sceneryMesh = gltfMesh;
-                that.scene.add(that.sceneryMesh);
-                this.restrictCameraToRoom();
+                    console.log('adding ALREADY loaded sceneryMesh');
 
-            })            
+            this.scene.add(this.sceneryMesh);
+            this.restrictCameraToRoom();
+        } else {
+            this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
+            this.loadColliderEnvironment()
+                .then(()=>{
+                    console.log('adding newly loaded sceneryMesh');
+                    that.scene.add(that.sceneryMesh);
+                    that.sceneryMesh.updateMatrixWorld();
+                    loadedItem.mesh.updateMatrixWorld();
+                    if(this.loadedItem){
+                        let newPos = new THREE.Vector3(0,this.floorY,0);
+            
+                        this.loadedItem.moveTo(newPos);
+                        that.resizeCanvas();                    
+                        this.restrictCameraToRoom();                        
+                    }
+                })
         }
         
     }
@@ -1248,23 +1253,12 @@ let img = document.querySelector('#'+hideElOnLoad);
     removeScenery = () =>{
         if(this.sceneryMesh){
             this.scene.remove(this.sceneryMesh);
-                    console.log('removeScenery: OK');
-
             this.unRestrictCamera();
-        }else {
-            console.log('no scenerymesh to remove');
-        }
+        };
     }    
 
     removeFloor = () =>{
-        if(this.sceneryMesh){
-                    console.log('removeScenery: OK');
-
-            this.scene.remove(this.sceneryMesh);
-            this.unRestrictCamera();
-        } else {
-            console.log('no scenerymesh to remove');
-        }
+        this.removeScenery();
     }
 
     addClickListenerFullScreen = (ctr, el, modelUrl) => {

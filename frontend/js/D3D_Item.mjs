@@ -96,6 +96,16 @@ export default class Item {
         });
     }
 
+    remove = () =>{
+        console.log('remove: ',this.mesh);
+        this.scene.remove(this.mesh.children[0]);
+    }
+    moveTo = (pos)=>{
+        console.log('current: ',this.mesh.position);
+        console.log('moveto: ',pos);
+        this.mesh.position.copy(pos);
+    }
+
     centerMeshInScene = (gltfScene) =>{
         let firstMesh = null;
 
