@@ -404,12 +404,14 @@ class D3DAssetCreator extends D3DNFTViewer {
     }
 
     calcOutputSize = (scaleWidth, scaleHeight) =>{
+   
         console.log('calcOutputSize',scaleWidth, scaleHeight);
 
         let currentWidth = document.getElementsByTagName('canvas')[0].width;
         let currentHeight = document.getElementsByTagName('canvas')[0].height;
-        
-        if(!isNaN(scaleHeight)){
+        console.log('currentWidth: ',currentWidth);
+        console.log('currentHeight: ',currentHeight);
+        if(!isNaN(parseInt(scaleHeight))||(parseInt(scaleHeight)===0)){
             if (currentHeight > scaleHeight) {
                 // calculate dimensions if we reize to 600 height
                 let reductionPercentage = (scaleHeight / currentHeight) * 100;
@@ -417,6 +419,9 @@ class D3DAssetCreator extends D3DNFTViewer {
                 this.outputHeight = scaleHeight;
                 this.outputWidth = newWidth;
                 console.log('calculate reductionPercentage:',reductionPercentage);
+                console.log('this.outputHeight: ',this.outputHeight);
+                console.log('this.outputWidth: ',this.newWidth);
+
             } else {
                 console.log('currentHeight < scaleHeight: no scaling required.');
                 
