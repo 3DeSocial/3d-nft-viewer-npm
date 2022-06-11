@@ -6,7 +6,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import Item from './D3D_Item.mjs';import Lighting from './D3D_Lighting.mjs';
-import {MeshBVH, VRButton, VRControls, D3DLoaders, D3DNFTViewerOverlay, SceneryLoader} from '3d-nft-viewer';
+import {MeshBVH, VRButton, VRControls, D3DLoaders, D3DNFTViewerOverlay, SceneryLoader, MeshBVHVisualizer} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
@@ -86,17 +86,23 @@ const params = {
 
 
         this.sceneryLoader = new SceneryLoader({
-            sceneryPath: 'http://localhost:3000/layouts/hotel/scene.gltf'
+            sceneryPath: 'http://localhost:3000/layouts/round_showroom/scene.gltf'
         });
         this.sceneryLoader.loadScenery()
         .then((gltf)=>{
             const root = gltf.scene;
-            this.scene.add(root);          
+            this.room = root;
+            that.scene.add(root);          
             that.collider = this.sceneryLoader.createCollider(root); 
-            console.log('new scene created');
-            this.scene.add(that.collider);
+
+       //   visualizer = new MeshBVHVisualizer( this.collider, params.visualizeDepth );
+            that.collider.position.setX(0);
+            that.collider.position.setZ(0); 
+            //that.scene.add( visualizer );
+            that.scene.add( that.collider );
+            that.collider.updateMatrixWorld();
             console.log('this.collider added');
-            this.initPlayer2();
+            that.initPlayer2();
 
 
         })
@@ -1032,7 +1038,7 @@ initPlayer2 = () => {
     let playerLoader = new GLTFLoader();
     let item = that.initItemForModel('./characters/AstridCentered.glb');
     this.mesh = item.model;
-    let newPos = new THREE.Vector3(0,0,0);
+    let newPos = new THREE.Vector3(0,2,0);
             
     item.place(newPos).then((model,pos)=>{
    
@@ -1041,27 +1047,31 @@ initPlayer2 = () => {
         // character
         this.player = new THREE.Group();
         that.character = new THREE.Mesh(
-            new RoundedBoxGeometry( 1.0, 2.0, 1.0, 10, 0.5 ),
-            new THREE.MeshStandardMaterial()
+            new RoundedBoxGeometry(  1.0, 2.0, 1.0, 10, 0.5),
+            new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
         );
 
-        that.character.geometry.translate( 0, - 0.5, 0 );
+        that.character.geometry.translate( 0, 0, 0 );
         that.character.capsuleInfo = {
-            radius: 0.5,
+            radius: 0.25,
             segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
         };
-        model.position.copy(pos);
-        this.character.copy(pos);
+       // model.position.copy(pos);
+       // this.character.copy(pos);
         this.player.add(model);
+        model.position.setY(-1.1);
+
         this.player.add(this.character);
         that.scene.add( this.player );
         that.reset();
         this.start3D();
         this.addListeners();
+
     });
 }
 
  updatePlayer = ( delta )=> {
+    let nextPos = new THREE.Vector3();
 
     this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
     this.player.position.addScaledVector( this.playerVelocity, delta );
@@ -1069,15 +1079,24 @@ initPlayer2 = () => {
     // move the player
     const angle = this.controls.getAzimuthalAngle();
     if ( fwdPressed ) {
-
+        if(this.loadedItem.hasAnimations()){
+            this.loadedItem.startAnimation(0);
+        };
         this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
+        //let angleToCamera = Math.atan2( ( this.player.position.x - this.playerVelocity.x ), ( this.player.position.z - this.playerVelocity.z ) );
+       // this.player.rotation.y = angleToCamera;  
+       nextPos.copy( this.player.position);
+       nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
+        this.player.lookAt(nextPos);
         this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
-
     }
 
     if ( bkdPressed ) {
 
         this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
+       nextPos.copy( this.player.position);
+       nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
+        this.player.lookAt(nextPos);      
         this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
 
     }
@@ -1085,6 +1104,9 @@ initPlayer2 = () => {
     if ( lftPressed ) {
 
         this.tempVector.set( - 1, 0, 0 ).applyAxisAngle(  this.upVector, angle );
+       nextPos.copy( this.player.position);
+       nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
+        this.player.lookAt(nextPos);
         this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
 
     }
@@ -1092,6 +1114,9 @@ initPlayer2 = () => {
     if ( rgtPressed ) {
 
         this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
+       nextPos.copy( this.player.position);
+       nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
+        this.player.lookAt(nextPos);
         this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
 
     }

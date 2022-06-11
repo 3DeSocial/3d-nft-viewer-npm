@@ -53,7 +53,7 @@ export default class SceneryLoader {
 
     scaleScene = (scene) =>{
 		const gltfScene = scene;
-        //gltfScene.scale.set(0.2,0.2,0.2);    
+        gltfScene.scale.set(0.2,0.2,0.2);    
     }
 
     centerScene = (scene) =>{
@@ -65,90 +65,91 @@ export default class SceneryLoader {
 
     createCollider = (gltfScene) =>{
 			// visual geometry setup
-        const toMerge = {};
-        gltfScene.traverse( c => {
+         // visual geometry setup
+            const toMerge = {};
+            gltfScene.traverse( c => {
 
-            if ( c.isMesh ) {
-                console.log('mesh found');
-                c.castShadow = false;
-                c.receiveShadow = true;
-                const hex = c.material.color.getHex();
-                toMerge[ hex ] = toMerge[ hex ] || [];
-                toMerge[ hex ].push( c );
-
-            }
-
-        } );
-
-        let environment = new THREE.Group();
-        for ( const hex in toMerge ) {
-
-            const arr = toMerge[ hex ];
-            const visualGeometries = [];
-            arr.forEach( mesh => {
-
-                if ( mesh.material.emissive.r !== 0 ) {
-
-                    environment.attach( mesh );
-
-                } else {
-
-                    const geom = mesh.geometry.clone();
-                    geom.applyMatrix4( mesh.matrixWorld );
-                    visualGeometries.push( geom );
+                if ( c.isMesh ) {
+                    c.castShadow = false;
+                    c.receiveShadow = true;
+                    const hex = c.material.color.getHex();
+                    toMerge[ hex ] = toMerge[ hex ] || [];
+                    toMerge[ hex ].push( c );
 
                 }
 
             } );
 
-            if ( visualGeometries.length ) {
+            let environment = new THREE.Group();
+            for ( const hex in toMerge ) {
 
-                const newGeom = BufferGeometryUtils.mergeBufferGeometries( visualGeometries );
-                const newMesh = new THREE.Mesh( newGeom, new THREE.MeshStandardMaterial( { color: parseInt( hex ), shadowSide: 2 } ) );
-                newMesh.castShadow = true;
-                newMesh.receiveShadow = true;
-                newMesh.material.shadowSide = 2;
+                const arr = toMerge[ hex ];
+                const visualGeometries = [];
+                arr.forEach( mesh => {
 
-                environment.add( newMesh );
+                    if ( mesh.material.emissive.r !== 0 ) {
 
-            }
+                        environment.attach( mesh );
 
-        }
+                    } else {
 
-        // collect all geometries to merge
-        const geometries = [];
-
-
-        environment.updateMatrixWorld( true );
-        environment.traverse( c => {
-
-            if ( c.geometry ) {
-                const cloned = c.geometry.clone();
-                cloned.applyMatrix4( c.matrixWorld );
-                for ( const key in cloned.attributes ) {
-
-                    if ( key !== 'position' ) {
-
-                        cloned.deleteAttribute( key );
+                        const geom = mesh.geometry.clone();
+                        geom.applyMatrix4( mesh.matrixWorld );
+                        visualGeometries.push( geom );
 
                     }
 
-                }
+                } );
 
-                geometries.push( cloned );
+                if ( visualGeometries.length ) {
+
+                    const newGeom = BufferGeometryUtils.mergeBufferGeometries( visualGeometries );
+                    const newMesh = new THREE.Mesh( newGeom, new THREE.MeshStandardMaterial( { color: parseInt( hex ), shadowSide: 2 } ) );
+                    newMesh.castShadow = true;
+                    newMesh.receiveShadow = true;
+                    newMesh.material.shadowSide = 2;
+
+                    environment.add( newMesh );
+
+                }
 
             }
 
-        } );
+            // collect all geometries to merge
+            const geometries = [];
 
-        // create the merged geometry
-        const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries( geometries, false );
-        mergedGeometry.boundsTree = new MeshBVH( mergedGeometry, { lazyGeneration: false } );
 
-        let collider = new THREE.Mesh( mergedGeometry );
-            collider.material.wireframe = false;
-            collider.material.opacity = 0.5;
+            environment.updateMatrixWorld( true );
+            environment.traverse( c => {
+
+                if ( c.geometry ) {
+                    const cloned = c.geometry.clone();
+                    cloned.applyMatrix4( c.matrixWorld );
+                    for ( const key in cloned.attributes ) {
+
+                        if ( key !== 'position' ) {
+
+                            cloned.deleteAttribute( key );
+
+                        }
+
+                    }
+
+                    geometries.push( cloned );
+
+                }
+
+            } );
+
+            // create the merged geometry
+            const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries( geometries, false );
+            mergedGeometry.boundsTree = new MeshBVH( mergedGeometry, { lazyGeneration: false } );
+            this.bvh = mergedGeometry.boundsTree;
+            let collider = new THREE.Mesh( mergedGeometry );
+            collider.material.wireframe = true;
+            collider.material.opacity = 1;
             collider.material.transparent = true;
+
         return collider;
      //   visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
 
