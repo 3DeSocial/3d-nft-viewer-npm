@@ -36,7 +36,7 @@ const params = {
                     fitOffset: 1.25,
                     nftsRoute: 'nfts', // Back end route to initialize NFTs
                     modelsRoute: 'models',// Back end route to load models
-                    sceneryPath: '/layouts/round_showroom/scene.gltf',
+                    sceneryPath: '/layouts/island/scene.gltf',
                     skyboxPath: '',
                     controls: {
                         maxDistance:Infinity,
@@ -86,7 +86,7 @@ const params = {
 
 
         this.sceneryLoader = new SceneryLoader({
-            sceneryPath: 'http://localhost:3000/layouts/round_showroom/scene.gltf'
+            sceneryPath: 'http://localhost:3000/layouts/hotel/scene.gltf'
         });
         this.sceneryLoader.loadScenery()
         .then((gltf)=>{
@@ -96,10 +96,9 @@ const params = {
             console.log('new scene created');
             this.scene.add(that.collider);
             console.log('this.collider added');
-            this.initPlayer();
+            this.initPlayer2();
 
-            this.start3D();
-            this.addListeners();
+
         })
 
     }
@@ -191,7 +190,7 @@ const params = {
         // camera setup
         this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
         this.camera.position.set( 10, 10, - 10 );
-        this.camera.far = 100;
+        this.camera.far = 1000;
         this.camera.updateProjectionMatrix();        
     }
 
@@ -875,126 +874,7 @@ const params = {
             this.dolly = this.vrControls.buildControllers();     
             console.log(this.dolly);
     }
-
-    loadColliderEnvironment =() =>{
-        var that = this;
-        this.sceneryLoader.load(this.config.sceneryPath, res => {
-
-            const gltfScene = res.scene;
-            gltfScene.scale.set(0.2,0.2,0.2);    
-
-            console.log(gltfScene);
-         //   gltfScene.scale.setScalar( .01 );
-
-            const box = new THREE.Box3();
-            box.setFromObject( gltfScene );
-            box.getCenter( gltfScene.position ).negate();
-            gltfScene.updateMatrixWorld( true );
-
-            // visual geometry setup
-            const toMerge = {};
-            gltfScene.traverse( c => {
-
-                if ( c.isMesh ) {
-                    console.log('mesh found');
-                    c.castShadow = false;
-                    c.receiveShadow = true;
-                    const hex = c.material.color.getHex();
-                    toMerge[ hex ] = toMerge[ hex ] || [];
-                    toMerge[ hex ].push( c );
-
-                }
-
-            } );
-
-            environment = new THREE.Group();
-            for ( const hex in toMerge ) {
-
-                const arr = toMerge[ hex ];
-                const visualGeometries = [];
-                arr.forEach( mesh => {
-
-                    if ( mesh.material.emissive.r !== 0 ) {
-
-                        environment.attach( mesh );
-
-                    } else {
-
-                        const geom = mesh.geometry.clone();
-                        geom.applyMatrix4( mesh.matrixWorld );
-                        visualGeometries.push( geom );
-
-                    }
-
-                } );
-
-                if ( visualGeometries.length ) {
-
-                    const newGeom = BufferGeometryUtils.mergeBufferGeometries( visualGeometries );
-                    const newMesh = new THREE.Mesh( newGeom, new THREE.MeshStandardMaterial( { color: parseInt( hex ), shadowSide: 2 } ) );
-                    newMesh.castShadow = true;
-                    newMesh.receiveShadow = true;
-                    newMesh.material.shadowSide = 2;
-
-                    environment.add( newMesh );
-
-                }
-
-            }
-
-            // collect all geometries to merge
-            const geometries = [];
-
-
-            environment.updateMatrixWorld( true );
-            environment.traverse( c => {
-
-                if ( c.geometry ) {
-                    const cloned = c.geometry.clone();
-                    cloned.applyMatrix4( c.matrixWorld );
-                    for ( const key in cloned.attributes ) {
-
-                        if ( key !== 'position' ) {
-
-                            cloned.deleteAttribute( key );
-
-                        }
-
-                    }
-
-                    geometries.push( cloned );
-
-                }
-
-            } );
-
-            // create the merged geometry
-            const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries( geometries, false );
-            mergedGeometry.boundsTree = new MeshBVH( mergedGeometry, { lazyGeneration: false } );
-
-            this.collider = new THREE.Mesh( mergedGeometry );
-            this.collider.material.wireframe = false;
-            this.collider.material.opacity = 1;
-            this.collider.material.transparent = true;
-
-         //   visualizer = new MeshBVHVisualizer( this.collider, params.visualizeDepth );
-
-            this.collider.position.set(0,0,0);   
-         //   this.scene.add( visualizer );
-            this.scene.add( this.collider );
-            //environment.position.set(0,0,0);    
-         //   this.scene.add( environment );
-           //gltfScene.position.set(0,-11.5,0)
-            gltfScene.position.set(0,0,0); 
-
-            that.scene.add(gltfScene);
-            that.sceneryMesh = gltfScene;
-
-console.log('added environment');
-        } );
-
-    }
-
+    
     addScenery = () =>{
         let that = this;
         if(this.sceneryMesh){
@@ -1128,22 +1008,58 @@ console.log('added environment');
     }
 
 initPlayer = () => {
-// character
-    this.player = new THREE.Mesh(
-        new RoundedBoxGeometry( 1.0, 2.0, 1.0, 10, 0.5 ),
-        new THREE.MeshStandardMaterial()
-    );
-    this.player.geometry.translate( 0, - 0.5, 0 );
-    this.player.capsuleInfo = {
-        radius: 0.5,
-        segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
-    };
-    this.player.castShadow = true;
-    this.player.receiveShadow = true;
-    this.player.material.shadowSide = 2;
-    this.scene.add( this.player );
-    this.reset();
-    }
+    let that = this;
+           that.player = new THREE.Mesh(
+            new RoundedBoxGeometry( 1.0, 2.0, 1.0, 10, 0.5 ),
+            new THREE.MeshStandardMaterial()
+        );
+        that.player.geometry.translate( 0, - 0.5, 0 );
+        that.player.capsuleInfo = {
+            radius: 0.5,
+            segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
+        };
+        that.player.castShadow = true;
+        that.player.receiveShadow = true;
+        that.player.material.shadowSide = 2;
+        that.scene.add( this.player );
+        that.reset();
+        this.start3D();
+        this.addListeners();
+}
+
+initPlayer2 = () => {
+    let that = this;
+    let playerLoader = new GLTFLoader();
+    let item = that.initItemForModel('./characters/AstridCentered.glb');
+    this.mesh = item.model;
+    let newPos = new THREE.Vector3(0,0,0);
+            
+    item.place(newPos).then((model,pos)=>{
+   
+         console.log('placed model: ');
+         console.log(model);
+        // character
+        this.player = new THREE.Group();
+        that.character = new THREE.Mesh(
+            new RoundedBoxGeometry( 1.0, 2.0, 1.0, 10, 0.5 ),
+            new THREE.MeshStandardMaterial()
+        );
+
+        that.character.geometry.translate( 0, - 0.5, 0 );
+        that.character.capsuleInfo = {
+            radius: 0.5,
+            segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
+        };
+        model.position.copy(pos);
+        this.character.copy(pos);
+        this.player.add(model);
+        this.player.add(this.character);
+        that.scene.add( this.player );
+        that.reset();
+        this.start3D();
+        this.addListeners();
+    });
+}
 
  updatePlayer = ( delta )=> {
 
@@ -1183,7 +1099,7 @@ initPlayer = () => {
     this.player.updateMatrixWorld();
 
     // adjust player position based on collisions
-    const capsuleInfo = this.player.capsuleInfo;
+    const capsuleInfo = this.character.capsuleInfo;
     this.tempBox.makeEmpty();
     this.tempMat.copy( this.collider.matrixWorld ).invert();
     this.tempSegment.copy( capsuleInfo.segment );

@@ -53,7 +53,7 @@ export default class SceneryLoader {
 
     scaleScene = (scene) =>{
 		const gltfScene = scene;
-        gltfScene.scale.set(0.2,0.2,0.2);    
+        //gltfScene.scale.set(0.2,0.2,0.2);    
     }
 
     centerScene = (scene) =>{
