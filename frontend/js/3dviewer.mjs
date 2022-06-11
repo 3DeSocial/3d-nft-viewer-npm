@@ -50,7 +50,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import Item from './D3D_Item.mjs';import Lighting from './D3D_Lighting.mjs';
-import {MeshBVH, VRButton, VRControls} from '3d-nft-viewer';
+import {MeshBVH, VRButton, VRControls, SkyBoxLoader, MeshBVHVisualizer} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, collider, visualizer, player, controls, geometries;
@@ -237,6 +237,7 @@ export class D3DLoaders {
     constructor(config) {
 
         let defaults = {
+                    bgColor: 0x000000,
                     el: document.body,
                     ctrClass: 'data-nft', // Attribute of div containing nft preview area for a single nft
                     fitOffset: 1.25,
@@ -244,6 +245,8 @@ export class D3DLoaders {
                     modelsRoute: 'models',// Back end route to load models
                     sceneryPath: '/layouts/round_showroom/scene.gltf',
                     skyboxPath: '',
+                    skyBoxList: ['blue','bluecloud','browncloud','lightblue','yellowcloud'],
+                    skyBox: 'blue',
                     controls: {
                         maxDistance:Infinity,
                         maxPolarAngle:Infinity
@@ -273,6 +276,7 @@ export class D3DLoaders {
         this.controllers = [];
         this.loaders = new D3DLoaders({defaultLoader:this.defaultLoader});
         this.initLoaders();
+        this.showroomLoaded = false;
         environment = null;
         collider = null;
 
@@ -303,9 +307,12 @@ export class D3DLoaders {
     }
 
     clearMesh = (obj, cb) =>{
-        obj = this.loadedItem.mesh;
-        console.log('clearMesh: ',this.loadedItem.mesh);
-        this.recursiveDestroy(obj,cb);
+        if(this.loadedItem){
+            if(this.loadedItem.mesh){
+                obj = this.loadedItem.mesh;
+                this.recursiveDestroy(obj,cb);                
+            }
+        }
     }
 
     recursiveDestroy = (obj, cb) =>{
@@ -334,7 +341,6 @@ export class D3DLoaders {
     }
 
     initContainer(parentDivEl){
-        console.log('container el: ',parentDivEl);
 
         if(this.containerInitialized){
             return true;
@@ -346,10 +352,10 @@ export class D3DLoaders {
         this.initScene();
         this.clock = new THREE.Clock();
         this.initSkybox();
-        if(this.config.useShowroom){
-            this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
-            this.loadColliderEnvironment();
+        if(this.config.bgColor){
+            this.setBgColor(this.config.bgColor);
         };
+
         this.initCamera();
         this.initRenderer(parentDivEl);
         this.initLighting();
@@ -366,7 +372,7 @@ export class D3DLoaders {
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/600, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
-        this.camera.position.set(10, 8, 40);
+        this.camera.position.set(0, 4, 12);
         this.camera.lookAt(0,0,0);
 
     }
@@ -380,6 +386,7 @@ export class D3DLoaders {
     }
 
     restrictCameraToRoom = () => {
+        console.log('restrictCameraToRoom', this.config.controls);
         this.controls.maxDistance = this.config.controls.maxDistance;
         this.controls.maxPolarAngle = this.config.controls.maxPolarAngle;
         this.controls.update();  
@@ -425,17 +432,36 @@ export class D3DLoaders {
 
     initSkybox = ()=>{
         if(this.config.skyboxes !== false){
-            this.addSky();
+            this.skyBoxLoader = new SkyBoxLoader({
+                scene: this.scene,
+                skyBoxPath: this.config.skyboxPath,
+                skyBoxList: this.config.skyBoxList
+            });
+            if(this.config.skyBox){
+                this.skyBoxLoader.setSkyBox(this.config.skyBox);
+            } else {
+                this.skyBoxLoader.setRandomSkyBox();
+            }
         };
     }
 
+
     addSky = () =>{
-        let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
-        let skyBoxNo = this.getRandomInt(0,4);
-        let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
-        this.scene.background = skyBox;        
+        this.skyBoxLoader.setRandomSkyBox();
     }
 
+    setSkyBox = (skyBoxName) =>{
+        this.skyBoxLoader.setSkyBox(skyBoxName);
+    }
+
+    setBgColor = (color)=>{
+        if(color instanceof THREE.Color){
+            this.scene.background = color;
+        } else {
+            color = new THREE.Color('#'+color);
+            this.scene.background = color;
+        }
+    }
     removeSky = () => {
         this.scene.background = null;
     }
@@ -523,71 +549,7 @@ export class D3DLoaders {
         })        
     }
 
-    getRandomInt (min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
 
-    loadSkyBox(boxname){
-        if(this.config.skyboxPath===''){
-            return false;
-        };
-
-        let skybox ='';
-
-        const loader = new THREE.CubeTextureLoader();
-        let skyboxPath = this.config.skyboxPath+'/'+boxname+'/';
-        loader.setPath(skyboxPath);
-
-        switch(boxname){
-            case 'bluecloud':
-                skybox = loader.load([
-                            'bluecloud_ft.jpg',
-                            'bluecloud_bk.jpg',
-                            'bluecloud_up.jpg',
-                            'bluecloud_dn.jpg',
-                            'bluecloud_rt.jpg',
-                            'bluecloud_lf.jpg']);
-            break;
-            case 'yellowcloud':
-                skybox = loader.load([
-                            'yellowcloud_ft.jpg',
-                            'yellowcloud_bk.jpg',
-                            'yellowcloud_up.jpg',
-                            'yellowcloud_dn.jpg',
-                            'yellowcloud_rt.jpg',
-                            'yellowcloud_lf.jpg']);
-            break;
-            case 'browncloud':
-                skybox = loader.load([
-                            'browncloud_ft.jpg',
-                            'browncloud_bk.jpg',
-                            'browncloud_up.jpg',
-                            'browncloud_dn.jpg',
-                            'browncloud_rt.jpg',
-                            'browncloud_lf.jpg']);
-            break;
-            case 'lightblue':
-                skybox = loader.load([
-                            'right.png',
-                            'left.png',
-                            'top.png',
-                            'bot.png',
-                            'front.png',
-                            'back.png']);
-            break;             
-            case 'blue':
-                skybox = loader.load([
-                            'bkg1_right.png',
-                            'bkg1_left.png',
-                            'bkg1_top.png',
-                            'bkg1_bot.png',
-                            'bkg1_front.png',
-                            'bkg1_back.png']);
-            break;
-        }
-        
-        return skybox;
-    }
 
     addEventListenerResize = () =>{
 
@@ -595,13 +557,16 @@ export class D3DLoaders {
     }
 
     addEventListenerContextLost = () =>{
-
-//        this.renderer.context.canvas.addEventListener("webglcontextlost", this.onLostContext);
+        if(this.renderer.context){
+            if(this.renderer.context.canvas){
+               this.renderer.context.canvas.addEventListener("webglcontextlost", this.onLostContext);
+            }
+        }
     }
 
     onLostContext = (e)=>{
         e.preventDefault();
-        console.log('lost!', e);
+        console.log('lost Context!', e);
         this.renderer.setAnimationLoop(null);
     }
 
@@ -718,6 +683,9 @@ export class D3DLoaders {
      fitCameraToMesh(loadedItem) {
 
         console.log('fitCameraToMesh: ', loadedItem);
+        if(!loadedItem.mesh){
+            return false;
+        };
         const box = new THREE.Box3().setFromObject(loadedItem.mesh);
         const center = new THREE.Vector3();
         const size = new THREE.Vector3();
@@ -868,7 +836,6 @@ export class D3DLoaders {
             that.updateLink(el,'Loading..');
             that.initContainer(targetEl);
             let item = that.initItemForModel(modelUrl);
-            that.mesh = item.model;
             let newPos = new THREE.Vector3(0,3.7,0);
             item.place(newPos).then((model,pos)=>{
                 that.resizeCanvas();
@@ -894,20 +861,39 @@ export class D3DLoaders {
             let container = document.getElementById(containerId);
                  
             that.initContainer(container);
-           
-            let item = that.initItemForModel(modelUrl);
-                that.mesh = item.model;
-            let newPos = new THREE.Vector3(0,3.7,0);
+                if(this.config.useShowroom && !this.showroomLoaded){
+                this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
+                this.loadColliderEnvironment()
+                .then(()=>{
+                    let item = that.initItemForModel(modelUrl); 
+                    let newPos = new THREE.Vector3(0,this.floorY,0);
             
-            item.place(newPos).then((model,pos)=>{
-                that.resizeCanvas();
-                let loadingElement = document.querySelector('#'+hideElOnLoad);
-                if(loadingElement){
-                    loadingElement.style.display = 'none';              
-                };
-                this.renderer.domElement.style.display = 'inline-block';
-                resolve(item, model, pos);
-            });
+                    item.place(newPos).then((model,pos)=>{
+                        that.mesh = model;
+                        that.resizeCanvas();
+                        let img = document.querySelector('#'+hideElOnLoad);
+                        if(img){
+                            img.style.display = 'none';
+                        };
+                        this.renderer.domElement.style.display = 'inline-block';
+                        resolve(item, model, pos);
+                    });
+                })
+            } else {
+                let item = that.initItemForModel(modelUrl);
+                let newPos = new THREE.Vector3(0,this.floorY,0);
+        
+                item.place(newPos).then((model,pos)=>{
+                    that.mesh = model;
+                    that.resizeCanvas();
+                    let img = document.querySelector('#'+hideElOnLoad);
+                    if(img){
+                        img.style.display = 'none';
+                    };
+                    this.renderer.domElement.style.display = 'inline-block';
+                    resolve(item, model, pos);
+                });
+            }
         });
 
     }
@@ -923,18 +909,40 @@ export class D3DLoaders {
             let container = document.getElementById(containerId);
             
             that.initContainer(container);
-           
-            let item = that.initItem(nftPostHash);
-                that.mesh = item.model;
-            let newPos = new THREE.Vector3(0,1.2,0);
+            if(this.config.useShowroom && !this.showroomLoaded){
+                this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
+                this.loadColliderEnvironment()
+                .then(()=>{
+                    let item = that.initItem(nftPostHash);
+                    let newPos = new THREE.Vector3(0,this.floorY,0);
             
-            item.place(newPos).then((model,pos)=>{
-                that.resizeCanvas();
-                let img = document.querySelector('#'+hideElOnLoad);
-                img.style.display = 'none';
-                this.renderer.domElement.style.display = 'inline-block';
-                resolve(item, model, pos);
-            });
+                    item.place(newPos).then((model,pos)=>{
+                        that.mesh = model;
+                        that.resizeCanvas();
+                    let img = document.querySelector('#'+hideElOnLoad);
+                    if(img){
+                        img.style.display = 'none';
+                    };
+                        this.renderer.domElement.style.display = 'inline-block';
+                        resolve(item, model, pos);
+                    });
+                })
+            } else {
+                let item = that.initItem(nftPostHash);
+                let newPos = new THREE.Vector3(0,this.floorY,0);
+        
+                item.place(newPos).then((model,pos)=>{
+                    that.mesh = model;
+                    that.resizeCanvas();
+let img = document.querySelector('#'+hideElOnLoad);
+                    if(img){
+                        img.style.display = 'none';
+                    };
+                    this.renderer.domElement.style.display = 'inline-block';
+                    resolve(item, model, pos);
+                });
+            }
+           
         });
 
 
@@ -961,13 +969,14 @@ export class D3DLoaders {
     }
 
     initItem = (nftPostHashHex) =>{
-
+        
         this.loadedItem = new Item({
             three: THREE,
             scene: this.scene,
             height: this.config.scaleModelToHeight,
             width: this.config.scaleModelToWidth,
             depth: this.config.scaleModelToDepth,
+            loader: this.loader,
             nftPostHashHex: nftPostHashHex,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute
@@ -976,13 +985,17 @@ export class D3DLoaders {
 
     }
 
-    initItemForModel = (modelUrl) =>{
-        let urlParts = modelUrl.split('.');
-        let extension = urlParts[urlParts.length-1];
+    initItemForModel = (modelUrl, format) =>{
+
+        if(typeof(format)==='undefined'){
+            let urlParts = modelUrl.split('.');
+            format = urlParts[urlParts.length-1];            
+        };
+
 
         this.loadedItem = new Item({
             three: THREE,
-            loader: this.loaders.getLoaderForFormat(extension),
+            loader: this.loaders.getLoaderForFormat(format),
             scene: this.scene,
             height: this.config.scaleModelToHeight,
             width: this.config.scaleModelToWidth,
@@ -990,7 +1003,7 @@ export class D3DLoaders {
             modelUrl: modelUrl,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
-            format:extension
+            format:format
         });
         return this.loadedItem;
 
@@ -1007,32 +1020,47 @@ export class D3DLoaders {
         this.vrControls = new VRControls({  scene:this.scene,
                                             renderer: this.renderer,
                                             camera: this.camera,
-                                            moveUp: function(){
-
+                                            moveUp: (data)=>{
+                                                return;
                                             },
-                                            moveDown: function(){
-
+                                            moveDown:(data)=>{
+                                                return;
                                             },
-                                            moveLeft: function(){
+                                            moveLeft:(data)=>{
                                                 lftPressed = true;
                                             },
-                                            moveRight: function(){
+                                            moveRight:(data)=>{
                                                 rgtPressed = true;
+                                                return;
                                             },
-                                            moveForward: function(){
-                                                console.log('fwd detecte');
+                                            moveForward:(data)=>{
                                                 fwdPressed = true;
+                                                return;
                                             },
-                                            moveBack: function(){
+                                            moveBack:(data)=>{
                                                 bkdPressed = true;
+                                                return;
+
                                             },
-                                            rotateLeft: function(){
-                                                that.player.rotateY(THREE.Math.degToRad(1));
-                                                that.dolly.rotateY(THREE.Math.degToRad(1));
+                                            rotateLeft: (data)=>{
+                                                try{
+                                                    let rot =  0.017453;
+                                                    that.player.rotateY(rot);
+                                                    that.dolly.rotateY(rot);
+                                                } catch(err) {
+                                                    console.log(err);
+                                                };
+                                                return;
                                             },
-                                            rotateRight: function(){
-                                                that.player.rotateY(-THREE.Math.degToRad(1));
-                                                that.dolly.rotateY(-THREE.Math.degToRad(1));
+                                            rotateRight: (data)=>{
+                                                try{
+                                                let rot = -0.017453;
+                                                that.player.rotateY(rot);
+                                                that.dolly.rotateY(rot);
+                                                } catch(err) {
+                                                    console.log(err);
+                                                };
+                                                return;
                                             }
                                         });
             this.dolly = this.vrControls.buildControllers();        
@@ -1040,12 +1068,14 @@ export class D3DLoaders {
 
     loadColliderEnvironment =() =>{
         var that = this;
+        this.showroomLoaded = true;
+        return new Promise((resolve,reject)=>{
+
         this.sceneryLoader.load(this.config.sceneryPath, res => {
 
             const gltfScene = res.scene;
             gltfScene.scale.set(0.2,0.2,0.2);    
 
-            console.log(gltfScene);
          //   gltfScene.scale.setScalar( .01 );
 
             const box = new THREE.Box3();
@@ -1058,7 +1088,6 @@ export class D3DLoaders {
             gltfScene.traverse( c => {
 
                 if ( c.isMesh ) {
-                    console.log('mesh found');
                     c.castShadow = false;
                     c.receiveShadow = true;
                     const hex = c.material.color.getHex();
@@ -1133,47 +1162,90 @@ export class D3DLoaders {
             // create the merged geometry
             const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries( geometries, false );
             mergedGeometry.boundsTree = new MeshBVH( mergedGeometry, { lazyGeneration: false } );
-
+            this.bvh = mergedGeometry.boundsTree;
             collider = new THREE.Mesh( mergedGeometry );
             collider.material.wireframe = false;
-            collider.material.opacity = 0;
+            collider.material.opacity = 1;
             collider.material.transparent = true;
 
-         //   visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
+        //   visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
 
-            collider.position.set(0,3,0);   
-         //   this.scene.add( visualizer );
+            collider.position.setX(0);
+            collider.position.setZ(0);  
+          //  this.scene.add( visualizer );
             this.scene.add( collider );
+            collider.updateMatrixWorld();
+
             //environment.position.set(0,0,0);    
-         //   this.scene.add( environment );
+          //  this.scene.add( environment );
+          //  environment.updateMatrixWorld()
+
            //gltfScene.position.set(0,-11.5,0)
-            gltfScene.position.set(0,0,0); 
+            gltfScene.position.setX(0); 
+            gltfScene.position.setZ(0); 
 
-            that.scene.add(gltfScene);
+            gltfScene.updateMatrixWorld()
             that.sceneryMesh = gltfScene;
+            that.collider = collider;
+            this.floorY = that.getFloorLevel(collider);
+            resolve(gltfScene);
+            });
 
-console.log('added environment');
-        } );
+        })
+
+    }
+    getFloorLevel = (meshToCheck) =>{
+        const invMat = new THREE.Matrix4();
+        invMat.copy( this.sceneryMesh.matrixWorld ).invert();
+
+        let origin = new THREE.Vector3(0,100,0);
+        let dest = new THREE.Vector3(0,-100,0);
+        let dir = new THREE.Vector3();
+        dir.subVectors( dest, origin ).normalize();
+        let raycaster = new THREE.Raycaster();
+        raycaster.ray.applyMatrix4( invMat );
+        raycaster.set(origin,dir);
+        const hit = this.bvh.raycastFirst( raycaster.ray );
+       // hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
+                 let planePos = new THREE.Vector3(0,hit.point.y,0);
+             //   this.addPlaneAtPos(planePos);
+//this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, 200, Math.random() * 0xffffff ));
+        return hit.point.y;
 
     }
 
+    addPlaneAtPos = (posVector) =>{
+        var geo = new THREE.PlaneBufferGeometry(20, 20);
+        var mat = new THREE.MeshPhongMaterial({ color: 0xFF6666, side: THREE.DoubleSide });
+        var plane = new THREE.Mesh(geo, mat);
+        plane.rotateX( - Math.PI / 2);
+        plane.position.copy(posVector);
+        this.scene.add(plane);
+
+    }
     addScenery = () =>{
         let that = this;
         if(this.sceneryMesh){
-            this.scene.add(this.sceneryMesh);
-        } else {
-            let modelURL = this.config.sceneryPath;
-            that.loader = this.loaders.getLoaderForFormat('gltf');
-            that.loader.load(modelURL, (model)=> {
-                let gltfMesh = null;
-                gltfMesh = model.scene;
-                gltfMesh.position.set(0,0,0); 
-                gltfMesh.scale.set(0.2,0.2,0.2);    
-                that.sceneryMesh = gltfMesh;
-                that.scene.add(that.sceneryMesh);
-                this.restrictCameraToRoom();
+                    console.log('adding ALREADY loaded sceneryMesh');
 
-            })            
+            this.scene.add(this.sceneryMesh);
+            this.restrictCameraToRoom();
+        } else {
+            this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
+            this.loadColliderEnvironment()
+                .then(()=>{
+                    console.log('adding newly loaded sceneryMesh');
+                    that.scene.add(that.sceneryMesh);
+                    that.sceneryMesh.updateMatrixWorld();
+                    loadedItem.mesh.updateMatrixWorld();
+                    if(this.loadedItem){
+                        let newPos = new THREE.Vector3(0,this.floorY,0);
+            
+                        this.loadedItem.moveTo(newPos);
+                        that.resizeCanvas();                    
+                        this.restrictCameraToRoom();                        
+                    }
+                })
         }
         
     }
@@ -1181,23 +1253,12 @@ console.log('added environment');
     removeScenery = () =>{
         if(this.sceneryMesh){
             this.scene.remove(this.sceneryMesh);
-                    console.log('removeScenery: OK');
-
             this.unRestrictCamera();
-        }else {
-            console.log('no scenerymesh to remove');
-        }
+        };
     }    
 
     removeFloor = () =>{
-        if(this.sceneryMesh){
-                    console.log('removeScenery: OK');
-
-            this.scene.remove(this.sceneryMesh);
-            this.unRestrictCamera();
-        } else {
-            console.log('no scenerymesh to remove');
-        }
+        this.removeScenery();
     }
 
     addClickListenerFullScreen = (ctr, el, modelUrl) => {
@@ -1310,20 +1371,16 @@ initPlayer = () => {
         this.player.material.shadowSide = 2;*/
         this.player.rotateY(0);
     
-        this.player.position.set(0, 4, 6);
+        this.player.position.set(0, 0, 6);
         this.scene.add( this.player );        
       /*  this.reset();*/
     }
 
     updatePlayer = (delta) =>{
-
-        this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
+        if(this.showroomLoaded){
+            this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
+        };
         this.player.position.addScaledVector( this.playerVelocity, delta );
-
-        // move the this.player
-        //const angle = this.controls.getAzimuthalAngle(); // directio camera looking
-        const angle = this.player.rotation.y;
-    // console.log('x',this.player.rotation.x,'y',this.player.rotation.y,'z',this.player.rotation.z);
         if ( fwdPressed ) {
 
             //this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
@@ -1347,8 +1404,6 @@ initPlayer = () => {
            // this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
             this.player.translateX(params.playerSpeed * delta );
         }
-  //      this.camera.position.set(this.player.position);
-
         this.player.updateMatrixWorld();
 
         // adjust this.player position based on collisions
@@ -1416,7 +1471,9 @@ initPlayer = () => {
         if ( ! this.playerIsOnGround ) {
 
             deltaVector.normalize();
-            this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
+            if(this.showroomLoaded){
+               this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
+            };
 
         } else {
 
@@ -1453,7 +1510,7 @@ initPlayer = () => {
 
             this.reset();
 
-        }
+        };
         fwdPressed = false;
         bkdPressed = false;
         rgtPressed = false;
@@ -1461,7 +1518,6 @@ initPlayer = () => {
     }
 
     reset = ()=> {
-console.log('player reset');
         this.playerVelocity.set( 0, 0, 0 );
         this.player.position.set( 0, 5, 5 );
         this.camera.position.set(0, 6.5, 5);

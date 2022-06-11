@@ -69,11 +69,6 @@ export default class Item {
         return new Promise((resolve,reject)=>{
             this.fetchModel(this.modelUrl, pos)
             .then((model)=>{
-                this.mesh = model;
-                let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh}});
-                document.body.dispatchEvent(loadedEvent);
-
-                document.body.dispatchEvent(this.meshPlacedEvent);
                 resolve(model, pos);
             }).catch((err=>{
                 console.log( err);
@@ -91,10 +86,24 @@ export default class Item {
                 that.modelUrl = modelUrl;
                 that.placeModel(pos)
                 .then((model, pos)=>{
+                    that.mesh = model;
+                    let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
+                    document.body.dispatchEvent(loadedEvent);
+                    document.body.dispatchEvent(this.meshPlacedEvent);
                     resolve(model, pos);
                 })
             });
         });
+    }
+
+    remove = () =>{
+        console.log('remove: ',this.mesh);
+        this.scene.remove(this.mesh.children[0]);
+    }
+    moveTo = (pos)=>{
+        console.log('current: ',this.mesh.position);
+        console.log('moveto: ',pos);
+        this.mesh.position.copy(pos);
     }
 
     centerMeshInScene = (gltfScene) =>{
@@ -157,7 +166,6 @@ export default class Item {
         let that = this;
         let boxMesh = this.addContainerBoxToScene(posVector);
         let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
-        let targetFloorYCoord = this.getFloorYCoord(posVector);
         return new Promise((resolve,reject)=>{
 
 
@@ -184,21 +192,21 @@ export default class Item {
                 };
 
 
-              /* if(that.shouldBeCentered(root.scene.children)){
+              /*if(that.shouldBeCentered(root.scene.children)){
                     let h = that.getImportedObjectSize(model.scene);
                     let heightOffset = h/2;                    
                     root.scene.children[0].position.setX(0);
                     root.scene.children[0].position.setZ(0);
                     root.scene.children[0].position.setY(heightOffset);                       
                     that.centerMeshInScene(model.scene);                
-                };
+                };*/
 
-*/
+
               
                  meshBounds = new THREE.Box3().setFromObject( obj3D );
                 
                 console.log(meshBounds);
-                console.log(obj3D);
+
 
                 // Calculate side lengths of scene (cube) bounding box
                 let lengthSceneBounds = {
@@ -216,7 +224,6 @@ export default class Item {
                   y: Math.abs(meshBounds.max.y - meshBounds.min.y),
                   z: Math.abs(meshBounds.max.z - meshBounds.min.z),
                 };
-                console.log('height before scale: ',lengthMeshBounds.y);
 
                 // Calculate length ratios
                 let lengthRatios = [
@@ -240,14 +247,46 @@ export default class Item {
                 };
 
                 console.log('height after scale: ',newLengthMeshBounds.y);
+                let cbox = that.createContainerBoxForModel(newLengthMeshBounds.x, newLengthMeshBounds.y, newLengthMeshBounds.z, posVector);
+                cbox.position.copy(posVector);
+                // center of box is position so move up by 50% of newLengthMeshBounds.y
+                let yOffset = newLengthMeshBounds.y/2;
+                cbox.position.setY(cbox.position.y+yOffset);
 
+                this.scene.add(cbox);
+                cbox.updateMatrixWorld();
 
-                this.postionMeshOnFLoor(obj3D, targetFloorYCoord, newLengthMeshBounds.y);
-                //et planePos = new THREE.Vector3(0,targetFloorYCoord,0);
-                // this.addPlaneAtPos(planePos)
-               
-                this.scene.add(obj3D);
-                this.mesh = obj3D;
+                cbox.add(obj3D);
+                obj3D.updateWorldMatrix();
+              //  this.postionMeshOnFLoor(obj3D, posVector, newLengthMeshBounds.y);
+              //  that.mesh = obj3D;
+              //  that.scene.add(that.mesh);
+              //  that.mesh.updateWorldMatrix();
+                var helper = new THREE.BoxHelper(obj3D, 0x00ff00);
+                helper.update();
+                // If you want a visible bounding box
+              //  this.scene.add(helper);
+              //  console.log(helper);
+             //   console.log('helper min: ',helper.min);
+                let lowestVertex = this.getBoxHelperVertices(helper);
+              //  console.log(lowestVertex);
+                lowestVertex.applyMatrix4(helper.matrixWorld);
+             //   console.log('lowestVertex: ');
+
+             //   console.log(lowestVertex);
+            //    console.log('floor: ',posVector.y);
+             //   this.addPlaneAtPos(posVector);
+              //  this.addPlaneAtPos(lowestVertex);
+                if(posVector.y !== lowestVertex.y){
+                    let yOffset = lowestVertex.y-posVector.y;
+                  //  console.log(yOffset);
+                    obj3D.position.setY(obj3D.position.y - yOffset);
+                    obj3D.position.setX(0);
+                    obj3D.position.setZ(0);
+
+                };
+             //   console.log(that.mesh.position.y);
+              //  console.log(posVector.y);
                 resolve(obj3D);
             },
             this.onProgressCallback,
@@ -262,12 +301,32 @@ onErrorCallback = (e)=> {
     console.log('loading error');
     console.log(e);
 }
+
+    getBoxHelperVertices = (boxHelper) =>{
+        var points = [];
+        let lowest = 1000000;
+        let lowestVertex = null;
+        for(var i = 0; i < 8; ++i) {
+            var x = boxHelper.geometry.attributes.position.getX(i)
+            var y = boxHelper.geometry.attributes.position.getY(i)
+            var z = boxHelper.geometry.attributes.position.getZ(i)
+            points.push({x: x, y:y, z: z})
+            if(y<lowest){
+                lowest = y;
+                lowestVertex = new THREE.Vector3(x,y,z);
+            }
+        }
+        console.log('lowest point in helper: ',lowest);
+        return lowestVertex;
+    }
+
     getFloorYCoord = (posVector) =>{
-        let boxmeshFloor = posVector.y-(this.config.height/2);
+        let boxmeshFloor = posVector.y;
         return boxmeshFloor;
     }
 
-    postionMeshOnFLoor = (mesh, destY, scaledMeshHeight) =>{
+    postionMeshOnFLoor = (mesh, posVector, scaledMeshHeight) =>{
+      /*  let destY = posVector.y;
         let yOffset = scaledMeshHeight/2;
         let y = destY + yOffset;
         if(mesh.geometry){
@@ -280,9 +339,10 @@ onErrorCallback = (e)=> {
             mesh.children[0].position.setX(0);
             mesh.children[0].position.setY(0);
             mesh.children[0].position.setZ(0);
-        };
-        mesh.position.setY(y);
-        console.log('set Object3D center position to ',y);
+        };*/
+        //posVector.setY(mesh.position.y+1);
+        mesh.position.copy(posVector);
+
 
     }
 
@@ -294,6 +354,23 @@ onErrorCallback = (e)=> {
         plane.position.copy(posVector);
         this.scene.add(plane);
 
+    }
+
+    createContainerBoxForModel = (width, height, depth, posVector) =>{
+        const geometry = new THREE.BoxGeometry(width, height, depth);
+        
+        if(!this.config.color){
+            this.config.color = 0xff3333;
+        };
+        
+        const material = new THREE.MeshPhongMaterial({
+            color: this.config.color,
+            opacity: 0,
+            transparent: true
+        });
+
+        let boxMesh = new THREE.Mesh( geometry, material );
+        return boxMesh;
     }
 
     addContainerBoxToScene = (posVector) =>{
@@ -446,6 +523,9 @@ onErrorCallback = (e)=> {
             return true;
         };
 
+        if(mesh.position.y!=0){
+            return true;
+        };
         return false;
     }
 
