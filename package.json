@@ -1,6 +1,6 @@
 {
   "name": "3d-nft-viewer",
-  "version": "1.6.17",
+  "version": "1.6.18",
   "description": "Display 3D NFTs using ThreeJS to render model stored on arweave and minted on DeSo",
   "main": "index.js",
   "scripts": {
