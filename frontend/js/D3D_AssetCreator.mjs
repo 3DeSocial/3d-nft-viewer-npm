@@ -407,8 +407,11 @@ class D3DAssetCreator extends D3DNFTViewer {
 
         console.log('calcOutputSize',scaleWidth, scaleHeight);
 
-        let currentWidth = document.getElementsByTagName('canvas')[0].width;
-        let currentHeight = document.getElementsByTagName('canvas')[0].height;
+        let currentWidth = this.renderer.domElement.width;
+        let currentHeight = this.renderer.domElement.height;
+
+        console.log('calcOutputSize',currentWidth, currentHeight);
+
         let outputWidth = currentWidth;
         let outputHeight = currentHeight;
         console.log('currentWidth: ',currentWidth);
@@ -421,7 +424,7 @@ class D3DAssetCreator extends D3DNFTViewer {
                 outputHeight = scaleHeight;
                 outputWidth = newWidth;
                 console.log('calculate reductionPercentage:',reductionPercentage);
-                console.log('scaleHeight: ',outputHeight);
+                console.log('scaleHeight: ',scaleHeight, 'outputHeight: ',outputHeight);
                 console.log('newWidth: ',newWidth);
 
             } else {
@@ -440,7 +443,7 @@ class D3DAssetCreator extends D3DNFTViewer {
                 var newHeight = currentHeight * (reductionPercentage / 100);
                 outputWidth = scaleWidth;
                 outputHeight = newHeight;
-                console.log('scaleWidth:',scaleWidth);
+                console.log('scaleWidth: ',scaleWidth,'outputWidth: ',outputWidth, 'outputHeight: ',outputHeight);
                 console.log('calculate newHeight:',newHeight);
             } else {
                 console.log('currentWidth < scaleWidth: no scaling required.');
