@@ -537,7 +537,8 @@ class D3DAssetCreator extends D3DNFTViewer {
 
         let gifName = this.generateGifName();
 
-        let outputSize = this.calcOutputSize(opts.scaleToWidth,opts.scaleToHeight);        
+        opts = this.validateScaleOptions(opts);
+        let outputSize = this.calcOutputSize(opts.scaleToWidth, opts.scaleToHeight);     
 
         this.gifShots = [];
 
