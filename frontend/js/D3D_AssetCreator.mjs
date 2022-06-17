@@ -110,7 +110,7 @@ class D3DAssetCreator extends D3DNFTViewer {
                     li.setAttribute('style','background-color: #9F9;');
 
                     if(that.loadedItem.action === null){
-                        that.loadedItem.startAnimation(idx);
+                        that.loadedItem.startAnimation(idx, THREE.LoopRepeat);
                     } else {
                         that.loadedItem.stopAnimation();
                         li.setAttribute('style','background-color: #FFF;');
