@@ -421,8 +421,8 @@ class D3DAssetCreator extends D3DNFTViewer {
                 outputHeight = scaleHeight;
                 outputWidth = newWidth;
                 console.log('calculate reductionPercentage:',reductionPercentage);
-                console.log('this.outputHeight: ',outputHeight);
-                console.log('this.outputWidth: ',newWidth);
+                console.log('scaleHeight: ',outputHeight);
+                console.log('newWidth: ',newWidth);
 
             } else {
                 console.log('currentHeight < scaleHeight: no scaling required.');
@@ -440,6 +440,7 @@ class D3DAssetCreator extends D3DNFTViewer {
                 var newHeight = currentHeight * (reductionPercentage / 100);
                 outputWidth = scaleWidth;
                 outputHeight = newHeight;
+                console.log('scaleWidth:',scaleWidth);
                 console.log('calculate newHeight:',newHeight);
             } else {
                 console.log('currentWidth < scaleWidth: no scaling required.');
