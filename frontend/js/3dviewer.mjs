@@ -607,11 +607,7 @@ export class D3DLoaders {
             this.renderer.setSize(canvasWidth,canvasHeight);
         } else {
             this.parentDivElWidth = this.parentDivEl.offsetWidth;
-            this.parentDivElHeight = this.parentDivEl.offsetHeight;            
-            console.log('resizing');
-            console.log('this.parentDivEl:',this.parentDivEl);
-            console.log('this.parentDivElWidth: ',this.parentDivElWidth);
-            console.log('this.parentDivElHeight: ',this.parentDivElHeight);            
+            this.parentDivElHeight = this.parentDivEl.offsetHeight;                      
             this.camera.aspect = this.parentDivElWidth/this.parentDivElHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
@@ -682,7 +678,6 @@ export class D3DLoaders {
 
      fitCameraToMesh(loadedItem) {
 
-        console.log('fitCameraToMesh: ', loadedItem);
         if(!loadedItem.mesh){
             return false;
         };
@@ -829,7 +824,6 @@ export class D3DLoaders {
         let that = this;
         let targetEl = document.querySelector('.'+this.config.previewCtrCls);
         let previewImg = targetEl.querySelector('img');
-        console.log('previewImg',previewImg);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
@@ -1015,7 +1009,7 @@ let img = document.querySelector('#'+hideElOnLoad);
         
         VRButton.registerSessionGrantedListener();        
         
-        let vrButtonEl = VRButton.createButton(this.renderer);
+        let vrButtonEl = VRButton.createButton(this.renderer, {btnCtr:this.config.ctrClass});
 
         this.vrControls = new VRControls({  scene:this.scene,
                                             renderer: this.renderer,
