@@ -415,6 +415,7 @@ export class D3DLoaders {
         this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         this.renderer.setClearColor( 0x000000, 1 );
         this.renderer.domElement.style.display = 'none';
+        this.renderer.domElement.id='3d-nft-canvas';
 
         if(el){
            el.appendChild(this.renderer.domElement);
