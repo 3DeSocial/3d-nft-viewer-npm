@@ -502,7 +502,7 @@ class D3DAssetCreator extends D3DNFTViewer {
             let outputSize = this.calcOutputSize(opts.scaleToWidth, opts.scaleToHeight);
 
             let strMime = 'image/jpeg';
-                this.loadedItem.startCurrentAnimation();
+                this.loadedItem.startCurrentAnimation(THREE.LoopOnce);
 
             let recordingTimer = window.setInterval(() => {
                 let imgData = null;
