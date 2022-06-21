@@ -175,32 +175,30 @@ class D3DAssetCreator extends D3DNFTViewer {
             that.canvasRecorder = canvasRecord(this.renderer.domElement,{download:true,
                                                                     mimeType:'video/webm'});
 
-        let btnStart = document.body.querySelector('button#start-record');
-        if(btnStart){
-            btnStart.addEventListener('click',(e)=>{
+        let btn = document.body.querySelector(opts.startBtnId);
+        if(btn){
+            btn.addEventListener('click',(e)=>{
                 e.preventDefault();
-                // start recorder
-                that.canvasRecorder.start({});
+                if(e.target.innerHTML == 'Start Recording'){
+                    // start recorder
+                    that.canvasRecorder.start({});
+                    e.target.innerHTML = 'Stop Recording';                
+                } else {
+                    let chunks = that.canvasRecorder.stop();
+                    const blob = new Blob(chunks, { type: "video/webm" });
+                    const url = URL.createObjectURL(blob);
+                    console.log(url);
+                    let player = this.createPlayer('asset-previews');
+                        player.src = '';
+                        player.controls = true;
+
+                    player.src = url;
+                    e.target.innerHTML = 'Start Recording';
+                }
+
             })
        };
 
-       let btnStop = document.body.querySelector('button#stop-record');
-        if(btnStop){
-            btnStop.addEventListener('click',(e)=>{
-                e.preventDefault();
-
-                let chunks = that.canvasRecorder.stop();
-                const blob = new Blob(chunks, { type: "video/webm" });
-                const url = URL.createObjectURL(blob);
-                console.log(url);
-                let player = this.createPlayer('asset-previews');
-                    player.src = '';
-                    player.controls = true;
-
-                    player.src = url;
-
-            })
-       }
     }
 
     createPlayer = (previewElement) =>{

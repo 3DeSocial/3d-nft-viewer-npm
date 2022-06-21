@@ -478,7 +478,7 @@ onErrorCallback = (e)=> {
 
     startCurrentAnimation = (loopType) => {
         if(!loopType){
-            loopType = THREE.LoopOnce
+            loopType = THREE.LoopRepeat
         };
         let that = this;
         let animIndex = this.currentAnimation;
