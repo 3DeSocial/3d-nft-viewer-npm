@@ -2,11 +2,16 @@ export const name = 'd3dntfviewer';
 import * as THREE from 'three';
 import D3DNFTViewer from './3dviewer.mjs';
 import gifshot from 'gifshot';
-import record from 'canvas-to-video';
+import { CanvasCapture } from 'canvas-capture';
 
 class D3DAssetCreator extends D3DNFTViewer {
 
     constructor(config) {
+
+        config.captureFrame = () =>{
+           if (CanvasCapture.isRecording()) CanvasCapture.recordFrame();
+        };
+
         super(config);
         this.initContainer(this.config.el);
         this.start3D();
@@ -176,31 +181,9 @@ class D3DAssetCreator extends D3DNFTViewer {
         if(btn){
             btn.addEventListener('click',(e)=>{
                 e.preventDefault();
-
-                const defaults = {
-                    // the number of times you want to record per duration
-                    timeslice: 100,
-                    // the length of video you would like to record
-                    duration: 3000,
-                    mimeType: 'video/webm',
-                    audioBitsPerSecond: 0,
-                    videoBitsPerSecond: 25000000,
-                    rotationAngles: that.getVideoFramesFromUI(), 
-                    rotationDirection: that.getVideoRotateFromUI(),
-                    animate: that.getAnimateFromUI(),
-                    previewElement: 'asset-previews',
-                    duration: that.getDurationFromUI(),
-                    timeslice: that.getTimesliceFromUI(),
-                };
-
-                let opts = that.getTargetSizeFromUI();
-
-                opts = {...defaults,...opts};
-
-                that.setVideoOptions(opts);
-                that.captureVideo(opts).then((video)=>{
-                    console.log('Video Capture Complete.');
-                })
+                that.captureVideo();
+               
+                 
             })
        }
     }
@@ -674,14 +657,17 @@ class D3DAssetCreator extends D3DNFTViewer {
     captureVideo = async (opts) =>{
         return new Promise(( resolve, reject ) => {
 
-            record(this.renderer.domElement, opts).then((video)=>{
-                const url = URL.createObjectURL(video);
-
-                let player = this.createPlayer(opts.previewElement);
-                    player.src = url;
-                    player.controls = true;
-                    resolve(url);
-            })
+            // Now you may start another recording.
+            CanvasCapture.beginVideoRecord({
+                format: CanvasCapture.MP4,
+                onExport: (video)=>{
+                    const videoURL = URL.createObjectURL( video );
+                    let player = this.createPlayer(opts.previewElement);
+                        player.src = videoURL;
+                        player.controls = true;
+                        resolve(url);
+                }
+             });
             
         });
 

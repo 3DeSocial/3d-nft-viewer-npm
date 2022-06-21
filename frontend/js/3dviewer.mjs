@@ -251,7 +251,8 @@ export class D3DLoaders {
                         maxDistance:Infinity,
                         maxPolarAngle:Infinity
                     },
-                    useOwnHandlers: false
+                    useOwnHandlers: false,
+                    captureFrame: ()=>{}  // runs once per animation loop. Use for video capture
                 };
         
         this.config = {
@@ -673,6 +674,10 @@ export class D3DLoaders {
             }
 
         this.renderer.render(this.scene, this.camera);
+        if(this.config.captureFrame){
+            // if video recorder is running capture frames here
+            this.config.captureFrame()
+        };
     }
 
     
