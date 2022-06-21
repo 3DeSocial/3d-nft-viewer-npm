@@ -2,7 +2,7 @@ export const name = 'd3dntfviewer';
 import * as THREE from 'three';
 import D3DNFTViewer from './3dviewer.mjs';
 import gifshot from 'gifshot';
-import record from 'canvas-to-video';
+import canvasRecord from "canvas-record";
 
 class D3DAssetCreator extends D3DNFTViewer {
 
@@ -172,35 +172,33 @@ class D3DAssetCreator extends D3DNFTViewer {
 
     addVideoListener = (opts) => {
         let that = this;
-        let btn = document.body.querySelector('button#take-video');
-        if(btn){
-            btn.addEventListener('click',(e)=>{
+            that.canvasRecorder = canvasRecord(this.renderer.domElement,{download:true,
+                                                                    mimeType:'video/webm'});
+
+        let btnStart = document.body.querySelector('button#start-record');
+        if(btnStart){
+            btnStart.addEventListener('click',(e)=>{
+                e.preventDefault();
+                // start recorder
+                that.canvasRecorder.start({});
+            })
+       };
+
+       let btnStop = document.body.querySelector('button#stop-record');
+        if(btnStop){
+            btnStop.addEventListener('click',(e)=>{
                 e.preventDefault();
 
-                const defaults = {
-                    // the number of times you want to record per duration
-                    timeslice: 100,
-                    // the length of video you would like to record
-                    duration: 3000,
-                    mimeType: 'video/webm',
-                    audioBitsPerSecond: 0,
-                    videoBitsPerSecond: 25000000,
-                    rotationAngles: that.getVideoFramesFromUI(), 
-                    rotationDirection: that.getVideoRotateFromUI(),
-                    animate: that.getAnimateFromUI(),
-                    previewElement: 'asset-previews',
-                    duration: that.getDurationFromUI(),
-                    timeslice: that.getTimesliceFromUI(),
-                };
+                let chunks = that.canvasRecorder.stop();
+                const blob = new Blob(chunks, { type: "video/webm" });
+                const url = URL.createObjectURL(blob);
+                console.log(url);
+                let player = this.createPlayer('asset-previews');
+                    player.src = '';
+                    player.controls = true;
 
-                let opts = that.getTargetSizeFromUI();
+                    player.src = url;
 
-                opts = {...defaults,...opts};
-
-                that.setVideoOptions(opts);
-                that.captureVideo(opts).then((video)=>{
-                    console.log('Video Capture Complete.');
-                })
             })
        }
     }
@@ -669,22 +667,6 @@ class D3DAssetCreator extends D3DNFTViewer {
                 ++i;
             }, 100);
         }
-    }
-
-    captureVideo = async (opts) =>{
-        return new Promise(( resolve, reject ) => {
-
-            record(this.renderer.domElement, opts).then((video)=>{
-                const url = URL.createObjectURL(video);
-
-                let player = this.createPlayer(opts.previewElement);
-                    player.src = url;
-                    player.controls = true;
-                    resolve(url);
-            })
-            
-        });
-
     }
 
     rotatePreview = (i, angles, cameraDistance, rotationDirection) =>{
