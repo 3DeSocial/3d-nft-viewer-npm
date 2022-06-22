@@ -964,15 +964,20 @@ let img = document.querySelector('#'+hideElOnLoad);
                                             loader: this.loader});
     }
 
-    initItem = (nftPostHashHex) =>{
-        
+    initItem = (nftPostHashHex, format) =>{
+
+        if(typeof(format)==='undefined'){
+            let urlParts = modelUrl.split('.');
+            format = urlParts[urlParts.length-1];            
+        };
+console.log('initItem (NFT)', format);
         this.loadedItem = new Item({
             three: THREE,
             scene: this.scene,
             height: this.config.scaleModelToHeight,
             width: this.config.scaleModelToWidth,
             depth: this.config.scaleModelToDepth,
-            loader: this.loader,
+            loader: this.loaders.getLoaderForFormat(format),
             nftPostHashHex: nftPostHashHex,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute
@@ -988,6 +993,7 @@ let img = document.querySelector('#'+hideElOnLoad);
             format = urlParts[urlParts.length-1];            
         };
 
+console.log('initItem (Model)', format);
 
         this.loadedItem = new Item({
             three: THREE,
