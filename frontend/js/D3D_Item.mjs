@@ -26,6 +26,7 @@ export default class Item {
         this.action = null;
         this.mesh = null;
         this.animRunning = false;
+        this.animations = null;
         this.initItemEvents();
 
 
@@ -60,6 +61,13 @@ export default class Item {
         return false;
     }
 
+    getAnimations = ()=>{
+        if(this.hasAnimations()){
+            return this.animations;
+        } else {
+            return false;
+        }
+    }
     initItemEvents = () =>{
         this.meshPlacedEvent = new CustomEvent('placed', {detail: {mesh: this.mesh}});
     }
@@ -139,7 +147,6 @@ export default class Item {
                 resolve(this.config.modelUrl);
             } else {
                 let url = this.config.nftsRoute+'/'+that.config.nftPostHashHex;
-                    console.log('fetchModelUrl from: '+url);
 
                 fetch(url,{ method: "post"})
                 .then(response => response.json())
@@ -455,9 +462,15 @@ onErrorCallback = (e)=> {
         return object3d;
     }
 
-    startAnimation = (animIndex) =>{
+    startAnimation = (animIndex, loopType) =>{
+
+        /* accepts 
+            THREE.LoopOnce
+            THREE.LoopRepeat
+            THREE.LoopPingPong */
+
         this.setCurrentAnimation(animIndex);
-        this.startCurrentAnimation();        
+        this.startCurrentAnimation(loopType);        
     }
     setCurrentAnimation = (animIndex) => {
         this.currentAnimation = animIndex;
@@ -465,7 +478,7 @@ onErrorCallback = (e)=> {
 
     startCurrentAnimation = (loopType) => {
         if(!loopType){
-            loopType = THREE.LoopOnce
+            loopType = THREE.LoopRepeat
         };
         let that = this;
         let animIndex = this.currentAnimation;

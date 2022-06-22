@@ -2,7 +2,7 @@ export const name = 'd3dntfviewer';
 import * as THREE from 'three';
 import D3DNFTViewer from './3dviewer.mjs';
 import gifshot from 'gifshot';
-import record from 'canvas-to-video';
+import canvasRecord from "canvas-record";
 
 class D3DAssetCreator extends D3DNFTViewer {
 
@@ -110,7 +110,7 @@ class D3DAssetCreator extends D3DNFTViewer {
                     li.setAttribute('style','background-color: #9F9;');
 
                     if(that.loadedItem.action === null){
-                        that.loadedItem.startAnimation(idx);
+                        that.loadedItem.startAnimation(idx, THREE.LoopRepeat);
                     } else {
                         that.loadedItem.stopAnimation();
                         li.setAttribute('style','background-color: #FFF;');
@@ -146,7 +146,9 @@ class D3DAssetCreator extends D3DNFTViewer {
                     opts.previewElement = 'asset-previews';
                     console.log(opts);
 
-                that.captureAnimationGif(opts);
+                that.captureAnimationGif(opts).then((gif)=>{
+                    console.log('Animated Gif Capture Complete.');
+                });
 
             }, false);            
         };
@@ -161,42 +163,42 @@ class D3DAssetCreator extends D3DNFTViewer {
                     opts.rotationAngles = that.getFramesFromUI(),
                     opts.rotationDirection = that.getRotateFromUI(),
                     opts.previewElement = 'asset-previews';
-                    that.captureRotatingGif(opts);
+                    that.captureRotatingGif(opts).then((gif)=>{
+                        console.log('Rotating Gif Capture Complete.');
+                    });
             }, false);    
         };
     }
 
     addVideoListener = (opts) => {
         let that = this;
-        let btn = document.body.querySelector('button#take-video');
+            that.canvasRecorder = canvasRecord(this.renderer.domElement,{download:true,
+                                                                    mimeType:'video/webm'});
+
+        let btn = document.body.querySelector(opts.startBtnId);
         if(btn){
             btn.addEventListener('click',(e)=>{
                 e.preventDefault();
+                if(e.target.innerHTML == 'Start Recording'){
+                    // start recorder
+                    that.canvasRecorder.start({});
+                    e.target.innerHTML = 'Stop Recording';                
+                } else {
+                    let chunks = that.canvasRecorder.stop();
+                    const blob = new Blob(chunks, { type: "video/webm" });
+                    const url = URL.createObjectURL(blob);
+                    console.log(url);
+                    let player = this.createPlayer('asset-previews');
+                        player.src = '';
+                        player.controls = true;
 
-                const defaults = {
-                    // the number of times you want to record per duration
-                    timeslice: 100,
-                    // the length of video you would like to record
-                    duration: 3000,
-                    mimeType: 'video/webm',
-                    audioBitsPerSecond: 0,
-                    videoBitsPerSecond: 25000000,
-                    rotationAngles: that.getVideoFramesFromUI(), 
-                    rotationDirection: that.getVideoRotateFromUI(),
-                    animate: that.getAnimateFromUI(),
-                    previewElement: 'asset-previews',
-                    duration: that.getDurationFromUI(),
-                    timeslice: that.getTimesliceFromUI(),
-                };
+                    player.src = url;
+                    e.target.innerHTML = 'Start Recording';
+                }
 
-                let opts = that.getTargetSizeFromUI();
-
-                opts = {...defaults,...opts};
-
-                that.setVideoOptions(opts);
-                that.captureVideo(opts);
             })
-       }
+       };
+
     }
 
     createPlayer = (previewElement) =>{
@@ -257,9 +259,8 @@ class D3DAssetCreator extends D3DNFTViewer {
     }  
     captureScreenshot = (opts) =>{
 
-        if(typeof(this.screenShots)==='undefined'){
-            this.screenShots = [];
-        };
+        this.screenShots = [];
+
         opts = this.validateScaleOptions(opts);
         let outputSize = this.calcOutputSize(opts.scaleToWidth, opts.scaleToHeight);
 
@@ -379,36 +380,43 @@ class D3DAssetCreator extends D3DNFTViewer {
 
     createGifFromImages = (gifName, outputWidth, outputHeight) => {
         var that = this;
-        let previewImgTag = document.getElementById(gifName);
-        if(that.gifShots.length===0){
-            throw('Error: no screenShots taken');
-        };
+        return new Promise(( resolve, reject ) => {
 
-        let params = {
-                images: that.gifShots,
-                gifWidth: outputWidth,
-                gifHeight: outputHeight
+            let previewImgTag = document.getElementById(gifName);
+            if(that.gifShots.length===0){
+                throw('Error: no screenShots taken');
             };
 
-        console.log('gif params: ',params);
-
-        gifshot.createGIF(
-            params,
-            function (obj) {
-                if (!obj.error) {
-                    var image = obj.image;
-                    that.replacePreviewWithScreenShot(image, previewImgTag);
+            let params = {
+                    images: that.gifShots,
+                    gifWidth: outputWidth,
+                    gifHeight: outputHeight
                 };
-            }
-        );
+
+            console.log('gif params: ',params);
+
+            gifshot.createGIF(
+                params,
+                function (obj) {
+                    if (!obj.error) {
+                        var image = obj.image;
+                        that.replacePreviewWithScreenShot(image, previewImgTag);
+                        resolve(image);
+                    };
+                }
+            );
+        })
     }
 
     calcOutputSize = (scaleWidth, scaleHeight) =>{
 
         console.log('calcOutputSize',scaleWidth, scaleHeight);
 
-        let currentWidth = document.getElementsByTagName('canvas')[0].width;
-        let currentHeight = document.getElementsByTagName('canvas')[0].height;
+        let currentWidth = this.renderer.domElement.width;
+        let currentHeight = this.renderer.domElement.height;
+
+        console.log('calcOutputSize',currentWidth, currentHeight);
+
         let outputWidth = currentWidth;
         let outputHeight = currentHeight;
         console.log('currentWidth: ',currentWidth);
@@ -421,8 +429,8 @@ class D3DAssetCreator extends D3DNFTViewer {
                 outputHeight = scaleHeight;
                 outputWidth = newWidth;
                 console.log('calculate reductionPercentage:',reductionPercentage);
-                console.log('this.outputHeight: ',outputHeight);
-                console.log('this.outputWidth: ',newWidth);
+                console.log('scaleHeight: ',scaleHeight, 'outputHeight: ',outputHeight);
+                console.log('newWidth: ',newWidth);
 
             } else {
                 console.log('currentHeight < scaleHeight: no scaling required.');
@@ -440,6 +448,7 @@ class D3DAssetCreator extends D3DNFTViewer {
                 var newHeight = currentHeight * (reductionPercentage / 100);
                 outputWidth = scaleWidth;
                 outputHeight = newHeight;
+                console.log('scaleWidth: ',scaleWidth,'outputWidth: ',outputWidth, 'outputHeight: ',outputHeight);
                 console.log('calculate newHeight:',newHeight);
             } else {
                 console.log('currentWidth < scaleWidth: no scaling required.');
@@ -479,115 +488,123 @@ class D3DAssetCreator extends D3DNFTViewer {
     }
 
     captureAnimationGif = (opts) =>{
+        return new Promise(( resolve, reject ) => {
 
-        let that = this;     
-        this.gifShots = [];
+            let that = this;     
+            this.gifShots = [];
 
-        let i = 0;
-        let previewEl = document.getElementById(opts.previewElement);
+            let i = 0;
+            let previewEl = document.getElementById(opts.previewElement);
 
-        let gifName = this.generateGifName();
+            let gifName = this.generateGifName();
 
-        opts = this.validateScaleOptions(opts);
-        let outputSize = this.calcOutputSize(opts.scaleToWidth, opts.scaleToHeight);
+            opts = this.validateScaleOptions(opts);
+            let outputSize = this.calcOutputSize(opts.scaleToWidth, opts.scaleToHeight);
 
-        let strMime = 'image/jpeg';
-            this.loadedItem.startCurrentAnimation();
+            let strMime = 'image/jpeg';
+                this.loadedItem.startCurrentAnimation(THREE.LoopOnce);
 
-        let recordingTimer = window.setInterval(() => {
-            let imgData = null;
+            let recordingTimer = window.setInterval(() => {
+                let imgData = null;
 
 
-            //if first shot, create and append image tag
-            if(i===0){
-                imgData = that.takeGifShot({appendTo:previewEl, gifName: gifName});
-                this.displayGifShot({appendTo:previewEl, gifName: gifName, imgData:imgData})
-            };                
-            //record other frames but dont displayGifShot until complete
-            if(i>0){
-                let previewImgTag = document.getElementById(gifName);
-                imgData = that.takeGifShot({replacePreview:previewImgTag, gifName: gifName});
-            };
+                //if first shot, create and append image tag
+                if(i===0){
+                    imgData = that.takeGifShot({appendTo:previewEl, gifName: gifName});
+                    this.displayGifShot({appendTo:previewEl, gifName: gifName, imgData:imgData})
+                };                
+                //record other frames but dont displayGifShot until complete
+                if(i>0){
+                    let previewImgTag = document.getElementById(gifName);
+                    imgData = that.takeGifShot({replacePreview:previewImgTag, gifName: gifName});
+                };
 
-            //store in array
-            this.storeGifScreenshot(
-                imgData.replace(strMime, 'image/octet-stream'),
-                imgData,
-                'snapshot.jpg'
-            );
-
-            //if animation stops, stop recording
-            if(!this.loadedItem.animRunning){
-                clearInterval(recordingTimer);
-                that.createGifFromImages(gifName, outputSize.width, outputSize.height);
-            };
-
-            ++i;
-        }, 100);
-              
-    }
-
-    captureRotatingGif = (opts) =>{
-        let that = this;
-
-        let angles = opts.rotationAngles;
-        let rotationDirection = opts.rotationDirection;
-        let i = 0;
-        let previewEl = document.getElementById(opts.previewElement);
-
-        let gifName = this.generateGifName();
-
-        let outputSize = this.calcOutputSize(opts.scaleToWidth,opts.scaleToHeight);        
-
-        this.gifShots = [];
-
-        let cameraDistance = this.camera.position.distanceTo(this.loadedItem.getPosition());
-        let previewImgTag = document.getElementById(gifName);
-
-        let strMime = 'image/jpeg';
-        let noRotations = angles+2;
-
-        this.camera.position.x = Math.sin(0) * cameraDistance;
-        this.camera.position.z = Math.cos(0) * cameraDistance;
-
-        this.controls.update();
-
-        let recordingTimer = window.setInterval(() => {
-
-            let imgData = null;
-            
-            //rotate first
-            that.rotatePreview(i, angles, cameraDistance, rotationDirection);
-
-            //if first shot, create and append image tag
-            if(i===0){
-
-                imgData = that.takeGifShot({appendTo:previewEl, gifName: gifName});
-                this.displayGifShot({appendTo:previewEl, gifName: gifName, imgData:imgData})
-                this.storeGifScreenshot(
-                    imgData.replace(strMime, 'image/octet-stream'),
-                    imgData,
-                    'snapshot.jpg');
-            } else {
-                // dont use first frame which has wrong angle                                
-                let imgData = that.takeGifShot({replacePreview:previewImgTag, gifName: gifName});
+                //store in array
                 this.storeGifScreenshot(
                     imgData.replace(strMime, 'image/octet-stream'),
                     imgData,
                     'snapshot.jpg'
                 );
 
-                // stop when all angles are covered
-                if (i > noRotations) {
-                    // 37 as we skip the 1st screenshot
+                //if animation stops, stop recording
+                if(!this.loadedItem.animRunning){
                     clearInterval(recordingTimer);
-                    that.createGifFromImages(gifName, outputSize.width, outputSize.height);
-                };                   
-            }
+                    that.createGifFromImages(gifName, outputSize.width, outputSize.height).then((image)=>{
+                        resolve(image)
+                    })
+                };
 
-            ++i;
-        }, noRotations);
-              
+                ++i;
+            }, 100);
+        });
+    }
+
+    captureRotatingGif = (opts) =>{
+        
+        let that = this;
+
+        return new Promise(( resolve, reject ) => {
+
+            let angles = opts.rotationAngles;
+            let rotationDirection = opts.rotationDirection;
+            let i = 0;
+            let previewEl = document.getElementById(opts.previewElement);
+
+            let gifName = this.generateGifName();
+
+            opts = this.validateScaleOptions(opts);
+            let outputSize = this.calcOutputSize(opts.scaleToWidth, opts.scaleToHeight);     
+
+            this.gifShots = [];
+
+            let cameraDistance = this.camera.position.distanceTo(this.loadedItem.getPosition());
+            let previewImgTag = document.getElementById(gifName);
+
+            let strMime = 'image/jpeg';
+            let noRotations = angles;
+            this.camera.position.x = Math.sin(0) * cameraDistance;
+            this.camera.position.z = Math.cos(0) * cameraDistance;
+
+            this.controls.update();
+
+            let recordingTimer = window.setInterval(() => {
+
+                let imgData = null;
+                
+                //rotate first
+                that.rotatePreview(i, angles, cameraDistance, rotationDirection);
+
+                //if first shot, create and append image tag
+                if(i===0){
+
+                    imgData = that.takeGifShot({appendTo:previewEl, gifName: gifName});
+                    this.displayGifShot({appendTo:previewEl, gifName: gifName, imgData:imgData})
+                    this.storeGifScreenshot(
+                        imgData.replace(strMime, 'image/octet-stream'),
+                        imgData,
+                        'snapshot.jpg');
+                } else {
+                    // dont use first frame which has wrong angle                                
+                    let imgData = that.takeGifShot({replacePreview:previewImgTag, gifName: gifName});
+                    this.storeGifScreenshot(
+                        imgData.replace(strMime, 'image/octet-stream'),
+                        imgData,
+                        'snapshot.jpg'
+                    );
+
+                    // stop when all angles are covered
+                    if (i >= noRotations) {
+                        // 37 as we skip the 1st screenshot
+                        clearInterval(recordingTimer);
+                        that.createGifFromImages(gifName, outputSize.width, outputSize.height).then((image)=>{
+                            resolve(image)
+                        });
+                    };                   
+                }
+
+                ++i;
+            }, 100);
+        }); 
     }
 
     validateScaleOptions = (opts) =>{
@@ -649,16 +666,6 @@ class D3DAssetCreator extends D3DNFTViewer {
         }
     }
 
-    captureVideo = async (opts) =>{
-
-        const video = await record(this.renderer.domElement, opts);
-        const url = URL.createObjectURL(video);
-
-        let player = this.createPlayer(opts.previewElement);
-            player.src = url;
-            player.controls = true;
-    }
-
     rotatePreview = (i, angles, cameraDistance, rotationDirection) =>{
         let angle;
        // console.log('rotatePreview: ', i, angles, cameraDistance, rotationDirection);
@@ -671,6 +678,7 @@ class D3DAssetCreator extends D3DNFTViewer {
         this.camera.position.x = Math.sin(angle) * cameraDistance;
         this.camera.position.z = Math.cos(angle) * cameraDistance;
         this.controls.update();
+        this.renderer.render(this.scene, this.camera);
     }
 
     generateGifName = () =>{

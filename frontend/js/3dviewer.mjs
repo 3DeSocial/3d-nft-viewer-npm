@@ -415,6 +415,7 @@ export class D3DLoaders {
         this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         this.renderer.setClearColor( 0x000000, 1 );
         this.renderer.domElement.style.display = 'none';
+        this.renderer.domElement.id='3d-nft-canvas';
 
         if(el){
            el.appendChild(this.renderer.domElement);
@@ -557,9 +558,10 @@ export class D3DLoaders {
     }
 
     addEventListenerContextLost = () =>{
-        if(this.renderer.context){
-            if(this.renderer.context.canvas){
-               this.renderer.context.canvas.addEventListener("webglcontextlost", this.onLostContext);
+        let context = this.renderer.getContext();
+        if(context){
+            if(context.canvas){
+               context.canvas.addEventListener("webglcontextlost", this.onLostContext);
             }
         }
     }
@@ -607,11 +609,7 @@ export class D3DLoaders {
             this.renderer.setSize(canvasWidth,canvasHeight);
         } else {
             this.parentDivElWidth = this.parentDivEl.offsetWidth;
-            this.parentDivElHeight = this.parentDivEl.offsetHeight;            
-            console.log('resizing');
-            console.log('this.parentDivEl:',this.parentDivEl);
-            console.log('this.parentDivElWidth: ',this.parentDivElWidth);
-            console.log('this.parentDivElHeight: ',this.parentDivElHeight);            
+            this.parentDivElHeight = this.parentDivEl.offsetHeight;                      
             this.camera.aspect = this.parentDivElWidth/this.parentDivElHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
@@ -682,7 +680,6 @@ export class D3DLoaders {
 
      fitCameraToMesh(loadedItem) {
 
-        console.log('fitCameraToMesh: ', loadedItem);
         if(!loadedItem.mesh){
             return false;
         };
@@ -829,7 +826,6 @@ export class D3DLoaders {
         let that = this;
         let targetEl = document.querySelector('.'+this.config.previewCtrCls);
         let previewImg = targetEl.querySelector('img');
-        console.log('previewImg',previewImg);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
@@ -968,15 +964,20 @@ let img = document.querySelector('#'+hideElOnLoad);
                                             loader: this.loader});
     }
 
-    initItem = (nftPostHashHex) =>{
-        
+    initItem = (nftPostHashHex, format) =>{
+
+        if(typeof(format)==='undefined'){
+            let urlParts = modelUrl.split('.');
+            format = urlParts[urlParts.length-1];            
+        };
+console.log('initItem (NFT)', format);
         this.loadedItem = new Item({
             three: THREE,
             scene: this.scene,
             height: this.config.scaleModelToHeight,
             width: this.config.scaleModelToWidth,
             depth: this.config.scaleModelToDepth,
-            loader: this.loader,
+            loader: this.loaders.getLoaderForFormat(format),
             nftPostHashHex: nftPostHashHex,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute
@@ -992,6 +993,7 @@ let img = document.querySelector('#'+hideElOnLoad);
             format = urlParts[urlParts.length-1];            
         };
 
+console.log('initItem (Model)', format);
 
         this.loadedItem = new Item({
             three: THREE,
@@ -1015,7 +1017,7 @@ let img = document.querySelector('#'+hideElOnLoad);
         
         VRButton.registerSessionGrantedListener();        
         
-        let vrButtonEl = VRButton.createButton(this.renderer);
+        let vrButtonEl = VRButton.createButton(this.renderer, {btnCtr:this.config.ctrClass});
 
         this.vrControls = new VRControls({  scene:this.scene,
                                             renderer: this.renderer,

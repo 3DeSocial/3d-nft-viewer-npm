@@ -1079,9 +1079,7 @@ initPlayer2 = () => {
     // move the player
     const angle = this.controls.getAzimuthalAngle();
     if ( fwdPressed ) {
-        if(this.loadedItem.hasAnimations()){
-            this.loadedItem.startAnimation(0);
-        };
+
         this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
         //let angleToCamera = Math.atan2( ( this.player.position.x - this.playerVelocity.x ), ( this.player.position.z - this.playerVelocity.z ) );
        // this.player.rotation.y = angleToCamera;  
