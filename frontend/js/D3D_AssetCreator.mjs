@@ -561,8 +561,7 @@ class D3DAssetCreator extends D3DNFTViewer {
             let previewImgTag = document.getElementById(gifName);
 
             let strMime = 'image/jpeg';
-            let noRotations = angles+2;
-
+            let noRotations = angles;
             this.camera.position.x = Math.sin(0) * cameraDistance;
             this.camera.position.z = Math.cos(0) * cameraDistance;
 
@@ -594,7 +593,7 @@ class D3DAssetCreator extends D3DNFTViewer {
                     );
 
                     // stop when all angles are covered
-                    if (i > noRotations) {
+                    if (i >= noRotations) {
                         // 37 as we skip the 1st screenshot
                         clearInterval(recordingTimer);
                         that.createGifFromImages(gifName, outputSize.width, outputSize.height).then((image)=>{
@@ -604,7 +603,7 @@ class D3DAssetCreator extends D3DNFTViewer {
                 }
 
                 ++i;
-            }, noRotations);
+            }, 100);
         }); 
     }
 
@@ -679,6 +678,7 @@ class D3DAssetCreator extends D3DNFTViewer {
         this.camera.position.x = Math.sin(angle) * cameraDistance;
         this.camera.position.z = Math.cos(angle) * cameraDistance;
         this.controls.update();
+        this.renderer.render(this.scene, this.camera);
     }
 
     generateGifName = () =>{
