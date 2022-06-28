@@ -1,7 +1,6 @@
 export const name = 'd3dntfviewer';
 // Find the latest version by visiting https://cdn.skypack.dev/three.
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import Item from './D3D_Item.mjs';import Lighting from './D3D_Lighting.mjs';
@@ -642,99 +641,64 @@ const params = {
     loadModel = (opts) =>{
 
         let that = this;
+
         return new Promise((resolve,reject)=>{
 
             let hideElOnLoad = opts.hideElOnLoad;
             let modelUrl = opts.modelUrl;
             let containerId = opts.containerId;
             let container = document.getElementById(containerId);
-                 
+            let item = this.initItemForModel(modelUrl);
+ 
             that.initContainer(container);
-                if(this.config.useShowroom && !this.showroomLoaded){
-                this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
-                this.loadColliderEnvironment()
-                .then(()=>{
-                    let item = that.initItemForModel(modelUrl); 
-                    let newPos = new THREE.Vector3(0,this.floorY,0);
-            
-                    item.place(newPos).then((model,pos)=>{
-                        that.mesh = model;
-                        that.resizeCanvas();
-                        let img = document.querySelector('#'+hideElOnLoad);
-                        if(img){
-                            img.style.display = 'none';
-                        };
-                        this.renderer.domElement.style.display = 'inline-block';
-                        resolve(item, model, pos);
-                    });
+            if(this.config.useShowroom && !this.showroomLoaded){
+                this.loadSceneryWithCollider().then(()=>{
+                    this.placeModel(item);
                 })
             } else {
-                let item = that.initItemForModel(modelUrl);
-                let newPos = new THREE.Vector3(0,this.floorY,0);
-        
-                item.place(newPos).then((model,pos)=>{
-                    that.mesh = model;
-                    that.resizeCanvas();
-                    let img = document.querySelector('#'+hideElOnLoad);
-                    if(img){
-                        img.style.display = 'none';
-                    };
-                    this.renderer.domElement.style.display = 'inline-block';
-                    resolve(item, model, pos);
-                });
-            }
+                this.placeModel(item);
+            };
         });
 
     }
 
+
     loadNFT = (opts) =>{
-        // load an item which is a minted nft
+
         let that = this;
         return new Promise((resolve,reject)=>{
 
             let hideElOnLoad = opts.hideElOnLoad;
-            let nftPostHash = opts.nftPostHash;
+            let modelUrl = opts.modelUrl;
             let containerId = opts.containerId;
             let container = document.getElementById(containerId);
-            
+            let item = this.initItem(modelUrl);
+                 
             that.initContainer(container);
             if(this.config.useShowroom && !this.showroomLoaded){
-                this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
-                this.loadColliderEnvironment()
-                .then(()=>{
-                    let item = that.initItem(nftPostHash);
-                    let newPos = new THREE.Vector3(0,this.floorY,0);
-            
-                    item.place(newPos).then((model,pos)=>{
-                        that.mesh = model;
-                        that.resizeCanvas();
-                    let img = document.querySelector('#'+hideElOnLoad);
-                    if(img){
-                        img.style.display = 'none';
-                    };
-                        this.renderer.domElement.style.display = 'inline-block';
-                        resolve(item, model, pos);
-                    });
+                this.loadSceneryWithCollider().then(()=>{
+                    this.placeModel(modelUrl);
                 })
             } else {
-                let item = that.initItem(nftPostHash);
-                let newPos = new THREE.Vector3(0,this.floorY,0);
-        
-                item.place(newPos).then((model,pos)=>{
-                    that.mesh = model;
-                    that.resizeCanvas();
-let img = document.querySelector('#'+hideElOnLoad);
-                    if(img){
-                        img.style.display = 'none';
-                    };
-                    this.renderer.domElement.style.display = 'inline-block';
-                    resolve(item, model, pos);
-                });
-            }
-           
+                this.placeModel(modelUrl);
+            };
         });
 
+    }
+    
+    placeModel = (item) =>{
+        let newPos = new THREE.Vector3(0,this.floorY,0);
 
+        item.place(newPos).then((model,pos)=>{
+            that.mesh = model;
+            that.resizeCanvas();
+            let img = document.querySelector('#'+hideElOnLoad);
+            if(img){
+                img.style.display = 'none';
+            };
+            this.renderer.domElement.style.display = 'inline-block';
+            resolve(item, model, pos);
+        });
     }
 
     start3D = () =>{
