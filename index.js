@@ -1,4 +1,4 @@
-import { D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer} from './frontend/js/3dviewer.mjs';
+import { D3DNFTViewerOverlay, D3DNFTViewer} from './frontend/js/3dviewer.mjs';
 import { D3DSpaceViewer} from './frontend/js/3d-space-viewer.mjs';
 import { SceneryLoader} from './frontend/js/SceneryLoader.mjs';
 import { D3DAssetCreator } from './frontend/js/D3D_AssetCreator.mjs';
@@ -9,6 +9,7 @@ import { Item } from './frontend/js/D3D_Item.mjs';
 import { Lighting } from './frontend/js/D3D_Lighting.mjs';
 import { XRControllerModelFactory } from './frontend/webxr/XRControllerModelFactory.js';
 import { MeshBVH, acceleratedRaycast, MeshBVHVisualizer } from './frontend/webxr/index.module.js';
+import {D3DLoaders } from  './frontend/js/D3D_Loaders.mjs';
 let SupportedFormats = [
 '3DM',
 '3MF',
