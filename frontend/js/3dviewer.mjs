@@ -5,7 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import Item from './D3D_Item.mjs';import Lighting from './D3D_Lighting.mjs';
-import {MeshBVH, VRButton, VRControls, SkyBoxLoader, MeshBVHVisualizer} from '3d-nft-viewer';
+import {D3DNFTViewerOverlay, D3DLoaders, MeshBVH, VRButton, VRControls, SkyBoxLoader, MeshBVHVisualizer} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, collider, visualizer, player, controls, geometries;
@@ -24,57 +24,6 @@ const params = {
     useShowroom: true
 
 };
-
-
-export class D3DNFTViewerOverlay {
-    constructor(config) {
-
-        let defaults = {
-                    el: document.body,
-                    handlers: {}
-                };
-        
-        this.config = {
-            ...defaults,
-            ...config
-        };
-
-        this.optionsMenu = this.createOptionsMenu(this.el);
-        this.addEventListeners();
-
-    }
-
-    createOptionsMenu = () =>{
-        const node = document.getElementById("nft-overlay");
-        if(node){
-            let menu = node.cloneNode(true);
-                menu.setAttribute('style','display:inline-block;');
-                this.config.el.appendChild(menu);
-                return menu;
-        } else {
-            return false;
-        }
-    }
-
-    addEventListeners = () =>{
-        let that = this;
-     
-        let floorCbx = this.optionsMenu.querySelector('#floor');
-        floorCbx.addEventListener('change',(e)=>{
-            if(that.config.handlers['floor']){
-                that.config.handlers['floor'](floorCbx.checked);
-            }
-        });
-
-        let skyCbx = this.optionsMenu.querySelector('#sky');
-        skyCbx.addEventListener('change',(e)=>{
-            if(that.config.handlers['sky']){
-                that.config.handlers['sky'](skyCbx.checked);
-            }
-        })        
-    }
-}
-
 
  export default class D3DNFTViewer {
     
