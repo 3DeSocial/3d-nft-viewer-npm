@@ -659,6 +659,7 @@ const params = {
                         console.log('model place by viewer');
                         this.removeLoader(hideElOnLoad);
                         this.start3D();
+                        resolve(item);                        
                     })
                 })
             } else {
@@ -666,6 +667,8 @@ const params = {
                     console.log('model place by viewer');
                     this.removeLoader(hideElOnLoad);
                     this.start3D();
+                    resolve(item);
+
                 })
             };
         });
@@ -717,6 +720,7 @@ const params = {
                     this.placeModel(item).then(()=>{
                         console.log('model place by viewer');
                         this.removeLoader(hideElOnLoad);
+                        resolve(item);
                     })
 
                 })
@@ -725,6 +729,8 @@ const params = {
                 this.placeModel(item).then(()=>{
                     console.log('model place by viewer');                    
                     this.removeLoader(hideElOnLoad);
+                    resolve(item);
+
                 })
             };
         });
@@ -760,7 +766,7 @@ const params = {
         //this.parentDivEl.children[0].setAttribute('style','display:none;');                    
       //  this.renderer.domElement.setAttribute('style','display:inline-block;');            
 
-        this.showOverlay();
+      //  this.showOverlay();
         this.initVR();
         this.animate();        
     }
