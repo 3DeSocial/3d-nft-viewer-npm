@@ -9,8 +9,11 @@ import { Item } from './frontend/js/D3D_Item.mjs';
 import { Lighting } from './frontend/js/D3D_Lighting.mjs';
 import { XRControllerModelFactory } from './frontend/webxr/XRControllerModelFactory.js';
 import { MeshBVH, acceleratedRaycast, MeshBVHVisualizer } from './frontend/webxr/index.module.js';
-import {D3DLoaders } from  './frontend/js/D3D_Loaders.mjs';
-import {D3DNFTViewerOverlay } from  './frontend/js/D3D_NFTViewerOverlay.mjs';
+import { D3DLoaders } from  './frontend/js/D3D_Loaders.mjs';
+import { D3DNFTViewerOverlay } from  './frontend/js/D3D_NFTViewerOverlay.mjs';
+import { ExtraData3DParser } from  './frontend/js/D3D_ExtraDataParser.mjs';
+
+
 let SupportedFormats = [
 '3DM',
 '3MF',
@@ -58,4 +61,4 @@ let SupportedFormats = [
 'VTK',
 'XYZ',
 ];
-export {D3DSpaceViewer, SupportedFormats, D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRButton, VRControls, Item, XRControllerModelFactory, MeshBVH, acceleratedRaycast, MeshBVHVisualizer, SceneryLoader, SkyBoxLoader}
+export {ExtraData3DParser, D3DSpaceViewer, SupportedFormats, D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRButton, VRControls, Item, XRControllerModelFactory, MeshBVH, acceleratedRaycast, MeshBVHVisualizer, SceneryLoader, SkyBoxLoader}
