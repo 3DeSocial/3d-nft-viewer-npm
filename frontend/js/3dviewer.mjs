@@ -624,7 +624,7 @@ const params = {
             e.stopPropagation();
             that.updateLink(el,'Loading..');
             that.initContainer(targetEl);
-            let item = that.initItemForModel(modelUrl);
+            let item = that.initItemForModel({modelUrl:modelUrl});
             let newPos = new THREE.Vector3(0,3.7,0);
             item.place(newPos).then((model,pos)=>{
                 that.resizeCanvas();
@@ -651,7 +651,7 @@ const params = {
             let container = document.getElementById(containerId);
             that.initContainer(container);
 
-            let item = this.initItemForModel(modelUrl);
+            let item = this.initItemForModel(opts);
  
             if(this.config.useShowroom && !this.showroomLoaded){
                 this.loadSceneryWithCollider().then(()=>{
@@ -709,12 +709,12 @@ const params = {
             let container = document.getElementById(containerId);
             that.initContainer(container);
 
-            let item = this.initItem(modelUrl);            
+            let item = this.initItem(opts);            
             if(this.config.useShowroom && !this.showroomLoaded){
 
                 this.loadSceneryWithCollider().then(()=>{
 
-                    this.placeModel(modelUrl).then(()=>{
+                    this.placeModel(item).then(()=>{
                         console.log('model place by viewer');
                         this.removeLoader(hideElOnLoad);
                     })
@@ -722,7 +722,7 @@ const params = {
                 })
 
             } else {
-                this.placeModel(modelUrl).then(()=>{
+                this.placeModel(item).then(()=>{
                     console.log('model place by viewer');                    
                     this.removeLoader(hideElOnLoad);
                 })
@@ -760,7 +760,7 @@ const params = {
         //this.parentDivEl.children[0].setAttribute('style','display:none;');                    
       //  this.renderer.domElement.setAttribute('style','display:inline-block;');            
 
-      //  this.showOverlay();
+        this.showOverlay();
         this.initVR();
         this.animate();        
     }
@@ -806,12 +806,13 @@ console.log('initItem nftsRoute: ',nftsRoute);
 
     }
 
-    initItemForModel = (modelUrl, format) =>{
-
+    initItemForModel = (opts) =>{
+        let format = opts.format;
         if(typeof(format)==='undefined'){
-            let urlParts = modelUrl.split('.');
+            let urlParts = opts.modelUrl.split('.');
             format = urlParts[urlParts.length-1];            
         };
+        let modelUrl = opts.modelUrl;
 
 console.log('initItem (Model)', format);
 
