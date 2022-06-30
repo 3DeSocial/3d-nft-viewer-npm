@@ -677,6 +677,7 @@ const params = {
 
     loadSceneryWithCollider= () =>{
         let that = this;
+        console.log('loadSceneryWithCollider');
         return new Promise((resolve,reject)=>{
             this.sceneryLoader = new SceneryLoader({
                 sceneryPath: 'http://localhost:3000/layouts/round_showroom/scene.gltf'

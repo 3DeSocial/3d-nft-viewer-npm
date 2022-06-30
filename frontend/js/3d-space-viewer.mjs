@@ -75,7 +75,6 @@ const params = {
 
     initSpace = () =>{
         let that = this;
-        console.log(this.config.el);
         this.getContainer(this.config.el);
         this.initScene();
         this.initRenderer(this.config.el);
@@ -83,34 +82,43 @@ const params = {
         this.initLighting();        
         this.initControls();
         this.resizeCanvas();
-
-
-        this.sceneryLoader = new SceneryLoader({
-            sceneScale: this.config.sceneScale,
-            sceneryPath: this.config.sceneryPath,
-            colliderYOffset: this.config.colliderYOffset
-        });
-        this.sceneryLoader.loadScenery()
-        .then((gltf)=>{
-            const root = gltf.scene;
-            this.room = root;
-            that.scene.add(root);  
-            root.updateMatrixWorld();
-            that.scene.updateMatrixWorld();
-            that.collider = this.sceneryLoader.createCollider(root); 
-
-          //  visualizer = new MeshBVHVisualizer( this.collider, params.visualizeDepth );
-            that.collider.position.setX(0);
-            that.collider.position.setZ(0); 
-            that.collider.position.setY(0);
-          //  that.scene.add( visualizer );
-            that.scene.add( that.collider );
-            that.collider.updateMatrixWorld();
+        this.loadScenery().then(()=>{
             that.initPlayer2();
-
-
+         
         })
+       
 
+     
+
+    }
+
+    loadScenery = () =>{
+        let that = this;
+        return new Promise((resolve,reject)=>{
+            that.sceneryLoader = new SceneryLoader({
+                sceneScale: that.config.sceneScale,
+                sceneryPath: that.config.sceneryPath,
+                colliderYOffset: that.config.colliderYOffset
+            });
+            that.sceneryLoader.loadScenery()
+            .then((gltf)=>{
+                const root = gltf.scene;
+                that.room = root;
+                that.scene.add(root);  
+                root.updateMatrixWorld();
+                that.scene.updateMatrixWorld();
+                that.collider = that.sceneryLoader.createCollider(root); 
+
+              //  visualizer = new MeshBVHVisualizer( this.collider, params.visualizeDepth );
+                that.collider.position.setX(0);
+                that.collider.position.setZ(0); 
+                that.collider.position.setY(0);
+              //  that.scene.add( visualizer );
+                that.scene.add( that.collider );
+                that.collider.updateMatrixWorld();
+                resolve();
+            })
+        });
     }
     setFormat = (format) =>{
         console.log('setFormat: ',format);
@@ -200,7 +208,7 @@ const params = {
         // camera setup
         this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
         this.camera.position.set( 10, 10, - 10 );
-        this.camera.far = 1000;
+        this.camera.far = 100;
         this.camera.updateProjectionMatrix();        
     }
 
@@ -1057,10 +1065,10 @@ initPlayer2 = () => {
     let newPos = null;
     if(this.config.playerStartPos !== null){
         newPos = this.config.playerStartPos;
-        console.log(this.config.playerStartPos);
+        console.log('playerStartPos: ',this.config.playerStartPos);
     } else {
         console.log('player starring at new post')
-        newPos = new THREE.Vector3(0,1,2);
+        newPos = new THREE.Vector3(0,0,2);
     };
     
     item.place(newPos).then((model,pos)=>{
@@ -1068,27 +1076,28 @@ initPlayer2 = () => {
          console.log('placed model: ');
          console.log(model);
         // character
-        this.player = new THREE.Group();
+        that.player = new THREE.Group();
         that.character = new THREE.Mesh(
             new RoundedBoxGeometry(  1.0, 2.0, 1.0, 10, 0.5),
-            new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
+            new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.5})
         );
 
-        that.character.geometry.translate( 0, 0, 0 );
+        that.character.geometry.translate( 0, -0.5, 0 );
         that.character.capsuleInfo = {
-            radius: 0.25,
+            radius: 0.5,
             segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
         };
-       // model.position.copy(pos);
        // this.character.copy(pos);
-        this.player.add(model);
-        this.player.add(this.character);
-        this.config.playerStartPos.copy(this.player.position);
-        that.scene.add( this.player );
-        that.reset();
-        this.start3D();
-        this.addListeners();
-
+        model.position.setY(-1.4);
+        that.player.add(model);
+        model.updateMatrixWorld();
+        that.player.add(that.character);
+        that.player.add(that.dolly);
+        that.character.updateMatrixWorld();
+        that.config.playerStartPos.copy(that.player.position);
+        that.scene.add( that.player );
+        that.start3D();
+        that.addListeners();   
     });
 }
 
