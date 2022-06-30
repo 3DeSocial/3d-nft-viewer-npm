@@ -785,18 +785,7 @@ const params = {
         let paramString = '';
         let params  = [];
         let nftsRoute = '';
-        if(opts.nftRequestParams){
-            let nftRequestParams = opts.nftRequestParams;
-
-            Object.keys(nftRequestParams).forEach((key, index) => {
-                params.push(key+'='+nftRequestParams[key]);
-            });
-            paramString = params.join('&');
-            nftsRoute = this.config.nftsRoute +'?' +paramString;
-        };
-
-console.log('initItem nftsRoute: ',nftsRoute);
-        this.loadedItem = new Item({
+        let itemParams = {
             three: THREE,
             scene: this.scene,
             height: this.config.scaleModelToHeight,
@@ -807,7 +796,20 @@ console.log('initItem nftsRoute: ',nftsRoute);
             modelsRoute: this.config.modelsRoute,
             nftsRoute: nftsRoute
 
-        });                
+        };
+        if(opts.nftRequestParams){
+            let nftRequestParams = opts.nftRequestParams;
+
+            Object.keys(nftRequestParams).forEach((key, index) => {
+                params.push(key+'='+nftRequestParams[key]);
+            });
+            paramString = params.join('&');
+            itemParams.nftsRoute = this.config.nftsRoute +'?' +paramString;
+        };
+
+console.log('initItem: itemParams.nftsRoute: ',itemParams.nftsRoute);
+console.log(opts);
+        this.loadedItem = new Item(itemParams);                
         return this.loadedItem;
 
     }

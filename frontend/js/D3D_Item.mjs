@@ -148,7 +148,7 @@ export default class Item {
                 resolve(this.config.modelUrl);
             } else {
                 let url = this.config.nftsRoute;
-                console.log('fetchModelUrl: '+url);
+
                 fetch(url,{ method: "get"})
                 .then(response => response.text())
                 .then((data)=>{ 
@@ -157,8 +157,8 @@ export default class Item {
                         console.log('that.config.nftPostHashHex: '+that.config.nftPostHashHex);
                         console.log('that.config.modelsRoute: '+that.config.modelsRoute);
                         console.log('modelUrl: '+that.config.modelUrl);
-
-                        let fullUrl = that.config.modelsRoute+'/'+that.config.nftPostHashHex+data.modelUrl;
+                        console.log('data',data);
+                        let fullUrl = that.config.modelsRoute+'/'+data;
                         resolve(fullUrl);
                     } else {
                         reject();
