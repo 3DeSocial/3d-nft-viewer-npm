@@ -53,7 +53,8 @@ export default class SceneryLoader {
 
     scaleScene = (scene) =>{
 		const gltfScene = scene;
-        gltfScene.scale.set(0.2,0.2,0.2);    
+        gltfScene.scale.set(this.config.sceneScale,this.config.sceneScale,this.config.sceneScale);    
+        gltfScene.updateMatrixWorld();
     }
 
     centerScene = (scene) =>{
@@ -86,23 +87,28 @@ export default class SceneryLoader {
                 const arr = toMerge[ hex ];
                 const visualGeometries = [];
                 arr.forEach( mesh => {
+                    if( mesh.material.emissive){
+                        if ( mesh.material.emissive.r !== 0 ) {
 
-                    if ( mesh.material.emissive.r !== 0 ) {
+                            environment.attach( mesh );
 
-                        environment.attach( mesh );
+                        } else {
 
+                            const geom = mesh.geometry.clone();
+                            geom.applyMatrix4( mesh.matrixWorld );
+                            visualGeometries.push( geom );
+
+                        }
                     } else {
-
                         const geom = mesh.geometry.clone();
                         geom.applyMatrix4( mesh.matrixWorld );
                         visualGeometries.push( geom );
-
                     }
+                   
 
                 } );
 
                 if ( visualGeometries.length ) {
-
                     const newGeom = BufferGeometryUtils.mergeBufferGeometries( visualGeometries );
                     const newMesh = new THREE.Mesh( newGeom, new THREE.MeshStandardMaterial( { color: parseInt( hex ), shadowSide: 2 } ) );
                     newMesh.castShadow = true;

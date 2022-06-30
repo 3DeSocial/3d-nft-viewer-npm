@@ -86,22 +86,26 @@ const params = {
 
 
         this.sceneryLoader = new SceneryLoader({
-            sceneryPath: 'http://localhost:3000/layouts/round_showroom/scene.gltf'
+            sceneScale: this.config.sceneScale,
+            sceneryPath: this.config.sceneryPath,
+            colliderYOffset: this.config.colliderYOffset
         });
         this.sceneryLoader.loadScenery()
         .then((gltf)=>{
             const root = gltf.scene;
             this.room = root;
-            that.scene.add(root);          
+            that.scene.add(root);  
+            root.updateMatrixWorld();
+            that.scene.updateMatrixWorld();
             that.collider = this.sceneryLoader.createCollider(root); 
 
-       //   visualizer = new MeshBVHVisualizer( this.collider, params.visualizeDepth );
+          //  visualizer = new MeshBVHVisualizer( this.collider, params.visualizeDepth );
             that.collider.position.setX(0);
             that.collider.position.setZ(0); 
-            //that.scene.add( visualizer );
+            that.collider.position.setY(0);
+          //  that.scene.add( visualizer );
             that.scene.add( that.collider );
             that.collider.updateMatrixWorld();
-            console.log('this.collider added');
             that.initPlayer2();
 
 
@@ -868,13 +872,25 @@ const params = {
                                             moveBack: function(){
                                                 bkdPressed = true;
                                             },
-                                            rotateLeft: function(){
-                                                that.player.rotateY(THREE.Math.degToRad(1));
-                                                that.dolly.rotateY(THREE.Math.degToRad(1));
+                                            rotateLeft: (data)=>{
+                                                try{
+                                                    let rot =  0.017453;
+                                                    that.player.rotateY(rot);
+                                                    that.dolly.rotateY(rot);
+                                                } catch(err) {
+                                                    console.log(err);
+                                                };
+                                                return;
                                             },
-                                            rotateRight: function(){
-                                                that.player.rotateY(-THREE.Math.degToRad(1));
-                                                that.dolly.rotateY(-THREE.Math.degToRad(1));
+                                            rotateRight: (data)=>{
+                                                try{
+                                                let rot = -0.017453;
+                                                that.player.rotateY(rot);
+                                                that.dolly.rotateY(rot);
+                                                } catch(err) {
+                                                    console.log(err);
+                                                };
+                                                return;
                                             }
                                         });
             this.dolly = this.vrControls.buildControllers();     
@@ -1038,8 +1054,15 @@ initPlayer2 = () => {
     let playerLoader = new GLTFLoader();
     let item = that.initItemForModel('./characters/AstridCentered.glb');
     this.mesh = item.model;
-    let newPos = new THREE.Vector3(0,2,0);
-            
+    let newPos = null;
+    if(this.config.playerStartPos !== null){
+        newPos = this.config.playerStartPos;
+        console.log(this.config.playerStartPos);
+    } else {
+        console.log('player starring at new post')
+        newPos = new THREE.Vector3(0,1,2);
+    };
+    
     item.place(newPos).then((model,pos)=>{
    
          console.log('placed model: ');
@@ -1059,9 +1082,8 @@ initPlayer2 = () => {
        // model.position.copy(pos);
        // this.character.copy(pos);
         this.player.add(model);
-        model.position.setY(-1.1);
-
         this.player.add(this.character);
+        this.config.playerStartPos.copy(this.player.position);
         that.scene.add( this.player );
         that.reset();
         this.start3D();
