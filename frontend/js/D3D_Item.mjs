@@ -94,6 +94,7 @@ export default class Item {
                 that.modelUrl = modelUrl;
                 that.placeModel(pos)
                 .then((model, pos)=>{
+                    console.log('placed ok');
                     that.mesh = model;
                     let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
                     document.body.dispatchEvent(loadedEvent);
@@ -146,18 +147,18 @@ export default class Item {
                 console.log('config url: ',this.config.modelUrl);
                 resolve(this.config.modelUrl);
             } else {
-                let url = this.config.nftsRoute+'/'+that.config.nftPostHashHex;
+                let url = this.config.nftsRoute;
 
-                fetch(url,{ method: "post"})
-                .then(response => response.json())
+                fetch(url,{ method: "get"})
+                .then(response => response.text())
                 .then((data)=>{ 
 
                     if(data !== undefined){
                         console.log('that.config.nftPostHashHex: '+that.config.nftPostHashHex);
                         console.log('that.config.modelsRoute: '+that.config.modelsRoute);
                         console.log('modelUrl: '+that.config.modelUrl);
-
-                        let fullUrl = that.config.modelsRoute+'/'+that.config.nftPostHashHex+data.modelUrl;
+                        console.log('data',data);
+                        let fullUrl = that.config.modelsRoute+'/'+data;
                         resolve(fullUrl);
                     } else {
                         reject();
@@ -180,7 +181,7 @@ export default class Item {
 
             console.log('loader attempting load of: ',modelUrl);
             that.loader.load(modelUrl, (root)=> {
-                this.root = root;
+                that.root = root;
                 let loadedItem = null;
 
                 if(root.scene){
@@ -260,7 +261,7 @@ export default class Item {
                 let yOffset = newLengthMeshBounds.y/2;
                 cbox.position.setY(cbox.position.y+yOffset);
 
-                this.scene.add(cbox);
+                that.scene.add(cbox);
                 cbox.updateMatrixWorld();
 
                 cbox.add(obj3D);
@@ -294,6 +295,7 @@ export default class Item {
                 };
              //   console.log(that.mesh.position.y);
               //  console.log(posVector.y);
+              console.log('obj3D fetched ok');
                 resolve(obj3D);
             },
             this.onProgressCallback,

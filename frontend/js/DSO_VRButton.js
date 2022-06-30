@@ -21,6 +21,7 @@ class VRButton {
     } else {
       button = document.createElement( 'button' );
       button.textContent = 'View In VR';
+      button.id='VRButton';
       let btnContainer = document.getElementById(options.btnCtr);
       if(btnContainer){
         btnContainer.append(button);

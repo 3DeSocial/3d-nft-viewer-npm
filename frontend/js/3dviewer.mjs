@@ -1,10 +1,11 @@
 export const name = 'd3dntfviewer';
 // Find the latest version by visiting https://cdn.skypack.dev/three.
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import Item from './D3D_Item.mjs';import Lighting from './D3D_Lighting.mjs';
-import {D3DNFTViewerOverlay, D3DLoaders, MeshBVH, VRButton, VRControls, SkyBoxLoader, MeshBVHVisualizer} from '3d-nft-viewer';
+import {SceneryLoader, D3DNFTViewerOverlay, D3DLoaders, MeshBVH, VRButton, VRControls, SkyBoxLoader, MeshBVHVisualizer} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, collider, visualizer, player, controls, geometries;
@@ -623,7 +624,7 @@ const params = {
             e.stopPropagation();
             that.updateLink(el,'Loading..');
             that.initContainer(targetEl);
-            let item = that.initItemForModel(modelUrl);
+            let item = that.initItemForModel({modelUrl:modelUrl});
             let newPos = new THREE.Vector3(0,3.7,0);
             item.place(newPos).then((model,pos)=>{
                 that.resizeCanvas();
@@ -648,20 +649,57 @@ const params = {
             let modelUrl = opts.modelUrl;
             let containerId = opts.containerId;
             let container = document.getElementById(containerId);
-            let item = this.initItemForModel(modelUrl);
- 
             that.initContainer(container);
+
+            let item = this.initItemForModel(opts);
+ 
             if(this.config.useShowroom && !this.showroomLoaded){
                 this.loadSceneryWithCollider().then(()=>{
-                    this.placeModel(item);
+                    this.placeModel(item).then(()=>{
+                        console.log('model place by viewer');
+                        this.removeLoader(hideElOnLoad);
+                        this.start3D();
+                        resolve(item);                        
+                    })
                 })
             } else {
-                this.placeModel(item);
+                this.placeModel(item).then(()=>{
+                    console.log('model place by viewer');
+                    this.removeLoader(hideElOnLoad);
+                    this.start3D();
+                    resolve(item);
+
+                })
             };
         });
 
     }
 
+    loadSceneryWithCollider= () =>{
+        let that = this;
+        return new Promise((resolve,reject)=>{
+            this.sceneryLoader = new SceneryLoader({
+                sceneryPath: 'http://localhost:3000/layouts/round_showroom/scene.gltf'
+            });
+
+            this.sceneryLoader.loadScenery()
+                .then((gltf)=>{
+                    const root = gltf.scene;
+                    that.room = root;
+                    that.scene.add(root);          
+                    that.collider = that.sceneryLoader.createCollider(root); 
+
+               //   visualizer = new MeshBVHVisualizer( this.collider, params.visualizeDepth );
+                    that.collider.position.setX(0);
+                    that.collider.position.setZ(0); 
+                    //that.scene.add( visualizer );
+                    that.scene.add( that.collider );
+                    that.collider.updateMatrixWorld();
+                    console.log('that.collider added');
+                    resolve()
+                });
+        });
+    }
 
     loadNFT = (opts) =>{
 
@@ -672,35 +710,56 @@ const params = {
             let modelUrl = opts.modelUrl;
             let containerId = opts.containerId;
             let container = document.getElementById(containerId);
-            let item = this.initItem(modelUrl);
-                 
             that.initContainer(container);
+
+            let item = this.initItem(opts);            
             if(this.config.useShowroom && !this.showroomLoaded){
+
                 this.loadSceneryWithCollider().then(()=>{
-                    this.placeModel(modelUrl);
+
+                    this.placeModel(item).then(()=>{
+                        console.log('model place by viewer');
+                        this.removeLoader(hideElOnLoad);
+                        resolve(item);
+                    })
+
                 })
+
             } else {
-                this.placeModel(modelUrl);
+                this.placeModel(item).then(()=>{
+                    console.log('model place by viewer');                    
+                    this.removeLoader(hideElOnLoad);
+                    resolve(item);
+
+                })
             };
         });
 
     }
     
     placeModel = (item) =>{
-        let newPos = new THREE.Vector3(0,this.floorY,0);
+        let that = this;
+        return new Promise((resolve,reject)=>{
 
-        item.place(newPos).then((model,pos)=>{
-            that.mesh = model;
-            that.resizeCanvas();
-            let img = document.querySelector('#'+hideElOnLoad);
-            if(img){
-                img.style.display = 'none';
-            };
-            this.renderer.domElement.style.display = 'inline-block';
-            resolve(item, model, pos);
+            let newPos = new THREE.Vector3(0,this.floorY,0);
+
+            item.place(newPos).then((model,pos)=>{
+                console.log('viewer: placeModel complete');
+                that.mesh = model;
+                that.resizeCanvas();
+                resolve(item, model, pos);
+            });
         });
     }
 
+    removeLoader = (hideElOnLoad) =>{
+        console.log('removeLoader');
+        let img = document.querySelector('#'+hideElOnLoad);
+        if(img){
+            img.style.display = 'none';
+        };
+        this.renderer.domElement.style.display = 'inline-block';        
+    }
     start3D = () =>{
 
         // start animation / controls
@@ -721,34 +780,47 @@ const params = {
                                             loader: this.loader});
     }
 
-    initItem = (nftPostHashHex, format) =>{
-
-        if(typeof(format)==='undefined'){
-            let urlParts = modelUrl.split('.');
-            format = urlParts[urlParts.length-1];            
-        };
-console.log('initItem (NFT)', format);
-        this.loadedItem = new Item({
+    initItem = (opts) =>{
+        let nftPostHashHex = opts.nftPostHashHex;
+        let paramString = '';
+        let params  = [];
+        let nftsRoute = '';
+        let itemParams = {
             three: THREE,
             scene: this.scene,
             height: this.config.scaleModelToHeight,
             width: this.config.scaleModelToWidth,
             depth: this.config.scaleModelToDepth,
-            loader: this.loaders.getLoaderForFormat(format),
+            loader: this.loaders.getLoaderForFormat(opts.format),
             nftPostHashHex: nftPostHashHex,
             modelsRoute: this.config.modelsRoute,
-            nftsRoute: this.config.nftsRoute
-        });
+            nftsRoute: nftsRoute
+
+        };
+        if(opts.nftRequestParams){
+            let nftRequestParams = opts.nftRequestParams;
+
+            Object.keys(nftRequestParams).forEach((key, index) => {
+                params.push(key+'='+nftRequestParams[key]);
+            });
+            paramString = params.join('&');
+            itemParams.nftsRoute = this.config.nftsRoute +'?' +paramString;
+        };
+
+console.log('initItem: itemParams.nftsRoute: ',itemParams.nftsRoute);
+console.log(opts);
+        this.loadedItem = new Item(itemParams);                
         return this.loadedItem;
 
     }
 
-    initItemForModel = (modelUrl, format) =>{
-
+    initItemForModel = (opts) =>{
+        let format = opts.format;
         if(typeof(format)==='undefined'){
-            let urlParts = modelUrl.split('.');
+            let urlParts = opts.modelUrl.split('.');
             format = urlParts[urlParts.length-1];            
         };
+        let modelUrl = opts.modelUrl;
 
 console.log('initItem (Model)', format);
 
