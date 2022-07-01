@@ -75,6 +75,8 @@ const params = {
 
     initSpace = () =>{
         let that = this;
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = { x : 0, y : 0 };
         this.getContainer(this.config.el);
         this.initScene();
         this.initRenderer(this.config.el);
@@ -83,13 +85,9 @@ const params = {
         this.initControls();
         this.resizeCanvas();
         this.loadScenery().then(()=>{
+            that.initVR();
             that.initPlayer2();
-         
-        })
-       
-
-     
-
+        });
     }
 
     loadScenery = () =>{
@@ -103,7 +101,7 @@ const params = {
             that.sceneryLoader.loadScenery()
             .then((gltf)=>{
                 const root = gltf.scene;
-                that.room = root;
+                that.sceneryMesh = root;
                 that.scene.add(root);  
                 root.updateMatrixWorld();
                 that.scene.updateMatrixWorld();
@@ -305,7 +303,8 @@ const params = {
         this.addEventListenerResize();
         this.addEventListenerContextLost();
         this.addEventListenerExitFullScreen();
-       this.addEventListenerKeys();
+        this.addEventListenerKeys();
+        this.addEventListenerMouseClick();
     }    
 
     addEventListenerKeys = ()=>{
@@ -345,6 +344,149 @@ const params = {
 
             } );
 
+    }
+
+    addEventListenerMouseClick = ()=>{
+        let that = this;
+        this.renderer.domElement.addEventListener( 'mousedown', this.checkMouse, false );
+
+    }
+
+    checkMouse = (e) =>{
+        let action = this.raycast(e);
+        console.log(action);
+        switch(parseInt(action.btnIndex)){
+            case 1:
+            console.log('lmb');
+            if(action.isOnFloor && (!action.isOnWall)){
+                console.log('move to ',action.selectedPoint);
+            }
+            break;
+            case 2:
+            console.log('rmb');
+            if(action.isOnWall && (!action.isOnFloor)){
+                console.log('place 2d nft ',action.selectedPoint);
+            };
+            if(action.isOnFloor && (!action.isOnWall)){
+                console.log('place 3d nft ',action.selectedPoint);
+                this.placeNFT(location,'87de5605d1a90936e692ae87f3544f6022eac06a6f283544d7f88c3d6e610a5d');
+            };
+            break;
+            default:
+            console.log('default',action);
+            break;
+        }
+    }
+    raycast = ( e ) => {
+        var isRightMB;
+        let isOnFloor = false;
+        let isOnWall = false;
+        let btnIndex = 0;
+        e = e || window.event;
+
+        if ("which" in e) { // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+            isRightMB = e.which == 3; 
+            if(isRightMB){
+                 btnIndex = 2;
+            } else {
+                btnIndex = e.which;
+            };
+            //console.log(e.which);
+        } else if ("button" in e){  // IE, Opera 
+            console.log(e.button);
+            isRightMB = e.button == 2; 
+            if(isRightMB){
+                 btnIndex = 1;
+            } else {
+                 btnIndex = e.button;
+            }
+        };
+    // Step 1: Detect light helper
+        //1. sets the this.mouse position with a coordinate system where the center
+        //   of the screen is the origin
+        this.mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
+        this.mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+
+        //2. set the picking ray from the camera position and this.mouse coordinates
+        this.raycaster.setFromCamera( this.mouse, this.camera );    
+
+        //3. compute intersections (note the 2nd parameter)
+        var intersects = this.raycaster.intersectObjects( this.scene.children, true );
+        let floorLevel;
+        if(intersects[0]){
+            isOnFloor = this.isOnFloor(intersects[0].point);
+            isOnWall = this.isOnWall(intersects[0].point);
+        };
+        return {
+            isOnFloor: isOnFloor,
+            isOnWall: isOnWall,
+            btnIndex: btnIndex,
+            selectedPoint: intersects[0].point
+        }
+    }
+
+    isOnFloor = (selectedPoint, meshToCheck) =>{
+
+        let origin = selectedPoint.clone();
+            origin.setY(origin.y+1);
+
+        let dest = selectedPoint.clone();
+            dest.setY(-1000); //raycast downwards from selected point.
+        let dir = new THREE.Vector3();
+        dir.subVectors( dest, origin ).normalize();
+        this.raycaster = new THREE.Raycaster();
+        this.raycaster.set(origin,dir);
+        var intersects = this.raycaster.intersectObjects( this.scene.children, true );
+        let hit;
+        if(intersects[0]){   
+            hit = intersects[0];
+
+            if(hit.point.y===selectedPoint.y){
+                return true;
+            } else {
+                return false;
+            };
+            //this.scene.add(new THREE.ArrowHelper( this.raycaster.ray.direction, this.raycaster.ray.origin, 1000, Math.random() * 0xffffff ));
+
+            return hit.point.y;
+        } else {
+            return false;
+        }
+   
+
+
+    }
+
+isOnWall = (selectedPoint, meshToCheck) =>{
+        let origin = selectedPoint.clone();
+         //   origin.setZ(origin.z-1);
+        let dest = selectedPoint.clone();
+            dest.setZ(this.player.position.z); //raycast downwards from selected point.
+        let dir = new THREE.Vector3();
+        dir.subVectors( dest, origin ).normalize();
+        this.raycaster = new THREE.Raycaster();
+        this.raycaster.set(origin,dir);
+        var intersects = this.raycaster.intersectObjects( this.scene.children, true );
+        let hit;
+        if(intersects[0]){   
+            hit = intersects[0];
+            if(hit.point.z===selectedPoint.z){
+                return true;
+            } else {
+                console.log('hit.point.z',hit.point.z,'selectedPoint.z',selectedPoint.z)
+                return false;
+            };
+           // this.scene.add(new THREE.ArrowHelper( this.raycaster.ray.direction, this.raycaster.ray.origin, 1000, Math.random() * 0xffffff ));
+        } else {
+            return false;
+        }
+    }
+
+    placeNFT = (pos, nftPostHashHex) =>{
+        let item = this.initItem({nftPostHashHex:nftPostHashHex,
+                                    format:'glb'});
+        item.place(pos);
+        console.log('item placed');
     }
 
     showOverlay =()=>{
@@ -801,7 +943,7 @@ const params = {
       //  this.renderer.domElement.setAttribute('style','display:inline-block;');            
 
       //  this.showOverlay();
-        this.initVR();
+        
         this.animate();        
     }
 
@@ -814,19 +956,39 @@ const params = {
                                             loader: this.loader});
     }
 
-    initItem = (nftPostHashHex) =>{
+    initItem = (opts) =>{
 
-        this.loadedItem = new Item({
+        let nftPostHashHex = opts.nftPostHashHex;
+        let paramString = '';
+        let params  = [];
+        let nftsRoute = '';
+        let itemParams = {
             three: THREE,
             scene: this.scene,
             height: this.config.scaleModelToHeight,
             width: this.config.scaleModelToWidth,
             depth: this.config.scaleModelToDepth,
+            loader: this.loaders.getLoaderForFormat(opts.format),
             nftPostHashHex: nftPostHashHex,
             modelsRoute: this.config.modelsRoute,
-            nftsRoute: this.config.nftsRoute
-        });
-        return this.loadedItem;
+            nftsRoute: nftsRoute
+
+        };
+        if(opts.nftRequestParams){
+            let nftRequestParams = opts.nftRequestParams;
+
+            Object.keys(nftRequestParams).forEach((key, index) => {
+                params.push(key+'='+nftRequestParams[key]);
+            });
+            paramString = params.join('&');
+            itemParams.nftsRoute = this.config.nftsRoute +'?' +paramString;
+        };
+
+console.log('initItem: itemParams.nftsRoute: ',itemParams.nftsRoute);
+console.log(opts);
+        let item = new Item(itemParams);                
+
+        return item;
 
     }
 
@@ -1092,7 +1254,6 @@ initPlayer2 = () => {
         that.player.add(model);
         model.updateMatrixWorld();
         that.player.add(that.character);
-        that.player.add(that.dolly);
         that.character.updateMatrixWorld();
         that.config.playerStartPos.copy(that.player.position);
         that.scene.add( that.player );
