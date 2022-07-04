@@ -7,7 +7,8 @@ export default class Item {
             modelUrl: '',
             modelsRoute: 'models',
             nftsRoute: 'nfts',
-            castShadow: true     
+            castShadow: true,
+            ceilingHeight: 10 // must be placed below this level     
         };
     
         this.config = {
@@ -87,14 +88,17 @@ export default class Item {
 
     place = (pos) =>{
         let that = this;
-
+if(typeof(pos)==='undefined'){
+    console.log(this);
+    throw('Cant place at undefined position');
+}        
         return new Promise((resolve,reject)=>{
             this.fetchModelUrl()
             .then((modelUrl)=>{
                 that.modelUrl = modelUrl;
                 that.placeModel(pos)
                 .then((model, pos)=>{
-                    console.log('placed ok');
+                    console.log('placed ok at ',pos);
                     that.mesh = model;
                     let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
                     document.body.dispatchEvent(loadedEvent);
@@ -106,7 +110,6 @@ export default class Item {
     }
 
     remove = () =>{
-        console.log('remove: ',this.mesh);
         this.scene.remove(this.mesh.children[0]);
     }
     moveTo = (pos)=>{
@@ -144,7 +147,6 @@ export default class Item {
         return new Promise((resolve,reject)=>{
             // fetch from config if available
             if(this.config.modelUrl!==''){
-                console.log('config url: ',this.config.modelUrl);
                 resolve(this.config.modelUrl);
             } else {
                 let url = this.config.nftsRoute;
@@ -154,11 +156,11 @@ export default class Item {
                 .then((data)=>{ 
 
                     if(data !== undefined){
-                        console.log('that.config.nftPostHashHex: '+that.config.nftPostHashHex);
-                        console.log('that.config.modelsRoute: '+that.config.modelsRoute);
-                        console.log('modelUrl: '+that.config.modelUrl);
-                        console.log('data',data);
-                        let fullUrl = that.config.modelsRoute+'/'+data;
+                      //console.log('that.config.nftPostHashHex: '+that.config.nftPostHashHex);
+                       //console.log('that.config.modelsRoute: '+that.config.modelsRoute);
+                        //console.log('modelUrl: '+that.config.modelUrl);
+                        //console.log('data',data);
+                        let fullUrl = that.config.modelsRoute+data;
                         resolve(fullUrl);
                     } else {
                         reject();
@@ -172,6 +174,8 @@ export default class Item {
     fetchModel = async(modelUrl, posVector) =>{
         
         let that = this;
+        //console.log('modelUrl: ',modelUrl);
+        //console.log('posVector:',posVector);
         let boxMesh = this.addContainerBoxToScene(posVector);
         let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
         return new Promise((resolve,reject)=>{
@@ -179,17 +183,13 @@ export default class Item {
 
             let meshBounds = null;
 
-            console.log('loader attempting load of: ',modelUrl);
             that.loader.load(modelUrl, (root)=> {
                 that.root = root;
                 let loadedItem = null;
 
                 if(root.scene){
-                    console.log('NOT using root');
                     loadedItem = root.scene;
                 } else {
-                                        console.log('using root');
-
                     loadedItem = root;
                 };
 
@@ -213,10 +213,7 @@ export default class Item {
               
                  meshBounds = new THREE.Box3().setFromObject( obj3D );
                 
-                console.log(meshBounds);
-
-
-                // Calculate side lengths of scene (cube) bounding box
+                 // Calculate side lengths of scene (cube) bounding box
                 let lengthSceneBounds = {
                   x: Math.abs(sceneBounds.max.x - sceneBounds.min.x),
                   y: Math.abs(sceneBounds.max.y - sceneBounds.min.y),
@@ -254,9 +251,9 @@ export default class Item {
                   z: Math.abs(newMeshBounds.max.z - newMeshBounds.min.z),
                 };
 
-                console.log('height after scale: ',newLengthMeshBounds.y);
                 let cbox = that.createContainerBoxForModel(newLengthMeshBounds.x, newLengthMeshBounds.y, newLengthMeshBounds.z, posVector);
                 cbox.position.copy(posVector);
+
                 // center of box is position so move up by 50% of newLengthMeshBounds.y
                 let yOffset = newLengthMeshBounds.y/2;
                 cbox.position.setY(cbox.position.y+yOffset);
@@ -270,6 +267,8 @@ export default class Item {
               //  that.mesh = obj3D;
               //  that.scene.add(that.mesh);
               //  that.mesh.updateWorldMatrix();
+              //console.log('placing Object3D: ');
+              //console.log(obj3D);
                 var helper = new THREE.BoxHelper(obj3D, 0x00ff00);
                 helper.update();
                 // If you want a visible bounding box
@@ -289,13 +288,10 @@ export default class Item {
                     let yOffset = lowestVertex.y-posVector.y;
                   //  console.log(yOffset);
                     obj3D.position.setY(obj3D.position.y - yOffset);
-                    obj3D.position.setX(0);
-                    obj3D.position.setZ(0);
-
                 };
              //   console.log(that.mesh.position.y);
               //  console.log(posVector.y);
-              console.log('obj3D fetched ok');
+             // console.log('obj3D fetched ok');
                 resolve(obj3D);
             },
             this.onProgressCallback,
@@ -325,7 +321,7 @@ onErrorCallback = (e)=> {
                 lowestVertex = new THREE.Vector3(x,y,z);
             }
         }
-        console.log('lowest point in helper: ',lowest);
+        //console.log('lowest point in helper: ',lowest);
         return lowestVertex;
     }
 
@@ -383,6 +379,7 @@ onErrorCallback = (e)=> {
     }
 
     addContainerBoxToScene = (posVector) =>{
+        console.log('addContainerBoxToScene: ',posVector);
         const geometry = new THREE.BoxGeometry(this.config.width, this.config.height,this.config.depth);
         
         if(!this.config.color){
@@ -396,14 +393,15 @@ onErrorCallback = (e)=> {
         });
 
         let boxMesh = new THREE.Mesh( geometry, material );
-        boxMesh.position.copy(posVector);
+            boxMesh.position.copy(posVector);
+
         return boxMesh;
     }
 
     convertToObj3D = (loadedItem) =>{
         let loadedType = loadedItem.type;
         let material, vertexColors, geometry;
-        console.log('loaded type: ',loadedType);
+       // console.log('loaded type: ',loadedType);
         switch(loadedType){
             case 'Object3D','Mesh':
             break;
@@ -595,7 +593,7 @@ onErrorCallback = (e)=> {
             if ( child.isMesh ) {
                 child.geometry.computeBoundingBox()
                 meshBounds = child.geometry.boundingBox;
-                console.log(meshBounds);
+              //  console.log(meshBounds);
             }
         });
         return meshBounds;
@@ -604,7 +602,7 @@ onErrorCallback = (e)=> {
     getPosition = () =>{
         let copiedPos = new THREE.Vector3();
             copiedPos.copy(this.mesh.position);
-            console.log('item pos: ', copiedPos);
+          //  console.log('item pos: ', copiedPos);
             return copiedPos;
     }
 
@@ -618,8 +616,8 @@ onErrorCallback = (e)=> {
 
     addToScene = (model) =>{
         this.scene.add(model);
-        console.log('model added to scene');
-        console.log(this.scene);
+     //   console.log('model added to scene');
+       // console.log(this.scene);
     }
 
 }

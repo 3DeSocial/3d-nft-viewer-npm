@@ -78,7 +78,7 @@ export default class Lighting {
 
     initLights = () =>{
 //Add lights
-        this.aLight = new THREE.AmbientLight(0xffffff, 0.5);
+        this.aLight = new THREE.AmbientLight(0xffffff, 2);
         this.scene.add(this.aLight);
 
         this.dLighting = [];

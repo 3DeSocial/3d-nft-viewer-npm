@@ -11,54 +11,8 @@ import { XRControllerModelFactory } from './frontend/webxr/XRControllerModelFact
 import { MeshBVH, acceleratedRaycast, MeshBVHVisualizer } from './frontend/webxr/index.module.js';
 import { D3DLoaders } from  './frontend/js/D3D_Loaders.mjs';
 import { D3DNFTViewerOverlay } from  './frontend/js/D3D_NFTViewerOverlay.mjs';
+import { D3DInventory } from  './frontend/js/D3D_Inventory.mjs';
 import { ExtraData3DParser } from  './frontend/js/D3D_ExtraDataParser.mjs';
+import { LayoutPlotter } from  './frontend/js/D3D_LayoutPlotter.mjs';
 
-
-let SupportedFormats = [
-'3DM',
-'3MF',
-'AMF',
-'BVH',
-'BasisTexture',
-'Collada',
-'DDS',
-'DRACO',
-'EXR',
-'FBX',
-'Font',
-'GCode',
-'GLTF',
-'HDRCubeTexture',
-'IFC',
-'KMZ',
-'KTX2',
-'LDraw',
-'LUT3dl',
-'LUTCube',
-'LWO',
-'LogLuv',
-'Lottie',
-'MD2',
-'MDD',
-'MTL',
-'NRRD',
-'OBJ',
-'PCD',
-'PDB',
-'PLY',
-'PRWM',
-'PVR',
-'RGBE',
-'RGBM',
-'STL',
-'SVG',
-'TDS',
-'TGA',
-'TTF',
-'Tilt',
-'VOX',
-'VRML',
-'VTK',
-'XYZ',
-];
-export {ExtraData3DParser, D3DSpaceViewer, SupportedFormats, D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRButton, VRControls, Item, XRControllerModelFactory, MeshBVH, acceleratedRaycast, MeshBVHVisualizer, SceneryLoader, SkyBoxLoader}
+export {D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRButton, VRControls, Item, XRControllerModelFactory, MeshBVH, acceleratedRaycast, MeshBVHVisualizer, SceneryLoader, SkyBoxLoader, LayoutPlotter}

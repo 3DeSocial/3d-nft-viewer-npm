@@ -43,8 +43,9 @@ export default class SceneryLoader {
                 console.log('gltf scaled');
 
                 that.centerScene(res.scene);
-                console.log('gltf centered');
 
+                console.log('gltf centered');
+                that.addScenery(res);
                 console.log('collider added');
                 resolve(res);
             });
@@ -61,7 +62,8 @@ export default class SceneryLoader {
 		const box = new THREE.Box3();
         box.setFromObject( scene );
         box.getCenter( scene.position ).negate();
-        scene.updateMatrixWorld( true );        
+        scene.updateMatrixWorld( true );
+        scene.position.setY(0);
     }
 
     createCollider = (gltfScene) =>{
@@ -153,12 +155,90 @@ export default class SceneryLoader {
             this.bvh = mergedGeometry.boundsTree;
             let collider = new THREE.Mesh( mergedGeometry );
             collider.material.wireframe = true;
-            collider.material.opacity = 1;
+            collider.material.opacity = 0;
             collider.material.transparent = true;
 
         return collider;
      //   visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
 
+    }
+
+    addScenery = (gltf) =>{
+        const root = gltf.scene;
+        this.sceneryMesh = root;
+        this.scene.add(root);  
+        root.updateMatrixWorld();
+        this.scene.updateMatrixWorld();
+        this.collider = this.createCollider(root); 
+        this.scene.add( this.collider );
+        this.collider.updateMatrixWorld();
+        this.floorY = this.findFloorLevel(this.collider)   ;
+    }
+    findFloorLevel = (meshToCheck) =>{
+        const invMat = new THREE.Matrix4();
+
+        let origin = new THREE.Vector3(0,100,0);
+        let dest = new THREE.Vector3(0,-100,0);
+        let dir = new THREE.Vector3();
+        dir.subVectors( dest, origin ).normalize();
+        let raycaster = new THREE.Raycaster();
+        raycaster.ray.applyMatrix4( invMat );
+        raycaster.set(origin,dir);
+        const hit = this.bvh.raycastFirst( raycaster.ray );
+       // hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
+                 let planePos = new THREE.Vector3(0,hit.point.y,0);
+             //   this.addPlaneAtPos(planePos);
+//this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, 200, Math.random() * 0xffffff ));
+        return hit.point.y;
+
+    }
+
+    findFloorAt = (pos, ceilHeight, floorHeight) =>{
+        
+        const invMat = new THREE.Matrix4();
+        invMat.copy( this.sceneryMesh.matrixWorld ).invert();
+
+        let origin = pos.clone()
+            origin.setY(ceilHeight);
+
+        let dest = pos.clone();
+            dest.setY(floorHeight);
+
+            
+        let dir = new THREE.Vector3();
+        dir.subVectors(dest, origin).normalize();
+        let raycaster = new THREE.Raycaster();
+        raycaster.ray.applyMatrix4( invMat );
+        raycaster.set(origin,dir);
+        const hit = this.bvh.raycastFirst( raycaster.ray );
+       // this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, ceilHeight, Math.random() * 0xffffff ));
+
+       // hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
+       if(hit){
+         //   let planePos = new THREE.Vector3(0,hit.point.y,0);
+            return hit.point.y;
+       } else {
+            return false;
+        }
+             //   this.addPlaneAtPos(planePos);
+//this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, 200, Math.random() * 0xffffff ));
+
+
+    }
+
+    addPlaneAtPos = (posVector) =>{
+        var geo = new THREE.PlaneBufferGeometry(20, 20);
+        var mat = new THREE.MeshPhongMaterial({ color: 0x99FFFF, side: THREE.DoubleSide });
+        var plane = new THREE.Mesh(geo, mat);
+        plane.rotateX( - Math.PI / 2);
+        plane.position.copy(posVector);
+        this.scene.add(plane);
+
+    }
+
+    getFloorY = () =>{
+        //reture floor level
+        return this.floorY;
     }
 
 }

@@ -5,8 +5,11 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import Item from './D3D_Item.mjs';import Lighting from './D3D_Lighting.mjs';
-import {MeshBVH, VRButton, VRControls, D3DLoaders, D3DNFTViewerOverlay, SceneryLoader, MeshBVHVisualizer} from '3d-nft-viewer';
+import Item from './D3D_Item.mjs';
+import Lighting from './D3D_Lighting.mjs';
+import LayoutPlotter from './D3D_LayoutPlotter.mjs';
+
+import {D3DInventory, MeshBVH, VRButton, VRControls, D3DLoaders, D3DNFTViewerOverlay, SceneryLoader, MeshBVHVisualizer} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
@@ -70,21 +73,26 @@ const params = {
         this.clock = new THREE.Clock();
         environment = null;
         this.collider = null;
+        this.moveTo = false;
 
     }
 
-    initSpace = () =>{
+    initSpace = (options) =>{
+        console.log('initSpace: ',options);
         let that = this;
         this.raycaster = new THREE.Raycaster();
         this.mouse = { x : 0, y : 0 };
         this.getContainer(this.config.el);
         this.initScene();
+        this.initInventory(options.items);        
         this.initRenderer(this.config.el);
+        this.initSkybox();
         this.initCameraPlayer();
         this.initLighting();        
         this.initControls();
         this.resizeCanvas();
         this.loadScenery().then(()=>{
+            that.placeAssets();
             that.initVR();
             that.initPlayer2();
         });
@@ -96,25 +104,11 @@ const params = {
             that.sceneryLoader = new SceneryLoader({
                 sceneScale: that.config.sceneScale,
                 sceneryPath: that.config.sceneryPath,
-                colliderYOffset: that.config.colliderYOffset
+                scene: that.scene
             });
             that.sceneryLoader.loadScenery()
             .then((gltf)=>{
-                const root = gltf.scene;
-                that.sceneryMesh = root;
-                that.scene.add(root);  
-                root.updateMatrixWorld();
-                that.scene.updateMatrixWorld();
-                that.collider = that.sceneryLoader.createCollider(root); 
-
-              //  visualizer = new MeshBVHVisualizer( this.collider, params.visualizeDepth );
-                that.collider.position.setX(0);
-                that.collider.position.setZ(0); 
-                that.collider.position.setY(0);
-              //  that.scene.add( visualizer );
-                that.scene.add( that.collider );
-                that.collider.updateMatrixWorld();
-                resolve();
+                resolve(gltf);
             })
         });
     }
@@ -191,7 +185,7 @@ const params = {
         this.parentDivElHeight = this.parentDivEl.offsetHeight;
        // this.initScene();
         
-      //  this.initSkybox();
+        this.initSkybox();
 
         this.initCamera();
         this.initRenderer(parentDivEl);
@@ -282,7 +276,9 @@ const params = {
         let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
         let skyBoxNo = this.getRandomInt(0,4);
         let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
-        this.scene.background = skyBox;        
+        console.log('skyBox');
+        console.log(skyBox);
+        this.scene.background = skyBox;
     }
 
     removeSky = () => {
@@ -291,7 +287,7 @@ const params = {
 
     initLighting = () =>{
         this.lights = new Lighting({scene:this.scene,
-                                        createListeners: true});   
+                                        createListeners: false});   
     }
 
     initLoaders = () =>{
@@ -318,6 +314,16 @@ const params = {
                     case 'KeyS': bkdPressed = true; break;
                     case 'KeyD': rgtPressed = true; break;
                     case 'KeyA': lftPressed = true; break;
+                    case 'Digit0': that.inventory.setActive(0); break;
+                    case 'Digit1': that.inventory.setActive(1); break;
+                    case 'Digit2': that.inventory.setActive(2); break;
+                    case 'Digit3': that.inventory.setActive(3); break;
+                    case 'Digit4': that.inventory.setActive(4); break;
+                    case 'Digit5': that.inventory.setActive(5); break;
+                    case 'Digit6': that.inventory.setActive(6); break;
+                    case 'Digit7': that.inventory.setActive(7); break;
+                    case 'Digit8': that.inventory.setActive(8); break;
+
                     case 'Space':
                         if ( that.playerIsOnGround ) {
 
@@ -355,11 +361,13 @@ const params = {
     checkMouse = (e) =>{
         let action = this.raycast(e);
         console.log(action);
+        this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
             case 1:
             console.log('lmb');
             if(action.isOnFloor && (!action.isOnWall)){
                 console.log('move to ',action.selectedPoint);
+                this.moveTo = action.selectedPoint.clone();
             }
             break;
             case 2:
@@ -367,15 +375,20 @@ const params = {
             if(action.isOnWall && (!action.isOnFloor)){
                 console.log('place 2d nft ',action.selectedPoint);
             };
-            if(action.isOnFloor && (!action.isOnWall)){
+            if(action.isOnFloor){
                 console.log('place 3d nft ',action.selectedPoint);
-                this.placeNFT(location,'87de5605d1a90936e692ae87f3544f6022eac06a6f283544d7f88c3d6e610a5d');
+                this.placeActiveItem(action.selectedPoint);
             };
             break;
             default:
             console.log('default',action);
             break;
         }
+    }
+
+    updateOverlayPos = (pos) =>{
+        let posText = 'x: '+pos.x+' y: '+pos.y+' z: '+pos.z;
+        document.querySelector('span#pos-display').innerHTML = posText;
     }
     raycast = ( e ) => {
         var isRightMB;
@@ -483,12 +496,24 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }
 
     placeNFT = (pos, nftPostHashHex) =>{
-        let item = this.initItem({nftPostHashHex:nftPostHashHex,
-                                    format:'glb'});
-        item.place(pos);
-        console.log('item placed');
+        let item = this.inventory.getItemByHash(nftPostHashHex);
+        if(item){
+            item.place(pos);
+            console.log('item placed');     
+        } else {
+            console.log('item not in inventory: ',nftPostHashHex);
+        }
+
     }
 
+    placeActiveItem = (pos) =>{
+        let item = this.inventory.getActiveItem();
+        if(item){
+            item.place(pos);
+            console.log('item placed');     
+        };
+
+    } 
     showOverlay =()=>{
 
         let that = this;
@@ -633,11 +658,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             this.renderer.setSize(canvasWidth,canvasHeight);
         } else {
             this.parentDivElWidth = this.parentDivEl.offsetWidth;
-            this.parentDivElHeight = this.parentDivEl.offsetHeight;            
-            console.log('resizing');
-            console.log('this.parentDivEl:',this.parentDivEl);
-            console.log('this.parentDivElWidth: ',this.parentDivElWidth);
-            console.log('this.parentDivElHeight: ',this.parentDivElHeight);            
+            this.parentDivElHeight = this.parentDivEl.offsetHeight;                       
             this.camera.aspect = this.parentDivElWidth/this.parentDivElHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
@@ -651,10 +672,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         
     animate = () =>{
         console.log('start animation loop');
-        console.log(this.scene);
-        console.log(this.camera);       
-        console.log(this.renderer);       
-
         this.renderer.setAnimationLoop(this.render);
     }
     
@@ -948,12 +965,18 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }
 
 
-    initInventory = () =>{
-
+    initInventory = (items) =>{
         this.inventory = new D3DInventory({ three: THREE,
-                                            items: this.config.items,
+                                            items: items,
                                             scene: this.scene,
-                                            loader: this.loader});
+                                            loader: this.loader,
+                                            loaders: this.loaders,
+                                            width: 3,
+                                            depth: 3,
+                                            height: 3,
+                                            modelsRoute: this.config.modelsRoute,
+                                            nftsRoute: this.config.nftsRoute
+                                        });
     }
 
     initItem = (opts) =>{
@@ -984,8 +1007,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             itemParams.nftsRoute = this.config.nftsRoute +'?' +paramString;
         };
 
-console.log('initItem: itemParams.nftsRoute: ',itemParams.nftsRoute);
-console.log(opts);
         let item = new Item(itemParams);                
 
         return item;
@@ -996,7 +1017,7 @@ console.log(opts);
         let urlParts = modelUrl.split('.');
         let extension = urlParts[urlParts.length-1];
 
-        this.loadedItem = new Item({
+        let item = new Item({
             three: THREE,
             loader: this.loaders.getLoaderForFormat(extension),
             scene: this.scene,
@@ -1008,8 +1029,20 @@ console.log(opts);
             nftsRoute: this.config.nftsRoute,
             format:extension
         });
-        return this.loadedItem;
+        return item;
 
+    }
+
+    placeAssets = () =>{
+
+        let itemsToPlace = this.inventory.getItems();
+        let floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
+        this.layoutPlotter = new LayoutPlotter({items:itemsToPlace, 
+                                                floorY: floorY,
+                                                sceneryLoader: this.sceneryLoader});
+        let radius = 8; 
+        let center = new THREE.Vector3(0,0,0);
+        this.layoutPlotter.plotCircle(itemsToPlace, center,radius);
     }
 
     initVR = () =>{
@@ -1199,52 +1232,33 @@ console.log(opts);
 
     }
 
-initPlayer = () => {
-    let that = this;
-           that.player = new THREE.Mesh(
-            new RoundedBoxGeometry( 1.0, 2.0, 1.0, 10, 0.5 ),
-            new THREE.MeshStandardMaterial()
-        );
-        that.player.geometry.translate( 0, - 0.5, 0 );
-        that.player.capsuleInfo = {
-            radius: 0.5,
-            segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
-        };
-        that.player.castShadow = true;
-        that.player.receiveShadow = true;
-        that.player.material.shadowSide = 2;
-        that.scene.add( this.player );
-        that.reset();
-        this.start3D();
-        this.addListeners();
-}
-
 initPlayer2 = () => {
+
     let that = this;
     let playerLoader = new GLTFLoader();
     let item = that.initItemForModel('./characters/AstridCentered.glb');
     this.mesh = item.model;
     let newPos = null;
-    if(this.config.playerStartPos !== null){
+    if(this.config.playerStartPos){
         newPos = this.config.playerStartPos;
-        console.log('playerStartPos: ',this.config.playerStartPos);
     } else {
-        console.log('player starring at new post')
-        newPos = new THREE.Vector3(0,0,2);
+        let playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(0,0,0), 2, -1);
+            playerFloor = 20;
+        console.log('playerFloor ', playerFloor);
+        newPos = new THREE.Vector3(0,playerFloor,0);
     };
     
     item.place(newPos).then((model,pos)=>{
    
          console.log('placed model: ');
-         console.log(model);
         // character
         that.player = new THREE.Group();
         that.character = new THREE.Mesh(
-            new RoundedBoxGeometry(  1.0, 2.0, 1.0, 10, 0.5),
+            new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
             new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.5})
         );
 
-        that.character.geometry.translate( 0, -0.5, 0 );
+        that.character.geometry.translate( 0, -1, 0 );
         that.character.capsuleInfo = {
             radius: 0.5,
             segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
@@ -1255,7 +1269,7 @@ initPlayer2 = () => {
         model.updateMatrixWorld();
         that.player.add(that.character);
         that.character.updateMatrixWorld();
-        that.config.playerStartPos.copy(that.player.position);
+        that.player.position.setY(2);
         that.scene.add( that.player );
         that.start3D();
         that.addListeners();   
@@ -1310,7 +1324,11 @@ initPlayer2 = () => {
         this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
 
     }
-
+    if(this.moveTo){
+        this.player.position.copy(this.moveTo);
+        this.moveTo = false;
+        console.log('moving to selectedPoint: ',this.moveTo);
+    };
     this.player.updateMatrixWorld();
 
     // adjust player position based on collisions
