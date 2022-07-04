@@ -1344,7 +1344,7 @@ initPlayer2 = () => {
     }
     if(this.moveTo){
    //     console.log('moving from ',this.player.position);
-        this.moveTo.setY(this.floorY);
+        this.moveTo.setY(this.player.position.y);
    //     console.log('moving to selectedPoint: ',this.moveTo);
 
         this.player.position.copy(this.moveTo);
