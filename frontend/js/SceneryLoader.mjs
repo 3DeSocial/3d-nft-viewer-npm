@@ -47,7 +47,7 @@ export default class SceneryLoader {
                 console.log('gltf centered');
                 that.addScenery(res);
                 console.log('collider added');
-                resolve(res);
+                resolve(res.scene);
             });
        });
 	}

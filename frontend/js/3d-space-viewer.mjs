@@ -108,6 +108,8 @@ const params = {
             });
             that.sceneryLoader.loadScenery()
             .then((gltf)=>{
+                this.collider = that.sceneryLoader.collider;
+                that.sceneryMesh = gltf;
                 resolve(gltf);
             })
         });
@@ -434,7 +436,7 @@ const params = {
             isOnFloor: isOnFloor,
             isOnWall: isOnWall,
             btnIndex: btnIndex,
-            selectedPoint: intersects[0].point
+            selectedPoint: (intersects[0])?intersects[0].point:null
         }
     }
 
