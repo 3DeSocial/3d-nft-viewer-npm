@@ -202,7 +202,7 @@ const params = {
         // camera setup
         this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
         this.camera.position.set( 10, 10, - 10 );
-        this.camera.far = 100;
+        this.camera.far = 500;
         this.camera.updateProjectionMatrix();        
     }
 
@@ -357,21 +357,14 @@ const params = {
     addEventListenerMouseClick = ()=>{
         let that = this;
         this.renderer.domElement.addEventListener( 'mousedown', this.checkMouse, false );
+        this.renderer.domElement.addEventListener( 'dblclick', this.checkMouseDbl, false );
 
     }
 
     checkMouse = (e) =>{
         let action = this.raycast(e);
-        console.log(action);
         this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
-            case 1:
-            console.log('lmb');
-            if(action.isOnFloor && (!action.isOnWall)){
-                console.log('move to ',action.selectedPoint);
-                this.moveTo = action.selectedPoint.clone();
-            }
-            break;
             case 2:
             console.log('rmb');
             if(action.isOnWall && (!action.isOnFloor)){
@@ -381,6 +374,24 @@ const params = {
                 console.log('place 3d nft ',action.selectedPoint);
                 this.placeActiveItem(action.selectedPoint);
             };
+            break;
+            default:
+            console.log('default',action);
+            break;
+        }
+    }
+
+    checkMouseDbl = (e) =>{
+        
+        let action = this.raycast(e);
+        this.updateOverlayPos(action.selectedPoint);
+        switch(parseInt(action.btnIndex)){
+            case 1:
+            console.log('lmb');
+            if(action.isOnFloor && (!action.isOnWall)){
+                console.log('move to ',action.selectedPoint);
+                this.moveTo = action.selectedPoint.clone();
+            }
             break;
             default:
             console.log('default',action);
@@ -426,7 +437,7 @@ const params = {
         this.raycaster.setFromCamera( this.mouse, this.camera );    
 
         //3. compute intersections (note the 2nd parameter)
-        var intersects = this.raycaster.intersectObjects( this.scene.children, true );
+        var intersects = this.raycaster.intersectObjects( this.scene.children, false );
         let floorLevel;
         if(intersects[0]){
             isOnFloor = this.isOnFloor(intersects[0].point);
@@ -1038,11 +1049,11 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     placeAssets = () =>{
 
         let itemsToPlace = this.inventory.getItems();
-        let floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
+        this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
         this.layoutPlotter = new LayoutPlotter({items:itemsToPlace, 
-                                                floorY: floorY,
+                                                floorY: this.floorY,
                                                 sceneryLoader: this.sceneryLoader});
-        let radius = 8; 
+        let radius = 12; 
         let center = new THREE.Vector3(0,0,0);
         this.layoutPlotter.plotCircle(itemsToPlace, center,radius);
     }
@@ -1241,13 +1252,17 @@ initPlayer2 = () => {
     let item = that.initItemForModel('./characters/AstridCentered.glb');
     this.mesh = item.model;
     let newPos = null;
+    let playerFloor = 0;
     if(this.config.playerStartPos){
+        playerFloor = this.sceneryLoader.findFloorAt(this.config.playerStartPos, 2, -1);
+        
+                console.log('playerFloor ', playerFloor);
+
         newPos = this.config.playerStartPos;
     } else {
-        let playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(0,0,0), 2, -1);
-            playerFloor = 20;
+        playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(0,0,0), 2, -1);
         console.log('playerFloor ', playerFloor);
-        newPos = new THREE.Vector3(0,playerFloor,0);
+        newPos = new THREE.Vector3(0,0,0);
     };
     
     item.place(newPos).then((model,pos)=>{
@@ -1257,7 +1272,7 @@ initPlayer2 = () => {
         that.player = new THREE.Group();
         that.character = new THREE.Mesh(
             new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
-            new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.5})
+            new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
         );
 
         that.character.geometry.translate( 0, -1, 0 );
@@ -1271,8 +1286,9 @@ initPlayer2 = () => {
         model.updateMatrixWorld();
         that.player.add(that.character);
         that.character.updateMatrixWorld();
-        that.player.position.setY(2);
         that.scene.add( that.player );
+        that.player.updateMatrixWorld();
+        that.player.position.setY(4);
         that.start3D();
         that.addListeners();   
     });
@@ -1327,9 +1343,12 @@ initPlayer2 = () => {
 
     }
     if(this.moveTo){
+   //     console.log('moving from ',this.player.position);
+        this.moveTo.setY(this.floorY);
+   //     console.log('moving to selectedPoint: ',this.moveTo);
+
         this.player.position.copy(this.moveTo);
         this.moveTo = false;
-        console.log('moving to selectedPoint: ',this.moveTo);
     };
     this.player.updateMatrixWorld();
 

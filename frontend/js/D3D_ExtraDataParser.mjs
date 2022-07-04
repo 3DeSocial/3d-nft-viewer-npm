@@ -12,8 +12,6 @@ export default class ExtraData3DParser {
     this.parse(config.extraData3D);
     this.getModelList();
     this.getAvailableFormats();
-    console.log(this.formats);
-    console.log('endPoint: ',this.endPoint);
   }
 
   parse = (extraData3D)=> {
@@ -22,7 +20,6 @@ export default class ExtraData3DParser {
 
   getModelList = () =>{
     this.models = this.extraData3D['3DModels'];
-    console.log('getModelList: ',this.models);
   }
 
   getAvailableFormats = (modelIdx) =>{
@@ -59,12 +56,8 @@ export default class ExtraData3DParser {
         let formatName = key;
         if(key==='gtlf'){formatName='gltf'};
         if(formatName.trim() === format.trim()){
-          console.log(key.trim()+'='+format.trim());
           let version = formatsList[key];
-          console.log(version);
           let versionString = format+'/'+version;
-                    console.log(versionString);
-
           versions.push(versionString);       
         } else {
           console.log('"'+key.trim()+'"<>"'+format.trim()+'"');
@@ -72,13 +65,11 @@ export default class ExtraData3DParser {
         }
 
       })
-    console.log('versions',versions);
       return versions;
   }
 
   getVersionsForFormat = (modelIdx,format) =>{
     if(!this.models[modelIdx].ModelFormats[format]){
-      console.log('format not available');
       return false;
     }
     return this.models[modelIdx].ModelFormats[format];
@@ -86,7 +77,6 @@ export default class ExtraData3DParser {
 
   getModelPath(modelIdx,preferredFormat,preferredVersion){
     if(!this.models[modelIdx]){
-      console.log('no model ',modelIdx);
       return false;
     };
 

@@ -66,7 +66,6 @@ class D3DLoaders {
             throw "Loaders:getLoaderForFormat: Unknown format";
         };
         format = format.toLowerCase();
-        console.log('getLoaderForFormat: ',format);
         this.loadingManager = new THREE.LoadingManager();
         // add handler for TGA textures
         this.loadingManager.addHandler( /\.tga$/i, new TGALoader() ); 

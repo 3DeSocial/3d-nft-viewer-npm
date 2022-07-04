@@ -78,7 +78,7 @@ export default class Item {
         return new Promise((resolve,reject)=>{
             this.fetchModel(this.modelUrl, pos)
             .then((model)=>{
-                resolve(model, pos);
+                resolve(model);
             }).catch((err=>{
                 console.log( err);
             }))
@@ -97,7 +97,7 @@ if(typeof(pos)==='undefined'){
             .then((modelUrl)=>{
                 that.modelUrl = modelUrl;
                 that.placeModel(pos)
-                .then((model, pos)=>{
+                .then((model)=>{
                     console.log('placed ok at ',pos);
                     that.mesh = model;
                     let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});

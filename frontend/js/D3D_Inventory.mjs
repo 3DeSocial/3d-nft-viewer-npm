@@ -79,11 +79,8 @@ console.log('inventoryconfig', this.config);
             paramString = params.join('&');
             itemParams.nftsRoute = this.config.nftsRoute +'?' +paramString;
         };
-
-console.log('initItem: itemParams.nftsRoute: ',itemParams.nftsRoute);
-console.log(opts);
-        this.loadedItem = new Item(itemParams);                
-        return this.loadedItem;
+             
+        return new Item(itemParams);
 
     }
 
