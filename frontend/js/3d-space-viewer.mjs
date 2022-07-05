@@ -23,8 +23,8 @@ const params = {
     displayBVH: false,
     visualizeDepth: 10,
     gravity: - 30,
-    playerSpeed: 10,
-    physicsSteps: 5,
+    playerSpeed: 40,
+    physicsSteps: 20,
     useShowroom: true
 
 };
@@ -93,8 +93,9 @@ const params = {
         this.resizeCanvas();
         this.loadScenery().then(()=>{
             that.placeAssets();
-            that.initVR();
             that.initPlayer2();
+            that.initVR();
+
         });
     }
 
@@ -689,12 +690,12 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }
     
     render = () =>{
+        const delta = Math.min( this.clock.getDelta(), 0.1 );
+
         if (this.renderer.xr.isPresenting === true) {
             this.vrControls.checkControllers();
+        } 
 
-        };
-
-            const delta = Math.min( this.clock.getDelta(), 0.1 );
             if ( params.firstPerson ) {
 
           /*      this.controls.maxPolarAngle = Math.PI;
@@ -718,7 +719,12 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
                 for ( let i = 0; i < physicsSteps; i ++ ) {
 
-                    this.updatePlayer( delta / physicsSteps );
+                    if (this.renderer.xr.isPresenting === true) {
+                        this.updatePlayerVR( delta / physicsSteps );
+                    } else {
+                        this.updatePlayer( delta / physicsSteps );
+
+                    }
 
                 }
 
@@ -730,12 +736,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             // raycast in direction of camera and move it if it's further than the closest point
 
           //  this.controls.update();
-          if(this.loadedItem){
-              if((this.loadedItem.mixer !== null)){
-                    this.loadedItem.mixer.update( delta );
-                };
-            }
-
+        
         this.renderer.render(this.scene, this.camera);
     }
 
@@ -1069,6 +1070,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         this.vrControls = new VRControls({  scene:this.scene,
                                             renderer: this.renderer,
                                             camera: this.camera,
+                                            player: this.player,
                                             moveUp: function(){
 
                                             },
@@ -1082,7 +1084,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                 rgtPressed = true;
                                             },
                                             moveForward: function(){
-                                                console.log('fwd detecte');
                                                 fwdPressed = true;
                                             },
                                             moveBack: function(){
@@ -1109,7 +1110,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                 return;
                                             }
                                         });
-            this.dolly = this.vrControls.buildControllers();     
+            this.dolly = this.vrControls.buildControllers();
             console.log(this.dolly);
     }
     
@@ -1264,12 +1265,7 @@ initPlayer2 = () => {
         console.log('playerFloor ', playerFloor);
         newPos = new THREE.Vector3(0,0,0);
     };
-    
-    item.place(newPos).then((model,pos)=>{
-   
-         console.log('placed model: ');
-        // character
-        that.player = new THREE.Group();
+ that.player = new THREE.Group();
         that.character = new THREE.Mesh(
             new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
             new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
@@ -1279,7 +1275,12 @@ initPlayer2 = () => {
         that.character.capsuleInfo = {
             radius: 0.5,
             segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
-        };
+        };    
+    item.place(newPos).then((model,pos)=>{
+   
+         console.log('placed model: ');
+        // character
+       
        // this.character.copy(pos);
         model.position.setY(-1.4);
         that.player.add(model);
@@ -1438,6 +1439,148 @@ initPlayer2 = () => {
     }
 
 }
+
+
+ updatePlayerVR = (delta) =>{
+        if(this.showroomLoaded){
+            this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
+        };
+        this.player.position.addScaledVector( this.playerVelocity, delta );
+        if ( fwdPressed ) {
+
+            //this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
+            this.player.translateZ(-params.playerSpeed * delta );
+        }
+
+        if ( bkdPressed ) {
+
+            //this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
+            this.player.translateZ(params.playerSpeed * delta );
+        }
+
+        if ( lftPressed ) {
+
+         //   this.tempVector.set( - 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
+            this.player.translateX(-params.playerSpeed * delta );
+        }
+
+        if ( rgtPressed ) {
+
+           // this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
+            this.player.translateX(params.playerSpeed * delta );
+        }
+        this.player.updateMatrixWorld();
+
+        // adjust this.player position based on collisions
+        const capsuleInfo = this.character.capsuleInfo;
+        this.tempBox.makeEmpty();
+        this.tempMat.copy( this.collider.matrixWorld ).invert();
+        this.tempSegment.copy( capsuleInfo.segment );
+
+        // get the position of the capsule in the local space of the collider
+        this.tempSegment.start.applyMatrix4( this.player.matrixWorld ).applyMatrix4( this.tempMat );
+        this.tempSegment.end.applyMatrix4( this.player.matrixWorld ).applyMatrix4( this.tempMat );
+
+        // get the axis aligned bounding box of the capsule
+        this.tempBox.expandByPoint( this.tempSegment.start );
+        this.tempBox.expandByPoint( this.tempSegment.end );
+
+        this.tempBox.min.addScalar( - capsuleInfo.radius );
+        this.tempBox.max.addScalar( capsuleInfo.radius );
+
+        this.collider.geometry.boundsTree.shapecast( {
+
+            intersectsBounds: box => box.intersectsBox( this.tempBox ),
+
+            intersectsTriangle: tri => {
+
+                // check if the triangle is intersecting the capsule and adjust the
+                // capsule position if it is.
+                const triPoint = this.tempVector;
+                const capsulePoint = this.tempVector2;
+
+                const distance = tri.closestPointToSegment( this.tempSegment, triPoint, capsulePoint );
+                if ( distance < capsuleInfo.radius ) {
+
+                    const depth = capsuleInfo.radius - distance;
+                    const direction = capsulePoint.sub( triPoint ).normalize();
+
+                    this.tempSegment.start.addScaledVector( direction, depth );
+                    this.tempSegment.end.addScaledVector( direction, depth );
+
+                }
+
+            }
+
+        } );
+
+        // get the adjusted position of the capsule collider in world space after checking
+        // triangle collisions and moving it. capsuleInfo.segment.start is assumed to be
+        // the origin of the this.player model.
+        const newPosition = this.tempVector;
+        newPosition.copy( this.tempSegment.start ).applyMatrix4( this.collider.matrixWorld );
+
+        // check how much the collider was moved
+        const deltaVector = this.tempVector2;
+        deltaVector.subVectors( newPosition, this.player.position );
+
+        // if the this.player was primarily adjusted vertically we assume it's on something we should consider ground
+        this.playerIsOnGround = deltaVector.y > Math.abs( delta * this.playerVelocity.y * 0.25 );
+
+        const offset = Math.max( 0.0, deltaVector.length() - 1e-5 );
+        deltaVector.normalize().multiplyScalar( offset );
+
+        // adjust the this.player model
+        this.player.position.add( deltaVector );
+
+        if ( ! this.playerIsOnGround ) {
+
+            deltaVector.normalize();
+            if(this.showroomLoaded){
+               this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
+            };
+
+        } else {
+
+            this.playerVelocity.set( 0, 0, 0 );
+
+        }
+        if (this.renderer.xr.isPresenting) {
+            if(this.player.position){
+                
+                if(this.player.position.x){
+               let playerx = this.player.position.x;
+               let playery = this.player.position.y;
+               let playerz = this.player.position.z;
+
+            //   console.log('playerpos');
+              // console.log(playerx,playery,playerz);
+             
+                this.dolly.position.set(playerx,(playery+0.15),playerz);
+
+              // playerPos.y = playerPos.y + 1.5;
+                //this.camera.position.set(playerPos);
+            }
+            };
+        };
+
+
+        // adjust the this.camerainit
+    //    this.camera.position.sub( this.controls.target );
+      //  this.controls.target.copy( this.player.position );
+        //this.camera.position.add( this.player.position );
+
+        // if the this.player has fallen too far below the level reset their position to the start
+        if ( this.player.position.y < - 25 ) {
+
+            this.reset();
+
+        };
+        fwdPressed = false;
+        bkdPressed = false;
+        rgtPressed = false;
+        lftPressed = false;
+    }
 
     reset = ()=> {
 console.log('player reset');

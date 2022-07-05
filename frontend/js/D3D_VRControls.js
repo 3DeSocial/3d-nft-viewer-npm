@@ -17,7 +17,7 @@ class VRControls {
 			...defaults,
 			...config
 		};
-
+        this.player = this.config.player;
     	this.init();
     }
 
@@ -246,8 +246,12 @@ class VRControls {
         };
 
         if(this.isOverMovementThreshold(data.axes[3])){
+                this.dolly.position.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
+                this.dolly.position.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
+
             if(data.axes[3] > 0){
              //   console.log(hand+ ' stick: back',data.axes[3]);
+
                 this.moveBackward(data);
             } else if (data.axes[3] < 0){
              //   console.log(hand + ' stick: forward',data.axes[3]);
@@ -265,18 +269,28 @@ class VRControls {
     }
 
     moveForward = (data) => {
+        this.dolly.position.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
+        this.dolly.position.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
+
         this.config.moveForward(data);
     }
 
     moveBackward = (data) => {
+        this.dolly.position.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
+        this.dolly.position.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
+
         this.config.moveBack(data);
     }
 
     moveLeft = (data) => {
+        this.dolly.position.x -= this.cameraVector.z * this.speedFactor[2] * data.axes[2];
+        this.dolly.position.z += this.cameraVector.x * this.speedFactor[2] * data.axes[2];        
         this.config.moveLeft(data);
     }
 
     moveRight = (data) => {
+        this.dolly.position.x -= this.cameraVector.z * this.speedFactor[2] * data.axes[2];
+        this.dolly.position.z += this.cameraVector.x * this.speedFactor[2] * data.axes[2];        
         this.config.moveRight(data);
     }
 
