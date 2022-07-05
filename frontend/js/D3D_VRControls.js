@@ -176,18 +176,18 @@ class VRControls {
                                     if (i == 2) {
                                         //left and right axis on thumbsticks
                                         if (data.handedness == 'left') {
-                                            this.handleLeftController(data);
+                                            this.handleLeftController(data, value);
                                         } else {
-                                            this.handleRightController(data);
+                                            this.handleRightController(data, value);
 
                                         }
                                     }
                                     if (i == 3) {
                                         //up and down axis on thumbsticks
                                         if (data.handedness == 'left') {
-                                            this.handleLeftController(data);
+                                            this.handleLeftController(data, value);
                                         } else {
-                                            this.handleRightController(data);
+                                            this.handleRightController(data, value);
                                         }
                                     }
                                 } else {
@@ -206,8 +206,8 @@ class VRControls {
 
     }
 
-    handleRightController = (data) =>{
-        this.handleRightThumbstick('right',data);
+    handleRightController = (data, value) =>{
+        this.handleRightThumbstick('right',data, value);
 
     }
 
@@ -234,14 +234,14 @@ class VRControls {
 
     }
 
-    handleRightThumbstick = (hand, data) =>{
+    handleRightThumbstick = (hand, data, value) =>{
         if(this.isOverMovementThreshold(data.axes[2])){
             if (data.axes[2] > 0) {
               //  console.log(hand+ ' stick: right ',data.axes[2]);
-                this.rotateRight(data);
+                this.rotateRight(data, value);
             } else if (data.axes[2] < 0) {
                 //console.log(hand+ ' stick: left',data.axes[2]);
-                this.rotateLeft(data);
+                this.rotateLeft(data, value);
             };
         };
 
@@ -303,15 +303,18 @@ class VRControls {
         
     }
 
-    rotateLeft = (data) => {
+    rotateLeft = (data,value) => {
+        this.dolly.rotateY(THREE.Math.degToRad(Math.abs(value)));
         this.config.rotateLeft(data);
     }
 
-    rotateRight = (data) => {
+    rotateRight = (data,value) => {
+        this.dolly.rotateY(-THREE.Math.degToRad(Math.abs(value)));
+
         this.config.rotateRight(data);
     }
 
-	dollyMove = () =>{
+	/*dollyMove = () =>{
         var handedness = 'unknown';
         var self = this;
         //determine if we are in an xr session
@@ -425,7 +428,7 @@ class VRControls {
                                         pulseStrength,
                                         100
                                     );
-                                }*/
+                                }*
                                     } else {
                                         //    console.log('RH ata.axes[2]: '+data.axes[2]);
                                         //    (data.axes[2] > 0) ? console.log('left on right thumbstick') : console.log('right on right thumbstick'); // !!!THIS WORKS!!!
@@ -452,7 +455,7 @@ class VRControls {
                                         pulseStrength,
                                         100
                                     );
-                                }*/
+                                }*
                                     } else {
                                         // (data.axes[3] > 0) ? console.log('up on right thumbstick') : console.log('down on right thumbstick')
                                         self.dolly.position.x -=
@@ -477,7 +480,7 @@ class VRControls {
                                         pulseStrength,
                                         100
                                     );
-                                }*/
+                                }*
                                         //self.controls.update();
                                     }
                                 }
@@ -494,7 +497,7 @@ class VRControls {
             }
         }
     }
-
+*/
 	isIterable = (obj) =>{
         // checks for null and undefined
         if (obj == null) {

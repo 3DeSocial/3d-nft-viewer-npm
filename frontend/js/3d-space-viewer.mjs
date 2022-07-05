@@ -686,15 +686,25 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         
     animate = () =>{
         console.log('start animation loop');
+/*
+        window.setInterval(()=>{
+        if (this.renderer.xr.isPresenting === true) {
+            this.vrControls.checkControllers();
+        }             *
+    },1)*/
+
+
         this.renderer.setAnimationLoop(this.render);
     }
     
     render = () =>{
+         if (this.renderer.xr.isPresenting === true) {
+            this.vrControls.checkControllers();
+        }  
+                if (this.renderer.xr.isPresenting === false) {
+
         const delta = Math.min( this.clock.getDelta(), 0.1 );
 
-        if (this.renderer.xr.isPresenting === true) {
-            this.vrControls.checkControllers();
-        } 
 
             if ( params.firstPerson ) {
 
@@ -720,7 +730,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                 for ( let i = 0; i < physicsSteps; i ++ ) {
 
                     if (this.renderer.xr.isPresenting === true) {
-                        this.updatePlayerVR( delta / physicsSteps );
+                        //this.updatePlayerVR( delta / physicsSteps );
                     } else {
                         this.updatePlayer( delta / physicsSteps );
 
@@ -736,7 +746,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             // raycast in direction of camera and move it if it's further than the closest point
 
           //  this.controls.update();
-        
+        }
         this.renderer.render(this.scene, this.camera);
     }
 
@@ -1090,28 +1100,15 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                 bkdPressed = true;
                                             },
                                             rotateLeft: (data)=>{
-                                                try{
-                                                    let rot =  0.017453;
-                                                    that.player.rotateY(rot);
-                                                    that.dolly.rotateY(rot);
-                                                } catch(err) {
-                                                    console.log(err);
-                                                };
+                                             
                                                 return;
                                             },
                                             rotateRight: (data)=>{
-                                                try{
-                                                let rot = -0.017453;
-                                                that.player.rotateY(rot);
-                                                that.dolly.rotateY(rot);
-                                                } catch(err) {
-                                                    console.log(err);
-                                                };
+                                               
                                                 return;
                                             }
                                         });
             this.dolly = this.vrControls.buildControllers();
-            console.log(this.dolly);
     }
     
     addScenery = () =>{
@@ -1545,24 +1542,23 @@ initPlayer2 = () => {
             this.playerVelocity.set( 0, 0, 0 );
 
         }
-        if (this.renderer.xr.isPresenting) {
             if(this.player.position){
                 
                 if(this.player.position.x){
-               let playerx = this.player.position.x;
-               let playery = this.player.position.y;
-               let playerz = this.player.position.z;
+                    let playerx = this.player.position.x;
+                    let playery = this.player.position.y;
+                    let playerz = this.player.position.z;
 
-            //   console.log('playerpos');
-              // console.log(playerx,playery,playerz);
-             
-                this.dolly.position.set(playerx,(playery+0.15),playerz);
+                //   console.log('playerpos');
+                  // console.log(playerx,playery,playerz);
+                 
+                    this.dolly.position.set(playerx,(playery+0.15),playerz);
 
-              // playerPos.y = playerPos.y + 1.5;
-                //this.camera.position.set(playerPos);
-            }
-            };
+                  // playerPos.y = playerPos.y + 1.5;
+                    //this.camera.position.set(playerPos);
+                }
         };
+        
 
 
         // adjust the this.camerainit
