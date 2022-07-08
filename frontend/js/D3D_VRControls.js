@@ -78,7 +78,7 @@ class VRControls {
         dolly.rotateY(0);
 
         dolly.add(this.camera);
-        this.camera.position.set(0,1,0);
+        this.camera.position.set(0,1.5,0);
         this.camera.rotateY(0);
         //add the controls to the dolly also or they will not move with the dolly
         dolly.add(controller1);
@@ -102,7 +102,6 @@ class VRControls {
                     return;
                 }
                 xrCamera.getWorldDirection(self.cameraVector);
-
                 //a check to prevent console errors if only one input source
                 if (this.isIterable(session.inputSources)) {
                     for (const source of session.inputSources) {
@@ -215,20 +214,34 @@ class VRControls {
         if(this.isOverMovementThreshold(data.axes[2])){
             if (data.axes[2] > 0) {
                 //console.log(hand+ ' stick: right ',data.axes[2]);
-                this.moveRight(data);
+                switch(this.config.vrType){
+                    case 'flying':
+                        this.flyRight(data);
+                    break;
+                    default:
+                        this.moveRight(data);
+                    break;
+                }
             } else if (data.axes[2] < 0) {
                 //console.log(hand+ ' stick: left',data.axes[2]);
-                this.moveLeft(data);
+                switch(this.config.vrType){
+                    case 'flying':
+                        this.flyLeft(data);
+                    break;
+                    default:
+                        this.moveLeft(data);
+                    break;
+                }
             };
         };
 
         if(this.isOverMovementThreshold(data.axes[3])){
             if(data.axes[3] > 0){
                 //console.log(hand+ ' stick: back',data.axes[3]);
-                this.moveDown(data);
+                this.flyUp(data);
             } else if (data.axes[3] < 0){
                 //console.log(hand + ' stick: forward',data.axes[3]);
-                this.moveUp(data);
+                this.flyDown(data);
             };
         };
 
@@ -246,16 +259,27 @@ class VRControls {
         };
 
         if(this.isOverMovementThreshold(data.axes[3])){
-                this.dolly.position.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
-                this.dolly.position.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
-
-            if(data.axes[3] > 0){
              //   console.log(hand+ ' stick: back',data.axes[3]);
-
-                this.moveBackward(data);
+            if(data.axes[3] > 0){
+                //console.log(hand+ ' stick: right ',data.axes[2]);
+                switch(this.config.vrType){
+                    case 'flying':
+                        this.flyBackward(data);
+                    break;
+                    default:
+                        this.moveBackward(data);
+                    break;
+                }
             } else if (data.axes[3] < 0){
              //   console.log(hand + ' stick: forward',data.axes[3]);
-                this.moveForward(data);
+                switch(this.config.vrType){
+                    case 'flying':
+                        this.flyForward(data);
+                    break;
+                    default:
+                        this.moveForward(data);
+                    break;
+                }             
             };
         };
 
@@ -268,34 +292,61 @@ class VRControls {
         return false;
     }
 
-    moveForward = (data) => {
+    flyForward = (data) => {
+        let nextPos = new THREE.Vector3();
+        nextPos.copy(this.dolly.position);
+        nextPos.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
+        nextPos.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
+        this.dolly.lookAt(nextPos);
         this.dolly.position.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
         this.dolly.position.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
-
-        this.config.moveForward(data);
     }
 
-    moveBackward = (data) => {
+    moveForward = (data) =>{
+        let nextPos = new THREE.Vector3();
+        nextPos.copy(this.dolly.position);
+        nextPos.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
+        nextPos.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
+        this.dolly.lookAt(nextPos);      
+        this.config.moveForward(data);        
+    }
+
+    flyBackward = (data) => {
         this.dolly.position.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
         this.dolly.position.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
-
+    }
+    moveBackward = (data) => {
         this.config.moveBack(data);
     }
 
-    moveLeft = (data) => {
+    flyLeft = (data) => {
         this.dolly.position.x -= this.cameraVector.z * this.speedFactor[2] * data.axes[2];
         this.dolly.position.z += this.cameraVector.x * this.speedFactor[2] * data.axes[2];        
+    }
+
+    moveLeft = (data) => {
         this.config.moveLeft(data);
     }
 
-    moveRight = (data) => {
+    flyRight = (data) => {
         this.dolly.position.x -= this.cameraVector.z * this.speedFactor[2] * data.axes[2];
         this.dolly.position.z += this.cameraVector.x * this.speedFactor[2] * data.axes[2];        
+    }
+
+    moveRight = (data) => {
         this.config.moveRight(data);
+    }
+
+    flyUp = (data) => {
+        this.dolly.position.y -= this.speedFactor[3] * data.axes[3];
     }
 
     moveUp = (data) => {
         this.config.moveUp(data);
+    }
+
+    flyDown = (data) =>{
+        this.dolly.position.y -= this.speedFactor[3] * data.axes[3];
     }
 
     moveDown = (data) => {
@@ -304,12 +355,12 @@ class VRControls {
     }
 
     rotateLeft = (data,value) => {
-        this.dolly.rotateY(THREE.Math.degToRad(Math.abs(value)));
+        this.player.rotateY(THREE.Math.degToRad(Math.abs(value)));
         this.config.rotateLeft(data);
     }
 
     rotateRight = (data,value) => {
-        this.dolly.rotateY(-THREE.Math.degToRad(Math.abs(value)));
+        this.player.rotateY(-THREE.Math.degToRad(Math.abs(value)));
 
         this.config.rotateRight(data);
     }

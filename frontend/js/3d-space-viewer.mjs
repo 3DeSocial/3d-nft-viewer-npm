@@ -15,6 +15,7 @@ let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
 let fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = false;
+let nextPos = new THREE.Vector3();
 
 const params = {
 
@@ -93,7 +94,11 @@ const params = {
         this.resizeCanvas();
         this.loadScenery().then(()=>{
             that.placeAssets();
-            that.initPlayer2();
+            if(that.config.firstPerson){
+                that.initPlayerFirstPerson();
+            } else {
+                that.initPlayerThirdPerson();
+            }
             that.initVR();
 
         });
@@ -701,7 +706,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
          if (this.renderer.xr.isPresenting === true) {
             this.vrControls.checkControllers();
         }  
-                if (this.renderer.xr.isPresenting === false) {
 
         const delta = Math.min( this.clock.getDelta(), 0.1 );
 
@@ -730,10 +734,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                 for ( let i = 0; i < physicsSteps; i ++ ) {
 
                     if (this.renderer.xr.isPresenting === true) {
-                        //this.updatePlayerVR( delta / physicsSteps );
+                      this.updatePlayerVR( delta / physicsSteps );
                     } else {
-                        this.updatePlayer( delta / physicsSteps );
-
+                       this.updatePlayer( delta / physicsSteps );
                     }
 
                 }
@@ -746,7 +749,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             // raycast in direction of camera and move it if it's further than the closest point
 
           //  this.controls.update();
-        }
         this.renderer.render(this.scene, this.camera);
     }
 
@@ -1077,7 +1079,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         
         let vrButtonEl = VRButton.createButton(this.renderer, {btnCtr: 'space-ctr'});
 
-        this.vrControls = new VRControls({  scene:this.scene,
+        this.vrControls = new VRControls({  vrType: 'walking',
+                                            scene:this.scene,
                                             renderer: this.renderer,
                                             camera: this.camera,
                                             player: this.player,
@@ -1100,7 +1103,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                 bkdPressed = true;
                                             },
                                             rotateLeft: (data)=>{
-                                             
                                                 return;
                                             },
                                             rotateRight: (data)=>{
@@ -1135,8 +1137,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     removeScenery = () =>{
         if(this.sceneryMesh){
             this.scene.remove(this.sceneryMesh);
-                    console.log('removeScenery: OK');
-
             this.unRestrictCamera();
         }else {
             console.log('no scenerymesh to remove');
@@ -1243,7 +1243,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }
 
-initPlayer2 = () => {
+initPlayerFirstPerson = () => {
 
     let that = this;
     let playerLoader = new GLTFLoader();
@@ -1253,26 +1253,61 @@ initPlayer2 = () => {
     let playerFloor = 0;
     if(this.config.playerStartPos){
         playerFloor = this.sceneryLoader.findFloorAt(this.config.playerStartPos, 2, -1);
-        
-                console.log('playerFloor ', playerFloor);
-
         newPos = this.config.playerStartPos;
     } else {
         playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(0,0,0), 2, -1);
-        console.log('playerFloor ', playerFloor);
         newPos = new THREE.Vector3(0,0,0);
     };
- that.player = new THREE.Group();
-        that.character = new THREE.Mesh(
-            new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
-            new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
-        );
+    
+    that.player = new THREE.Group();
+    that.character = new THREE.Mesh(
+        new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
+        new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
+    );
 
-        that.character.geometry.translate( 0, -1, 0 );
-        that.character.capsuleInfo = {
-            radius: 0.5,
-            segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
-        };    
+    that.character.geometry.translate( 0, -1, 0 );
+    that.character.capsuleInfo = {
+        radius: 0.75,
+        segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
+    };    
+
+    that.player.add(that.character);
+    that.character.updateMatrixWorld();
+    that.scene.add( that.player );
+    that.player.updateMatrixWorld();
+    that.player.position.setY(4);
+    that.player.rotateY(0);
+    that.start3D();
+    that.addListeners();   
+}
+
+initPlayerThirdPerson = () => {
+
+    let that = this;
+    let playerLoader = new GLTFLoader();
+    let item = that.initItemForModel('./characters/AstridCentered.glb');
+    this.mesh = item.model;
+    let newPos = null;
+    let playerFloor = 0;
+    if(this.config.playerStartPos){
+        playerFloor = this.sceneryLoader.findFloorAt(this.config.playerStartPos, 2, -1);
+        newPos = this.config.playerStartPos;
+    } else {
+        playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(0,0,0), 2, -1);
+        newPos = new THREE.Vector3(0,0,0);
+    };
+    
+    that.player = new THREE.Group();
+    that.character = new THREE.Mesh(
+        new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
+        new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
+    );
+
+    that.character.geometry.translate( 0, -1, 0 );
+    that.character.capsuleInfo = {
+        radius: 0.75,
+        segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
+    };    
     item.place(newPos).then((model,pos)=>{
    
          console.log('placed model: ');
@@ -1287,13 +1322,13 @@ initPlayer2 = () => {
         that.scene.add( that.player );
         that.player.updateMatrixWorld();
         that.player.position.setY(4);
+        that.player.rotateY(0);
         that.start3D();
         that.addListeners();   
     });
 }
 
  updatePlayer = ( delta )=> {
-    let nextPos = new THREE.Vector3();
 
     this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
     this.player.position.addScaledVector( this.playerVelocity, delta );
@@ -1427,7 +1462,24 @@ initPlayer2 = () => {
     this.camera.position.sub( this.controls.target );
     this.controls.target.copy( this.player.position );
     this.camera.position.add( this.player.position );
+    if (this.renderer.xr.isPresenting) {
+        if(this.player.position){
+            
+            if(this.player.position.x){
+           let playerx = this.player.position.x;
+           let playery = this.player.position.y;
+           let playerz = this.player.position.z;
 
+        //   console.log('playerpos');
+          // console.log(playerx,playery,playerz);
+         
+            this.dolly.position.set(playerx,(playery+0.15),playerz);
+
+          // playerPos.y = playerPos.y + 1.5;
+            //this.camera.position.set(playerPos);
+        }
+        };
+    };
     // if the player has fallen too far below the level reset their position to the start
     if ( this.player.position.y < - 25 ) {
 
@@ -1444,27 +1496,26 @@ initPlayer2 = () => {
         };
         this.player.position.addScaledVector( this.playerVelocity, delta );
         if ( fwdPressed ) {
-
             //this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateZ(-params.playerSpeed * delta );
+            this.player.translateZ(params.playerSpeed * delta );
         }
 
         if ( bkdPressed ) {
 
             //this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateZ(params.playerSpeed * delta );
+            this.player.translateZ(-params.playerSpeed * delta );
         }
 
         if ( lftPressed ) {
 
          //   this.tempVector.set( - 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateX(-params.playerSpeed * delta );
+            this.player.translateX(params.playerSpeed * delta );
         }
 
         if ( rgtPressed ) {
 
            // this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateX(params.playerSpeed * delta );
+            this.player.translateX(-params.playerSpeed * delta );
         }
         this.player.updateMatrixWorld();
 
@@ -1548,14 +1599,10 @@ initPlayer2 = () => {
                     let playerx = this.player.position.x;
                     let playery = this.player.position.y;
                     let playerz = this.player.position.z;
-
-                //   console.log('playerpos');
-                  // console.log(playerx,playery,playerz);
-                 
-                    this.dolly.position.set(playerx,(playery+0.15),playerz);
-
-                  // playerPos.y = playerPos.y + 1.5;
-                    //this.camera.position.set(playerPos);
+         
+                    this.dolly.position.set(playerx,(playery+0.5),playerz);
+                    this.dolly.rotation.copy(this.player.rotation);
+                    this.player.rotateY(Math.PI);
                 }
         };
         
@@ -1579,7 +1626,6 @@ initPlayer2 = () => {
     }
 
     reset = ()=> {
-console.log('player reset');
         this.playerVelocity.set( 0, 0, 0 );
         this.player.position.set( 0, 5, 5 );
         this.camera.position.set(0, 6.5, 5);
