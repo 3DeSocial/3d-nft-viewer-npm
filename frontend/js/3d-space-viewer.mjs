@@ -24,8 +24,8 @@ const params = {
     displayBVH: false,
     visualizeDepth: 10,
     gravity: - 30,
-    playerSpeed: 40,
-    physicsSteps: 20,
+    playerSpeed: 10,
+    physicsSteps: 40,
     useShowroom: true
 
 };
@@ -35,6 +35,7 @@ const params = {
     constructor(config) {
 
         let defaults = {
+                    avatarSize: {width: 1, height:1, depth:1},
                     el: document.body,
                     ctrClass: 'data-nft', // Attribute of div containing nft preview area for a single nft
                     fitOffset: 1.25,
@@ -369,6 +370,9 @@ const params = {
 
     checkMouse = (e) =>{
         let action = this.raycast(e);
+        if(!action.selectedPoint){
+            return false;
+        };
         this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
             case 2:
@@ -443,7 +447,7 @@ const params = {
         this.raycaster.setFromCamera( this.mouse, this.camera );    
 
         //3. compute intersections (note the 2nd parameter)
-        var intersects = this.raycaster.intersectObjects( this.scene.children, false );
+        var intersects = this.raycaster.intersectObjects( this.scene.children, true );
         let floorLevel;
         if(intersects[0]){
             isOnFloor = this.isOnFloor(intersects[0].point);
@@ -712,16 +716,16 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
             if ( params.firstPerson ) {
 
-          /*      this.controls.maxPolarAngle = Math.PI;
+                this.controls.maxPolarAngle = Math.PI;
                 this.controls.minDistance = 1e-4;
                 this.controls.maxDistance = 1e-4;
-*/
+
             } else {
-/*
+
                 this.controls.maxPolarAngle = Math.PI / 2;
                 this.controls.minDistance = 1;
                 this.controls.maxDistance = 20;
-*/
+
             }
 
               if ( this.collider ) {
@@ -1059,6 +1063,35 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }
 
+    initAvatarForModel = (modelUrl, size) =>{
+        let urlParts = modelUrl.split('.');
+        let extension = urlParts[urlParts.length-1];
+
+        if(!size){ // default size for avatar
+
+            size = {
+                width: 1,
+                height: 1,
+                depth: 1
+            }
+        }
+
+        let item = new Item({
+            three: THREE,
+            loader: this.loaders.getLoaderForFormat(extension),
+            scene: this.scene,
+            height: size.height,
+            width: size.width,
+            depth: size.depth,
+            modelUrl: modelUrl,
+            modelsRoute: this.config.modelsRoute,
+            nftsRoute: this.config.nftsRoute,
+            format:extension
+        });
+        return item;
+
+    }    
+
     placeAssets = () =>{
 
         let itemsToPlace = this.inventory.getItems();
@@ -1247,18 +1280,16 @@ initPlayerFirstPerson = () => {
 
     let that = this;
     let playerLoader = new GLTFLoader();
-    let item = that.initItemForModel('./characters/AstridCentered.glb');
-    this.mesh = item.model;
     let newPos = null;
     let playerFloor = 0;
+    let playerStartPos;
     if(this.config.playerStartPos){
-        playerFloor = this.sceneryLoader.findFloorAt(this.config.playerStartPos, 2, -1);
-        newPos = this.config.playerStartPos;
+        playerStartPos = new THREE.Vector3(this.config.playerStartPos.x,this.config.playerStartPos.y,this.config.playerStartPos.z);
+        playerFloor = this.sceneryLoader.findFloorAt(playerStartPos, 1, -1);
     } else {
         playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(0,0,0), 2, -1);
-        newPos = new THREE.Vector3(0,0,0);
     };
-    
+    newPos = playerStartPos;
     that.player = new THREE.Group();
     that.character = new THREE.Mesh(
         new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
@@ -1279,6 +1310,7 @@ initPlayerFirstPerson = () => {
     that.player.rotateY(0);
     that.start3D();
     that.addListeners();   
+
 }
 
 initPlayerThirdPerson = () => {
@@ -1290,11 +1322,13 @@ initPlayerThirdPerson = () => {
     let newPos = null;
     let playerFloor = 0;
     if(this.config.playerStartPos){
-        playerFloor = this.sceneryLoader.findFloorAt(this.config.playerStartPos, 2, -1);
-        newPos = this.config.playerStartPos;
+        let playerStartPos = new THREE.Vector3(this.config.playerStartPos.x,this.config.playerStartPos.y,this.config.playerStartPos.z);        
+        newPos = new THREE.Vector3(0,playerFloor,0);
+
     } else {
         playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(0,0,0), 2, -1);
-        newPos = new THREE.Vector3(0,0,0);
+        newPos = new THREE.Vector3(0,playerFloor,0);
+
     };
     
     that.player = new THREE.Group();
@@ -1321,8 +1355,6 @@ initPlayerThirdPerson = () => {
         that.character.updateMatrixWorld();
         that.scene.add( that.player );
         that.player.updateMatrixWorld();
-        that.player.position.setY(4);
-        that.player.rotateY(0);
         that.start3D();
         that.addListeners();   
     });

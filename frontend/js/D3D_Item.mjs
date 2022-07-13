@@ -7,8 +7,7 @@ export default class Item {
             modelUrl: '',
             modelsRoute: 'models',
             nftsRoute: 'nfts',
-            castShadow: true,
-            ceilingHeight: 10 // must be placed below this level     
+            castShadow: true   
         };
     
         this.config = {
@@ -88,25 +87,49 @@ export default class Item {
 
     place = (pos) =>{
         let that = this;
-if(typeof(pos)==='undefined'){
-    console.log(this);
-    throw('Cant place at undefined position');
-}        
+        if(typeof(pos)==='undefined'){
+            console.log(this);
+            throw('Cant place at undefined position');
+        }        
         return new Promise((resolve,reject)=>{
             this.fetchModelUrl()
             .then((modelUrl)=>{
-                that.modelUrl = modelUrl;
-                that.placeModel(pos)
-                .then((model)=>{
-                    console.log('placed ok at ',pos);
-                    that.mesh = model;
-                    let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
-                    document.body.dispatchEvent(loadedEvent);
-                    document.body.dispatchEvent(this.meshPlacedEvent);
-                    resolve(model, pos);
-                })
-            });
+                if(!that.retrievedModelUrlIsValid(modelUrl)){
+                    reject('Invalid ModelUrl in ExtraData: '+modelUrl);
+                    return;
+                } else {
+                    console.log('validated modelUrl: ',modelUrl);
+                    that.modelUrl = modelUrl;
+                    that.placeModel(pos)
+                    .then((model)=>{
+                        that.mesh = model;
+                        let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
+                        document.body.dispatchEvent(loadedEvent);
+                        document.body.dispatchEvent(this.meshPlacedEvent);
+                        resolve(model, pos);
+                    })
+                };
+            }).catch(err =>{
+                console.log(this.config);
+                console.log(err);
+            })
         });
+    }
+
+    retrievedModelUrlIsValid = (modelUrl) =>{
+        if(typeof(modelUrl)==='undefined'){
+            return false;        
+        };        
+        if(modelUrl===''){
+            return false;        
+        };
+        if(modelUrl === 'https://desodata.azureedge.net/'){
+            return false;
+        };
+        if(modelUrl === 'https://desodata.azureedge.net'){
+            return false;
+        };   
+        return true;
     }
 
     remove = () =>{
@@ -148,23 +171,26 @@ if(typeof(pos)==='undefined'){
             // fetch from config if available
             if(this.config.modelUrl!==''){
                 resolve(this.config.modelUrl);
+                return;
             } else {
                 let url = this.config.nftsRoute;
-
+                if(url.trim()===''){
+                    reject('No nftsRoute or modelUrl exists for this item');
+                    return;
+                };
                 fetch(url,{ method: "get"})
                 .then(response => response.text())
                 .then((data)=>{ 
-
-                    if(data !== undefined){
-                      //console.log('that.config.nftPostHashHex: '+that.config.nftPostHashHex);
-                       //console.log('that.config.modelsRoute: '+that.config.modelsRoute);
-                        //console.log('modelUrl: '+that.config.modelUrl);
-                        //console.log('data',data);
-                        let fullUrl = that.config.modelsRoute+data;
-                        resolve(fullUrl);
-                    } else {
-                        reject();
-                    }
+                    if(typeof(data)=== undefined){
+                        reject('undefined response from ',url);
+                        return;
+                    };
+                    if(data.indexOf('DOCTYPE')>-1){
+                        reject('DOCTYPE error recieved from ',this.config );
+                        return;
+                    };
+                    let fullUrl = that.config.modelsRoute+data;
+                    resolve(fullUrl);
                 });
             }
         })
@@ -174,7 +200,6 @@ if(typeof(pos)==='undefined'){
     fetchModel = async(modelUrl, posVector) =>{
         
         let that = this;
-        //console.log('modelUrl: ',modelUrl);
         //console.log('posVector:',posVector);
         let boxMesh = this.addContainerBoxToScene(posVector);
         let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
@@ -379,7 +404,6 @@ onErrorCallback = (e)=> {
     }
 
     addContainerBoxToScene = (posVector) =>{
-        console.log('addContainerBoxToScene: ',posVector);
         const geometry = new THREE.BoxGeometry(this.config.width, this.config.height,this.config.depth);
         
         if(!this.config.color){

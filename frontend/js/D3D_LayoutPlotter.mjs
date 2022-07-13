@@ -30,7 +30,10 @@ export default class LayoutPlotter  {
 
             // set Y for new position
             plotPoint.setY(floor);
-            this.plotItem(items[i],plotPoint);
+            this.plotItem(items[i],plotPoint)
+                .then((model)=>{
+                    model.lookAt(center);
+                })
         }
     }
 
@@ -39,10 +42,12 @@ export default class LayoutPlotter  {
     }    
 
     plotItem = (item, plotPoint) =>{
-        item.place(plotPoint).then((model)=>{
-            model.lookAt(0,0,0)
-            model.rotateX(0);
-        });
+        return new Promise(( resolve, reject ) => {
+            item.place(plotPoint).then((model, pos)=>{
+                console.log('placed');
+                resolve(model);
+            });
+        });      
     }
 
 }

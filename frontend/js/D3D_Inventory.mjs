@@ -44,16 +44,19 @@ console.log('inventoryconfig', this.config);
             itemConfig.scene = this.scene;
             itemConfig.loader = this.loader;
             itemConfig.modelsRoute = this.config.modelsRoute,
-            itemConfig.nftsRoute = this.config.nftsRoute            
-            let item = this.initItem(itemConfig)
+            itemConfig.nftsRoute = this.config.nftsRoute;
 
-            that.items.push(item);
+            let item = this.initItem(itemConfig)
+            if(item){
+                that.items.push(item);
+            }
 
         })
 
     }
     
     initItem = (opts) =>{
+
         let nftPostHashHex = opts.nftPostHashHex;
         let paramString = '';
         let params  = [];
@@ -79,7 +82,14 @@ console.log('inventoryconfig', this.config);
             paramString = params.join('&');
             itemParams.nftsRoute = this.config.nftsRoute +'?' +paramString;
         };
-             
+        if(!itemParams.nftPostHashHex){
+            console.log('cannot initItem without nftPostHashHex');
+            return false;
+        };
+        if((itemParams.nftsRoute==='')&&(itemParams.modelsRoute==='')){
+            console.log('cannot initItem without either modelsRoute or nftsRoute');
+            return false;
+        };        
         return new Item(itemParams);
 
     }
