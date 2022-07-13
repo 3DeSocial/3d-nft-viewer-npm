@@ -88,7 +88,6 @@ export default class Item {
     place = (pos) =>{
         let that = this;
         if(typeof(pos)==='undefined'){
-            console.log(this);
             throw('Cant place at undefined position');
         }        
         return new Promise((resolve,reject)=>{
@@ -98,7 +97,7 @@ export default class Item {
                     reject('Invalid ModelUrl in ExtraData: '+modelUrl);
                     return;
                 } else {
-                    console.log('validated modelUrl: ',modelUrl);
+                    //console.log('validated modelUrl: ',modelUrl);
                     that.modelUrl = modelUrl;
                     that.placeModel(pos)
                     .then((model)=>{
@@ -136,8 +135,8 @@ export default class Item {
         this.scene.remove(this.mesh.children[0]);
     }
     moveTo = (pos)=>{
-        console.log('current: ',this.mesh.position);
-        console.log('moveto: ',pos);
+       // console.log('current: ',this.mesh.position);
+       // console.log('moveto: ',pos);
         this.mesh.position.copy(pos);
     }
 

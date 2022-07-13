@@ -89,10 +89,7 @@ const params = {
         this.initInventory(options.items);        
         this.initRenderer(this.config.el);
         this.initSkybox();
-        this.initCameraPlayer();
         this.initLighting();        
-        this.initControls();
-        this.resizeCanvas();
         this.loadScenery().then(()=>{
             that.placeAssets();
             if(that.config.firstPerson){
@@ -100,8 +97,10 @@ const params = {
             } else {
                 that.initPlayerThirdPerson();
             }
+            this.initCameraPlayer();
+            this.initControls();
             that.initVR();
-
+            this.resizeCanvas();
         });
     }
 
@@ -208,8 +207,8 @@ const params = {
     initCameraPlayer = () =>{
         // camera setup
         this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-        this.camera.position.set( 10, 10, - 10 );
-        this.camera.far = 500;
+      //w  this.camera.position.set( 10, 10, - 10 );
+        this.camera.far = 1000;
         this.camera.updateProjectionMatrix();        
     }
 
@@ -316,7 +315,6 @@ const params = {
         let that = this;
 
         window.addEventListener( 'keydown', function ( e ) {
-            console.log('keydown pressed');
                 switch ( e.code ) {
 
                     case 'KeyW': fwdPressed = true; break;
@@ -1283,14 +1281,18 @@ initPlayerFirstPerson = () => {
     let newPos = null;
     let playerFloor = 0;
     let playerStartPos;
+    that.player = new THREE.Group();
+
     if(this.config.playerStartPos){
         playerStartPos = new THREE.Vector3(this.config.playerStartPos.x,this.config.playerStartPos.y,this.config.playerStartPos.z);
-        playerFloor = this.sceneryLoader.findFloorAt(playerStartPos, 1, -1);
     } else {
         playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(0,0,0), 2, -1);
+        playerStartPos = new THREE.Vector3(0,playerFloor,0);
     };
-    newPos = playerStartPos;
+
     that.player = new THREE.Group();
+console.log('playerStartPos', playerStartPos);
+    that.player.position.copy(playerStartPos);
     that.character = new THREE.Mesh(
         new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
         new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
@@ -1306,10 +1308,11 @@ initPlayerFirstPerson = () => {
     that.character.updateMatrixWorld();
     that.scene.add( that.player );
     that.player.updateMatrixWorld();
-    that.player.position.setY(4);
-    that.player.rotateY(0);
+    that.player.rotation.y = playerFloor;
     that.start3D();
     that.addListeners();   
+    console.log('player at: ',this.player.position);
+    console.log('camera at: ',this.player.position);
 
 }
 
