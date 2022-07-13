@@ -41,6 +41,7 @@ export default class LayoutPlotter  {
     plotItem = (item, plotPoint) =>{
         item.place(plotPoint).then((model)=>{
             model.lookAt(0,0,0)
+            model.rotateX(0);
         });
     }
 
