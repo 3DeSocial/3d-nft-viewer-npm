@@ -299,20 +299,19 @@ class VRControls {
         nextPos.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
         this.dolly.lookAt(nextPos);*/
         console.log('flying flyForward');
-        console.log(this.speedFactor[3],data.axes[3]);
         this.dolly.position.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
         this.dolly.position.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
 
     }
 
     moveForward = (data) =>{
-        let nextPos = new THREE.Vector3();
+
+     /*   let nextPos = new THREE.Vector3();
         nextPos.copy(this.dolly.position);
         nextPos.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
         nextPos.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
-        this.dolly.lookAt(nextPos);      
+        this.dolly.lookAt(nextPos);      */
         this.config.moveForward(data);        
-        console.log('moving forward');
 
     }
 

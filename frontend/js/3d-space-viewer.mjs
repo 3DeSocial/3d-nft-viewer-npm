@@ -24,7 +24,7 @@ const params = {
     displayBVH: false,
     visualizeDepth: 10,
     gravity: - 30,
-    playerSpeed: 10,
+    playerSpeed: 40,
     physicsSteps: 40,
     useShowroom: true
 
@@ -1402,7 +1402,7 @@ initPlayerThirdPerson = () => {
 }
 
  updatePlayer = ( delta )=> {
-
+console.log('updatePlayer');
     this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
     this.player.position.addScaledVector( this.playerVelocity, delta );
 
@@ -1564,6 +1564,7 @@ initPlayerThirdPerson = () => {
 
 
  updatePlayerVR = (delta) =>{
+    console.log('updatePlayerVR');
         if(this.showroomLoaded){
             this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
         };
