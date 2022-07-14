@@ -98,7 +98,7 @@ class D3DLoaders {
                         gltfLoader = new GLTFLoader(this.loadingManager); 
                     
                         dracoLoader = new DRACOLoader(this.loadingManager); 
-                        dracoLoader.setDecoderPath( './libs/draco/' );
+                        dracoLoader.setDecoderPath( 'libs/draco/' );
                         dracoLoader.setDecoderConfig( { type: 'js' } );
                     
                         gltfLoader.setDRACOLoader(dracoLoader);

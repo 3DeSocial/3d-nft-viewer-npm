@@ -47,7 +47,8 @@ const params = {
                         maxDistance:Infinity,
                         maxPolarAngle:Infinity
                     },
-                    useOwnHandlers: false
+                    vrType: 'walking',
+                    useOwnHandlers: true
                 };
         
         this.config = {
@@ -1005,6 +1006,24 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                             modelsRoute: this.config.modelsRoute,
                                             nftsRoute: this.config.nftsRoute
                                         });
+        this.sceneInventory = null;
+        if(this.config.sceneAssets){
+            console.log('loading sceneAssets');
+
+            this.sceneInventory = new D3DInventory({
+                                            three: THREE,
+                                            items: this.config.sceneAssets,
+                                            scene: this.scene,
+                                            loader: this.loader,
+                                            loaders: this.loaders,
+                                            width: 3,
+                                            depth: 3,
+                                            height: 3,
+                                            modelsRoute: this.config.modelsRoute,
+                                            nftsRoute: this.config.nftsRoute
+                                        });                    
+        }
+        
     }
 
     initItem = (opts) =>{
@@ -1091,7 +1110,26 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }    
 
     placeAssets = () =>{
+        if(this.sceneInventory){
+            console.log('placing assetst');
+            this.placeSceneAssets();
+        };
+        this.placeUserAssets();
+    }
 
+    placeSceneAssets = () =>{
+        let itemsToPlace = this.sceneInventory.getItems();
+            this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
+            this.layoutPlotter = new LayoutPlotter({items:itemsToPlace, 
+                                                floorY: this.floorY,
+                                                sceneryLoader: this.sceneryLoader});
+
+
+            this.layoutPlotter.plotFromArray(itemsToPlace);
+
+    }
+
+    placeUserAssets = () =>{
         let itemsToPlace = this.inventory.getItems();
         this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
         this.layoutPlotter = new LayoutPlotter({items:itemsToPlace, 
@@ -1099,7 +1137,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                 sceneryLoader: this.sceneryLoader});
         let radius = 12; 
         let center = new THREE.Vector3(0,0,0);
-        this.layoutPlotter.plotCircle(itemsToPlace, center,radius);
+        this.layoutPlotter.plotCircle(itemsToPlace, center,radius);        
     }
 
     initVR = () =>{
@@ -1110,7 +1148,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         
         let vrButtonEl = VRButton.createButton(this.renderer, {btnCtr: 'space-ctr'});
 
-        this.vrControls = new VRControls({  vrType: 'walking',
+        this.vrControls = new VRControls({  vrType: this.config.vrType,
                                             scene:this.scene,
                                             renderer: this.renderer,
                                             camera: this.camera,
@@ -1529,7 +1567,7 @@ initPlayerThirdPerson = () => {
         if(this.showroomLoaded){
             this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
         };
-        this.player.position.addScaledVector( this.playerVelocity, delta );
+      //  this.player.position.addScaledVector( this.playerVelocity, delta );
         if ( fwdPressed ) {
             //this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
             this.player.translateZ(params.playerSpeed * delta );

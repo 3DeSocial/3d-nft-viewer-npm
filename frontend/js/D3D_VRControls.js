@@ -25,7 +25,7 @@ class VRControls {
         this.cameraVector = new THREE.Vector3();
         this.dolly = null;
         this.prevGamePads = new Map();
-        this.speedFactor = [0.1, 0.1, 0.1, 0.1];
+        this.speedFactor = [0.2, 0.2, 0.2, 0.2];
         this.controllers = [];
     	this.renderer = this.config.renderer;
     	this.scene = this.config.scene;
@@ -293,13 +293,16 @@ class VRControls {
     }
 
     flyForward = (data) => {
-        let nextPos = new THREE.Vector3();
+     /*   let nextPos = new THREE.Vector3();
         nextPos.copy(this.dolly.position);
         nextPos.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
         nextPos.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
-        this.dolly.lookAt(nextPos);
+        this.dolly.lookAt(nextPos);*/
+        console.log('flying flyForward');
+        console.log(this.speedFactor[3],data.axes[3]);
         this.dolly.position.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
         this.dolly.position.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
+
     }
 
     moveForward = (data) =>{
@@ -309,6 +312,8 @@ class VRControls {
         nextPos.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
         this.dolly.lookAt(nextPos);      
         this.config.moveForward(data);        
+        console.log('moving forward');
+
     }
 
     flyBackward = (data) => {
@@ -355,13 +360,14 @@ class VRControls {
     }
 
     rotateLeft = (data,value) => {
+        this.dolly.rotateY(THREE.Math.degToRad(Math.abs(value)));        
         this.player.rotateY(THREE.Math.degToRad(Math.abs(value)));
         this.config.rotateLeft(data);
     }
 
     rotateRight = (data,value) => {
+        this.dolly.rotateY(-THREE.Math.degToRad(Math.abs(value)));
         this.player.rotateY(-THREE.Math.degToRad(Math.abs(value)));
-
         this.config.rotateRight(data);
     }
 

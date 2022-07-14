@@ -22,7 +22,6 @@ import {Item} from '3d-nft-viewer';
 
         this.items = [];
         this.activeItemIdx = 0;
-console.log('inventoryconfig', this.config);
         this.load();
       
     }
@@ -36,15 +35,32 @@ console.log('inventoryconfig', this.config);
         let that = this;
 
         itemList.forEach((itemData)=>{
-            let itemConfig = itemData.params;
-            itemConfig.width = this.config.width;
-            itemConfig.depth = this.config.depth;
-            itemConfig.height = this.config.height;
+         //   console.log('itemData, ',itemData);
+
+            let itemConfig;
+            if(itemData.params){
+                itemConfig = itemData.params;
+            } else {
+                itemConfig = itemData;
+            };
+            if(!itemConfig.width){
+                itemConfig.width = this.config.width;
+            }
+            if(!itemConfig.depth){
+                itemConfig.depth = this.config.depth;
+            }
+            if(!itemConfig.height){
+                itemConfig.height = this.config.height;
+            }
+
             itemConfig.three = THREE;
             itemConfig.scene = this.scene;
             itemConfig.loader = this.loader;
             itemConfig.modelsRoute = this.config.modelsRoute,
             itemConfig.nftsRoute = this.config.nftsRoute;
+
+         //   console.log('itemConfig, ',itemConfig);
+         //   console.log('itemData, ',itemData);
 
             let item = this.initItem(itemConfig)
             if(item){
@@ -73,6 +89,31 @@ console.log('inventoryconfig', this.config);
             nftsRoute: nftsRoute
 
         };
+
+        if(opts.modelUrl){
+            itemParams.modelUrl = opts.modelUrl;
+        };
+
+        if(opts.position){
+            itemParams.position = opts.position;
+        }
+
+        if(opts.rotation){
+            itemParams.rotation = opts.rotation;
+        }
+
+        if(opts.width){
+            itemParams.width = opts.width;
+        }
+
+        if(opts.height){
+            itemParams.height = opts.height;
+        }
+
+        if(opts.depth){
+            itemParams.depth = opts.depth;
+        }
+
         if(opts.nftRequestParams){
             let nftRequestParams = opts.nftRequestParams;
 
@@ -81,15 +122,17 @@ console.log('inventoryconfig', this.config);
             });
             paramString = params.join('&');
             itemParams.nftsRoute = this.config.nftsRoute +'?' +paramString;
+            
+            if(!itemParams.nftPostHashHex){
+                console.log('cannot initItem without nftPostHashHex');
+                return false;
+            };
+            if((itemParams.nftsRoute==='')&&(itemParams.modelsRoute==='')){
+                console.log('cannot initItem without either modelsRoute or nftsRoute');
+                return false;
+            };              
         };
-        if(!itemParams.nftPostHashHex){
-            console.log('cannot initItem without nftPostHashHex');
-            return false;
-        };
-        if((itemParams.nftsRoute==='')&&(itemParams.modelsRoute==='')){
-            console.log('cannot initItem without either modelsRoute or nftsRoute');
-            return false;
-        };        
+   //   console.log(itemParams);
         return new Item(itemParams);
 
     }
