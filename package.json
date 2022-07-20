@@ -3,6 +3,7 @@
   "version": "1.7.2",
   "description": "Display 3D NFTs using ThreeJS to render model stored on arweave and minted on DeSo",
   "main": "index.js",
+  "type":"module",
   "scripts": {
     "test": "echo \"Error: no test specified\""
   },
