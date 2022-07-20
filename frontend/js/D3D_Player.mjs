@@ -55,29 +55,45 @@ export default class Player {
     }
 
     init = () => {
-        // character
 
-        let mat = new THREE.MeshStandardMaterial();
-            mat.opacity = 0;
-            mat.transparent = true;
+        let that = this;
+        let playerLoader = new GLTFLoader();
+        let newPos = null;
+        let playerFloor = 0;
+        let playerStartPos;
+        that.player = new THREE.Group();
 
-        this.player = new THREE.Mesh(
-            new THREE.BoxGeometry( 1, 1, 1),
-            mat
+        if(this.config.playerStartPos){
+            playerStartPos = new THREE.Vector3(this.config.playerStartPos.x,this.config.playerStartPos.y,this.config.playerStartPos.z);
+        } else {
+            playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(0,0,0), 2, -1);
+            playerStartPos = new THREE.Vector3(0,playerFloor,0);
+        };
+
+        that.player = new THREE.Group();
+    console.log('playerStartPos', playerStartPos);
+        that.player.position.copy(playerStartPos);
+        that.character = new THREE.Mesh(
+            new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
+            new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
         );
 
-        this.player.capsuleInfo = {
+        that.character.geometry.translate( 0, -1, 0 );
+        that.character.capsuleInfo = {
             radius: 0.75,
             segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
-        };
-     /*   this.player.castShadow = true;
-        this.player.receiveShadow = true;
-        this.player.material.shadowSide = 2;*/
-        this.player.rotateY(0);
-    
-        this.player.position.set(0, 2, 0);
-        this.scene.add( this.player );        
-      /*  this.reset();*/
+        };    
+
+        that.player.add(that.character);
+        that.character.updateMatrixWorld();
+        that.scene.add( that.player );
+        that.player.updateMatrixWorld();
+        that.player.rotation.y = playerFloor;
+        that.start3D();
+        that.addListeners();   
+        console.log('player at: ',this.player.position);
+        console.log('camera at: ',this.player.position);
+
     }
 
     loadModels = ()=> {

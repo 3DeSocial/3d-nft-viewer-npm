@@ -3,7 +3,6 @@ export const name = 'd3dspaceviewer';
 import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import Item from './D3D_Item.mjs';
 import Lighting from './D3D_Lighting.mjs';
@@ -36,7 +35,6 @@ const params = {
 
         let defaults = {
                     avatarSize: {width: 1, height:1, depth:1},
-                    el: document.body,
                     ctrClass: 'data-nft', // Attribute of div containing nft preview area for a single nft
                     fitOffset: 1.25,
                     nftsRoute: 'nfts', // Back end route to initialize NFTs
@@ -55,6 +53,46 @@ const params = {
             ...defaults,
             ...config
         };
+
+
+    }
+
+    initWorkers = (workerURL) =>{
+        let that = this;
+        this.canvasWorker = new Worker(workerURL, {type: 'module'});
+
+        this.canvasWorker.addEventListener('message', function (e) {
+            console.log('message receieved from worker');
+            console.log(e.data);
+        });
+        this.canvasWorker.postMessage({type: 'activate'});
+
+        const canvas = document.createElement('canvas');    
+
+        let ctr = document.querySelector('.'+this.config.ctrClass);
+            ctr.appendChild(canvas);
+
+        const offscreen = canvas.transferControlToOffscreen();
+
+        this.canvasWorker.postMessage({type: 'main', canvas: offscreen, config: this.config}, [offscreen]);
+/*
+        function sendSize() {
+            
+            that.canvasWorker.postMessage({
+                  type: 'size',
+                  width: canvas.clientWidth,
+                  height: canvas.clientHeight,
+                });
+        }
+        
+        window.addEventListener('resize', sendSize);
+        sendSize();
+  */       
+        console.log('using OffscreenCanvas');
+
+    }
+
+    initData = () =>{
         this.containerInitialized = false;
         this.el = this.config.el;
         this.playerVelocity = new THREE.Vector3();
@@ -79,16 +117,16 @@ const params = {
         this.moveTo = false;
 
     }
-
     initSpace = (options) =>{
         console.log('initSpace: ',options);
         let that = this;
+        this.initData();
         this.raycaster = new THREE.Raycaster();
         this.mouse = { x : 0, y : 0 };
-        this.getContainer(this.config.el);
+        this.getContainer(options.el);
         this.initScene();
         this.initInventory(options.items);        
-        this.initRenderer(this.config.el);
+        this.initRenderer(this.parentDivEl);
         this.initSkybox();
         this.initLighting();        
         this.loadScenery().then(()=>{
@@ -133,9 +171,10 @@ const params = {
         this.loader = loader;
     }
     
-    getContainer = (parentDivEl) =>{
+    getContainer = (parentDivElId) =>{
+
         //First lets create a parent DIV
-        this.parentDivEl = parentDivEl;
+        this.parentDivEl = document.querySelector(parentDivElId);
         this.parentDivElWidth = this.parentDivEl.offsetWidth;
         this.parentDivElHeight = this.parentDivEl.offsetHeight;        
     }
@@ -285,8 +324,6 @@ const params = {
         let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
         let skyBoxNo = this.getRandomInt(0,4);
         let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
-        console.log('skyBox');
-        console.log(skyBox);
         this.scene.background = skyBox;
     }
 
@@ -374,6 +411,13 @@ const params = {
         };
         this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
+            case 1:
+            console.log('lmb',action);
+            if(action.isOnFloor){
+                console.log('move to ',action.selectedPoint);
+                this.moveTo = action.selectedPoint.clone();
+            };
+            break;
             case 2:
             console.log('rmb');
             if(action.isOnWall && (!action.isOnFloor)){
@@ -461,7 +505,7 @@ const params = {
     }
 
     isOnFloor = (selectedPoint, meshToCheck) =>{
-
+        console.log('isOnFloor: ',selectedPoint);
         let origin = selectedPoint.clone();
             origin.setY(origin.y+1);
 
@@ -472,16 +516,19 @@ const params = {
         this.raycaster = new THREE.Raycaster();
         this.raycaster.set(origin,dir);
         var intersects = this.raycaster.intersectObjects( this.scene.children, true );
+        console.log('intersects');
+        console.log(intersects);
+            this.scene.add(new THREE.ArrowHelper( this.raycaster.ray.direction, this.raycaster.ray.origin, 1000, Math.random() * 0xffffff ));
+
         let hit;
         if(intersects[0]){   
             hit = intersects[0];
-
+            console.log('comparing..', hit.point.y.toFixed(3), selectedPoint.y.toFixed(3))
             if(hit.point.y===selectedPoint.y){
                 return true;
             } else {
                 return false;
             };
-            //this.scene.add(new THREE.ArrowHelper( this.raycaster.ray.direction, this.raycaster.ray.origin, 1000, Math.random() * 0xffffff ));
 
             return hit.point.y;
         } else {
@@ -706,7 +753,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }
     
     render = () =>{
-         if (this.renderer.xr.isPresenting === true) {
+         if (this.renderer.xr.isPresenting === true) {ww
             this.vrControls.checkControllers();
         }  
 
@@ -1333,7 +1380,7 @@ console.log('playerStartPos', playerStartPos);
     that.player.position.copy(playerStartPos);
     that.character = new THREE.Mesh(
         new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
-        new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
+        new THREE.MeshStandardMaterial({ transparent: false, opacity: 0})
     );
 
     that.character.geometry.translate( 0, -1, 0 );
@@ -1402,7 +1449,6 @@ initPlayerThirdPerson = () => {
 }
 
  updatePlayer = ( delta )=> {
-console.log('updatePlayer');
     this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
     this.player.position.addScaledVector( this.playerVelocity, delta );
 
@@ -1415,7 +1461,7 @@ console.log('updatePlayer');
        // this.player.rotation.y = angleToCamera;  
        nextPos.copy( this.player.position);
        nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
-        this.player.lookAt(nextPos);
+      //  this.player.lookAt(nextPos);
         this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
     }
 
@@ -1424,7 +1470,7 @@ console.log('updatePlayer');
         this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
        nextPos.copy( this.player.position);
        nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
-        this.player.lookAt(nextPos);      
+       // this.player.lookAt(nextPos);      
         this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
 
     }
@@ -1434,7 +1480,7 @@ console.log('updatePlayer');
         this.tempVector.set( - 1, 0, 0 ).applyAxisAngle(  this.upVector, angle );
        nextPos.copy( this.player.position);
        nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
-        this.player.lookAt(nextPos);
+      //  this.player.lookAt(nextPos);
         this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
 
     }
@@ -1444,14 +1490,14 @@ console.log('updatePlayer');
         this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
        nextPos.copy( this.player.position);
        nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
-        this.player.lookAt(nextPos);
+       // this.player.lookAt(nextPos);
         this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
 
     }
     if(this.moveTo){
    //     console.log('moving from ',this.player.position);
         this.moveTo.setY(this.player.position.y);
-   //     console.log('moving to selectedPoint: ',this.moveTo);
+       console.log('moving to selectedPoint: ',this.moveTo);
 
         this.player.position.copy(this.moveTo);
         this.moveTo = false;
@@ -1564,7 +1610,6 @@ console.log('updatePlayer');
 
 
  updatePlayerVR = (delta) =>{
-    console.log('updatePlayerVR');
         if(this.showroomLoaded){
             this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
         };

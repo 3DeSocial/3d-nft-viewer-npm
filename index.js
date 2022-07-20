@@ -14,5 +14,4 @@ import { D3DNFTViewerOverlay } from  './frontend/js/D3D_NFTViewerOverlay.mjs';
 import { D3DInventory } from  './frontend/js/D3D_Inventory.mjs';
 import { ExtraData3DParser } from  './frontend/js/D3D_ExtraDataParser.mjs';
 import { LayoutPlotter } from  './frontend/js/D3D_LayoutPlotter.mjs';
-
-export {D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRButton, VRControls, Item, XRControllerModelFactory, MeshBVH, acceleratedRaycast, MeshBVHVisualizer, SceneryLoader, SkyBoxLoader, LayoutPlotter}
+export { D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRButton, VRControls, Item, XRControllerModelFactory, MeshBVH, acceleratedRaycast, MeshBVHVisualizer, SceneryLoader, SkyBoxLoader, LayoutPlotter}
