@@ -481,7 +481,7 @@ onErrorCallback = (e)=> {
     }
 
     configureImportedObject = (object3d) =>{
-        object3d.castShadow = true;
+        object3d.castShadow = false;
         return object3d;
     }
 

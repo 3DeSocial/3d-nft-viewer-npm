@@ -12,7 +12,7 @@ export default class SceneryLoader {
             modelUrl: '',
             modelsRoute: 'models',
             nftsRoute: 'nfts',
-            castShadow: true,
+            castShadow: false,
             sceneryPath: ''
         };
     
@@ -67,14 +67,15 @@ export default class SceneryLoader {
     }
 
     createCollider = (gltfScene) =>{
+        let that = this;
 			// visual geometry setup
          // visual geometry setup
             const toMerge = {};
             gltfScene.traverse( c => {
 
                 if ( c.isMesh ) {
-                    c.castShadow = false;
-                    c.receiveShadow = true;
+                    c.castShadow = that.config.castShadow.;
+                    c.receiveShadow = that.config.receiveShadow;
                     const hex = c.material.color.getHex();
                     toMerge[ hex ] = toMerge[ hex ] || [];
                     toMerge[ hex ].push( c );
@@ -113,8 +114,8 @@ export default class SceneryLoader {
                 if ( visualGeometries.length ) {
                     const newGeom = BufferGeometryUtils.mergeBufferGeometries( visualGeometries );
                     const newMesh = new THREE.Mesh( newGeom, new THREE.MeshStandardMaterial( { color: parseInt( hex ), shadowSide: 2 } ) );
-                    newMesh.castShadow = true;
-                    newMesh.receiveShadow = true;
+                    newMesh.castShadow = that.config.castShadow;
+                    newMesh.receiveShadow = config.config.receiveShadow;
                     newMesh.material.shadowSide = 2;
 
                     environment.add( newMesh );

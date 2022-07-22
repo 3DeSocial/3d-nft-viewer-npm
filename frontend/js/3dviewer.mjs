@@ -76,13 +76,11 @@ const params = {
     }
 
     setFormat = (format) =>{
-        console.log('setFormat: ',format);
         let loader = this.loaders.getLoaderForFormat(format);
         if(loader === false){
             throw('Error - No Loader Availble for File Format: '+format+' in D3DNFTViewer');
             return false;
         };
-        console.log('set loader');
         this.format = format;
         this.loader = loader;
     }
