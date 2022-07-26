@@ -74,7 +74,7 @@ export default class SceneryLoader {
             gltfScene.traverse( c => {
 
                 if ( c.isMesh ) {
-                    c.castShadow = that.config.castShadow.;
+                    c.castShadow = that.config.castShadow;
                     c.receiveShadow = that.config.receiveShadow;
                     const hex = c.material.color.getHex();
                     toMerge[ hex ] = toMerge[ hex ] || [];
