@@ -111,7 +111,9 @@ const params = {
             that.sceneryLoader = new SceneryLoader({
                 sceneScale: that.config.sceneScale,
                 sceneryPath: that.config.sceneryPath,
-                scene: that.scene
+                scene: that.scene,
+                castShadow: false,
+                receiveShadow:false
             });
             that.sceneryLoader.loadScenery()
             .then((gltf)=>{
