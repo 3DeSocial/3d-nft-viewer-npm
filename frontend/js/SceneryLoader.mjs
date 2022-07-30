@@ -34,9 +34,7 @@ export default class SceneryLoader {
         let that = this;
 
         return new Promise((resolve, reject) => {
-            var that = this;
             this.gltfLoader = new GLTFLoader();
-
             this.gltfLoader.load(this.config.sceneryPath, (res) => {
                 console.log('gltf loaded');
             	that.scaleScene(res.scene);
@@ -114,8 +112,8 @@ export default class SceneryLoader {
                 if ( visualGeometries.length ) {
                     const newGeom = BufferGeometryUtils.mergeBufferGeometries( visualGeometries );
                     const newMesh = new THREE.Mesh( newGeom, new THREE.MeshStandardMaterial( { color: parseInt( hex ), shadowSide: 2 } ) );
-                    newMesh.castShadow = that.config.castShadow;
-                    newMesh.receiveShadow = config.config.receiveShadow;
+                    newMesh.castShadow = false;
+                    newMesh.receiveShadow = false;
                     newMesh.material.shadowSide = 2;
 
                     environment.add( newMesh );
@@ -165,6 +163,8 @@ export default class SceneryLoader {
     }
 
     addScenery = (gltf) =>{
+        console.log('addScenery');
+        console.log(this.config);
         const root = gltf.scene;
         this.sceneryMesh = root;
         this.scene.add(root);  

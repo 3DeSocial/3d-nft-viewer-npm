@@ -678,25 +678,19 @@ const params = {
         console.log('loadSceneryWithCollider');
         return new Promise((resolve,reject)=>{
             this.sceneryLoader = new SceneryLoader({
-                sceneryPath: this.config.sceneryPath
+                sceneScale: that.config.sceneScale,
+                sceneryPath: that.config.sceneryPath,
+                scene: that.scene,
+                castShadow: false,
+                receiveShadow:false
             });
 
             this.sceneryLoader.loadScenery()
-                .then((gltf)=>{
-                    const root = gltf.scene;
-                    that.room = root;
-                    that.scene.add(root);          
-                    that.collider = that.sceneryLoader.createCollider(root); 
-
-               //   visualizer = new MeshBVHVisualizer( this.collider, params.visualizeDepth );
-                    that.collider.position.setX(0);
-                    that.collider.position.setZ(0); 
-                    //that.scene.add( visualizer );
-                    that.scene.add( that.collider );
-                    that.collider.updateMatrixWorld();
-                    console.log('that.collider added');
-                    resolve()
-                });
+            .then((gltf)=>{
+                this.collider = that.sceneryLoader.collider;
+                that.sceneryMesh = gltf;
+                resolve(gltf);
+            })
         });
     }
 
