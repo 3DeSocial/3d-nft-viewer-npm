@@ -187,9 +187,12 @@ export default class SceneryLoader {
         raycaster.set(origin,dir);
         const hit = this.bvh.raycastFirst( raycaster.ray );
        // hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
-                 let planePos = new THREE.Vector3(0,hit.point.y,0);
+             //    let planePos = new THREE.Vector3(0,hit.point.y,0);
              //   this.addPlaneAtPos(planePos);
 //this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, 200, Math.random() * 0xffffff ));
+        // let planePos = new THREE.Vector3(0,hit.point.y,0);
+        //    this.addPlaneAtPos(planePos);
+
         return hit.point.y;
 
     }
@@ -214,14 +217,15 @@ export default class SceneryLoader {
         const hit = this.bvh.raycastFirst( raycaster.ray );
        // this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, ceilHeight, Math.random() * 0xffffff ));
 
-       // hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
+        hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
        if(hit){
-         //   let planePos = new THREE.Vector3(0,hit.point.y,0);
+         let planePos = new THREE.Vector3(0,hit.point.y,0);
+            this.addPlaneAtPos(planePos);
+
             return hit.point.y;
        } else {
             return false;
         }
-             //   this.addPlaneAtPos(planePos);
 //this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, 200, Math.random() * 0xffffff ));
 
 

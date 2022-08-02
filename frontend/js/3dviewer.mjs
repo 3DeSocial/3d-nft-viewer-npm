@@ -405,9 +405,6 @@ const params = {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         };
-        if(this.loadedItem){
-           this.fitCameraToMesh(this.loadedItem);        
-        }
     }
 
         
@@ -470,10 +467,12 @@ const params = {
     
 
      fitCameraToMesh(loadedItem) {
-
+        console.log('fitCameraToMesh');
         if(!loadedItem.mesh){
             return false;
         };
+        console.log('fitCameraToMesh: have mesh');
+
         const box = new THREE.Box3().setFromObject(loadedItem.mesh);
         const center = new THREE.Vector3();
         const size = new THREE.Vector3();
@@ -486,6 +485,7 @@ const params = {
         const fitWidthDistance = fitHeightDistance / this.camera.aspect;
 
         const distance = this.config.fitOffset * Math.max(fitHeightDistance, fitWidthDistance);
+        console.log('calculated camera distance: ', distance);
         this.distance = distance;
 
         const direction = this.controls.target.clone()
@@ -501,6 +501,8 @@ const params = {
         this.camera.updateProjectionMatrix();
 
         this.camera.position.copy(this.controls.target).sub(direction);
+        console.log('this.camera.position');
+        console.log(this.camera.position);
         this.controls.update();
     }
 
@@ -654,9 +656,8 @@ const params = {
             if(this.config.useShowroom && !this.showroomLoaded){
                 this.loadSceneryWithCollider().then(()=>{
                     this.placeModel(item).then(()=>{
-                        console.log('model place by viewer');
                         this.removeLoader(hideElOnLoad);
-                        this.start3D();
+                        this.start3D();                        
                         resolve(item);                        
                     })
                 })
@@ -664,6 +665,7 @@ const params = {
                 this.placeModel(item).then(()=>{
                     console.log('model place by viewer');
                     this.removeLoader(hideElOnLoad);
+                  //this.cam  this.fitCameraToMesh(item);
                     this.start3D();
                     resolve(item);
 
@@ -672,6 +674,7 @@ const params = {
         });
 
     }
+
 
     loadSceneryWithCollider= () =>{
         let that = this;
@@ -708,10 +711,10 @@ const params = {
             let item = this.initItem(opts);            
             if(this.config.useShowroom && !this.showroomLoaded){
 
-                this.loadSceneryWithCollider().then(()=>{
-
+                this.loadSceneryWithCollider().then((item)=>{
+                    this.restrictCameraToRoom();
                     this.placeModel(item).then(()=>{
-                        console.log('model place by viewer');
+                        console.log('model placed by viewer');
                         this.removeLoader(hideElOnLoad);
                         resolve(item);
                     })
@@ -730,12 +733,13 @@ const params = {
 
     }
     
+    // Place model in center of space at 0,floorY,0
     placeModel = (item) =>{
         let that = this;
         return new Promise((resolve,reject)=>{
-
-            let newPos = new THREE.Vector3(0,this.floorY,0);
-
+            let floorY = this.sceneryLoader.getFloorY(); // use detected floor Y
+            console.log('placeModel: floorY: ',floorY);
+            let newPos = new THREE.Vector3(0,floorY,0);
             item.place(newPos).then((model,pos)=>{
                 console.log('viewer: placeModel complete');
                 that.mesh = model;
@@ -838,12 +842,24 @@ console.log('initItem (Model)', format);
         let that = this;
         
         VRButton.registerSessionGrantedListener();        
-        
-        let vrButtonEl = VRButton.createButton(this.renderer, {btnCtr:this.config.ctrClass});
+        let vrBtnOptions = { btnCtr : this.config.ctrClass,
+                             onStartSession: ()=>{
+                                console.log('position camara for VR');
+                                that.buildDolly();                                
+                            } }
+        let vrButtonEl = VRButton.createButton(this.renderer, vrBtnOptions);
 
+      
+    }
+
+   buildDolly = () =>{
+    console.log('buildDolly');
         this.vrControls = new VRControls({  scene:this.scene,
                                             renderer: this.renderer,
                                             camera: this.camera,
+                                            player: this.player,
+                                            playerStartPos: this.config.playerStartPos,
+                                            vrType: 'flying',
                                             moveUp: (data)=>{
                                                 return;
                                             },
@@ -867,157 +883,17 @@ console.log('initItem (Model)', format);
 
                                             },
                                             rotateLeft: (data)=>{
-                                                try{
-                                                    let rot =  0.017453;
-                                                    that.player.rotateY(rot);
-                                                    that.dolly.rotateY(rot);
-                                                } catch(err) {
-                                                    console.log(err);
-                                                };
+                                            
                                                 return;
                                             },
                                             rotateRight: (data)=>{
-                                                try{
-                                                let rot = -0.017453;
-                                                that.player.rotateY(rot);
-                                                that.dolly.rotateY(rot);
-                                                } catch(err) {
-                                                    console.log(err);
-                                                };
+                                               
                                                 return;
                                             }
                                         });
             this.dolly = this.vrControls.buildControllers();        
-    }
 
-    loadColliderEnvironment =() =>{
-        var that = this;
-        this.showroomLoaded = true;
-        return new Promise((resolve,reject)=>{
-
-        this.sceneryLoader.load(this.config.sceneryPath, res => {
-
-            const gltfScene = res.scene;
-            gltfScene.scale.set(0.2,0.2,0.2);    
-
-         //   gltfScene.scale.setScalar( .01 );
-
-            const box = new THREE.Box3();
-            box.setFromObject( gltfScene );
-            box.getCenter( gltfScene.position ).negate();
-            gltfScene.updateMatrixWorld( true );
-
-            // visual geometry setup
-            const toMerge = {};
-            gltfScene.traverse( c => {
-
-                if ( c.isMesh ) {
-                    c.castShadow = false;
-                    c.receiveShadow = true;
-                    const hex = c.material.color.getHex();
-                    toMerge[ hex ] = toMerge[ hex ] || [];
-                    toMerge[ hex ].push( c );
-
-                }
-
-            } );
-
-            environment = new THREE.Group();
-            for ( const hex in toMerge ) {
-
-                const arr = toMerge[ hex ];
-                const visualGeometries = [];
-                arr.forEach( mesh => {
-
-                    if ( mesh.material.emissive.r !== 0 ) {
-
-                        environment.attach( mesh );
-
-                    } else {
-
-                        const geom = mesh.geometry.clone();
-                        geom.applyMatrix4( mesh.matrixWorld );
-                        visualGeometries.push( geom );
-
-                    }
-
-                } );
-
-                if ( visualGeometries.length ) {
-
-                    const newGeom = BufferGeometryUtils.mergeBufferGeometries( visualGeometries );
-                    const newMesh = new THREE.Mesh( newGeom, new THREE.MeshStandardMaterial( { color: parseInt( hex ), shadowSide: 2 } ) );
-                    newMesh.castShadow = true;
-                    newMesh.receiveShadow = true;
-                    newMesh.material.shadowSide = 2;
-
-                    environment.add( newMesh );
-
-                }
-
-            }
-
-            // collect all geometries to merge
-            const geometries = [];
-
-
-            environment.updateMatrixWorld( true );
-            environment.traverse( c => {
-
-                if ( c.geometry ) {
-                    const cloned = c.geometry.clone();
-                    cloned.applyMatrix4( c.matrixWorld );
-                    for ( const key in cloned.attributes ) {
-
-                        if ( key !== 'position' ) {
-
-                            cloned.deleteAttribute( key );
-
-                        }
-
-                    }
-
-                    geometries.push( cloned );
-
-                }
-
-            } );
-
-            // create the merged geometry
-            const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries( geometries, false );
-            mergedGeometry.boundsTree = new MeshBVH( mergedGeometry, { lazyGeneration: false } );
-            this.bvh = mergedGeometry.boundsTree;
-            collider = new THREE.Mesh( mergedGeometry );
-            collider.material.wireframe = false;
-            collider.material.opacity = 1;
-            collider.material.transparent = true;
-
-        //   visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
-
-            collider.position.setX(0);
-            collider.position.setZ(0);  
-          //  this.scene.add( visualizer );
-            this.scene.add( collider );
-            collider.updateMatrixWorld();
-
-            //environment.position.set(0,0,0);    
-          //  this.scene.add( environment );
-          //  environment.updateMatrixWorld()
-
-           //gltfScene.position.set(0,-11.5,0)
-            gltfScene.position.setX(0); 
-            gltfScene.position.setZ(0); 
-
-            gltfScene.updateMatrixWorld()
-            that.sceneryMesh = gltfScene;
-            that.collider = collider;
-            this.floorY = that.getFloorLevel(collider);
-            resolve(gltfScene);
-            });
-
-        })
-
-    }
+   }
     getFloorLevel = (meshToCheck) =>{
         const invMat = new THREE.Matrix4();
         invMat.copy( this.sceneryMesh.matrixWorld ).invert();
@@ -1055,19 +931,29 @@ console.log('initItem (Model)', format);
             this.scene.add(this.sceneryMesh);
             this.restrictCameraToRoom();
         } else {
-            this.sceneryLoader = this.loaders.getLoaderForFormat('gltf');
-            this.loadColliderEnvironment()
+            this.loadSceneryWithCollider().then(()=>{
+                    this.placeModel(item).then(()=>{
+                        this.removeLoader(hideElOnLoad);
+                        this.fitCameraToMesh(item);
+                        this.start3D();                        
+                        resolve(item);                        
+                    })
+                })
                 .then(()=>{
                     console.log('adding newly loaded sceneryMesh');
                     that.scene.add(that.sceneryMesh);
                     that.sceneryMesh.updateMatrixWorld();
                     loadedItem.mesh.updateMatrixWorld();
                     if(this.loadedItem){
-                        let newPos = new THREE.Vector3(0,this.floorY,0);
+                        let floorY = this.sceneryLoader.getFloorY();
+                        console.log('addScenery: floorY: ',floorY);
+                        let newPos = new THREE.Vector3(0,floorY,0);
             
                         this.loadedItem.moveTo(newPos);
                         that.resizeCanvas();                    
                         this.restrictCameraToRoom();                        
+                    } else{
+                        console.log('no laoded item')
                     }
                 })
         }

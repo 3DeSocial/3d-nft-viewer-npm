@@ -83,13 +83,13 @@ export default class Lighting {
 
         this.dLighting = [];
 
-        const aboveLight = new THREE.DirectionalLight(0xffffff, 1);
+        const aboveLight = new THREE.DirectionalLight(0xffffff, 0.5);
        // aboveLight.castShadow = true;
         aboveLight.position.set(0, 15, 0);
         this.scene.add(aboveLight);
         this.dLighting['above'] = aboveLight;
 
-        const belowLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        const belowLight = new THREE.DirectionalLight(0xffffff, 0);
       //  belowLight.castShadow = true;
         belowLight.position.set(0, -15, 0);
         this.scene.add(belowLight);
