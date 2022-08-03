@@ -26,7 +26,7 @@ class VRControls {
         this.dolly = null;
         this.prevGamePads = new Map();
         this.speedFactor = [0.2, 0.2, 0.2, 0.2];
-        this.flyingSpeedFactor = [0.01, 0.01, 0.01, 0.01];
+        this.flyingSpeedFactor = [0.1, 0.1, 0.1, 0.1];
         this.controllers = [];
     	this.renderer = this.config.renderer;
     	this.scene = this.config.scene;
@@ -132,10 +132,7 @@ class VRControls {
                                              //   self.player.rotateY(-THREE.MathUtils.degToRad(1));
                                             }
                                             if (i == 3) {
-                                                //reset teleport to home position
-                                          //      self.dolly.position.x = 0;
-                                            //    self.dolly.position.y = 5;
-                                              //  self.dolly.position.z = 0;
+                                                self.dolly.position.copy(this.config.playerStartPos);
                                             }
                                         } else {
                                             //console.log("Right Paddle Down");
@@ -239,7 +236,7 @@ class VRControls {
 
         if(this.isOverMovementThreshold(data.axes[3])){
             if(data.axes[3] > 0){
-                console.log(hand+ ' stick: back',data.axes[3]);
+                //console.log(hand+ ' stick: back',data.axes[3]);
                 this.flyUp(data, value);
             } else if (data.axes[3] < 0){
                 //console.log(hand + ' stick: forward',data.axes[3]);
@@ -263,7 +260,7 @@ class VRControls {
         if(this.isOverMovementThreshold(data.axes[3])){
              //   console.log(hand+ ' stick: back',data.axes[3]);
             if(data.axes[3] > 0){
-                //console.log(hand+ ' stick: right ',data.axes[2]);
+                //console.log(hand+ ' stick: right ',data.axes[2],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
                         this.flyBackward(data);
@@ -273,7 +270,7 @@ class VRControls {
                     break;
                 }
             } else if (data.axes[3] < 0){
-             //   console.log(hand + ' stick: forward',data.axes[3]);
+                //console.log(hand + ' stick: forward',data.axes[3],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
                         this.flyForward(data);
@@ -300,9 +297,8 @@ class VRControls {
         nextPos.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
         nextPos.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
         this.dolly.lookAt(nextPos);*/
-        console.log('flying flyForward');
-        this.dolly.position.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
-        this.dolly.position.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
+        this.dolly.position.x -= this.cameraVector.x * this.flyingSpeedFactor[3] * data.axes[3];
+        this.dolly.position.z -= this.cameraVector.z * this.flyingSpeedFactor[3] * data.axes[3];
 
     }
 
@@ -352,7 +348,7 @@ class VRControls {
     }
 
     flyDown = (data) =>{
-        this.dolly.position.y -= this.flyingSpeedFactor[3] * data.axes[3];
+        this.dolly.position.y += this.flyingSpeedFactor[3] * data.axes[3];
     }
 
     moveDown = (data) => {

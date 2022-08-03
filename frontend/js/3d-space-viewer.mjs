@@ -77,7 +77,7 @@ const params = {
         environment = null;
         this.collider = null;
         this.moveTo = false;
-
+        this.vrType = this.config.vrType;
     }
 
     initSpace = (options) =>{
@@ -757,7 +757,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                 for ( let i = 0; i < physicsSteps; i ++ ) {
 
                     if (this.renderer.xr.isPresenting === true) {
-                      this.updatePlayerVR( delta / physicsSteps );
+                        if(this.vrType==="walking"){
+                           this.updatePlayerVR( delta / physicsSteps );
+                        }
                     } else {
                        this.updatePlayer( delta / physicsSteps );
                     }
@@ -1168,8 +1170,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         VRButton.registerSessionGrantedListener();        
         
         let vrButtonEl = VRButton.createButton(this.renderer, {btnCtr: 'space-ctr'});
-
-        this.vrControls = new VRControls({  vrType: this.config.vrType,
+console.log('this.vrType: ',this.vrType);
+        this.vrControls = new VRControls({  vrType: this.vrType,
                                             scene:this.scene,
                                             renderer: this.renderer,
                                             camera: this.camera,
