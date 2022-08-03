@@ -35,9 +35,7 @@ export default class SceneryLoader {
         let that = this;
 
         return new Promise((resolve, reject) => {
-            var that = this;
             this.gltfLoader = new GLTFLoader();
-
             this.gltfLoader.load(this.config.sceneryPath, (res) => {
                 console.log('gltf loaded');
             	that.scaleScene(res.scene);
@@ -115,8 +113,8 @@ export default class SceneryLoader {
                 if ( visualGeometries.length ) {
                     const newGeom = BufferGeometryUtils.mergeBufferGeometries( visualGeometries );
                     const newMesh = new THREE.Mesh( newGeom, new THREE.MeshStandardMaterial( { color: parseInt( hex ), shadowSide: 2 } ) );
-                    newMesh.castShadow = that.config.castShadow;
-                    newMesh.receiveShadow = that.config.receiveShadow;
+                    newMesh.castShadow = false;
+                    newMesh.receiveShadow = false;
                     newMesh.material.shadowSide = 2;
 
                     environment.add( newMesh );
@@ -166,6 +164,8 @@ export default class SceneryLoader {
     }
 
     addScenery = (gltf) =>{
+        console.log('addScenery');
+        console.log(this.config);
         const root = gltf.scene;
         this.sceneryMesh = root;
         this.scene.add(root);  
@@ -188,9 +188,12 @@ export default class SceneryLoader {
         raycaster.set(origin,dir);
         const hit = this.bvh.raycastFirst( raycaster.ray );
        // hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
-                 let planePos = new THREE.Vector3(0,hit.point.y,0);
+             //    let planePos = new THREE.Vector3(0,hit.point.y,0);
              //   this.addPlaneAtPos(planePos);
 //this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, 200, Math.random() * 0xffffff ));
+        // let planePos = new THREE.Vector3(0,hit.point.y,0);
+        //    this.addPlaneAtPos(planePos);
+
         return hit.point.y;
 
     }
@@ -215,14 +218,15 @@ export default class SceneryLoader {
         const hit = this.bvh.raycastFirst( raycaster.ray );
        // this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, ceilHeight, Math.random() * 0xffffff ));
 
-       // hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
+        hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
        if(hit){
-         //   let planePos = new THREE.Vector3(0,hit.point.y,0);
+         let planePos = new THREE.Vector3(0,hit.point.y,0);
+            this.addPlaneAtPos(planePos);
+
             return hit.point.y;
        } else {
             return false;
         }
-             //   this.addPlaneAtPos(planePos);
 //this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, 200, Math.random() * 0xffffff ));
 
 

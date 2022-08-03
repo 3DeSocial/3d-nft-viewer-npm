@@ -118,6 +118,8 @@ const params = {
 
     loadScenery = () =>{
         let that = this;
+        console.log('loadScenery: ');
+        console.log(this.config);
         return new Promise((resolve,reject)=>{
             that.sceneryLoader = new SceneryLoader({
                 sceneScale: that.config.sceneScale,

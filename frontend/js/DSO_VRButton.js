@@ -6,7 +6,8 @@ class VRButton {
 
     let defaults = {
       btnCls: 'view-vr-btn',
-      btnCtr: 'collection-wrapper'
+      btnCtr: 'collection-wrapper',
+      onStartSession: function(){}
     };
   
     options = {
@@ -17,6 +18,7 @@ class VRButton {
     let vrButtons = document.getElementsByClassName(options.btnCls);
     if(vrButtons[0]){
       button = vrButtons[0];
+      console.log('VRButton: ');
       console.log(button);
     } else {
       button = document.createElement( 'button' );
@@ -75,10 +77,8 @@ class VRButton {
       };
 
       button.onclick = function () {
-          console.log('click vr button');
-
         if ( currentSession === null ) {
-          console.log('click vr button2');
+          options.onStartSession()
           // WebXR's requestReferenceSpace only works if the corresponding feature
           // was requested at session creation time. For simplicity, just ask for
           // the interesting ones as optional features, but be aware that the

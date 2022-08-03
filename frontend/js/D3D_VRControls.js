@@ -26,6 +26,7 @@ class VRControls {
         this.dolly = null;
         this.prevGamePads = new Map();
         this.speedFactor = [0.2, 0.2, 0.2, 0.2];
+        this.flyingSpeedFactor = [0.01, 0.01, 0.01, 0.01];
         this.controllers = [];
     	this.renderer = this.config.renderer;
     	this.scene = this.config.scene;
@@ -72,13 +73,13 @@ class VRControls {
 
         //dolly for camera
         let dolly = new THREE.Group();
-        dolly.position.set(0, 0, 0);
+        dolly.position.copy(this.config.playerStartPos);
         dolly.name = 'dolly';
         this.scene.add(dolly);
         dolly.rotateY(0);
 
         dolly.add(this.camera);
-        this.camera.position.set(0,1.5,0);
+        this.camera.position.copy(this.config.playerStartPos);
         this.camera.rotateY(0);
         //add the controls to the dolly also or they will not move with the dolly
         dolly.add(controller1);
@@ -127,7 +128,7 @@ class VRControls {
                                         if (data.handedness == 'left') {
                                             //console.log("Left Paddle Down");
                                             if (i == 1) {
-                                             //   self.player.rotateY(-THREE.Math.degToRad(1));
+                                             //   self.player.rotateY(-THREE.MathUtils.degToRad(1));
                                             }
                                             if (i == 3) {
                                                 //reset teleport to home position
@@ -138,7 +139,7 @@ class VRControls {
                                         } else {
                                             //console.log("Right Paddle Down");
                                             if (i == 1) {
-                                               // self.player.rotateY(THREE.Math.degToRad(1));
+                                               // self.player.rotateY(THREE.MathUtils.degToRad(1));
                                             }
                                         }
                                     } else {
@@ -149,12 +150,12 @@ class VRControls {
                                             if (data.handedness == 'left') {
                                                 //console.log("Left Paddle Down");
                                              //   self.player.rotateY(
-                                              //      -THREE.Math.degToRad(Math.abs(value))
+                                              //      -THREE.MathUtils.degToRad(Math.abs(value))
                                                // );
                                             } else {
                                                 //console.log("Right Paddle Down");
                                            //     self.player.rotateY(
-                                             //      THREE.Math.degToRad(Math.abs(value))
+                                             //      THREE.MathUtils.degToRad(Math.abs(value))
                                                // );
                                             }
                                         }
@@ -316,16 +317,16 @@ class VRControls {
     }
 
     flyBackward = (data) => {
-        this.dolly.position.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
-        this.dolly.position.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
+        this.dolly.position.x -= this.cameraVector.x * this.flyingSpeedFactor[3] * data.axes[3];
+        this.dolly.position.z -= this.cameraVector.z * this.flyingSpeedFactor[3] * data.axes[3];
     }
     moveBackward = (data) => {
         this.config.moveBack(data);
     }
 
     flyLeft = (data) => {
-        this.dolly.position.x -= this.cameraVector.z * this.speedFactor[2] * data.axes[2];
-        this.dolly.position.z += this.cameraVector.x * this.speedFactor[2] * data.axes[2];        
+        this.dolly.position.x -= this.cameraVector.z * this.flyingSpeedFactor[2] * data.axes[2];
+        this.dolly.position.z += this.cameraVector.x * this.flyingSpeedFactor[2] * data.axes[2];        
     }
 
     moveLeft = (data) => {
@@ -333,8 +334,8 @@ class VRControls {
     }
 
     flyRight = (data) => {
-        this.dolly.position.x -= this.cameraVector.z * this.speedFactor[2] * data.axes[2];
-        this.dolly.position.z += this.cameraVector.x * this.speedFactor[2] * data.axes[2];        
+        this.dolly.position.x -= this.cameraVector.z * this.flyingSpeedFactor[2] * data.axes[2];
+        this.dolly.position.z += this.cameraVector.x * this.flyingSpeedFactor[2] * data.axes[2];        
     }
 
     moveRight = (data) => {
@@ -342,7 +343,7 @@ class VRControls {
     }
 
     flyUp = (data) => {
-        this.dolly.position.y -= this.speedFactor[3] * data.axes[3];
+        this.dolly.position.y -= this.flyingSpeedFactor[3] * data.axes[3];
     }
 
     moveUp = (data) => {
@@ -350,7 +351,7 @@ class VRControls {
     }
 
     flyDown = (data) =>{
-        this.dolly.position.y -= this.speedFactor[3] * data.axes[3];
+        this.dolly.position.y -= this.flyingSpeedFactor[3] * data.axes[3];
     }
 
     moveDown = (data) => {
@@ -359,14 +360,14 @@ class VRControls {
     }
 
     rotateLeft = (data,value) => {
-        this.dolly.rotateY(THREE.Math.degToRad(Math.abs(value)));        
-        this.player.rotateY(THREE.Math.degToRad(Math.abs(value)));
+        this.dolly.rotateY(THREE.MathUtils.degToRad(Math.abs(value)));        
+        this.player.rotateY(THREE.MathUtils.degToRad(Math.abs(value)));
         this.config.rotateLeft(data);
     }
 
     rotateRight = (data,value) => {
-        this.dolly.rotateY(-THREE.Math.degToRad(Math.abs(value)));
-        this.player.rotateY(-THREE.Math.degToRad(Math.abs(value)));
+        this.dolly.rotateY(-THREE.MathUtils.degToRad(Math.abs(value)));
+        this.player.rotateY(-THREE.MathUtils.degToRad(Math.abs(value)));
         this.config.rotateRight(data);
     }
 
@@ -409,7 +410,7 @@ class VRControls {
                                     if (data.handedness == 'left') {
                                         //console.log("Left Paddle Down");
                                         if (i == 1) {
-                                            self.dolly.rotateY(-THREE.Math.degToRad(1));
+                                            self.dolly.rotateY(-THREE.MathUtils.degToRad(1));
                                         }
                                         if (i == 3) {
                                             //reset teleport to home position
@@ -420,7 +421,7 @@ class VRControls {
                                     } else {
                                         //console.log("Right Paddle Down");
                                         if (i == 1) {
-                                            self.dolly.rotateY(THREE.Math.degToRad(1));
+                                            self.dolly.rotateY(THREE.MathUtils.degToRad(1));
                                         }
                                     }
                                 } else {
@@ -431,12 +432,12 @@ class VRControls {
                                         if (data.handedness == 'left') {
                                             //console.log("Left Paddle Down");
                                             self.dolly.rotateY(
-                                                -THREE.Math.degToRad(Math.abs(value))
+                                                -THREE.MathUtils.degToRad(Math.abs(value))
                                             );
                                         } else {
                                             //console.log("Right Paddle Down");
                                             self.dolly.rotateY(
-                                                THREE.Math.degToRad(Math.abs(value))
+                                                THREE.MathUtils.degToRad(Math.abs(value))
                                             );
                                         }
                                     }
@@ -488,7 +489,7 @@ class VRControls {
                                     } else {
                                         //    console.log('RH ata.axes[2]: '+data.axes[2]);
                                         //    (data.axes[2] > 0) ? console.log('left on right thumbstick') : console.log('right on right thumbstick'); // !!!THIS WORKS!!!
-                                        self.dolly.rotateY(-THREE.Math.degToRad(data.axes[2]));
+                                        self.dolly.rotateY(-THREE.MathUtils.degToRad(data.axes[2]));
                                     }
                                     // self.controls.update();
                                 }
