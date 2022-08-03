@@ -217,10 +217,10 @@ export default class SceneryLoader {
         const hit = this.bvh.raycastFirst( raycaster.ray );
        // this.scene.add(new THREE.ArrowHelper( raycaster.ray.direction, raycaster.ray.origin, ceilHeight, Math.random() * 0xffffff ));
 
-        hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
+     //   hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
        if(hit){
-         let planePos = new THREE.Vector3(0,hit.point.y,0);
-            this.addPlaneAtPos(planePos);
+       //  let planePos = new THREE.Vector3(0,hit.point.y,0);
+         //   this.addPlaneAtPos(planePos);
 
             return hit.point.y;
        } else {

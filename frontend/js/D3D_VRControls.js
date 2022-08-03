@@ -80,6 +80,7 @@ class VRControls {
 
         dolly.add(this.camera);
         this.camera.position.copy(this.config.playerStartPos);
+        this.camera.position.setY(this.camera.position.y+2);
         this.camera.rotateY(0);
         //add the controls to the dolly also or they will not move with the dolly
         dolly.add(controller1);
