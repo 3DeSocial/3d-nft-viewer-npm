@@ -24,8 +24,8 @@ const params = {
     displayBVH: false,
     visualizeDepth: 10,
     gravity: - 30,
-    playerSpeed: 40,
-    physicsSteps: 40,
+    playerSpeed: 10,
+    physicsSteps: 20,
     useShowroom: true
 
 };
@@ -102,6 +102,17 @@ const params = {
             this.initControls();
             that.initVR();
             this.resizeCanvas();
+   
+            this.controls.update();
+            this.renderer.render(this.scene,this.camera);
+            console.log(this.camera.rotation);
+            console.log('starting controls target',this.controls.target);
+            this.controls.target.y = 1.5;
+            this.controls.target.z = -1;
+            console.log(this.camera.position);
+            console.log(this.camera.rotation);
+            this.controls.update();
+            this.animate();
         });
     }
 
@@ -216,12 +227,12 @@ const params = {
     }
 
     initCamera = () =>{
- 
+ console.log('initCamera an look at floor');
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/600, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
-        this.camera.position.set(10, 8, 40);
-        this.camera.lookAt(0,0,0);
+        this.camera.rotation.setX(0);
+
 
     }
 
@@ -387,7 +398,12 @@ const params = {
             };
             break;
             default:
-            console.log('default',action);
+            if(action.selection.object.userData.owner){
+                console.log(action.selection.object.userData.owner.config);
+                console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
+                console.log('body: ',action.selection.object.userData.owner.config.nft.body);
+
+            }
             break;
         }
     }
@@ -458,7 +474,8 @@ const params = {
             isOnFloor: isOnFloor,
             isOnWall: isOnWall,
             btnIndex: btnIndex,
-            selectedPoint: (intersects[0])?intersects[0].point:null
+            selectedPoint: (intersects[0])?intersects[0].point:null,
+            selection: (intersects[0])?intersects[0]:null,
         }
     }
 
@@ -687,9 +704,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         };
-        if(this.loadedItem){
-           this.fitCameraToMesh(this.loadedItem);        
-        }
+
+        this.controls.update();
     }
 
         
@@ -791,6 +807,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         this.camera.position.copy(this.controls.target).sub(direction);
         this.controls.update();
     }
+
 
     centerMeshInScene = (gltfScene) =>{
         let firstMesh = null;
@@ -992,7 +1009,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
       //  this.showOverlay();
         
-        this.animate();        
+        //this.animate();        
     }
 
 
@@ -1348,9 +1365,9 @@ console.log('playerStartPos', playerStartPos);
     that.character.updateMatrixWorld();
     that.scene.add( that.player );
     that.player.updateMatrixWorld();
-    that.player.rotation.y = playerFloor;
-    that.start3D();
-    that.addListeners();   
+    that.addListeners();
+
+
     console.log('player at: ',this.player.position);
     console.log('camera at: ',this.player.position);
 
@@ -1398,13 +1415,11 @@ initPlayerThirdPerson = () => {
         that.character.updateMatrixWorld();
         that.scene.add( that.player );
         that.player.updateMatrixWorld();
-        that.start3D();
         that.addListeners();   
     });
 }
 
  updatePlayer = ( delta )=> {
-console.log('updatePlayer');
     this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
     this.player.position.addScaledVector( this.playerVelocity, delta );
 
@@ -1451,9 +1466,9 @@ console.log('updatePlayer');
 
     }
     if(this.moveTo){
-   //     console.log('moving from ',this.player.position);
+        console.log('moving from ',this.player.position);
         this.moveTo.setY(this.player.position.y);
-   //     console.log('moving to selectedPoint: ',this.moveTo);
+        console.log('moving to selectedPoint: ',this.moveTo);
 
         this.player.position.copy(this.moveTo);
         this.moveTo = false;
@@ -1566,7 +1581,6 @@ console.log('updatePlayer');
 
 
  updatePlayerVR = (delta) =>{
-    console.log('updatePlayerVR');
         if(this.showroomLoaded){
             this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
         };

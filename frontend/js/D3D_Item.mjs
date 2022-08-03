@@ -7,14 +7,23 @@ export default class Item {
             modelUrl: '',
             modelsRoute: 'models',
             nftsRoute: 'nfts',
-            castShadow: true   
+            castShadow: true,
+            // override the actions array to set click handlers
+            actions: {'click': function(e){ 
+                console.log('clicked');
+                console.log(this);
+            },'dblclick': function(e){
+                console.log('dblclick');
+                console.log(this);
+            }}
         };
     
         this.config = {
             ...defaults,
             ...config
         };
-        
+        console.log('init item');
+console.log(this.config);
         THREE = this.config.three;
         this.loader = this.config.loader;
         this.scene = this.config.scene;
@@ -27,7 +36,9 @@ export default class Item {
         this.mesh = null;
         this.animRunning = false;
         this.animations = null;
+        this.actions = this.config.actions;
         this.initItemEvents();
+        this.isItem = true;
 
 
     }
@@ -216,7 +227,6 @@ export default class Item {
                 } else {
                     loadedItem = root;
                 };
-
                 let obj3D = this.convertToObj3D(loadedItem);
                 if(obj3D===false){
                     console.log('could not convert item for scene');
@@ -284,6 +294,7 @@ export default class Item {
 
                 that.scene.add(cbox);
                 cbox.updateMatrixWorld();
+                cbox.userData.owner = that; //set reference to Item
 
                 cbox.add(obj3D);
                 obj3D.updateWorldMatrix();

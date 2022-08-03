@@ -13,6 +13,7 @@ export default class SceneryLoader {
             modelsRoute: 'models',
             nftsRoute: 'nfts',
             castShadow: false,
+            receiveShadow: false,
             sceneryPath: ''
         };
     
@@ -74,7 +75,7 @@ export default class SceneryLoader {
             gltfScene.traverse( c => {
 
                 if ( c.isMesh ) {
-                    c.castShadow = that.config.castShadow.;
+                    c.castShadow = that.config.castShadow;
                     c.receiveShadow = that.config.receiveShadow;
                     const hex = c.material.color.getHex();
                     toMerge[ hex ] = toMerge[ hex ] || [];
@@ -115,7 +116,7 @@ export default class SceneryLoader {
                     const newGeom = BufferGeometryUtils.mergeBufferGeometries( visualGeometries );
                     const newMesh = new THREE.Mesh( newGeom, new THREE.MeshStandardMaterial( { color: parseInt( hex ), shadowSide: 2 } ) );
                     newMesh.castShadow = that.config.castShadow;
-                    newMesh.receiveShadow = config.config.receiveShadow;
+                    newMesh.receiveShadow = that.config.receiveShadow;
                     newMesh.material.shadowSide = 2;
 
                     environment.add( newMesh );

@@ -35,7 +35,6 @@ import {Item} from '3d-nft-viewer';
         let that = this;
 
         itemList.forEach((itemData)=>{
-         //   console.log('itemData, ',itemData);
 
             let itemConfig;
             if(itemData.params){
@@ -58,9 +57,10 @@ import {Item} from '3d-nft-viewer';
             itemConfig.loader = this.loader;
             itemConfig.modelsRoute = this.config.modelsRoute,
             itemConfig.nftsRoute = this.config.nftsRoute;
+            itemConfig.nft = itemData.nft;
 
-         //   console.log('itemConfig, ',itemConfig);
-         //   console.log('itemData, ',itemData);
+            console.log('itemConfig, ',itemConfig);
+            console.log('itemData, ',itemData);
 
             let item = this.initItem(itemConfig)
             if(item){
@@ -88,6 +88,9 @@ import {Item} from '3d-nft-viewer';
             modelsRoute: this.config.modelsRoute,
             nftsRoute: nftsRoute
 
+        };
+        if(opts.nft){
+            itemParams.nft = opts.nft;
         };
 
         if(opts.modelUrl){
