@@ -202,8 +202,8 @@ class VRControls {
             }
         }
 
-    handleLeftController = (data) =>{
-        this.handleLeftThumbstick('left',data);
+    handleLeftController = (data, value) =>{
+        this.handleLeftThumbstick('left',data, value);
 
     }
 
@@ -212,7 +212,7 @@ class VRControls {
 
     }
 
-    handleLeftThumbstick = (hand, data) =>{
+    handleLeftThumbstick = (hand, data, value) =>{
         if(this.isOverMovementThreshold(data.axes[2])){
             if (data.axes[2] > 0) {
                 //console.log(hand+ ' stick: right ',data.axes[2]);
@@ -239,11 +239,11 @@ class VRControls {
 
         if(this.isOverMovementThreshold(data.axes[3])){
             if(data.axes[3] > 0){
-                //console.log(hand+ ' stick: back',data.axes[3]);
-                this.flyUp(data);
+                console.log(hand+ ' stick: back',data.axes[3]);
+                this.flyUp(data, value);
             } else if (data.axes[3] < 0){
                 //console.log(hand + ' stick: forward',data.axes[3]);
-                this.flyDown(data);
+                this.flyDown(data, value);
             };
         };
 
@@ -344,7 +344,7 @@ class VRControls {
     }
 
     flyUp = (data) => {
-        this.dolly.position.y -= this.flyingSpeedFactor[3] * data.axes[3];
+        this.dolly.position.y += this.flyingSpeedFactor[3] * data.axes[3];
     }
 
     moveUp = (data) => {
@@ -361,15 +361,11 @@ class VRControls {
     }
 
     rotateLeft = (data,value) => {
-        this.dolly.rotateY(THREE.MathUtils.degToRad(Math.abs(value)));        
-        this.player.rotateY(THREE.MathUtils.degToRad(Math.abs(value)));
-        this.config.rotateLeft(data);
+        this.config.rotateLeft(data,value);
     }
 
     rotateRight = (data,value) => {
-        this.dolly.rotateY(-THREE.MathUtils.degToRad(Math.abs(value)));
-        this.player.rotateY(-THREE.MathUtils.degToRad(Math.abs(value)));
-        this.config.rotateRight(data);
+        this.config.rotateRight(data,value);
     }
 
 	/*dollyMove = () =>{

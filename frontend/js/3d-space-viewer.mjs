@@ -1173,7 +1173,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                             scene:this.scene,
                                             renderer: this.renderer,
                                             camera: this.camera,
-                                            player: this.player,
+                                            playerStartPos: this.config.playerStartPos,
+                                            vrType: this.vrType,
                                             moveUp: function(){
 
                                             },
@@ -1192,11 +1193,14 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                             moveBack: function(){
                                                 bkdPressed = true;
                                             },
-                                            rotateLeft: (data)=>{
+                                            rotateLeft: (data,value)=>{
+                                                this.dolly.rotateY(THREE.MathUtils.degToRad(Math.abs(value)));        
+                                                this.player.rotateY(THREE.MathUtils.degToRad(Math.abs(value)));                                                
                                                 return;
                                             },
-                                            rotateRight: (data)=>{
-                                               
+                                            rotateRight: (data, value)=>{
+                                                this.dolly.rotateY(-THREE.MathUtils.degToRad(Math.abs(value)));
+                                                this.player.rotateY(-THREE.MathUtils.degToRad(Math.abs(value)));
                                                 return;
                                             }
                                         });
