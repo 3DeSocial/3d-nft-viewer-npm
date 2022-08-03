@@ -1682,9 +1682,7 @@ initPlayerThirdPerson = () => {
         if ( ! this.playerIsOnGround ) {
 
             deltaVector.normalize();
-            if(this.showroomLoaded){
-               this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
-            };
+           this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
 
         } else {
 
