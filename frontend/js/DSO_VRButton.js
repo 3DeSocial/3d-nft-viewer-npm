@@ -15,12 +15,14 @@ class VRButton {
         ...options
     };
 
-    let vrButtons = document.getElementsByClassName(options.btnCls);
-    if(vrButtons[0]){
-      button = vrButtons[0];
-      console.log('VRButton: ');
+
+    let vrButton = document.querySelector('div.view-vr-btn');
+    if(vrButton){
+      button = vrButton;
+      console.log('VRButton FOUND: ');
       console.log(button);
     } else {
+      console.log('VRBUTTON CREATED!!!');
       button = document.createElement( 'button' );
       button.textContent = 'View In VR';
       button.id='VRButton';
@@ -75,8 +77,9 @@ class VRButton {
         button.style.opacity = '0.5';
 
       };
-
+console.log(button);
       button.onclick = function () {
+        console.log('VRButton click');
         if ( currentSession === null ) {
           options.onStartSession()
           // WebXR's requestReferenceSpace only works if the corresponding feature
@@ -97,7 +100,7 @@ class VRButton {
         }
 
       };
-console.log('onclick event added to vr button');
+      console.log('onclick event added to vr button: ',button);
     }
 
     function disableButton() {

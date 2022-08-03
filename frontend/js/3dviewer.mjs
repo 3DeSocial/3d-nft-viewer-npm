@@ -674,7 +674,6 @@ const params = {
                 this.loadSceneryWithCollider().then(()=>{
                     this.placeModel(item).then(()=>{
                         this.removeLoader(hideElOnLoad);
-                        this.start3D();                        
                         resolve(item);                        
                     })
                 })
@@ -683,7 +682,6 @@ const params = {
                     console.log('model place by viewer');
                     this.removeLoader(hideElOnLoad);
                   //this.cam  this.fitCameraToMesh(item);
-                    this.start3D();
                     resolve(item);
 
                 })
@@ -775,7 +773,7 @@ const params = {
         this.renderer.domElement.style.display = 'inline-block';        
     }
     start3D = () =>{
-
+        console.log('start3D STARTING NOW!!');
         // start animation / controls
         //this.parentDivEl.children[0].setAttribute('style','display:none;');                    
       //  this.renderer.domElement.setAttribute('style','display:inline-block;');            
@@ -859,14 +857,15 @@ console.log('initItem (Model)', format);
         let that = this;
         
         VRButton.registerSessionGrantedListener();        
-        let vrBtnOptions = { btnCtr : 'view-vr-btn',
+        let vrBtnOptions = { btnCtr : 'div.view-vr-btn',
                              viewer: this,
-                             onStartSession: (btn)=>{
-                                console.log('start session, button');
-                                console.log(btn);
-                                that.buildDolly('walking');                                
+                             onStartSession: ()=>{
+                                console.log('start session');
+                                that.buildDolly('flying');                                
                             } }
         let vrButtonEl = VRButton.createButton(this.renderer, vrBtnOptions);
+        console.log('initVR');
+        console.log(vrButtonEl);
 
     }
 
