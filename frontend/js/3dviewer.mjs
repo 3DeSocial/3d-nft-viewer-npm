@@ -44,6 +44,7 @@ const params = {
                         maxDistance:Infinity,
                         maxPolarAngle:Infinity
                     },
+                    vrType: 'walking',
                     useOwnHandlers: false
                 };
         
@@ -70,6 +71,7 @@ const params = {
         this.loaders = new D3DLoaders({defaultLoader:this.defaultLoader});
         this.initLoaders();
         this.showroomLoaded = false;
+        this.vrType = this.config.vrType,
         environment = null;
         collider = null;
 
@@ -83,6 +85,10 @@ const params = {
         };
         this.format = format;
         this.loader = loader;
+    }
+
+    setVrType = (vrType) => {
+        this.vrType = vrType;
     }
     
     initScene = () =>{
@@ -843,6 +849,7 @@ console.log('initItem (Model)', format);
         
         VRButton.registerSessionGrantedListener();        
         let vrBtnOptions = { btnCtr : this.config.ctrClass,
+                             viewer: this,
                              onStartSession: ()=>{
                                 console.log('position camara for VR');
                                 that.buildDolly();                                
@@ -859,7 +866,7 @@ console.log('initItem (Model)', format);
                                             camera: this.camera,
                                             player: this.player,
                                             playerStartPos: this.config.playerStartPos,
-                                            vrType: 'flying',
+                                            vrType: this.vrType,
                                             moveUp: (data)=>{
                                                 return;
                                             },
