@@ -860,13 +860,13 @@ console.log('initItem (Model)', format);
         let vrBtnOptions = { btnCtr : 'div.view-vr-btn',
                              viewer: this,
                              onStartSession: ()=>{
-                                this.player.rotateY(Math.PI);
                                 console.log('start session walking');
                                 console.log('player rotation', this.player.rotation);
                                 console.log('camera.rotation', this.camera.rotation);
                                 console.log('character rotation',this.character.rotation);
-                                that.camera.rotation.copy(this.player.rotation);
                                 let vrType = this.getVrTypeFromUI();
+                                console.log('180 degrees later: ',that.camera.rotation);
+
                                 that.buildDolly(vrType);                                
                             } }
         let vrButtonEl = VRButton.createButton(this.renderer, vrBtnOptions);
@@ -926,7 +926,7 @@ console.log('initItem (Model)', format);
                                                 return;
                                             }
                                         });
-            this.dolly = this.vrControls.buildControllers();        
+            this.dolly = this.vrControls.buildControllers();
     }
 
     getFloorLevel = (meshToCheck) =>{
@@ -1111,11 +1111,10 @@ initPlayerFirstPerson = () => {
     };
 
     that.player = new THREE.Group();
-console.log('playerStartPos', playerStartPos);
     that.player.position.copy(playerStartPos);
     that.character = new THREE.Mesh(
         new RoundedBoxGeometry(  1.5, 1.5, 1.5, 10, 0.5),
-        new THREE.MeshStandardMaterial({ transparent: true, opacity: 1})
+        new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
     );
 
     that.character.geometry.translate( 0, -1, 0 );
@@ -1128,8 +1127,6 @@ console.log('playerStartPos', playerStartPos);
     that.character.updateMatrixWorld();
     that.scene.add( that.player );
     that.player.updateMatrixWorld();
-
-
 
     console.log('player at: ',this.player.position);
     console.log('camera at: ',this.player.position);
@@ -1342,32 +1339,30 @@ initPlayerThirdPerson = () => {
 
 }
 updatePlayerVR = (delta) =>{
-        if(this.showroomLoaded){
-            this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
-            this.player.position.addScaledVector( this.playerVelocity, delta );
-        };
-        
+        this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
+        this.player.position.addScaledVector( this.playerVelocity, delta );
+          
         if ( fwdPressed ) {
             //this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateZ(params.playerSpeed * delta );
+            this.player.translateZ(-params.playerSpeed * delta );
         }
 
         if ( bkdPressed ) {
 
             //this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateZ(-params.playerSpeed * delta );
+            this.player.translateZ(params.playerSpeed * delta );
         }
 
         if ( lftPressed ) {
 
          //   this.tempVector.set( - 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateX(params.playerSpeed * delta );
+            this.player.translateX(-params.playerSpeed * delta );
         }
 
         if ( rgtPressed ) {
 
            // this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateX(-params.playerSpeed * delta );
+            this.player.translateX(params.playerSpeed * delta );
         }
         this.player.updateMatrixWorld();
 
