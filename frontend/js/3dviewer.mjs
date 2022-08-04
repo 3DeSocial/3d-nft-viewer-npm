@@ -160,11 +160,11 @@ const params = {
         this.initLighting();
         if(this.config.firstPerson){
             this.initPlayerFirstPerson();
+            this.addListeners();
         } else {
             this.initPlayerThirdPerson();
         };
         this.initControls();
-        this.addListeners();
         this.containerInitialized = true;
 
     }
@@ -184,7 +184,6 @@ const params = {
         //Controls
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.restrictCameraToRoom();
-   //     this.controls.addEventListener('change', this.render);
         this.controls.update();
     }
 
@@ -707,6 +706,7 @@ const params = {
             .then((gltf)=>{
                 this.collider = that.sceneryLoader.collider;
                 that.sceneryMesh = gltf;
+                that.showroomLoaded = true;
                 resolve(gltf);
             })
         });
@@ -860,13 +860,26 @@ console.log('initItem (Model)', format);
         let vrBtnOptions = { btnCtr : 'div.view-vr-btn',
                              viewer: this,
                              onStartSession: ()=>{
+                                this.player.rotateY(Math.PI);
                                 console.log('start session walking');
-                                that.buildDolly('walking');                                
+                                console.log('player rotation', this.player.rotation);
+                                console.log('camera.rotation', this.camera.rotation);
+                                console.log('character rotation',this.character.rotation);
+                                that.camera.rotation.copy(this.player.rotation);
+                                let vrType = this.getVrTypeFromUI();
+                                that.buildDolly(vrType);                                
                             } }
         let vrButtonEl = VRButton.createButton(this.renderer, vrBtnOptions);
         console.log('initVR');
         console.log(vrButtonEl);
 
+    }
+
+    getVrTypeFromUI = () =>{
+        let vrTypeSelect = document.querySelector('select#vrType');
+        let selectedVrType = vrTypeSelect.options[vrTypeSelect.selectedIndex].value;
+        console.log('vrtype: ',selectedVrType);
+        return selectedVrType;
     }
 
     buildDolly = (vrType) =>{
@@ -1101,13 +1114,13 @@ initPlayerFirstPerson = () => {
 console.log('playerStartPos', playerStartPos);
     that.player.position.copy(playerStartPos);
     that.character = new THREE.Mesh(
-        new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
-        new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
+        new RoundedBoxGeometry(  1.5, 1.5, 1.5, 10, 0.5),
+        new THREE.MeshStandardMaterial({ transparent: true, opacity: 1})
     );
 
     that.character.geometry.translate( 0, -1, 0 );
     that.character.capsuleInfo = {
-        radius: 0.75,
+        radius: 1,
         segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
     };    
 
@@ -1115,7 +1128,7 @@ console.log('playerStartPos', playerStartPos);
     that.character.updateMatrixWorld();
     that.scene.add( that.player );
     that.player.updateMatrixWorld();
-    that.addListeners();
+
 
 
     console.log('player at: ',this.player.position);
@@ -1331,8 +1344,9 @@ initPlayerThirdPerson = () => {
 updatePlayerVR = (delta) =>{
         if(this.showroomLoaded){
             this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
+            this.player.position.addScaledVector( this.playerVelocity, delta );
         };
-      //  this.player.position.addScaledVector( this.playerVelocity, delta );
+        
         if ( fwdPressed ) {
             //this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
             this.player.translateZ(params.playerSpeed * delta );
@@ -1433,7 +1447,7 @@ updatePlayerVR = (delta) =>{
         }
         if(this.player.position){
                 
-            /* TO DO - fix this issue for avatar direction
+            /* TO DO - fix this issue for avatar direction */
             if(this.player.position.x){
                     let playerx = this.player.position.x;
                     let playery = this.player.position.y;
@@ -1441,16 +1455,15 @@ updatePlayerVR = (delta) =>{
          
                     this.dolly.position.set(playerx,(playery+0.5),playerz);
                     this.dolly.rotation.copy(this.player.rotation);
-                    this.player.rotateY(Math.PI);
-            }*/
+            }
         };
         
 
 
         // adjust the this.camerainit
-    //    this.camera.position.sub( this.controls.target );
-      //  this.controls.target.copy( this.player.position );
-        //this.camera.position.add( this.player.position );
+        this.camera.position.sub( this.controls.target );
+        this.controls.target.copy( this.player.position );
+        this.camera.position.add( this.player.position );
 
         // if the this.player has fallen too far below the level reset their position to the start
         if ( this.player.position.y < - 25 ) {
