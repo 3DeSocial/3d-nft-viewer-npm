@@ -860,8 +860,8 @@ console.log('initItem (Model)', format);
         let vrBtnOptions = { btnCtr : 'div.view-vr-btn',
                              viewer: this,
                              onStartSession: ()=>{
-                                console.log('start session');
-                                that.buildDolly('flying');                                
+                                console.log('start session walking');
+                                that.buildDolly('walking');                                
                             } }
         let vrButtonEl = VRButton.createButton(this.renderer, vrBtnOptions);
         console.log('initVR');
@@ -1433,6 +1433,7 @@ updatePlayerVR = (delta) =>{
         }
         if(this.player.position){
                 
+            /* TO DO - fix this issue for avatar direction
             if(this.player.position.x){
                     let playerx = this.player.position.x;
                     let playery = this.player.position.y;
@@ -1441,7 +1442,7 @@ updatePlayerVR = (delta) =>{
                     this.dolly.position.set(playerx,(playery+0.5),playerz);
                     this.dolly.rotation.copy(this.player.rotation);
                     this.player.rotateY(Math.PI);
-            }
+            }*/
         };
         
 
@@ -1465,8 +1466,9 @@ updatePlayerVR = (delta) =>{
 
     reset = ()=> {
         this.playerVelocity.set( 0, 0, 0 );
-        this.player.position.set( 0, 5, 5 );
-        this.camera.position.set(0, 6.5, 5);
+        this.player.position.copy(this.config.playerStartPos);
+        this.camera.position.set(this.config.playerStartPos);
+        this.camera.position.setY(this.camera.position.y+1);
        // this.camera.position.set( this.player.position );
       //  this.controls.target.copy( this.player.position );
         //this.camera.position.add( this.player.position );
