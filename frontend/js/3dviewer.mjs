@@ -661,6 +661,9 @@ const params = {
  
             if(this.config.useShowroom && !this.showroomLoaded){
                 this.loadSceneryWithCollider().then(()=>{
+                    this.controls.maxPolarAngle = Math.PI / 2;
+                    this.controls.minDistance = 1;
+                    this.controls.maxDistance = 16;
                     this.placeModel(this.loadedItem).then((item)=>{
                         this.fitCameraToMesh(item);
                         this.removeLoader(hideElOnLoad);
@@ -875,9 +878,15 @@ console.log('initItem (Model)', format);
     }
 
     getVrTypeFromUI = () =>{
-        let vrTypeSelect = document.querySelector('select#vrType');
-        let selectedVrType = vrTypeSelect.options[vrTypeSelect.selectedIndex].value;
-        console.log('vrtype: ',selectedVrType);
+        let selectedVrType = 'flying';
+        let vrTypeSelect = document.getElementById('vrType');
+        if(vrTypeSelect){
+            console.log('vrTypeSelect');
+            console.log(vrTypeSelect);
+            selectedVrType = vrTypeSelect.options[vrTypeSelect.selectedIndex].value;
+        } else {
+            console.log('no vr type selection so fly by default');
+        };
         return selectedVrType;
     }
 
@@ -1076,7 +1085,7 @@ console.log('initItem (Model)', format);
 
             }).catch(err => {
                 console.log(err);
-                console.log(response);
+                console.log(response); 
             });
         };
 
@@ -1107,7 +1116,7 @@ initPlayerFirstPerson = () => {
 
     that.character.geometry.translate( 0, -1, 0 );
     that.character.capsuleInfo = {
-        radius: 1,
+        radius: 2,
         segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
     };    
 
