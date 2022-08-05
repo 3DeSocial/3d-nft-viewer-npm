@@ -158,12 +158,6 @@ const params = {
         this.initCamera();
         this.initRenderer(parentDivEl);
         this.initLighting();
-        if(this.config.firstPerson){
-            this.initPlayerFirstPerson();
-            this.addListeners();
-        } else {
-            this.initPlayerThirdPerson();
-        };
         this.initControls();
         this.containerInitialized = true;
 
@@ -425,13 +419,12 @@ const params = {
     }
     
     render = () =>{
+        
+        const delta = Math.min( this.clock.getDelta(), 0.1 );
 
         if (this.renderer.xr.isPresenting === true) {
             this.vrControls.checkControllers();
-        } 
-
-        const delta = Math.min( this.clock.getDelta(), 0.1 );
-
+   
 
             if ( params.firstPerson ) {
 
@@ -447,7 +440,7 @@ const params = {
 
             }
 
-              if ( this.collider ) {
+             if ( this.collider ) {
                 this.collider.visible = params.displayCollider;
              //   visualizer.visible = params.displayBVH;
 
@@ -463,12 +456,9 @@ const params = {
                        this.updatePlayer( delta / physicsSteps );
                     }
 
-                }
-
-            } else {
-  //              console.log('no this.collider');
+                };
             }
-
+        };
             // TODO: limit the camera movement based on the this.collider
             // raycast in direction of camera and move it if it's further than the closest point
 
@@ -667,17 +657,18 @@ const params = {
             let container = document.getElementById(containerId);
             that.initContainer(container);
 
-            let item = this.initItemForModel(opts);
+            this.loadedItem = this.initItemForModel(opts);
  
             if(this.config.useShowroom && !this.showroomLoaded){
                 this.loadSceneryWithCollider().then(()=>{
-                    this.placeModel(item).then(()=>{
+                    this.placeModel(this.loadedItem).then((item)=>{
+                        this.fitCameraToMesh(item);
                         this.removeLoader(hideElOnLoad);
                         resolve(item);                        
                     })
                 })
             } else {
-                this.placeModel(item).then(()=>{
+                this.placeModel(this.loadedItem).then((item)=>{
                     console.log('model place by viewer');
                     this.removeLoader(hideElOnLoad);
                   //this.cam  this.fitCameraToMesh(item);
@@ -752,7 +743,10 @@ const params = {
     placeModel = (item) =>{
         let that = this;
         return new Promise((resolve,reject)=>{
-            let floorY = this.sceneryLoader.getFloorY(); // use detected floor Y
+            let floorY = 0;
+            if(this.sceneryLoader){ // TO DO - improve by using 0-half mesh height
+                floorY = this.sceneryLoader.getFloorY(); // use detected floor Y
+            };
             console.log('placeModel: floorY: ',floorY);
             let newPos = new THREE.Vector3(0,floorY,0);
             item.place(newPos).then((model,pos)=>{
@@ -773,12 +767,10 @@ const params = {
         this.renderer.domElement.style.display = 'inline-block';        
     }
     start3D = () =>{
-        console.log('start3D STARTING NOW!!');
         // start animation / controls
         //this.parentDivEl.children[0].setAttribute('style','display:none;');                    
       //  this.renderer.domElement.setAttribute('style','display:inline-block;');            
-
-      //  this.showOverlay();
+        this.addListeners();   
         this.initVR();
         this.animate();        
     }
@@ -836,7 +828,7 @@ console.log(opts);
 
 console.log('initItem (Model)', format);
 
-        this.loadedItem = new Item({
+        let item = new Item({
             three: THREE,
             loader: this.loaders.getLoaderForFormat(format),
             scene: this.scene,
@@ -848,7 +840,7 @@ console.log('initItem (Model)', format);
             nftsRoute: this.config.nftsRoute,
             format:format
         });
-        return this.loadedItem;
+        return item;
 
     }
 
@@ -860,6 +852,13 @@ console.log('initItem (Model)', format);
         let vrBtnOptions = { btnCtr : 'div.view-vr-btn',
                              viewer: this,
                              onStartSession: ()=>{
+                                if(!this.player){
+                                    if(this.config.firstPerson){
+                                        this.initPlayerFirstPerson();
+                                    } else {
+                                        this.initPlayerThirdPerson();
+                                    };
+                                };
                                 console.log('start session walking');
                                 console.log('player rotation', this.player.rotation);
                                 console.log('camera.rotation', this.camera.rotation);
@@ -967,29 +966,18 @@ console.log('initItem (Model)', format);
             this.restrictCameraToRoom();
         } else {
             this.loadSceneryWithCollider().then(()=>{
-                    this.placeModel(item).then(()=>{
-                        this.removeLoader(hideElOnLoad);
-                        this.fitCameraToMesh(item);
-                        resolve(item);                        
-                    })
-                })
-                .then(()=>{
-                    console.log('adding newly loaded sceneryMesh');
-                    that.scene.add(that.sceneryMesh);
-                    that.sceneryMesh.updateMatrixWorld();
-                    loadedItem.mesh.updateMatrixWorld();
-                    if(this.loadedItem){
-                        let floorY = this.sceneryLoader.getFloorY();
-                        console.log('addScenery: floorY: ',floorY);
-                        let newPos = new THREE.Vector3(0,floorY,0);
-            
-                        this.loadedItem.moveTo(newPos);
-                        that.resizeCanvas();                    
-                        this.restrictCameraToRoom();                        
-                    } else{
-                        console.log('no laoded item')
-                    }
-                })
+                if(this.loadedItem){
+                    let floorY = this.sceneryLoader.getFloorY();
+                    console.log('addScenery: floorY: ',floorY);
+                    let newPos = new THREE.Vector3(0,floorY,0);
+        
+                    this.loadedItem.moveTo(newPos);
+                    that.resizeCanvas();                    
+                    this.restrictCameraToRoom();                        
+                } else{
+                    console.log('no laoded item')
+                }
+            });
         }
         
     }
