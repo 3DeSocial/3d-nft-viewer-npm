@@ -116,7 +116,7 @@ export default class Lighting {
         this.scene.add(frontLight);
         this.dLighting['front'] = frontLight;
 
-        const backLight = new THREE.DirectionalLight(0xffffff, 1);
+        const backLight = new THREE.DirectionalLight(0xffffff, 0.1);
         this.configureLight(backLight);
 
         backLight.position.set(0, 6, 15);
