@@ -40,7 +40,7 @@ class D3DAssetCreator extends D3DNFTViewer {
         this.addClearSceneListener();
         this.addScreenShotListener();
         this.addGifShotListener();
-        this.addVideoListener();        
+        this.addVideoListener({startBtnId:'start-record'});        
         this.addMeshLoadedListener();
     }   
 

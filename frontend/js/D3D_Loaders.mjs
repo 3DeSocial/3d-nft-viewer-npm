@@ -146,6 +146,7 @@ class D3DLoaders {
             case 'ttf': return new TTFLoader(this.loadingManager); break;
             case 'tilt': return new TiltLoader(this.loadingManager); break;
             case 'vox': return new VOXLoader(this.loadingManager); break;
+            case 'vrm': return new GLTFLoader(this.loadingManager); break;            
             case 'vrml': case 'wrl': return new VRMLLoader(this.loadingManager); break;
             case 'vtk': return new VTKLoader(this.loadingManager); break;
             case 'xyz': return new XYZLoader(this.loadingManager); break;
