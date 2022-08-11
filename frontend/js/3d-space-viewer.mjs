@@ -48,7 +48,8 @@ const params = {
                         maxPolarAngle:Infinity
                     },
                     vrType: 'walking',
-                    useOwnHandlers: true
+                    useOwnHandlers: true,
+                    lookAtStartPos: {x:0, y:4, z:-10}
                 };
         
         this.config = {
@@ -100,18 +101,10 @@ const params = {
             }
             this.initCameraPlayer();
             this.initControls();
-            that.initVR();
-            this.resizeCanvas();
-   
+            //that.initVR();
+            this.resizeCanvas();   
             this.controls.update();
             this.renderer.render(this.scene,this.camera);
-            console.log(this.camera.rotation);
-            console.log('starting controls target',this.controls.target);
-            this.controls.target.y = 1.5;
-            this.controls.target.z = -1;
-            console.log(this.camera.position);
-            console.log(this.camera.rotation);
-            this.controls.update();
             this.animate();
         });
     }
@@ -226,14 +219,14 @@ const params = {
       //w  this.camera.position.set( 10, 10, - 10 );
         this.camera.far = 1000;
         this.camera.updateProjectionMatrix();        
+
     }
 
     initCamera = () =>{
- console.log('initCamera an look at floor');
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/600, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
-        this.camera.rotation.setX(0);
+//        this.camera.rotation.setX(0);
 
 
     }
@@ -241,8 +234,9 @@ const params = {
     initControls = () =>{
         //Controls
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-       // this.restrictCameraToRoom();
-      //  this.controls.addEventListener('change', this.render);
+        /*let cameraStartPos = new THREE.Vector3(this.config.cameraStartPos.x, this.config.cameraStartPos.y, this.config.cameraStartPos.z);
+        this.camera.position.copy(cameraStartPos);
+        this.camera.updateProjectionMatrix();        */
         this.controls.update();
     }
 
@@ -431,6 +425,10 @@ const params = {
     updateOverlayPos = (pos) =>{
         let posText = 'x: '+pos.x+' y: '+pos.y+' z: '+pos.z;
         document.querySelector('span#pos-display').innerHTML = posText;
+        console.log('camera status');
+        console.log(this.camera);
+        console.log('controls status');
+        console.log(this.controls)        
     }
     raycast = ( e ) => {
         var isRightMB;
@@ -733,11 +731,12 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         const delta = Math.min( this.clock.getDelta(), 0.1 );
 
 
+
             if ( params.firstPerson ) {
 
-                this.controls.maxPolarAngle = Math.PI;
-                this.controls.minDistance = 1e-4;
-                this.controls.maxDistance = 1e-4;
+            this.controls.maxPolarAngle = Infinity;
+            this.controls.minDistance = 1e-4;
+            this.controls.maxDistance = 1e-4;
 
             } else {
 
@@ -1168,36 +1167,67 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let that = this;
         
         VRButton.registerSessionGrantedListener();        
-        
-        let vrButtonEl = VRButton.createButton(this.renderer, {btnCtr: 'space-ctr'});
-console.log('this.vrType: ',this.vrType);
-        this.vrControls = new VRControls({  vrType: this.vrType,
-                                            scene:this.scene,
+        let vrBtnOptions = { btnCtr : 'div.view-vr-btn',
+                             viewer: this,
+                             onStartSession: ()=>{
+                                if(!this.player){
+                                    if(this.config.firstPerson){
+                                        this.initPlayerFirstPerson();
+                                    } else {
+                                        this.initPlayerThirdPerson();
+                                    };
+                                };
+                                console.log('start session walking');
+                                console.log('player rotation', this.player.rotation);
+                                console.log('camera.rotation', this.camera.rotation);
+                                console.log('character rotation',this.character.rotation);
+                                let vrType = this.getVrTypeFromUI();
+                                console.log('180 degrees later: ',that.camera.rotation);
+
+                                that.buildDolly(vrType);                                
+                            } }
+        let vrButtonEl = VRButton.createButton(this.renderer, vrBtnOptions);
+        console.log('initVR');
+        console.log(vrButtonEl);
+
+    }
+    
+    buildDolly = (vrType) =>{
+        if(vrType){
+            this.setVrType(vrType);
+        };
+        console.log('buildDolly for ',this.vrType);        
+        this.vrControls = new VRControls({  scene:this.scene,
                                             renderer: this.renderer,
                                             camera: this.camera,
+                                            player: this.player,
                                             playerStartPos: this.config.playerStartPos,
                                             vrType: this.vrType,
-                                            moveUp: function(){
-
+                                            moveUp: (data)=>{
+                                                return;
                                             },
-                                            moveDown: function(){
-
+                                            moveDown:(data)=>{
+                                                return;
                                             },
-                                            moveLeft: function(){
+                                            moveLeft:(data)=>{
                                                 lftPressed = true;
                                             },
-                                            moveRight: function(){
+                                            moveRight:(data)=>{
                                                 rgtPressed = true;
+                                                return;
                                             },
-                                            moveForward: function(){
+                                            moveForward:(data)=>{
                                                 fwdPressed = true;
+                                                return;
                                             },
-                                            moveBack: function(){
+                                            moveBack:(data)=>{
                                                 bkdPressed = true;
+                                                return;
+
                                             },
-                                            rotateLeft: (data,value)=>{
-                                                this.dolly.rotateY(THREE.MathUtils.degToRad(Math.abs(value)));        
-                                                this.player.rotateY(THREE.MathUtils.degToRad(Math.abs(value)));                                                
+                                            rotateLeft: (data, value)=>{
+                                                this.dolly.rotateY(THREE.MathUtils.degToRad(Math.abs(value)));
+                                                this.player.rotateY(THREE.MathUtils.degToRad(Math.abs(value)));
                                                 return;
                                             },
                                             rotateRight: (data, value)=>{
@@ -1208,7 +1238,7 @@ console.log('this.vrType: ',this.vrType);
                                         });
             this.dolly = this.vrControls.buildControllers();
     }
-    
+
     addScenery = () =>{
         let that = this;
         if(this.sceneryMesh){
@@ -1356,7 +1386,6 @@ initPlayerFirstPerson = () => {
     };
 
     that.player = new THREE.Group();
-console.log('playerStartPos', playerStartPos);
     that.player.position.copy(playerStartPos);
     that.character = new THREE.Mesh(
         new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
@@ -1374,11 +1403,6 @@ console.log('playerStartPos', playerStartPos);
     that.scene.add( that.player );
     that.player.updateMatrixWorld();
     that.addListeners();
-
-
-    console.log('player at: ',this.player.position);
-    console.log('camera at: ',this.player.position);
-
 }
 
 initPlayerThirdPerson = () => {
