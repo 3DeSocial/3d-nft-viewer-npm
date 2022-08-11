@@ -82,30 +82,32 @@ const params = {
     }
 
     initSpace = (options) =>{
-        console.log('initSpace: ',options);
-        let that = this;
-        this.raycaster = new THREE.Raycaster();
-        this.mouse = { x : 0, y : 0 };
-        this.getContainer(this.config.el);
-        this.initScene();
-        this.initInventory(options.items);        
-        this.initRenderer(this.config.el);
-        this.initSkybox();
-        this.initLighting();        
-        this.loadScenery().then(()=>{
-            that.placeAssets();
-            if(that.config.firstPerson){
-                that.initPlayerFirstPerson();
-            } else {
-                that.initPlayerThirdPerson();
-            }
-            this.initCameraPlayer();
-            this.initControls();
-            //that.initVR();
-            this.resizeCanvas();   
-            this.controls.update();
-            this.renderer.render(this.scene,this.camera);
-            this.animate();
+        return new Promise((resolve, reject) => {
+            let that = this;
+            this.raycaster = new THREE.Raycaster();
+            this.mouse = { x : 0, y : 0 };
+            this.getContainer(this.config.el);
+            this.initScene();
+            this.initInventory(options.items);        
+            this.initRenderer(this.config.el);
+            this.initSkybox();
+            this.initLighting();        
+            this.loadScenery().then(()=>{
+                that.placeAssets();
+                if(that.config.firstPerson){
+                    that.initPlayerFirstPerson();
+                } else {
+                    that.initPlayerThirdPerson();
+                }
+                this.initCameraPlayer();
+                this.initControls();
+                that.initVR();
+                this.resizeCanvas();   
+                this.controls.update();
+                this.renderer.render(this.scene,this.camera);
+                this.animate();
+                resolve('SCENE CREATED');
+            });
         });
     }
 

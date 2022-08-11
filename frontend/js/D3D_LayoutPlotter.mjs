@@ -37,6 +37,7 @@ export default class LayoutPlotter  {
     plotCircle = (items, center, radius) =>{
         //first position
         let noItems = items.length;
+        let positions = [];
         for (var i = noItems - 1; i >= 0; i--) {
             let angle = ((2*Math.PI) / noItems) * i;
             let xCoord = Math.sin(angle) * radius;
@@ -50,10 +51,14 @@ export default class LayoutPlotter  {
             plotPoint.setY(floor);
                 let target = center;
                 target.y = floor;
+                //console.log('items[i]',items[i]);
+                positions.push({nftHex:items[i].config.nftPostHashHex, plotPoint, rotation: target});
                 this.plotItem(items[i],plotPoint).then((model)=>{
                     model.lookAt(target);
                 })
         }
+
+        this.circlePositions = positions;
     }
 
     plotRow = (items, startPos, endPos) =>{
