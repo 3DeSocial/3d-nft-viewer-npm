@@ -8,6 +8,7 @@ export default class Item {
             modelsRoute: 'models',
             nftsRoute: 'nfts',
             castShadow: true,
+            isImage: false,
             // override the actions array to set click handlers
             actions: {'click': function(e){ 
                 console.log('clicked');
@@ -33,12 +34,13 @@ console.log(this.config);
         this.modelUrl = this.config.modelUrl;
         this.mixer = null;
         this.action = null;
-        this.mesh = null;
+        this.mesh = this.config.mesh
         this.animRunning = false;
         this.animations = null;
         this.actions = this.config.actions;
         this.initItemEvents();
         this.isItem = true;
+        this.isImage = this.config.isImage;
 
 
     }
@@ -100,30 +102,39 @@ console.log(this.config);
         let that = this;
         if(typeof(pos)==='undefined'){
             throw('Cant place at undefined position');
-        }        
+        };
         return new Promise((resolve,reject)=>{
-            this.fetchModelUrl()
-            .then((modelUrl)=>{
-                if(!that.retrievedModelUrlIsValid(modelUrl)){
-                    reject('Invalid ModelUrl in ExtraData: '+modelUrl);
-                    return;
-                } else {
-                    //console.log('validated modelUrl: ',modelUrl);
-                    that.modelUrl = modelUrl;
-                    that.placeModel(pos)
-                    .then((model)=>{
-                        that.mesh = model;
-                        let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
-                        document.body.dispatchEvent(loadedEvent);
-                        document.body.dispatchEvent(this.meshPlacedEvent);
-                        resolve(model, pos);
-                    })
-                };
-            }).catch(err =>{
-                console.log(this.config);
-                console.log(err);
-            })
+            if(this.mesh){
+                this.mesh.position.copy(pos);
+                this.scene.add(this.mesh);
+                this.fixYCoord(this.mesh, pos);
+
+                resolve(this.mesh, pos);
+            } else{
+                this.fetchModelUrl()
+                .then((modelUrl)=>{
+                    if(!that.retrievedModelUrlIsValid(modelUrl)){
+                        reject('Invalid ModelUrl in ExtraData: '+modelUrl);
+                        return;
+                    } else {
+                        //console.log('validated modelUrl: ',modelUrl);
+                        that.modelUrl = modelUrl;
+                        that.placeModel(pos)
+                        .then((model)=>{
+                            that.mesh = model;
+                            let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
+                            document.body.dispatchEvent(loadedEvent);
+                            document.body.dispatchEvent(this.meshPlacedEvent);
+                            resolve(model, pos);
+                        })
+                    };
+                }).catch(err =>{
+                    console.log(this.config);
+                    console.log(err);
+                })
+            }
         });
+
     }
 
     retrievedModelUrlIsValid = (modelUrl) =>{
@@ -215,7 +226,6 @@ console.log(this.config);
         let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
         return new Promise((resolve,reject)=>{
 
-
             let meshBounds = null;
 
             that.loader.load(modelUrl, (root)=> {
@@ -283,17 +293,8 @@ console.log(this.config);
                 cbox.add(obj3D);
                 obj3D.updateWorldMatrix();
 
-                var helper = new THREE.BoxHelper(obj3D, 0x00ff00);
-                helper.update();
 
-                let lowestVertex = this.getBoxHelperVertices(helper);
-                lowestVertex.applyMatrix4(helper.matrixWorld);
-
-                if(posVector.y !== lowestVertex.y){
-                    let yOffset = lowestVertex.y-posVector.y;
-                    //console.log('yOffset: ',yOffset);
-                    obj3D.position.setY(obj3D.position.y - yOffset);
-                };
+                this.fixYCoord(obj3D, posVector);
 
                 resolve(obj3D);
             },
@@ -462,6 +463,20 @@ onErrorCallback = (e)=> {
     configureImportedObject = (object3d) =>{
         object3d.castShadow = false;
         return object3d;
+    }
+
+    fixYCoord = (obj3D, posVector) =>{
+        var helper = new THREE.BoxHelper(obj3D, 0x00ff00);
+            helper.update();
+
+        let lowestVertex = this.getBoxHelperVertices(helper);
+        lowestVertex.applyMatrix4(helper.matrixWorld);
+
+        if(posVector.y !== lowestVertex.y){
+            let yOffset = lowestVertex.y-posVector.y;
+            //console.log('yOffset: ',yOffset);
+            obj3D.position.setY(obj3D.position.y - yOffset);
+        };
     }
 
     startAnimation = (animIndex, loopType) =>{

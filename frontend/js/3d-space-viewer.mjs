@@ -88,25 +88,24 @@ const params = {
             this.mouse = { x : 0, y : 0 };
             this.getContainer(this.config.el);
             this.initScene();
-            this.initInventory(options.items);        
+            this.initInventory(options);        
             this.initRenderer(this.config.el);
             this.initSkybox();
             this.initLighting();        
             this.loadScenery().then(()=>{
+                this.initCameraPlayer();                
                 that.placeAssets();
                 if(that.config.firstPerson){
                     that.initPlayerFirstPerson();
                 } else {
                     that.initPlayerThirdPerson();
                 }
-                this.initCameraPlayer();
                 this.initControls();
                 that.initVR();
                 this.resizeCanvas();   
-                this.controls.update();
                 this.renderer.render(this.scene,this.camera);
                 this.animate();
-                resolve('SCENE CREATED');
+                this.controls.update();                
             });
         });
     }
@@ -1018,7 +1017,15 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }
 
 
-    initInventory = (items) =>{
+    initInventory = (options) =>{
+        let items = [];
+        if(options.items){
+            items = items.concat(options.items);
+        };        
+        if(options.images){
+            items = items.concat(options.images);
+        };
+        console.log('initInventory: ',items);
         this.inventory = new D3DInventory({ three: THREE,
                                             items: items,
                                             scene: this.scene,
@@ -1146,7 +1153,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
             this.layoutPlotter = new LayoutPlotter({items:itemsToPlace, 
                                                 floorY: this.floorY,
-                                                sceneryLoader: this.sceneryLoader});
+                                                sceneryLoader: this.sceneryLoader,
+                                                camera: this.camera});
 
 
             this.layoutPlotter.plotFromArray(itemsToPlace);
@@ -1158,7 +1166,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
         this.layoutPlotter = new LayoutPlotter({items:itemsToPlace, 
                                                 floorY: this.floorY,
-                                                sceneryLoader: this.sceneryLoader});
+                                                sceneryLoader: this.sceneryLoader,
+                                                camera: this.camera});
         let radius = 12; 
         let center = new THREE.Vector3(0,0,0);
         this.layoutPlotter.plotCircle(itemsToPlace, center,radius);        

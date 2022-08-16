@@ -47,7 +47,8 @@ const params = {
                         maxPolarAngle:Infinity
                     },
                     vrType: 'walking',
-                    useOwnHandlers: false
+                    useOwnHandlers: false,
+                    images: [] //holds user image for adding to scene
                 };
         
         this.config = {
@@ -73,6 +74,7 @@ const params = {
         this.loaders = new D3DLoaders({defaultLoader:this.defaultLoader});
         this.initLoaders();
         this.vrType = this.config.vrType,
+        this.images = this.config.images
         environment = null;
         collider = null;
 

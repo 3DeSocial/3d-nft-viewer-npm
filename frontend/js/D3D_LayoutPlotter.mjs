@@ -25,7 +25,7 @@ export default class LayoutPlotter  {
             let plotPoint = new THREE.Vector3(item.config.position.x,item.config.position.y,item.config.position.z);
             let floor = this.config.sceneryLoader.findFloorAt(plotPoint, 2, -1);
             this.plotItem(item,plotPoint).then((model)=>{
-                model.rotation.x = item.config.rotation.x;
+                model.rotation.x = 0;
                 model.rotation.y = item.config.rotation.y;
                 model.rotation.z = item.config.rotation.z;
 
@@ -52,9 +52,24 @@ export default class LayoutPlotter  {
                 let target = center;
                 target.y = floor;
                 //console.log('items[i]',items[i]);
-                positions.push({nftHex:items[i].config.nftPostHashHex, plotPoint, rotation: target});
-                this.plotItem(items[i],plotPoint).then((model)=>{
-                    model.lookAt(target);
+                positions.push({nftHex:items[i].config.nftPostHashHex, plotPoint, target: target});
+                let thisItem = items[i];
+                this.plotItem(thisItem,plotPoint).then((item)=>{
+                    console.log(item);
+                    console.log('plotted position Y',item.mesh.position.y);
+                    let lookAtTarget = center.clone();
+
+                    if(item.isImage){
+                        lookAtTarget.y = item.mesh.position.y;
+                        console.log('2d cloned: ',lookAtTarget);                     
+                    } else {
+                        lookAtTarget.y = floor;
+                        console.log('floor cloned: ',lookAtTarget);                     
+                        console.log(item.mesh);
+                    }
+
+                   item.mesh.lookAt(lookAtTarget);
+
                 })
         }
 
@@ -69,7 +84,7 @@ export default class LayoutPlotter  {
         return new Promise(( resolve, reject ) => {
             item.place(plotPoint).then((model, pos)=>{
 
-                resolve(model);
+                resolve(item);
             });
         });      
     }
