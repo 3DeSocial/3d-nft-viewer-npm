@@ -57,7 +57,14 @@ import {Item} from '3d-nft-viewer';
             itemConfig.loader = this.loader;
             itemConfig.modelsRoute = this.config.modelsRoute,
             itemConfig.nftsRoute = this.config.nftsRoute;
-            itemConfig.nft = itemData.nft;
+
+            if(itemData.nft){
+                itemConfig.nft = itemData.nft;               
+            } else {
+                console.warn('!!!! NO NFT in ItemList!!!');
+                console.log(itemData);           
+            };
+
             if(itemData.isImage){
                 itemConfig.isImage = itemData.isImage;
             };
@@ -95,6 +102,9 @@ import {Item} from '3d-nft-viewer';
 
         if(opts.nft){
             itemParams.nft = opts.nft;
+        } else {
+            console.warn('!!!! NO NFT!!!2');
+            console.log(opts);
         };
 
         if(opts.modelUrl){

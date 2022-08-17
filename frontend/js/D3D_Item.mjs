@@ -106,6 +106,7 @@ console.log(this.config);
         return new Promise((resolve,reject)=>{
             if(this.mesh){
                 this.mesh.position.copy(pos);
+                this.scaleToFitScene(this.mesh, pos)
                 this.scene.add(this.mesh);
                 this.fixYCoord(this.mesh, pos);
 
@@ -221,12 +222,8 @@ console.log(this.config);
     fetchModel = async(modelUrl, posVector) =>{
         
         let that = this;
-        //console.log('posVector:',posVector);
-        let boxMesh = this.addContainerBoxToScene(posVector);
-        let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
-        return new Promise((resolve,reject)=>{
 
-            let meshBounds = null;
+        return new Promise((resolve,reject)=>{
 
             that.loader.load(modelUrl, (root)=> {
                 that.root = root;
@@ -243,57 +240,7 @@ console.log(this.config);
                     return false;
                 };
               
-                 meshBounds = new THREE.Box3().setFromObject( obj3D );
-                
-                 // Calculate side lengths of scene (cube) bounding box
-                let lengthSceneBounds = {
-                  x: Math.abs(sceneBounds.max.x - sceneBounds.min.x),
-                  y: Math.abs(sceneBounds.max.y - sceneBounds.min.y),
-                  z: Math.abs(sceneBounds.max.z - sceneBounds.min.z),
-                };   
-
-                // Calculate side lengths of glb-model bounding box
-                let lengthMeshBounds = {
-                  x: Math.abs(meshBounds.max.x - meshBounds.min.x),
-                  y: Math.abs(meshBounds.max.y - meshBounds.min.y),
-                  z: Math.abs(meshBounds.max.z - meshBounds.min.z),
-                };
-
-                // Calculate length ratios
-                let lengthRatios = [
-                  (lengthSceneBounds.x / lengthMeshBounds.x),
-                  (lengthSceneBounds.y / lengthMeshBounds.y),
-                  (lengthSceneBounds.z / lengthMeshBounds.z),
-                ];
-
-                let minRatio = Math.min(...lengthRatios);
-                // Use smallest ratio to scale the model
-                if(obj3D.scale.set){
-                    obj3D.scale.set(minRatio, minRatio, minRatio);
-                    obj3D.updateWorldMatrix();
-                };
-                let newMeshBounds = new THREE.Box3().setFromObject( obj3D );
-
-                let newLengthMeshBounds = {
-                  x: Math.abs(newMeshBounds.max.x - newMeshBounds.min.x),
-                  y: Math.abs(newMeshBounds.max.y - newMeshBounds.min.y),
-                  z: Math.abs(newMeshBounds.max.z - newMeshBounds.min.z),
-                };
-                let cbox = that.createContainerBoxForModel(newLengthMeshBounds.x, newLengthMeshBounds.y, newLengthMeshBounds.z, posVector);
-                cbox.position.copy(posVector);
-
-                // center of box is position so move up by 50% of newLengthMeshBounds.y
-                let yOffset = newLengthMeshBounds.y/2;
-                cbox.position.setY(cbox.position.y+yOffset);
-
-                that.scene.add(cbox);
-                cbox.updateMatrixWorld();
-                cbox.userData.owner = that; //set reference to Item
-
-                cbox.add(obj3D);
-                obj3D.updateWorldMatrix();
-
-
+                this.scaleToFitScene(obj3D, posVector);
                 this.fixYCoord(obj3D, posVector);
 
                 resolve(obj3D);
@@ -310,6 +257,69 @@ onErrorCallback = (e)=> {
     console.log('loading error');
     console.log(e);
 }
+
+scaleToFitScene = (obj3D, posVector) =>{
+
+    let that = this;
+
+        //console.log('posVector:',posVector);
+        let boxMesh = this.createContainerBox(posVector);
+        let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
+
+        let meshBounds = null    
+            meshBounds = new THREE.Box3().setFromObject( obj3D );
+
+        // Calculate side lengths of scene (cube) bounding box
+        let lengthSceneBounds = {
+            x: Math.abs(sceneBounds.max.x - sceneBounds.min.x),
+            y: Math.abs(sceneBounds.max.y - sceneBounds.min.y),
+            z: Math.abs(sceneBounds.max.z - sceneBounds.min.z),
+        };   
+
+        // Calculate side lengths of glb-model bounding box
+        let lengthMeshBounds = {
+            x: Math.abs(meshBounds.max.x - meshBounds.min.x),
+            y: Math.abs(meshBounds.max.y - meshBounds.min.y),
+            z: Math.abs(meshBounds.max.z - meshBounds.min.z),
+        };
+
+        // Calculate length ratios
+        let lengthRatios = [
+            (lengthSceneBounds.x / lengthMeshBounds.x),
+            (lengthSceneBounds.y / lengthMeshBounds.y),
+            (lengthSceneBounds.z / lengthMeshBounds.z),
+        ];
+
+        let minRatio = Math.min(...lengthRatios);
+        
+        // Use smallest ratio to scale the model
+        if(obj3D.scale.set){
+            obj3D.scale.set(minRatio, minRatio, minRatio);
+            obj3D.updateWorldMatrix();
+        };
+        
+        let newMeshBounds = new THREE.Box3().setFromObject( obj3D );
+
+        let newLengthMeshBounds = {
+            x: Math.abs(newMeshBounds.max.x - newMeshBounds.min.x),
+            y: Math.abs(newMeshBounds.max.y - newMeshBounds.min.y),
+            z: Math.abs(newMeshBounds.max.z - newMeshBounds.min.z),
+        };
+        
+        let cbox = that.createContainerBoxForModel(newLengthMeshBounds.x, newLengthMeshBounds.y, newLengthMeshBounds.z, posVector);
+        cbox.position.copy(posVector);
+
+        // center of box is position so move up by 50% of newLengthMeshBounds.y
+        let yOffset = newLengthMeshBounds.y/2;
+        cbox.position.setY(cbox.position.y+yOffset);
+        cbox.add(obj3D);
+        obj3D.updateWorldMatrix();
+
+        that.scene.add(cbox);
+        cbox.userData.owner = this; //set reference to Item
+        obj3D.userData.owner = this;
+        cbox.updateMatrixWorld();    
+    }
 
     getBoxHelperVertices = (boxHelper) =>{
         var points = [];
@@ -367,7 +377,7 @@ onErrorCallback = (e)=> {
 
     createContainerBoxForModel = (width, height, depth, posVector) =>{
         const geometry = new THREE.BoxGeometry(width, height, depth);
-        
+        console.log('createContainerBoxForModel: ', width, height, depth);
         if(!this.config.color){
             this.config.color = 0xff3333;
         };
@@ -382,7 +392,7 @@ onErrorCallback = (e)=> {
         return boxMesh;
     }
 
-    addContainerBoxToScene = (posVector) =>{
+    createContainerBox = (posVector) =>{
         const geometry = new THREE.BoxGeometry(this.config.width, this.config.height,this.config.depth);
         
         if(!this.config.color){

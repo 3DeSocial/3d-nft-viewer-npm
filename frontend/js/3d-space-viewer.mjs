@@ -79,12 +79,14 @@ const params = {
         this.collider = null;
         this.moveTo = false;
         this.vrType = this.config.vrType;
+
+        this.raycaster = new THREE.Raycaster();
+
     }
 
     initSpace = (options) =>{
         return new Promise((resolve, reject) => {
             let that = this;
-            this.raycaster = new THREE.Raycaster();
             this.mouse = { x : 0, y : 0 };
             this.getContainer(this.config.el);
             this.initScene();
@@ -400,6 +402,8 @@ const params = {
                 console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
                 console.log('body: ',action.selection.object.userData.owner.config.nft.body);
 
+            } else {
+                console.log('no owner: ',action.selection.object);
             }
             break;
         }
@@ -408,7 +412,7 @@ const params = {
     checkMouseDbl = (e) =>{
         
         let action = this.raycast(e);
-        this.updateOverlayPos(action.selectedPoint);
+       // this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
             case 1:
             console.log('lmb');
@@ -489,7 +493,6 @@ const params = {
             dest.setY(-1000); //raycast downwards from selected point.
         let dir = new THREE.Vector3();
         dir.subVectors( dest, origin ).normalize();
-        this.raycaster = new THREE.Raycaster();
         this.raycaster.set(origin,dir);
         var intersects = this.raycaster.intersectObjects( this.scene.children, true );
         let hit;
