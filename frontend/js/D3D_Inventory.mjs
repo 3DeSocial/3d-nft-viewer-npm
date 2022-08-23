@@ -8,7 +8,9 @@ import {Item} from '3d-nft-viewer';
     constructor(config) {
 
         let defaults = {
-                    items: []
+                    items: [],
+                    items2d: [],
+                    items3d: []
                 };
         
         this.config = {
@@ -27,12 +29,21 @@ import {Item} from '3d-nft-viewer';
     }
 
     load = () =>{
-        this.initItems(this.config.items);
+        let nfts2d = this.initItems(this.config.items2d);
+        let nfts3d = this.initItems(this.config.items3d);
+        let allItems = [];
+            allItems = allItems.concat(nfts2d);
+            allItems = allItems.concat(nfts3d);
+        this.items = allItems;
+        this.items2d = nfts2d;
+        this.items3d = nfts3d
+        
     }
 
     initItems = (itemList)=>{
 
         let that = this;
+        let items = [];
 
         itemList.forEach((itemData)=>{
 
@@ -67,10 +78,11 @@ import {Item} from '3d-nft-viewer';
             };
             let item = this.initItem(itemConfig)
             if(item){
-                that.items.push(item);
+                items.push(item);
             }
 
-        })
+        });
+        return items;
 
     }
     
@@ -156,9 +168,16 @@ import {Item} from '3d-nft-viewer';
                 return false;
             };              
         };
-      console.log(itemParams);
         return new Item(itemParams);
 
+    }
+
+    has2d = () =>{
+        return (this.config.items2d.length>0);
+    }
+
+    has3d = () =>{
+        return (this.config.items3d.length>0);
     }
 
     getActiveItem = () =>{
@@ -167,6 +186,14 @@ import {Item} from '3d-nft-viewer';
 
     getItems = () =>{
         return this.items;
+    }
+
+    getItems2d = () =>{
+        return this.items2d;
+    }
+
+    getItems3d = () =>{
+        return this.items3d;
     }
 
     getItemByHash = (nftPostHashHex) =>{

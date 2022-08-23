@@ -17,19 +17,16 @@ export default class LayoutPlotter  {
 
     plotFromArray = (items) =>{
         let noItems = items.length;
-        console.log('plotFromArray: ',items);
+       // console.log('plotFromArray: ',items);
 
         for (var i = noItems - 1; i >= 0; i--) {
             let item = items[i];
-            console.log(item);
             let plotPoint = new THREE.Vector3(item.config.position.x,item.config.position.y,item.config.position.z);
             let floor = this.config.sceneryLoader.findFloorAt(plotPoint, 2, -1);
             this.plotItem(item,plotPoint).then((model)=>{
                 model.rotation.x = 0;
                 model.rotation.y = item.config.rotation.y;
                 model.rotation.z = item.config.rotation.z;
-
-                console.log('plotted');
             })
         }
     }
@@ -55,17 +52,14 @@ export default class LayoutPlotter  {
                 positions.push({nftHex:items[i].config.nftPostHashHex, plotPoint, target: target});
                 let thisItem = items[i];
                 this.plotItem(thisItem,plotPoint).then((item)=>{
-                    console.log(item);
-                    console.log('plotted position Y',item.mesh.position.y);
+                   // console.log(item);
+                   // console.log('plotted position Y',item.mesh.position.y);
                     let lookAtTarget = center.clone();
 
                     if(item.isImage){
                         lookAtTarget.y = item.mesh.position.y;
-                        console.log('2d cloned: ',lookAtTarget);                     
                     } else {
                         lookAtTarget.y = floor;
-                        console.log('floor cloned: ',lookAtTarget);                     
-                        console.log(item.mesh);
                     }
 
                    item.mesh.lookAt(lookAtTarget);

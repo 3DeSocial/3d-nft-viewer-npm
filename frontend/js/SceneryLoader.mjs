@@ -9,6 +9,7 @@ export default class SceneryLoader {
     constructor(config){
 
         let defaults = {
+            hasCircleLayout: false,
             modelUrl: '',
             modelsRoute: 'models',
             nftsRoute: 'nfts',
@@ -21,6 +22,8 @@ export default class SceneryLoader {
             ...defaults,
             ...config
         };
+
+        console.log(config);
         
         this.loader = this.config.loader;
         this.scene = this.config.scene;
@@ -31,11 +34,15 @@ export default class SceneryLoader {
 
     }
 
+    hasCircleLayout = () =>{
+        return this.config.hasCircleLayout;
+    }
 	loadScenery = () =>{
         let that = this;
 
         return new Promise((resolve, reject) => {
             this.gltfLoader = new GLTFLoader();
+            console.log('loadScenery: ',this.config.sceneryPath);
             this.gltfLoader.load(this.config.sceneryPath, (res) => {
                 console.log('gltf loaded');
             	that.scaleScene(res.scene);

@@ -23,8 +23,7 @@ export default class Item {
             ...defaults,
             ...config
         };
-        console.log('init item');
-console.log(this.config);
+
         THREE = this.config.three;
         this.loader = this.config.loader;
         this.scene = this.config.scene;
@@ -318,7 +317,6 @@ scaleToFitScene = (obj3D, posVector) =>{
         obj3D.updateWorldMatrix();
 
         that.scene.add(cbox);
-        console.log('setting owner to ',this);
         cbox.userData.owner = this; //set reference to Item
         obj3D.userData.owner = this;
         cbox.updateMatrixWorld();    

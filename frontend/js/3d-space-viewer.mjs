@@ -111,16 +111,19 @@ const params = {
 
     loadScenery = () =>{
         let that = this;
-        console.log('loadScenery: ');
-        console.log(this.config);
         return new Promise((resolve,reject)=>{
-            that.sceneryLoader = new SceneryLoader({
-                sceneScale: that.config.sceneScale,
-                sceneryPath: that.config.sceneryPath,
-                scene: that.scene,
-                castShadow: false,
-                receiveShadow:false
-            });
+
+            let sceneryOptions = {
+                ...{scene : that.scene,
+                    castShadow: false,
+                receiveShadow : false},
+                ...that.config.sceneryOptions
+            };
+
+            console.log('create sceneryLoader for: ');
+            console.log(that.config.sceneryOptions);
+
+            that.sceneryLoader = new SceneryLoader(sceneryOptions);
             that.sceneryLoader.loadScenery()
             .then((gltf)=>{
                 this.collider = that.sceneryLoader.collider;
@@ -253,6 +256,8 @@ const params = {
     }
 
     initRenderer = (el) =>{
+
+        console.log('CREATE RENDERER HERE!');
         //Create a WebGLRenderer
         this.renderer = new THREE.WebGLRenderer({
                 antialias: true,
@@ -294,8 +299,7 @@ const params = {
         let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
         let skyBoxNo = this.getRandomInt(0,4);
         let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
-        console.log('skyBox');
-        console.log(skyBox);
+
         this.scene.background = skyBox;
     }
 
@@ -421,6 +425,7 @@ const params = {
             commentCount: nft.commentCount,
             nftzUrl: 'https://nftz.me/nft/'+nft.postHashHex
         }
+    }
 
     convertNanosToDeso = (nanos, d) =>{
         return (nanos / 1e9).toFixed(d)        
@@ -1042,22 +1047,16 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
 
     initInventory = (options) =>{
-        let items = [];
-        if(options.items){
-            items = items.concat(options.items);
-        };        
-        if(options.images){
-            items = items.concat(options.images);
-        };
-        console.log('initInventory: ',items);
+
         this.inventory = new D3DInventory({ three: THREE,
-                                            items: items,
+                                            items3d: options.items,
+                                            items2d: options.images,
                                             scene: this.scene,
                                             loader: this.loader,
                                             loaders: this.loaders,
-                                            width: 3,
-                                            depth: 3,
-                                            height: 3,
+                                            width: this.config.sceneryOptions.scaleModelToWidth,
+                                            depth: this.config.sceneryOptions.scaleModelToDepth,
+                                            height: this.config.sceneryOptions.scaleModelToHeight,
                                             modelsRoute: this.config.modelsRoute,
                                             nftsRoute: this.config.nftsRoute
                                         });
@@ -1165,8 +1164,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }    
 
     placeAssets = () =>{
-        if(this.sceneInventory){
-            console.log('placing assetst');
+        if(this.sceneInventory){    
             this.placeSceneAssets();
         };
         this.placeUserAssets();
@@ -1186,7 +1184,47 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }
 
     placeUserAssets = () =>{
-        let itemsToPlace = this.inventory.getItems();
+        if(this.inventory.has2d()){
+            console.log('plotting 2D')
+            //create outer circle layut for 2D
+            if(this.sceneryLoader.hasCircleLayout()){
+                console.log('HAS circle layout');
+                this.plotCircle2d();
+            } else{
+                console.log('no circle layout');
+            }
+        };
+
+        if(this.inventory.has3d()){
+            console.log('plotting 3D')
+
+            //create outer circle layut for 2D
+             if(this.sceneryLoader.hasCircleLayout()){
+                console.log('HAS circle layout');
+                this.plotCircle3d();
+            } else{
+                console.log('no circle layout');
+            }
+        } else {
+            console.log('user has no 3D');
+        }  
+       
+    }
+
+    plotCircle2d = () => {
+        let itemsToPlace = this.inventory.getItems2d();
+        this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
+        this.layoutPlotter = new LayoutPlotter({items:itemsToPlace, 
+                                                floorY: this.floorY,
+                                                sceneryLoader: this.sceneryLoader,
+                                                camera: this.camera});
+            let radius = this.sceneryLoader.config.layouts.circle.radius;
+            let center = new THREE.Vector3(0,0,0);
+            this.layoutPlotter.plotCircle(itemsToPlace, center,radius);
+    }
+
+    plotCircle3d  = () => {
+        let itemsToPlace = this.inventory.getItems3d();
         this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
         this.layoutPlotter = new LayoutPlotter({items:itemsToPlace, 
                                                 floorY: this.floorY,
@@ -1194,8 +1232,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                 camera: this.camera});
         let radius = 12; 
         let center = new THREE.Vector3(0,0,0);
-        this.layoutPlotter.plotCircle(itemsToPlace, center,radius);        
-    }
+        this.layoutPlotter.plotCircle(itemsToPlace, center,radius);         
+    }    
 
     initVR = () =>{
 
