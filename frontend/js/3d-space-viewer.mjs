@@ -18,7 +18,6 @@ let fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = fal
 let nextPos = new THREE.Vector3();
 
 const params = {
-
     firstPerson: true,
     displayCollider: false,
     displayBVH: false,
@@ -26,9 +25,7 @@ const params = {
     gravity: - 30,
     playerSpeed: 10,
     physicsSteps: 20,
-    useShowroom: true
-
-};
+    useShowroom: true};
 
  export default class D3DSpaceViewer {
     
@@ -398,15 +395,35 @@ const params = {
             break;
             default:
             if(action.selection.object.userData.owner){
-                console.log(action.selection.object.userData.owner.config);
-                console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
-                console.log('body: ',action.selection.object.userData.owner.config.nft.body);
+                let nftDisplayData = this.parseNFTDisplayData(action.selection.object.userData.owner.config.nft);
+                this.displayInHUD(nftDisplayData);
+                //console.log(action.selection.object.userData.owner.config.nft);
+                //console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
+                //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
 
             } else {
                 console.log('no owner: ',action.selection.object);
             }
             break;
         }
+    }
+
+    parseNFTDisplayData = (nft) =>{
+
+        let data = {
+            maxPrice: this.convertNanosToDeso(nft.maxprice,4),
+            isBuyNow: nft.isBuyNow,
+            likeCount: nft.likeCount,
+            created:nft.created,
+            diamondCount:nft.diamondCount,
+            buyNowPrice: this.convertNanosToDeso(nft.buyNowPrice,4),
+            copies: nft.copies,
+            commentCount: nft.commentCount,
+            nftzUrl: 'https://nftz.me/nft/'+nft.postHashHex
+        }
+
+    convertNanosToDeso = (nanos, d) =>{
+        return (nanos / 1e9).toFixed(d)        
     }
 
     checkMouseDbl = (e) =>{
@@ -425,6 +442,10 @@ const params = {
             console.log('default',action);
             break;
         }
+    }
+
+    displayInHUD = (data) =>{
+        console.log(data);
     }
 
     updateOverlayPos = (pos) =>{
@@ -584,11 +605,11 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         })        
     }
 
-    getRandomInt (min, max) {
+    getRandomInt = (min, max) => {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    loadSkyBox(boxname){
+    loadSkyBox = (boxname) => {
         if(this.config.skyboxPath===''){
             return false;
         };
@@ -782,7 +803,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     
 
-     fitCameraToMesh(loadedItem) {
+     fitCameraToMesh=(loadedItem)=>{
 
         console.log('fitCameraToMesh: ', loadedItem);
         const box = new THREE.Box3().setFromObject(loadedItem.mesh);
@@ -1769,5 +1790,6 @@ initPlayerThirdPerson = () => {
    //     this.controls.update();
 
     }    
-}
+};
+
 export {D3DSpaceViewer}

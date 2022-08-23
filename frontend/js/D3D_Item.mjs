@@ -234,6 +234,8 @@ console.log(this.config);
                 } else {
                     loadedItem = root;
                 };
+                that.mesh = loadedItem;
+                that.mesh.userData.owner = this;
                 let obj3D = this.convertToObj3D(loadedItem);
                 if(obj3D===false){
                     console.log('could not convert item for scene');
@@ -316,6 +318,7 @@ scaleToFitScene = (obj3D, posVector) =>{
         obj3D.updateWorldMatrix();
 
         that.scene.add(cbox);
+        console.log('setting owner to ',this);
         cbox.userData.owner = this; //set reference to Item
         obj3D.userData.owner = this;
         cbox.updateMatrixWorld();    

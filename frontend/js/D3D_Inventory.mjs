@@ -55,14 +55,11 @@ import {Item} from '3d-nft-viewer';
             itemConfig.three = THREE;
             itemConfig.scene = this.scene;
             itemConfig.loader = this.loader;
-            itemConfig.modelsRoute = this.config.modelsRoute,
+            itemConfig.modelsRoute = this.config.modelsRoute;
             itemConfig.nftsRoute = this.config.nftsRoute;
 
             if(itemData.nft){
                 itemConfig.nft = itemData.nft;               
-            } else {
-                console.warn('!!!! NO NFT in ItemList!!!');
-                console.log(itemData);           
             };
 
             if(itemData.isImage){
@@ -93,9 +90,8 @@ import {Item} from '3d-nft-viewer';
             depth: this.config.depth,
             nftPostHashHex: nftPostHashHex,
             modelsRoute: this.config.modelsRoute,
-            nftsRoute: nftsRoute,
+            nftsRoute: this.config.nftsRoute,
             isImage: false
-
         };
 
 
