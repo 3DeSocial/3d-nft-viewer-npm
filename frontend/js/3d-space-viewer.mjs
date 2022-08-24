@@ -76,7 +76,7 @@ const params = {
         this.collider = null;
         this.moveTo = false;
         this.vrType = this.config.vrType;
-
+        this.camPos = new THREE.Vector3();
         this.raycaster = new THREE.Raycaster();
 
     }
@@ -390,17 +390,20 @@ const params = {
             case 2:
             console.log('rmb');
             if(action.isOnWall && (!action.isOnFloor)){
-                console.log('place 2d nft ',action.selectedPoint);
+                //console.log('place 2d nft ',action.selectedPoint);
             };
             if(action.isOnFloor){
-                console.log('place 3d nft ',action.selectedPoint);
-                this.placeActiveItem(action.selectedPoint);
+               // console.log('place 3d nft ',action.selectedPoint);
+                //this.placeActiveItem(action.selectedPoint);
             };
             break;
             default:
             if(action.selection.object.userData.owner){
-                let nftDisplayData = this.parseNFTDisplayData(action.selection.object.userData.owner.config.nft);
-                this.displayInHUD(nftDisplayData);
+                if(action.selection.object.userData.owner.config.nft){
+                    let nftDisplayData = this.parseNFTDisplayData(action.selection.object.userData.owner.config.nft);
+                    this.displayInHUD(nftDisplayData);            
+                }
+
                 //console.log(action.selection.object.userData.owner.config.nft);
                 //console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
                 //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
@@ -413,8 +416,10 @@ const params = {
     }
 
     parseNFTDisplayData = (nft) =>{
-
+console.log(nft);
         let data = {
+            creator: nft.profileEntryResponse.username,
+            description: nft.body,
             maxPrice: this.convertNanosToDeso(nft.maxprice,4),
             isBuyNow: nft.isBuyNow,
             likeCount: nft.likeCount,
@@ -425,6 +430,8 @@ const params = {
             commentCount: nft.commentCount,
             nftzUrl: 'https://nftz.me/nft/'+nft.postHashHex
         }
+
+        return data;
     }
 
     convertNanosToDeso = (nanos, d) =>{
@@ -451,6 +458,9 @@ const params = {
 
     displayInHUD = (data) =>{
         console.log(data);
+        let msg = 'Creator '+data.creator+' '+data.description;
+        console.log('msg: ',msg);
+        this.updateOverlayMsg(msg);
     }
 
     updateOverlayPos = (pos) =>{
@@ -461,6 +471,12 @@ const params = {
         console.log('controls status');
         console.log(this.controls)        
     }
+
+    updateOverlayMsg = (msg) =>{
+        document.querySelector('span#pos-display').innerHTML = msg;
+     
+    }
+
     raycast = ( e ) => {
         var isRightMB;
         let isOnFloor = false;
@@ -1184,40 +1200,81 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }
 
     placeUserAssets = () =>{
-        if(this.inventory.has2d()){
+        if(this.inventory.has2d()&&(this.inventory.has3d())){
             console.log('plotting 2D')
             //create outer circle layut for 2D
             if(this.sceneryLoader.hasCircleLayout()){
                 console.log('HAS circle layout');
-                this.plotCircle2d();
+                this.plotCircles();
             } else{
                 console.log('no circle layout');
             }
         };
 
-        if(this.inventory.has3d()){
+     /*   if(this.inventory.has3d()){
             console.log('plotting 3D')
 
             //create outer circle layut for 2D
              if(this.sceneryLoader.hasCircleLayout()){
                 console.log('HAS circle layout');
-                this.plotCircle3d();
+             //   this.plotCircle3d();
             } else{
                 console.log('no circle layout');
             }
         } else {
             console.log('user has no 3D');
-        }  
+        }  */
        
     }
 
-    plotCircle2d = () => {
+    plotCircles = () =>{
+        let that = this;
         let itemsToPlace = this.inventory.getItems2d();
         this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
-        this.layoutPlotter = new LayoutPlotter({items:itemsToPlace, 
-                                                floorY: this.floorY,
+        this.layoutPlotter = new LayoutPlotter({floorY: this.floorY,
                                                 sceneryLoader: this.sceneryLoader,
-                                                camera: this.camera});
+                                                camera: this.camera});    
+        
+        let center = this.sceneryLoader.config.center;
+        const objectComparisonCallback = (arrayItemA, arrayItemB) => {
+              if (arrayItemA.maxNFTs > arrayItemB.maxNFTs) {
+                return -1
+              }
+
+              if (arrayItemA.maxNFTs < arrayItemB.maxNFTs) {
+                return 1
+              }
+              return 0;
+        }
+
+        let circles2d =this.sceneryLoader.circles.sort(objectComparisonCallback);
+        let circle3d = circles2d.pop(); //use inner most for 3d
+
+            circles2d.forEach((circle, idx)=>{
+
+                let items = itemsToPlace.splice(0,circle.maxNFTs);
+                console.log('plottin ',items.length,' in circle: ',idx);
+                console.log(items);
+                that.layoutPlotter.plotCircle(items,center,circle.radius);
+                console.log('plotted circle: ',idx);
+
+            });
+
+
+        itemsToPlace = this.inventory.getItems3d();
+        let items = itemsToPlace.splice(0,circle3d.maxNFTs);
+            console.log('plottin ',items.length,' in circle: 3d');
+            console.log(items);
+            that.layoutPlotter.plotCircle(items,center,circle3d.radius);
+
+    }
+
+    plotCircle2d = (itemsToPlace) => {
+        if(!itemsToPlace){
+            itemsToPlace = this.inventory.getItems2d();
+        };
+        this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
+        
             let radius = this.sceneryLoader.config.layouts.circle.radius;
             let center = new THREE.Vector3(0,0,0);
             this.layoutPlotter.plotCircle(itemsToPlace, center,radius);
@@ -1537,7 +1594,7 @@ initPlayerThirdPerson = () => {
        // this.player.rotation.y = angleToCamera;  
        nextPos.copy( this.player.position);
        nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
-        this.player.lookAt(nextPos);
+        //this.player.lookAt(nextPos);
         this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
     }
 
@@ -1546,7 +1603,7 @@ initPlayerThirdPerson = () => {
         this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
        nextPos.copy( this.player.position);
        nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
-        this.player.lookAt(nextPos);      
+        //this.player.lookAt(nextPos);      
         this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
 
     }
@@ -1556,7 +1613,7 @@ initPlayerThirdPerson = () => {
         this.tempVector.set( - 1, 0, 0 ).applyAxisAngle(  this.upVector, angle );
        nextPos.copy( this.player.position);
        nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
-        this.player.lookAt(nextPos);
+        //this.player.lookAt(nextPos);
         this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
 
     }
@@ -1566,7 +1623,7 @@ initPlayerThirdPerson = () => {
         this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
        nextPos.copy( this.player.position);
        nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
-        this.player.lookAt(nextPos);
+        //this.player.lookAt(nextPos);
         this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
 
     }
@@ -1655,8 +1712,12 @@ initPlayerThirdPerson = () => {
 
     // adjust the camera
     this.camera.position.sub( this.controls.target );
-    this.controls.target.copy( this.player.position );
-    this.camera.position.add( this.player.position );
+    let playerx = this.player.position.x;
+    let playery = this.player.position.y+0.15;
+    let playerz = this.player.position.z;
+    //this.camPos.set(playerx,(playery),playerz);
+    this.controls.target.set(playerx,(playery),playerz);
+    this.camera.position.add( this.controls.target );
     if (this.renderer.xr.isPresenting) {
         if(this.player.position){
             

@@ -15,7 +15,8 @@ export default class SceneryLoader {
             nftsRoute: 'nfts',
             castShadow: false,
             receiveShadow: false,
-            sceneryPath: ''
+            sceneryPath: '',
+            center: new THREE.Vector3(0,0,0)
         };
     
         this.config = {
@@ -30,12 +31,26 @@ export default class SceneryLoader {
         this.height = this.config.height;
         this.width = this.config.width;
         this.depth = this.config.depth;
+        this.loadFloorPlan();
+
 
 
     }
 
     hasCircleLayout = () =>{
-        return this.config.hasCircleLayout;
+        if(!this.config.floorPlan){
+            return false;
+        }
+        let circles =  this.config.floorPlan.filter(plan => plan.type == 'circle');
+        return (circles.length>1);
+    }
+
+    loadFloorPlan = () =>{
+
+        this.circles =  this.config.floorPlan.filter(plan => plan.type == 'circle');
+        this.centerPiece = this.config.floorPlan.filter(plan => plan.type == 'centerPiece');
+        this.rows = this.config.floorPlan.filter(plan => plan.type == 'rows');
+
     }
 	loadScenery = () =>{
         let that = this;

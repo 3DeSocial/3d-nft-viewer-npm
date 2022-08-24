@@ -300,7 +300,7 @@ scaleToFitScene = (obj3D, posVector) =>{
         };
         
         let newMeshBounds = new THREE.Box3().setFromObject( obj3D );
-
+        //console.log('newMeshBounds',newMeshBounds);
         let newLengthMeshBounds = {
             x: Math.abs(newMeshBounds.max.x - newMeshBounds.min.x),
             y: Math.abs(newMeshBounds.max.y - newMeshBounds.min.y),
@@ -316,9 +316,14 @@ scaleToFitScene = (obj3D, posVector) =>{
         cbox.add(obj3D);
         obj3D.updateWorldMatrix();
 
-        that.scene.add(cbox);
-        cbox.userData.owner = this; //set reference to Item
-        obj3D.userData.owner = this;
+        if(this.isImage){
+            obj3D.userData.owner = this;
+            that.scene.add(obj3D);
+        } else {
+            cbox.userData.owner = this; //set reference to Item
+            that.scene.add(cbox);    
+        };
+       
         cbox.updateMatrixWorld();    
     }
 
@@ -378,7 +383,7 @@ scaleToFitScene = (obj3D, posVector) =>{
 
     createContainerBoxForModel = (width, height, depth, posVector) =>{
         const geometry = new THREE.BoxGeometry(width, height, depth);
-        console.log('createContainerBoxForModel: ', width, height, depth);
+      //  console.log('createContainerBoxForModel: ', width, height, depth);
         if(!this.config.color){
             this.config.color = 0xff3333;
         };
@@ -481,6 +486,11 @@ scaleToFitScene = (obj3D, posVector) =>{
             helper.update();
 
         let lowestVertex = this.getBoxHelperVertices(helper);
+        if(!lowestVertex){
+            console.log('no lowestVertex in');
+            console.log(obj3D);
+            return false;
+        };
         lowestVertex.applyMatrix4(helper.matrixWorld);
 
         if(posVector.y !== lowestVertex.y){
