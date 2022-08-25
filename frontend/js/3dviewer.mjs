@@ -868,7 +868,7 @@ console.log('initItem (Model)', format);
                                 console.log('player rotation', this.player.rotation);
                                 console.log('camera.rotation', this.camera.rotation);
                                 console.log('character rotation',this.character.rotation);
-                                let vrType = this.getVrTypeFromUI();
+                                let vrType = that.getVrTypeFromUI();
                                 console.log('180 degrees later: ',that.camera.rotation);
 
                                 that.buildDolly(vrType);                                

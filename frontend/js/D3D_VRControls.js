@@ -25,7 +25,7 @@ class VRControls {
         this.cameraVector = new THREE.Vector3();
         this.dolly = null;
         this.prevGamePads = new Map();
-        this.speedFactor = [0.4, 0.4, 0.4, 0.4];
+        this.speedFactor = [0.8, 0.8, 0.8, 0.8];
         this.flyingSpeedFactor = [0.1, 0.1, 0.1, 0.1];
         this.controllers = [];
     	this.renderer = this.config.renderer;

@@ -100,7 +100,9 @@ const params = {
                     that.initPlayerThirdPerson();
                 }
                 this.initControls();
-                that.initVR();
+                if ( 'xr' in navigator ) {
+                    that.initVR();
+                }
                 this.resizeCanvas();   
                 this.renderer.render(this.scene,this.camera);
                 this.animate();
@@ -428,7 +430,8 @@ console.log(nft);
             buyNowPrice: this.convertNanosToDeso(nft.buyNowPrice,4),
             copies: nft.copies,
             commentCount: nft.commentCount,
-            nftzUrl: 'https://nftz.me/nft/'+nft.postHashHex
+            nftzUrl: 'https://nftz.me/nft/'+nft.postHashHex,
+            postHashHex: +nft.postHashHex
         }
 
         return data;
@@ -1255,7 +1258,11 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                 let items = itemsToPlace.splice(0,circle.maxNFTs);
                 console.log('plottin ',items.length,' in circle: ',idx);
                 console.log(items);
-                that.layoutPlotter.plotCircle(items,center,circle.radius);
+                if((idx % 2)){
+                    that.layoutPlotter.plotCircle(items,center,circle.radius);
+                } else {
+                    that.layoutPlotter.plotCircleOffsetHalf(items,center,circle.radius);
+                };
                 console.log('plotted circle: ',idx);
 
             });
@@ -1311,7 +1318,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                 console.log('player rotation', this.player.rotation);
                                 console.log('camera.rotation', this.camera.rotation);
                                 console.log('character rotation',this.character.rotation);
-                                let vrType = this.getVrTypeFromUI();
+                                let vrType = that.getVrTypeFromUI();
                                 console.log('180 degrees later: ',that.camera.rotation);
 
                                 that.buildDolly(vrType);                                
@@ -1322,6 +1329,24 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }
     
+    getVrTypeFromUI = () =>{
+        let selectedVrType = 'walking';
+        let vrTypeSelect = document.getElementById('vrType');
+        if(vrTypeSelect){
+            console.log('vrTypeSelect');
+            console.log(vrTypeSelect);
+            selectedVrType = vrTypeSelect.options[vrTypeSelect.selectedIndex].value;
+        } else {
+            console.log('no vr type selection so fly by default');
+        };
+        return selectedVrType;
+    }
+
+    setVrType = (vrType) => {
+        console.log('vrType: ',vrType);
+        this.vrType = vrType;
+    }
+
     buildDolly = (vrType) =>{
         if(vrType){
             this.setVrType(vrType);
@@ -1747,31 +1772,31 @@ initPlayerThirdPerson = () => {
 
 
  updatePlayerVR = (delta) =>{
-        if(this.showroomLoaded){
-            this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
-        };
+        this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
+        let speedFactor = params.playerSpeed * delta *10;
+
       //  this.player.position.addScaledVector( this.playerVelocity, delta );
         if ( fwdPressed ) {
             //this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateZ(params.playerSpeed * delta );
+            this.player.translateZ(speedFactor );
         }
 
         if ( bkdPressed ) {
 
             //this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateZ(-params.playerSpeed * delta );
+            this.player.translateZ(-speedFactor );
         }
 
         if ( lftPressed ) {
 
          //   this.tempVector.set( - 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateX(params.playerSpeed * delta );
+            this.player.translateX(speedFactor);
         }
 
         if ( rgtPressed ) {
 
            // this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
-            this.player.translateX(-params.playerSpeed * delta );
+            this.player.translateX(-speedFactor );
         }
         this.player.updateMatrixWorld();
 

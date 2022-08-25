@@ -105,7 +105,7 @@ console.log(button);
 
     function disableButton() {
 
-      button.style.display = '';
+      button.style.display = 'none';
 
       button.style.cursor = 'auto';
       button.style.left = 'calc(50% - 75px)';
