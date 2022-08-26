@@ -1236,7 +1236,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
         this.layoutPlotter = new LayoutPlotter({floorY: this.floorY,
                                                 sceneryLoader: this.sceneryLoader,
-                                                camera: this.camera});    
+                                                camera: this.camera,
+                                                scene: this.scene});    
         
         let center = this.sceneryLoader.config.center;
         const objectComparisonCallback = (arrayItemA, arrayItemB) => {
@@ -1272,7 +1273,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let items = itemsToPlace.splice(0,circle3d.maxNFTs);
             console.log('plottin ',items.length,' in circle: 3d');
             console.log(items);
-            that.layoutPlotter.plotCircle(items,center,circle3d.radius);
+            this.plotCircle3d(center,circle3d.radius);
 
     }
 
@@ -1287,16 +1288,18 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             this.layoutPlotter.plotCircle(itemsToPlace, center,radius);
     }
 
-    plotCircle3d  = () => {
+    plotCircle3d  = (center,radius) => {
         let itemsToPlace = this.inventory.getItems3d();
         this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
         this.layoutPlotter = new LayoutPlotter({items:itemsToPlace, 
                                                 floorY: this.floorY,
                                                 sceneryLoader: this.sceneryLoader,
-                                                camera: this.camera});
-        let radius = 12; 
-        let center = new THREE.Vector3(0,0,0);
+                                                scene:this.scene,
+                                                camera:this.camera});
+        console.log('plot circle 3d');
+        console.log(itemsToPlace, center,radius);
         this.layoutPlotter.plotCircle(itemsToPlace, center,radius);         
+       // this.layoutPlotter.plotCircleWithDivders(itemsToPlace, center,radius,true);         
     }    
 
     initVR = () =>{
