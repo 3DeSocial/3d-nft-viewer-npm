@@ -1448,7 +1448,7 @@ initPlayerFirstPerson = () => {
 
     that.character.geometry.translate( 0, -1, 0 );
     that.character.capsuleInfo = {
-        radius: 0.75,
+        radius: 0.5,
         segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
     };    
 
@@ -1485,7 +1485,7 @@ initPlayerThirdPerson = () => {
 
     that.character.geometry.translate( 0, -1, 0 );
     that.character.capsuleInfo = {
-        radius: 0.75,
+        radius: 0.5,
         segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
     };    
     item.place(newPos).then((model,pos)=>{
@@ -1637,7 +1637,7 @@ initPlayerThirdPerson = () => {
     // adjust the camera
     this.camera.position.sub( this.controls.target );
     let playerx = this.player.position.x;
-    let playery = this.player.position.y+0.15;
+    let playery = this.player.position.y+0.1;
     let playerz = this.player.position.z;
     //this.camPos.set(playerx,(playery),playerz);
     this.controls.target.set(playerx,(playery),playerz);
