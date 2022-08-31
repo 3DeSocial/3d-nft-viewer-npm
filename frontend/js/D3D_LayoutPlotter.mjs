@@ -5,7 +5,9 @@ export default class LayoutPlotter  {
     constructor(config) {
         let defaults = {
                  items: [],
-                 floorY: 0
+                 floorY: 0,
+                 inventory: null,
+                 sceneryLoader: null
                 };
         
         this.config = {
@@ -14,24 +16,168 @@ export default class LayoutPlotter  {
         };      
 
         this.plotPoint = new THREE.Vector3();
+        this.inventory = this.config.inventory;
+        this.sceneryLoader = this.config.sceneryLoader;
+    }
+
+
+
+    placeSceneAssets = () =>{
+        let itemsToPlace = this.sceneInventory.getItems();
+            this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
+            this.layoutPlotter = new LayoutPlotter({items:itemsToPlace, 
+                                                floorY: this.floorY,
+                                                sceneryLoader: this.sceneryLoader,
+                                                camera: this.camera});
+
+
+            this.layoutPlotter.plotFromArray(itemsToPlace);
 
     }
 
-    plotFromArray = (items, positions) =>{
-        let noItems = items.length;
-       // console.log('plotFromArray: ',items);
+    placeUserAssets = () =>{
+        if(this.inventory.has2d()&&(this.inventory.has3d())){
+            console.log('plotting 2D')
+            //create outer circle layut for 2D
+            if(this.sceneryLoader.hasCircleLayout()){
+                console.log('HAS circle layout');
+                this.plotCircles();
+            };
 
-        for (var i = noItems - 1; i >= 0; i--) {
-            let item = items[i];
-            let pos = positions[i];
-            let plotPoint = new THREE.Vector3(pos.x,pos.y,pos.z);
-            let floor = this.config.sceneryLoader.findFloorAt(plotPoint, 2, -1);
-            this.plotItem(item,plotPoint).then((model)=>{
-                model.rotation.x = 0;
-                model.rotation.y = item.config.rotation.y;
-                model.rotation.z = item.config.rotation.z;
-            })
+           
         }
+
+        if(this.sceneryLoader.hasListLayout()){
+            console.log('list layout detected');
+            this.plotList2d();
+        } else {
+            console.log('no list layout');
+        };
+     /*   if(this.inventory.has3d()){
+            console.log('plotting 3D')
+
+            //create outer circle layut for 2D
+             if(this.sceneryLoader.hasCircleLayout()){
+                console.log('HAS circle layout');
+             //   this.plotCircle3d();
+            } else{
+                console.log('no circle layout');
+            }
+        } else {
+            console.log('user has no 3D');
+        }  */
+       
+    }
+
+    plotCircles = () =>{
+        let that = this;
+        let itemsToPlace = this.inventory.getItems2d();
+        
+        let center = this.sceneryLoader.config.center;
+        const objectComparisonCallback = (arrayItemA, arrayItemB) => {
+              if (arrayItemA.maxItems > arrayItemB.maxItems) {
+                return -1
+              }
+
+              if (arrayItemA.maxItems < arrayItemB.maxItems) {
+                return 1
+              }
+              return 0;
+        }
+
+        let circles2d =this.sceneryLoader.circles.sort(objectComparisonCallback);
+        let circle3d = circles2d.pop(); //use inner most for 3d
+
+            circles2d.forEach((circle, idx)=>{
+
+                let items = itemsToPlace.splice(0,circle.maxItems);
+                console.log('plottin ',items.length,' in circle: ',idx);
+                console.log(items);
+                if((idx % 2)){
+                    that.plotCircle(items,center,circle.radius);
+                } else {
+                    that.plotCircleOffsetHalf(items,center,circle.radius);
+                };
+                console.log('plotted circle: ',idx);
+
+            });
+
+
+        itemsToPlace = this.inventory.getItems3d();
+        let items = itemsToPlace.splice(0,circle3d.maxItems);
+            this.plotCircle3d(center,circle3d.radius);
+
+        let centerPiece = this.inventory.getItemWithFilter((item)=>{
+            if(item.config.layout){
+                return (item.config.layout==='centerPiece');
+            } else {
+                return false;
+            }
+        });
+
+        if(centerPiece[0]){
+            centerPiece[0].place(center);
+        }
+
+    }
+
+    plotCircle2d = (itemsToPlace) => {
+        if(!itemsToPlace){
+            itemsToPlace = this.inventory.getItems2d();
+        };
+        this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
+        
+            let radius = this.sceneryLoader.config.layouts.circle.radius;
+            let center = new THREE.Vector3(0,0,0);
+            this.layoutPlotter.plotCircle(itemsToPlace, center,radius);
+    }
+
+    plotCircle3d  = (center,radius) => {
+    
+
+        console.log('plot circle 3d');
+        console.log(itemsToPlace, center,radius);
+        this.plotCircle(itemsToPlace, center,radius);         
+       // this.layoutPlotter.plotCircleWithDivders(itemsToPlace, center,radius,true);         
+    }    
+
+    plotList2d = () =>{
+        this.sceneryLoader.loadFloorPlan(); 
+        let lists = this.sceneryLoader.lists;
+        let items = this.inventory.getItems2d();
+        console.log('plotList2d: ',lists.length);
+        lists.forEach((list,idx)=>{
+            console.log(list);
+            let noPos = list.spots.length-1;
+            console.log('noPos: ',noPos);
+            for (var i = 0; i < noPos; i++) {
+                let item = items[i];
+                let pos = list.spots[i].pos
+                let rot = list.spots.rot;
+                let dims = list.spots.dims;
+                items[i].pos = pos;
+                let plotPoint = new THREE.Vector3(pos.x,pos.y,pos.z);
+                let floor = this.config.sceneryLoader.findFloorAt(plotPoint, 2, -1);
+               /* if(pos.maxHeight){
+                    item.setDimensions(dims.width, dims.height, 0.1);
+                    item.scaleToFitScene(item.mesh, pos);
+                };*/
+
+                item.spot = list.spots[i];
+                item.spot.idx = i;
+                this.plotItem(item,plotPoint).then((item)=>{
+                    if(item.spot.rot){
+                        item.mesh.rotateY(item.spot.rot.y);
+                        console.log('rotated: ',item.config.nftPostHash);
+                    } else{
+                        console.log('cant rotate no rotation')
+                    }        
+                /*    model.rotation.x = 0;
+                    model.rotation.y = 0;
+                    model.rotation.z = 0;*/
+                })
+            }
+        });
     }
 
     plotCircle = (items, center, radius) =>{

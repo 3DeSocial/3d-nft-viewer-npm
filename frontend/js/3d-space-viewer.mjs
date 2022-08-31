@@ -134,6 +134,16 @@ const params = {
             })
         });
     }
+
+    placeAssets = () =>{
+        this.layoutPlotter = new LayoutPlotter({ sceneryLoader: this.sceneryLoader,
+                                                 camera: this.camera,
+                                                 scene: this.scene,
+                                                 inventory: this.inventory,
+                                                 sceneryLoader: this.sceneryLoader});    
+        this.layoutPlotter.placeUserAssets();
+    }
+
     setFormat = (format) =>{
         console.log('setFormat: ',format);
         let loader = this.loaders.getLoaderForFormat(format);
@@ -400,9 +410,15 @@ const params = {
             };
             break;
             default:
+            console.log(action.selection.object);
             if(action.selection.object.userData.owner){
-                if(action.selection.object.userData.owner.config.nft){
-                    let nftDisplayData = this.parseNFTDisplayData(action.selection.object.userData.owner.config.nft);
+                let item = action.selection.object.userData.owner;
+                if(item.config.nft){
+                    let nftDisplayData = this.parseNFTDisplayData(item.config.nft);
+                    if(item.spot){
+                        nftDisplayData.spot = item.spot;
+                    };
+                    console.log('spot index: ',item.spot.idx);
                     this.displayInHUD(nftDisplayData);            
                 }
 
@@ -418,7 +434,7 @@ const params = {
     }
 
     parseNFTDisplayData = (nft) =>{
-console.log(nft);
+
         let data = {
             creator: nft.profileEntryResponse.username,
             description: nft.body,
@@ -469,10 +485,10 @@ console.log(nft);
     updateOverlayPos = (pos) =>{
         let posText = 'x: '+pos.x+' y: '+pos.y+' z: '+pos.z;
         document.querySelector('span#pos-display').innerHTML = posText;
-        console.log('camera status');
+     /*   console.log('camera status');
         console.log(this.camera);
         console.log('controls status');
-        console.log(this.controls)        
+        console.log(this.controls)        */
     }
 
     updateOverlayMsg = (msg) =>{
@@ -1182,126 +1198,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }    
 
-    placeAssets = () =>{
-        if(this.sceneInventory){    
-            this.placeSceneAssets();
-        };
-        this.placeUserAssets();
-    }
-
-    placeSceneAssets = () =>{
-        let itemsToPlace = this.sceneInventory.getItems();
-            this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
-            this.layoutPlotter = new LayoutPlotter({items:itemsToPlace, 
-                                                floorY: this.floorY,
-                                                sceneryLoader: this.sceneryLoader,
-                                                camera: this.camera});
-
-
-            this.layoutPlotter.plotFromArray(itemsToPlace);
-
-    }
-
-    placeUserAssets = () =>{
-        if(this.inventory.has2d()&&(this.inventory.has3d())){
-            console.log('plotting 2D')
-            //create outer circle layut for 2D
-            if(this.sceneryLoader.hasCircleLayout()){
-                console.log('HAS circle layout');
-                this.plotCircles();
-            } else{
-                console.log('no circle layout');
-            }
-        };
-
-     /*   if(this.inventory.has3d()){
-            console.log('plotting 3D')
-
-            //create outer circle layut for 2D
-             if(this.sceneryLoader.hasCircleLayout()){
-                console.log('HAS circle layout');
-             //   this.plotCircle3d();
-            } else{
-                console.log('no circle layout');
-            }
-        } else {
-            console.log('user has no 3D');
-        }  */
-       
-    }
-
-    plotCircles = () =>{
-        let that = this;
-        let itemsToPlace = this.inventory.getItems2d();
-        this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
-        this.layoutPlotter = new LayoutPlotter({floorY: this.floorY,
-                                                sceneryLoader: this.sceneryLoader,
-                                                camera: this.camera,
-                                                scene: this.scene});    
-        
-        let center = this.sceneryLoader.config.center;
-        const objectComparisonCallback = (arrayItemA, arrayItemB) => {
-              if (arrayItemA.maxNFTs > arrayItemB.maxNFTs) {
-                return -1
-              }
-
-              if (arrayItemA.maxNFTs < arrayItemB.maxNFTs) {
-                return 1
-              }
-              return 0;
-        }
-
-        let circles2d =this.sceneryLoader.circles.sort(objectComparisonCallback);
-        let circle3d = circles2d.pop(); //use inner most for 3d
-
-            circles2d.forEach((circle, idx)=>{
-
-                let items = itemsToPlace.splice(0,circle.maxNFTs);
-                console.log('plottin ',items.length,' in circle: ',idx);
-                console.log(items);
-                if((idx % 2)){
-                    that.layoutPlotter.plotCircle(items,center,circle.radius);
-                } else {
-                    that.layoutPlotter.plotCircleOffsetHalf(items,center,circle.radius);
-                };
-                console.log('plotted circle: ',idx);
-
-            });
-
-
-        itemsToPlace = this.inventory.getItems3d();
-        let items = itemsToPlace.splice(0,circle3d.maxNFTs);
-            console.log('plottin ',items.length,' in circle: 3d');
-            console.log(items);
-            this.plotCircle3d(center,circle3d.radius);
-
-    }
-
-    plotCircle2d = (itemsToPlace) => {
-        if(!itemsToPlace){
-            itemsToPlace = this.inventory.getItems2d();
-        };
-        this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
-        
-            let radius = this.sceneryLoader.config.layouts.circle.radius;
-            let center = new THREE.Vector3(0,0,0);
-            this.layoutPlotter.plotCircle(itemsToPlace, center,radius);
-    }
-
-    plotCircle3d  = (center,radius) => {
-        let itemsToPlace = this.inventory.getItems3d();
-        this.floorY = this.sceneryLoader.getFloorY(); // floor height at starting point
-        this.layoutPlotter = new LayoutPlotter({items:itemsToPlace, 
-                                                floorY: this.floorY,
-                                                sceneryLoader: this.sceneryLoader,
-                                                scene:this.scene,
-                                                camera:this.camera});
-        console.log('plot circle 3d');
-        console.log(itemsToPlace, center,radius);
-        this.layoutPlotter.plotCircle(itemsToPlace, center,radius);         
-       // this.layoutPlotter.plotCircleWithDivders(itemsToPlace, center,radius,true);         
-    }    
-
     initVR = () =>{
 
         let that = this;
@@ -1536,8 +1432,8 @@ initPlayerFirstPerson = () => {
     let playerStartPos;
     that.player = new THREE.Group();
 
-    if(this.config.playerStartPos){
-        playerStartPos = new THREE.Vector3(this.config.playerStartPos.x,this.config.playerStartPos.y,this.config.playerStartPos.z);
+    if(this.sceneryLoader.playerStartPos){
+        playerStartPos = new THREE.Vector3(this.sceneryLoader.playerStartPos.x,this.sceneryLoader.playerStartPos.y,this.sceneryLoader.playerStartPos.z);
     } else {
         playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(0,0,0), 2, -1);
         playerStartPos = new THREE.Vector3(0,playerFloor,0);

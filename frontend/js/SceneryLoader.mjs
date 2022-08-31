@@ -31,10 +31,14 @@ export default class SceneryLoader {
         this.height = this.config.height;
         this.width = this.config.width;
         this.depth = this.config.depth;
-        this.loadFloorPlan();
-
-
-
+        if(this.config.playerStartPos){
+            this.playerStartPos = this.config.playerStartPos;
+        } else {
+            this.playerStartPos = this.config.center;
+        }
+        if(this.config.floorPlan){
+            this.loadFloorPlan();          
+        };
     }
 
     hasCircleLayout = () =>{
@@ -45,19 +49,29 @@ export default class SceneryLoader {
         return (circles.length>1);
     }
 
+    hasListLayout = () =>{
+        if(!this.config.floorPlan){
+            console.log('no floorPlan')
+            return false;
+        }
+        console.log('hasListLayout:');
+        console.log(this.config.floorPlan);
+        let lists =  this.config.floorPlan.filter(plan => plan.type == 'list');
+        return (lists.length>0);
+    }
+
     loadFloorPlan = () =>{
 
         this.circles =  this.config.floorPlan.filter(plan => plan.type == 'circle');
         this.centerPiece = this.config.floorPlan.filter(plan => plan.type == 'centerPiece');
         this.rows = this.config.floorPlan.filter(plan => plan.type == 'rows');
-
+        this.lists =  this.config.floorPlan.filter(plan => plan.type == 'list');
     }
 	loadScenery = () =>{
         let that = this;
 
         return new Promise((resolve, reject) => {
             this.gltfLoader = new GLTFLoader();
-            console.log('loadScenery: ',this.config.sceneryPath);
             this.gltfLoader.load(this.config.sceneryPath, (res) => {
                 console.log('gltf loaded');
             	that.scaleScene(res.scene);

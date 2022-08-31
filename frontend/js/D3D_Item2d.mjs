@@ -1,6 +1,7 @@
 let THREE;
 import { VOXMesh } from "three/examples/jsm/loaders/VOXLoader.js";
-export default class Item {
+import {Item} from '3d-nft-viewer';
+class Item2d extends Item {
 
     constructor(config){
         let defaults = {
@@ -18,6 +19,8 @@ export default class Item {
                 console.log(this);
             }}
         };
+
+        super();
     
         this.config = {
             ...defaults,
@@ -103,9 +106,9 @@ export default class Item {
             throw('Cant place at undefined position');
         };
         return new Promise((resolve,reject)=>{
-            if(this.mesh){
+            if(this.mesh){ // already loaded / created
+                this.mesh.userData.owner = this;
                 this.mesh.position.copy(pos);
-                this.scaleToFitScene(this.mesh, pos)
                 this.scene.add(this.mesh);
                 this.fixYCoord(this.mesh, pos);
 
@@ -194,7 +197,7 @@ export default class Item {
                 resolve(this.config.modelUrl);
                 return;
             } else {
-                let url = this.config.nftsRoute;
+                let url = this.config.nftsRoute; // returns path to asset
                 if(url.trim()===''){
                     reject('No nftsRoute or modelUrl exists for this item');
                     return;
@@ -260,12 +263,12 @@ onErrorCallback = (e)=> {
 }
 
 scaleToFitScene = (obj3D, posVector) =>{
+    console.log('scaleToFitScene', this.config.width,this.config.height);
 
     let that = this;
 
         //console.log('posVector:',posVector);
         let boxMesh = this.createContainerBox(posVector);
-        console.log(boxMesh);
         let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
 
         let meshBounds = null    
@@ -667,4 +670,4 @@ scaleToFitScene = (obj3D, posVector) =>{
 
 }
 
-export {Item}
+export {Item2d}

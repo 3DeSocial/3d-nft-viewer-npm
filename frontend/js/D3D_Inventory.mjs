@@ -1,6 +1,6 @@
 export const name = 'd3d-inventory';
-let THREE, loader, OrbitControls, XRControllerModelFactory, VRButton;
-import {Item} from '3d-nft-viewer';
+let THREE, loader;
+import {Item, Item2d} from '3d-nft-viewer';
 
 
  class D3DInventory {
@@ -46,7 +46,7 @@ import {Item} from '3d-nft-viewer';
         let items = [];
 
         itemList.forEach((itemData)=>{
-
+            let item ;
             let itemConfig;
             if(itemData.params){
                 itemConfig = itemData.params;
@@ -54,13 +54,13 @@ import {Item} from '3d-nft-viewer';
                 itemConfig = itemData;
             };
             if(!itemConfig.width){
-                itemConfig.width = this.config.width;
+                itemConfig.width = itemData.width;
             }
             if(!itemConfig.depth){
-                itemConfig.depth = this.config.depth;
+                itemConfig.depth = itemData.depth;
             }
             if(!itemConfig.height){
-                itemConfig.height = this.config.height;
+                itemConfig.height = itemData.height;
             }
 
             itemConfig.three = THREE;
@@ -68,15 +68,19 @@ import {Item} from '3d-nft-viewer';
             itemConfig.loader = this.loader;
             itemConfig.modelsRoute = this.config.modelsRoute;
             itemConfig.nftsRoute = this.config.nftsRoute;
-
+            if(itemData.layout){
+                itemConfig.layout = itemData.layout;               
+            };
             if(itemData.nft){
                 itemConfig.nft = itemData.nft;               
             };
 
             if(itemData.isImage){
                 itemConfig.isImage = itemData.isImage;
-            };
-            let item = this.initItem(itemConfig)
+                item = this.initItem2d(itemConfig)                
+            } else {
+                item = this.initItem(itemConfig)
+            }
             if(item){
                 items.push(item);
             }
@@ -97,13 +101,14 @@ import {Item} from '3d-nft-viewer';
         let itemParams = {
             three: THREE,
             scene: this.scene,
-            height: this.config.height,
-            width: this.config.width,
-            depth: this.config.depth,
+            height: opts.height,
+            width: opts.width,
+            depth: opts.depth,
             nftPostHashHex: nftPostHashHex,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
-            isImage: false
+            isImage: false,
+            layout: opts.layout
         };
 
 
@@ -172,6 +177,93 @@ import {Item} from '3d-nft-viewer';
 
     }
 
+    initItem2d = (opts) =>{
+
+        let nftPostHashHex = opts.nftPostHashHex;
+        let paramString = '';
+        let params  = [];
+        let nftsRoute = '';
+
+
+        let itemParams = {
+            three: THREE,
+            scene: this.scene,
+            height: opts.height,
+            width: this.config.width,
+            depth: this.config.depth,
+            nftPostHashHex: nftPostHashHex,
+            modelsRoute: this.config.modelsRoute,
+            nftsRoute: this.config.nftsRoute,
+            isImage: false,
+            layout: opts.layout
+        };
+
+
+
+        if(opts.nft){
+            itemParams.nft = opts.nft;
+        } else {
+            console.warn('!!!! NO NFT!!!2');
+            console.log(opts);
+        };
+
+        if(opts.modelUrl){
+            itemParams.modelUrl = opts.modelUrl;
+        };
+
+        if(opts.position){
+            itemParams.position = opts.position;
+        }
+
+        if(opts.rotation){
+            itemParams.rotation = opts.rotation;
+        }
+
+        if(opts.width){
+            itemParams.width = opts.width;
+        }
+
+        if(opts.height){
+            itemParams.height = opts.height;
+        }
+
+        if(opts.depth){
+            itemParams.depth = opts.depth;
+        }
+
+        if(opts.mesh){
+            itemParams.mesh = opts.mesh;
+        } else {
+             itemParams.loader = this.config.loaders.getLoaderForFormat(opts.format);
+        };
+
+
+        if(opts.isImage){
+            itemParams.isImage = opts.isImage;
+        };
+
+        if(opts.nftRequestParams){
+            let nftRequestParams = opts.nftRequestParams;
+
+            Object.keys(nftRequestParams).forEach((key, index) => {
+                params.push(key+'='+nftRequestParams[key]);
+            });
+            paramString = params.join('&');
+            itemParams.nftsRoute = this.config.nftsRoute +'?' +paramString;
+            
+            if(!itemParams.nftPostHashHex){
+                console.log('cannot initItem without nftPostHashHex');
+                return false;
+            };
+            if((itemParams.nftsRoute==='')&&(itemParams.modelsRoute==='')){
+                console.log('cannot initItem without either modelsRoute or nftsRoute');
+                return false;
+            };              
+        };
+        return new Item2d(itemParams);
+
+    }
+
     has2d = () =>{
         return (this.config.items2d.length>0);
     }
@@ -196,6 +288,9 @@ import {Item} from '3d-nft-viewer';
         return this.items3d;
     }
 
+    getItemWithFilter = (filter) =>{
+        return this.items.filter(filter);
+    }
     getItemByHash = (nftPostHashHex) =>{
         console.log('checking inventory ',this.items);
         let idx = 1;

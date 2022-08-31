@@ -6,6 +6,7 @@ import { VRButton } from './frontend/js/DSO_VRButton.js';
 import { SkyBoxLoader } from './frontend/js/SkyBoxLoader.mjs';
 import { VRControls } from './frontend/js/D3D_VRControls.js';
 import { Item } from './frontend/js/D3D_Item.mjs';
+import { Item2d } from './frontend/js/D3D_Item2d.mjs';
 import { Lighting } from './frontend/js/D3D_Lighting.mjs';
 import { XRControllerModelFactory } from './frontend/webxr/XRControllerModelFactory.js';
 import { MeshBVH, acceleratedRaycast, MeshBVHVisualizer } from './frontend/webxr/index.module.js';
@@ -15,4 +16,4 @@ import { D3DInventory } from  './frontend/js/D3D_Inventory.mjs';
 import { ExtraData3DParser } from  './frontend/js/D3D_ExtraDataParser.mjs';
 import { LayoutPlotter } from  './frontend/js/D3D_LayoutPlotter.mjs';
 
-export {D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRButton, VRControls, Item, XRControllerModelFactory, MeshBVH, acceleratedRaycast, MeshBVHVisualizer, SceneryLoader, SkyBoxLoader, LayoutPlotter}
+export {D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DNFTViewerOverlay, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRButton, VRControls, Item, Item2d, XRControllerModelFactory, MeshBVH, acceleratedRaycast, MeshBVHVisualizer, SceneryLoader, SkyBoxLoader, LayoutPlotter}
