@@ -148,7 +148,7 @@ export default class LayoutPlotter  {
         console.log('plotList2d: ',lists.length);
         lists.forEach((list,idx)=>{
             console.log(list);
-            let noPos = list.spots.length-1;
+            let noPos = list.spots.length;
             console.log('noPos: ',noPos);
             for (var i = 0; i < noPos; i++) {
                 let item = items[i];
