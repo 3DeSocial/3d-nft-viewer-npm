@@ -1637,7 +1637,7 @@ initPlayerThirdPerson = () => {
     // adjust the camera
     this.camera.position.sub( this.controls.target );
     let playerx = this.player.position.x;
-    let playery = this.player.position.y+0.1;
+    let playery = this.player.position.y+1;
     let playerz = this.player.position.z;
     //this.camPos.set(playerx,(playery),playerz);
     this.controls.target.set(playerx,(playery),playerz);
