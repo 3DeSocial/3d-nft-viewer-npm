@@ -168,10 +168,7 @@ export default class LayoutPlotter  {
                 this.plotItem(item,plotPoint).then((item)=>{
                     if(item.spot.rot){
                         item.mesh.rotateY(item.spot.rot.y);
-                        console.log('rotated: ',item.config.nftPostHash);
-                    } else{
-                        console.log('cant rotate no rotation')
-                    }        
+                    }       
                 /*    model.rotation.x = 0;
                     model.rotation.y = 0;
                     model.rotation.z = 0;*/
