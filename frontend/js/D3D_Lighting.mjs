@@ -82,15 +82,15 @@ export default class Lighting {
         this.scene.add(this.aLight);
 
         this.dLighting = [];
-/*
-       // const aboveLight = new THREE.DirectionalLight(0xffffff, 0.75);
-       // aboveLight.castShadow = true;
+
+        const aboveLight = new THREE.DirectionalLight(0xffffff, 0.75);
+        aboveLight.castShadow = true;
         aboveLight.position.set(0, 15, 0);
         this.scene.add(aboveLight);
         this.dLighting['above'] = aboveLight;
-/*
+
         const belowLight = new THREE.DirectionalLight(0xffffff, 0);
-      //  belowLight.castShadow = true;
+        belowLight.castShadow = true;
         belowLight.position.set(0, -15, 0);
         this.scene.add(belowLight);
         this.dLighting['below'] = belowLight;
@@ -122,7 +122,7 @@ export default class Lighting {
         backLight.position.set(0, 6, 15);
         this.scene.add(backLight);
         this.dLighting['back'] = backLight;
-*/
+
     }
 
     configureLight = (light) =>{

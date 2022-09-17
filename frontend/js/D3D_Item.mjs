@@ -1,4 +1,5 @@
-let THREE;
+import * as THREE from 'three';
+
 import { VOXMesh } from "three/examples/jsm/loaders/VOXLoader.js";
 export default class Item {
 
@@ -24,7 +25,6 @@ export default class Item {
             ...config
         };
 
-        THREE = this.config.three;
         this.loader = this.config.loader;
         this.scene = this.config.scene;
         this.height = this.config.height;
@@ -40,8 +40,17 @@ export default class Item {
         this.initItemEvents();
         this.isItem = true;
         this.isImage = this.config.isImage;
+        this.velocity = new THREE.Vector3();
+        this.direction = new THREE.Vector3();
+        this.rotVelocity = new THREE.Vector3();
 
+    }
 
+    resetVelocity = ()=>{
+        this.velocity.setX(0);
+        this.velocity.setY(0);
+        this.velocity.setZ(0);
+        this.direction.set(0,0,0)
     }
 
     hasAnimations = (obj) =>{
@@ -322,7 +331,9 @@ scaleToFitScene = (obj3D, posVector) =>{
             that.scene.add(obj3D);
         } else {
             cbox.userData.owner = this; //set reference to Item
-            that.scene.add(cbox);    
+            that.scene.add(obj3D);    
+            console.log('added to scene: ');
+            console.log(obj3D);
         };
        
         cbox.updateMatrixWorld();    
@@ -403,6 +414,10 @@ scaleToFitScene = (obj3D, posVector) =>{
         this.config.width = w;
         this.config.height = h;
         this.config.depth = d;
+    }
+
+    setTarget = () =>{
+
     }
 
     createContainerBox = (posVector) =>{

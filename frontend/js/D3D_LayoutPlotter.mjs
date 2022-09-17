@@ -132,11 +132,7 @@ export default class LayoutPlotter  {
             this.layoutPlotter.plotCircle(itemsToPlace, center,radius);
     }
 
-    plotCircle3d  = (center,radius) => {
-    
-
-        console.log('plot circle 3d');
-        console.log(itemsToPlace, center,radius);
+    plotCircle3d  = (itemsToPlace, center,radius) => {
         this.plotCircle(itemsToPlace, center,radius);         
        // this.layoutPlotter.plotCircleWithDivders(itemsToPlace, center,radius,true);         
     }    
@@ -150,30 +146,33 @@ export default class LayoutPlotter  {
             console.log(list);
             let noPos = list.spots.length;
             console.log('noPos: ',noPos);
-            for (var i = 0; i < noPos; i++) {
-                let item = items[i];
-                let pos = list.spots[i].pos
-                let rot = list.spots.rot;
-                let dims = list.spots.dims;
-                items[i].pos = pos;
-                let plotPoint = new THREE.Vector3(pos.x,pos.y,pos.z);
-                let floor = this.config.sceneryLoader.findFloorAt(plotPoint, 2, -1);
-               /* if(pos.maxHeight){
-                    item.setDimensions(dims.width, dims.height, 0.1);
-                    item.scaleToFitScene(item.mesh, pos);
-                };*/
+            let noToPlace = (items.length>list.spots.length)?list.spots.length:items.length;
+            console.log('noToPlace: ',noToPlace); 
+            if(noToPlace>0) {
+                for (var i = 0; i <= noToPlace; i++) {
+                    let item = items[i];
+                    let pos = list.spots[i].pos
+                    let rot = list.spots.rot;
+                    let dims = list.spots.dims;
+                    items[i].pos = pos;
+                    let plotPoint = new THREE.Vector3(pos.x,pos.y,pos.z);
+                    let floor = this.config.sceneryLoader.findFloorAt(plotPoint, 2, -1);
+                   /* if(pos.maxHeight){
+                        item.setDimensions(dims.width, dims.height, 0.1);
+                        item.scaleToFitScene(item.mesh, pos);
+                    };*/
 
-                item.spot = list.spots[i];
-                item.spot.idx = i;
-                this.plotItem(item,plotPoint).then((item)=>{
-                    if(item.spot.rot){
-                        item.mesh.rotateY(item.spot.rot.y);
-                    }       
-                /*    model.rotation.x = 0;
-                    model.rotation.y = 0;
-                    model.rotation.z = 0;*/
-                })
-            }
+                    item.spot = list.spots[i];
+                    item.spot.idx = i;
+                    this.plotItem(item,plotPoint).then((item)=>{
+                        if(item.spot.rot){
+                            item.mesh.rotateY(item.spot.rot.y);
+                        }       
+
+                    })
+                }
+            };
+
         });
     }
 
