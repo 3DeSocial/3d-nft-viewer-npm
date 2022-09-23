@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 
 export const name = 'd3d-inventory';
-let THREE, loader;
+let loader;
 
-import { Item, Item2d, ChainAPI} from '3d-nft-viewer';
+import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
 
  class D3DInventory {
     
@@ -19,12 +19,14 @@ import { Item, Item2d, ChainAPI} from '3d-nft-viewer';
             ...defaults,
             ...config
         };
-
+        this.items2d = [];
+        this.items3d = [];
         this.scene = this.config.scene;
         this.loader = this.config.loader;
-        this.chainAPI = this.config.chainAPI;
-        this.items = [];
+        this.chainAPI = new ChainAPI(this.config.chainAPI);
         this.activeItemIdx = 0;
+
+        console.log('this.config.items: ', this.config.items);
         if(this.config.items.length>0){
             this.import(this.config.items);
         } else {
@@ -48,18 +50,31 @@ import { Item, Item2d, ChainAPI} from '3d-nft-viewer';
         
         let that = this;
 
-        this.extraDataParser = new ExtraData3DParser({  nftPostHashHex: nft.postHashHex,
+    /*    let parser = new ExtraData3DParser({  nftPostHashHex: nft.postHashHex,
                                                                 extraData3D:nft.path3D,
                                                                 endPoint:'https://desodata.azureedge.net/unzipped/'});
-
+*/
         nftList.forEach((nftPostHashHex)=>{
             that.chainAPI.fetchPostDetail(nftPostHashHex).then((nftMeta)=>{
-                
-                console.log('nftMeta: ',nftPostHashHex);
+                console.log('nftMeta');
                 console.log(nftMeta);
+              let extraDataParser = new ExtraData3DParser({ nftPostHashHex: nftMeta.postHashHex,
+                                                                extraData3D:nftMeta.path3D,
+                                                                endPoint:'https://desodata.azureedge.net/unzipped/'});
 
-                if(nftMeta.is3D){
-                    this.initItem(itemConfig);
+              let formats = extraDataParser.getAvailableFormats();
+              console.log(formats);
+              /*let path3D = versions[0];
+              let params;
+              if(path3D.indexOf('.')>-1){ // there is a file extension
+                let modelUrl = extraDataParser.getModelPath(0,'gltf','any');*/
+              if(nftMeta.is3D){
+                    let item = this.initItem({nft:nftMeta, width: 2, height:2, depth:2, scene: that.scene, format: formats[0]});
+                    this.items3d.push(item);
+                } else {
+                    console.log('initItem2d');
+                    let item = this.initItem2d({nft:nftMeta, width: 2, height:2, depth:2, scene: that.scene});
+                    this.items2d.push(item);
                 }
 
 
@@ -69,12 +84,15 @@ import { Item, Item2d, ChainAPI} from '3d-nft-viewer';
 
     load = () =>{
         let nfts2d = this.initItems(this.config.items2d);
+        if(nfts2d){
+           this.items2d = nfts2d;        
+        };
         let nfts3d = this.initItems(this.config.items3d);
         let allItems = [];
             allItems = allItems.concat(nfts2d);
             allItems = allItems.concat(nfts3d);
         this.items = allItems;
-        this.items2d = nfts2d;
+
         this.items3d = nfts3d
         
     }
@@ -312,6 +330,13 @@ import { Item, Item2d, ChainAPI} from '3d-nft-viewer';
     }
 
     getActiveItem = () =>{
+        if(!this.activeItemIdx){
+            console.log('no active item');
+            return false;
+        };
+        if(!this.items[this.activeItemIdx]){
+            return false;
+        }
         return this.items[this.activeItemIdx];
     }
 
@@ -331,6 +356,10 @@ import { Item, Item2d, ChainAPI} from '3d-nft-viewer';
         return this.items.filter(filter);
     }
     getItemByHash = (nftPostHashHex) =>{
+        if(!this.items){
+            console.log('no inventory items');
+            return false;
+        };
         console.log('checking inventory ',this.items);
         let idx = 1;
         let item = this.items[0];

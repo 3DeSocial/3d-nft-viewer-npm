@@ -1116,7 +1116,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     initInventory = (options) =>{
 
-        this.inventory = new D3DInventory({ items: this.config.items,
+        this.inventory = new D3DInventory({ chainAPI: this.config.chainAPI,
+                                            items: options.items,
                                             scene: this.scene,
                                             loader: this.loader,
                                             loaders: this.loaders,
@@ -1131,6 +1132,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             console.log('loading sceneAssets');
 
             this.sceneInventory = new D3DInventory({
+                                            chainAPI: this.config.chainAPI,
                                             items: this.config.sceneAssets,
                                             scene: this.scene,
                                             loader: this.loader,

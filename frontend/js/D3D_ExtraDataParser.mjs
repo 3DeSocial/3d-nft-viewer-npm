@@ -20,30 +20,33 @@ export default class ExtraData3DParser {
 
   getModelList = () =>{
     this.models = this.extraData3D['3DModels'];
+    console.log('ExtraData3DParser: No of models: ',this.models.length);
   }
 
-  getAvailableFormats = (modelIdx) =>{
+  getAvailableFormats = () =>{
     
     //return unique list of formats
 
     let formats = [];
     let that = this;
     this.models.forEach((model, idx)=>{
-      let formatList = that.getFormatsForModel(idx);
+      console.log('models idx:',idx);
+      console.log(model);
+      let formatList = that.getFormatsForModel(model);
+      console.log('formatList: ',formatList);
       formats =  [...formats, ...formatList];
     });
 
-    this.formats = formats.filter((c, index) => {
-      return formats.indexOf(c) === index;
-    });
+    return formats;
 
   }
 
-  getFormatsForModel = (modelIdx) =>{
-    if(!this.models[modelIdx]){
+  getFormatsForModel = (model) =>{
+    if(!model){
+      console.log('getFormatsForModel: no model');
       return false;
     };
-    return Object.keys(this.models[modelIdx].ModelFormats);
+    return Object.keys(model.ModelFormats);
   }
 
   getAvailableVersions = (modelIdx, format) =>{
@@ -84,7 +87,7 @@ export default class ExtraData3DParser {
     let version = '';
     let path = '';
 
-    let availableFormats = this.getFormatsForModel(modelIdx);
+    let availableFormats = this.getFormatsForModel(this.models[modelIdx]);
     if(availableFormats.indexOf(preferredFormat.toLowerCase())>-1){
       //format exists
       format = preferredFormat;

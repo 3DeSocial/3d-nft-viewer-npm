@@ -141,6 +141,9 @@ export default class LayoutPlotter  {
         this.sceneryLoader.loadFloorPlan(); 
         let lists = this.sceneryLoader.lists;
         let items = this.inventory.getItems2d();
+        if(items.length===0){
+            return;
+        };
         console.log('plotList2d: ',lists.length);
         lists.forEach((list,idx)=>{
             console.log(list);
