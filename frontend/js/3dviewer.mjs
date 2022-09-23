@@ -5,8 +5,8 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import Item from './D3D_Item.mjs';import Lighting from './D3D_Lighting.mjs';
-import {SceneryLoader, D3DNFTViewerOverlay, D3DLoaders, MeshBVH, VRButton, VRControls, SkyBoxLoader, MeshBVHVisualizer} from '3d-nft-viewer';
+
+import {Item, Lighting, SceneryLoader, NFTViewerOverlay, D3DLoaders, VRButton, VRControls, SkyBoxLoader} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, collider, visualizer, player, controls, geometries;
@@ -326,7 +326,7 @@ const params = {
     showOverlay =()=>{
 
         let that = this;
-        let overlay = new D3DNFTViewerOverlay({
+        let overlay = new NFTViewerOverlay({
             el: this.parentDivEl,
             handlers: {
                 floor: (checked)=>{

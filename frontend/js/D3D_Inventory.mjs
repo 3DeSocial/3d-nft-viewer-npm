@@ -1,7 +1,9 @@
+import * as THREE from 'three';
+
 export const name = 'd3d-inventory';
 let THREE, loader;
-import {Item, Item2d} from '3d-nft-viewer';
 
+import { Item, Item2d, ChainAPI} from '3d-nft-viewer';
 
  class D3DInventory {
     
@@ -18,14 +20,51 @@ import {Item, Item2d} from '3d-nft-viewer';
             ...config
         };
 
-        THREE = this.config.three;
         this.scene = this.config.scene;
         this.loader = this.config.loader;
-
+        this.chainAPI = this.config.chainAPI;
         this.items = [];
         this.activeItemIdx = 0;
-        this.load();
+        if(this.config.items.length>0){
+            this.import(this.config.items);
+        } else {
+            if((this.config.items3d.length>0)||(this.config.items2d.length>0)){
+                this.load();
+            };
+        };
       
+    }
+
+    import = () =>{
+        /*  - takes the raw nft hash list
+            - parses extra data
+            - determines which type of item the nft becomes  (2d or 3D)
+            - optional: preloads asset */
+        this.fetchNFTMeta(this.config.items);
+
+    }
+
+    fetchNFTMeta = (nftList) =>{
+        
+        let that = this;
+
+        this.extraDataParser = new ExtraData3DParser({  nftPostHashHex: nft.postHashHex,
+                                                                extraData3D:nft.path3D,
+                                                                endPoint:'https://desodata.azureedge.net/unzipped/'});
+
+        nftList.forEach((nftPostHashHex)=>{
+            that.chainAPI.fetchPostDetail(nftPostHashHex).then((nftMeta)=>{
+                
+                console.log('nftMeta: ',nftPostHashHex);
+                console.log(nftMeta);
+
+                if(nftMeta.is3D){
+                    this.initItem(itemConfig);
+                }
+
+
+            })
+        })
     }
 
     load = () =>{

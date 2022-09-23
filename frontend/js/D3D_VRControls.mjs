@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 import {XRControllerModelFactory} from '3d-nft-viewer';
-export const name = 'D3D_VRControls';
+export const name = 'VRControls';
 class VRControls {
 
 	   

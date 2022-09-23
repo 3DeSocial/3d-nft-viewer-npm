@@ -3,13 +3,8 @@ export const name = 'd3dspaceviewer';
 import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import Item from './D3D_Item.mjs';
-import Lighting from './D3D_Lighting.mjs';
-import LayoutPlotter from './D3D_LayoutPlotter.mjs';
-
-import {D3DInventory, MeshBVH, VRButton, VRControls, D3DLoaders, D3DNFTViewerOverlay, SceneryLoader, MeshBVHVisualizer} from '3d-nft-viewer';
+import { SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
@@ -79,7 +74,6 @@ const params = {
         this.camPos = new THREE.Vector3();
         this.raycaster = new THREE.Raycaster();
         this.objectsInMotion = []; // use for things being thrown etc
-
     }
 
     initSpace = (options) =>{
@@ -651,7 +645,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     showOverlay =()=>{
 
         let that = this;
-        let overlay = new D3DNFTViewerOverlay({
+        let overlay = new NFTViewerOverlay({
             el: this.parentDivEl,
             handlers: {
                 floor: (checked)=>{
@@ -1122,9 +1116,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     initInventory = (options) =>{
 
-        this.inventory = new D3DInventory({ three: THREE,
-                                            items3d: options.items,
-                                            items2d: options.images,
+        this.inventory = new D3DInventory({ items: this.config.items,
                                             scene: this.scene,
                                             loader: this.loader,
                                             loaders: this.loaders,
@@ -1139,7 +1131,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             console.log('loading sceneAssets');
 
             this.sceneInventory = new D3DInventory({
-                                            three: THREE,
                                             items: this.config.sceneAssets,
                                             scene: this.scene,
                                             loader: this.loader,

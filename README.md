@@ -94,7 +94,7 @@ module.exports = router;
       import { GLTFLoader } from 'https://unpkg.com/three@0.139.1/examples/jsm/loaders/GLTFLoader.js';
       import { XRControllerModelFactory } from '/js/webxr/XRControllerModelFactory.js';
 
-      import { VRButton } from '/js/DSO_VRButton.js';
+      import { VRButton } from '/js/D3D_VRButton.js';
 
       import { D3DNFTViewer } from '/js/3dviewer.js'
 

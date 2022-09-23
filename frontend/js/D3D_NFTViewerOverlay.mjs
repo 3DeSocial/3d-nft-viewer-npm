@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export default class D3DNFTViewerOverlay {
+export default class NFTViewerOverlay {
     constructor(config) {
 
         let defaults = {
@@ -48,4 +48,4 @@ export default class D3DNFTViewerOverlay {
         })        
     }
 }
-export {D3DNFTViewerOverlay}
+export {NFTViewerOverlay}

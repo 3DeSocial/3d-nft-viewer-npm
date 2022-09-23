@@ -1,4 +1,4 @@
-class VRButton {
+export default class VRButton {
 
   static createButton( renderer, options ) {
   

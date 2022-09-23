@@ -45,7 +45,7 @@ import { XYZLoader } from "three/examples/jsm/loaders/XYZLoader.js";
 import * as THREE from 'three';
 
 
-class D3DLoaders {
+export default class D3DLoaders {
 
     constructor(config) {
 

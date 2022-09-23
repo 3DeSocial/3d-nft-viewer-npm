@@ -5561,4 +5561,4 @@ bool bvhIntersectFirstHit(
 `;
 
 export { AVERAGE, CENTER, CONTAINED, ExtendedTriangle, FloatVertexAttributeTexture, INTERSECTED, IntVertexAttributeTexture, MeshBVH, MeshBVHUniformStruct, MeshBVHVisualizer, NOT_INTERSECTED, OrientedBox, SAH, UIntVertexAttributeTexture, VertexAttributeTexture, acceleratedRaycast, computeBoundsTree, disposeBoundsTree, estimateMemoryInBytes, getBVHExtremes, getJSONStructure, getTriangleHitPointInfo, shaderIntersectFunction, shaderStructs, validateBounds };
-//# sourceMappingURL=index.module.js.map
+//# sourceMappingURL=index.module.mjs.map

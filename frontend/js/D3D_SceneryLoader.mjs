@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import {MeshBVH} from '3d-nft-viewer';
+//import { MeshBVH } from 'index.module.mjs';
 let visualizer, geometries;
 
 export default class SceneryLoader {
