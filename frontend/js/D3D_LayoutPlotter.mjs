@@ -142,6 +142,7 @@ export default class LayoutPlotter  {
         let lists = this.sceneryLoader.lists;
         let items = this.inventory.getItems2d();
         if(items.length===0){
+            console.log('inventory hs no 2d items');
             return;
         };
         console.log('plotList2d: ',lists.length);
@@ -159,7 +160,6 @@ export default class LayoutPlotter  {
                     let dims = list.spots.dims;
                     items[i].pos = pos;
                     let plotPoint = new THREE.Vector3(pos.x,pos.y,pos.z);
-                    let floor = this.config.sceneryLoader.findFloorAt(plotPoint, 2, -1);
                    /* if(pos.maxHeight){
                         item.setDimensions(dims.width, dims.height, 0.1);
                         item.scaleToFitScene(item.mesh, pos);
@@ -177,6 +177,34 @@ export default class LayoutPlotter  {
             };
 
         });
+    }
+
+    getNextFreePos = () =>{
+
+        if(!this.posQ){
+            this.initPosQ();
+        };
+        console.log('this.posQ',this.posQ);
+
+        let spot = this.posQ.pop();
+        console.log('next spot',spot);
+        return spot;
+      
+    }
+
+initPosQ = () =>{
+    let that = this;
+    this.posQ = [];
+    this.sceneryLoader.loadFloorPlan(); 
+    let lists = this.sceneryLoader.lists;
+    console.log('initPosQ');
+    console.log(lists);
+        lists.forEach((list,idx)=>{
+            let noPos = list.spots.length;
+            list.spots.forEach((spot)=>{
+                that.posQ.push(spot); 
+            })
+        });   
     }
 
     plotCircle = (items, center, radius) =>{

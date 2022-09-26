@@ -25,10 +25,8 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         this.loader = this.config.loader;
         this.chainAPI = new ChainAPI(this.config.chainAPI);
         this.activeItemIdx = 0;
-
-        console.log('this.config.items: ', this.config.items);
-        if(this.config.items.length>0){
-            this.import(this.config.items);
+        if(this.config.items){
+            this.importToLayout();
         } else {
             if((this.config.items3d.length>0)||(this.config.items2d.length>0)){
                 this.load();
@@ -46,40 +44,52 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
 
     }
 
+
+    importToLayout = () =>{
+        /*  - takes the raw nft hash list
+            - parses extra data
+            - determines which type of item the nft becomes  (2d or 3D)
+            - optional: preloads asset */
+        this.fetchNFTMeta(this.config.items);
+
+    }
+
     fetchNFTMeta = (nftList) =>{
         
         let that = this;
+        return new Promise((resolve, reject) => {
+            nftList.forEach((nft)=>{
+                that.chainAPI.fetchPostDetail(nft).then((nftMeta)=>{
+                  
+                  /*let path3D = versions[0];
+                  let params;
+                  if(path3D.indexOf('.')>-1){ // there is a file extension
+                    let modelUrl = extraDataParser.getModelPath(0,'gltf','any');*/
+                  if(nftMeta.is3D===true){
+                      let extraDataParser = new ExtraData3DParser({ nftPostHashHex: nftMeta.postHashHex,
+                                                                        extraData3D:nftMeta.path3D,
+                                                                        endPoint:'https://desodata.azureedge.net/unzipped/'});
 
-    /*    let parser = new ExtraData3DParser({  nftPostHashHex: nft.postHashHex,
-                                                                extraData3D:nft.path3D,
-                                                                endPoint:'https://desodata.azureedge.net/unzipped/'});
-*/
-        nftList.forEach((nftPostHashHex)=>{
-            that.chainAPI.fetchPostDetail(nftPostHashHex).then((nftMeta)=>{
-                console.log('nftMeta');
-                console.log(nftMeta);
-              let extraDataParser = new ExtraData3DParser({ nftPostHashHex: nftMeta.postHashHex,
-                                                                extraData3D:nftMeta.path3D,
-                                                                endPoint:'https://desodata.azureedge.net/unzipped/'});
+                        let formats = extraDataParser.getAvailableFormats();                    
 
-              let formats = extraDataParser.getAvailableFormats();
-              console.log(formats);
-              /*let path3D = versions[0];
-              let params;
-              if(path3D.indexOf('.')>-1){ // there is a file extension
-                let modelUrl = extraDataParser.getModelPath(0,'gltf','any');*/
-              if(nftMeta.is3D){
-                    let item = this.initItem({nft:nftMeta, width: 2, height:2, depth:2, scene: that.scene, format: formats[0]});
-                    this.items3d.push(item);
-                } else {
-                    console.log('initItem2d');
-                    let item = this.initItem2d({nft:nftMeta, width: 2, height:2, depth:2, scene: that.scene});
-                    this.items2d.push(item);
-                }
+                        let spot = this.config.layoutPlotter.getNextFreePos();
+                        let item = this.initItem({pos:spot.pos, rot:spot.rot, nft:nftMeta, width: 2, height:2, depth:2, scene: that.scene, format: formats[0]});
+                        that.items3d.push(item);
 
+                    } else {
+                        let spot = this.config.layoutPlotter.getNextFreePos();
+                        let item = this.initItem2d({position:spot.pos, rot:spot.rot, nft:nftMeta, width: 2, height:2, depth:2, scene: that.scene});
+                        that.items2d.push(item);
+                     
+                    }
+                    if((that.items2d.length+that.items3d.length) == nftList.length){
+                        console.log('import complete');
+                        resolve()
+                    }
 
+                })
             })
-        })
+        });
     }
 
     load = () =>{
@@ -272,8 +282,12 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
             itemParams.position = opts.position;
         }
 
-        if(opts.rotation){
-            itemParams.rotation = opts.rotation;
+        if(opts.pos){
+            itemParams.position = opts.pos;
+        }
+
+        if(opts.rot){
+            itemParams.rotation = opts.rot;
         }
 
         if(opts.width){
@@ -287,13 +301,6 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         if(opts.depth){
             itemParams.depth = opts.depth;
         }
-
-        if(opts.mesh){
-            itemParams.mesh = opts.mesh;
-        } else {
-             itemParams.loader = this.config.loaders.getLoaderForFormat(opts.format);
-        };
-
 
         if(opts.isImage){
             itemParams.isImage = opts.isImage;

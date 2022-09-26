@@ -5,11 +5,12 @@ class Item2d extends Item {
 
     constructor(config){
         let defaults = {
+            proxyURL: 'http://localhost:3001/proxy?url=',
             modelUrl: '',
             modelsRoute: 'models',
             nftsRoute: 'nfts',
             castShadow: true,
-            isImage: false,
+            isImage: true,
             // override the actions array to set click handlers
             actions: {'click': function(e){ 
                 console.log('clicked');
@@ -42,9 +43,13 @@ class Item2d extends Item {
         this.actions = this.config.actions;
         this.initItemEvents();
         this.isItem = true;
-        this.isImage = this.config.isImage;
-
-
+        let that = this;
+        this.initMesh(this.config.nft).then((nftImgData)=>{
+                that.place(that.config.position);
+                    if(that.config.rot){
+                        nftImgData.mesh.rotateY(that.config.rot.y);
+                    };
+                });
     }
 
     hasAnimations = (obj) =>{
@@ -107,6 +112,8 @@ class Item2d extends Item {
         };
         return new Promise((resolve,reject)=>{
             if(this.mesh){ // already loaded / created
+                console.log('place mesh');
+                console.log(this);
                 this.mesh.userData.owner = this;
                 this.mesh.position.copy(pos);
                 this.scene.add(this.mesh);
@@ -114,30 +121,73 @@ class Item2d extends Item {
 
                 resolve(this.mesh, pos);
             } else{
-                this.fetchModelUrl()
-                .then((modelUrl)=>{
-                    if(!that.retrievedModelUrlIsValid(modelUrl)){
-                        reject('Invalid ModelUrl in ExtraData: '+modelUrl);
-                        return;
-                    } else {
-                        //console.log('validated modelUrl: ',modelUrl);
-                        that.modelUrl = modelUrl;
-                        that.placeModel(pos)
-                        .then((model)=>{
-                            that.mesh = model;
-                            let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
-                            document.body.dispatchEvent(loadedEvent);
-                            document.body.dispatchEvent(this.meshPlacedEvent);
-                            resolve(model, pos);
-                        })
-                    };
-                }).catch(err =>{
-                    console.log(this.config);
-                    console.log(err);
-                })
+                console.log('no mesh to place');
+                console.log(this);
             }
         });
 
+    }
+
+    initMesh = async(nft) =>{
+        let that = this;
+        return new Promise(( resolve, reject ) => {
+            let imageUrl = nft.imageURLs[0];
+            console.log('initMesh for image: ',imageUrl);
+            let proxyImageURL = this.config.proxyURL +imageUrl;
+            let nftData = nft;
+            var img = new Image();
+
+                img.onload = function(){
+
+                  var height = this.height;
+                  var width = this.width;
+                  let dims = that.calculateAspectRatioFit(width, height, 4,2.75);
+                  const textureLoader = new THREE.TextureLoader()
+                        textureLoader.crossOrigin = ""
+                  const texture = textureLoader.load(this.src);
+                  const geometry = new THREE.BoxGeometry( dims.width, dims.height, 0.10 );
+                  const materials = that.createMats(texture);
+                  const nftMesh = new THREE.Mesh( geometry, materials );
+                  that.mesh = nftMesh;
+                  let nftImgData = {is3D:nft.is3D, nft:nftData, mesh: nftMesh, imageUrl: imageUrl, width:dims.width, height:dims.height};
+                  resolve(nftImgData);
+            };
+
+            img.addEventListener('error', (img, error) =>{
+              console.log('could not load image',img.src);
+              console.log(error);
+              reject(img.src)
+            });
+            img.src = proxyImageURL;
+
+        })
+    }
+
+    createMats = (texture) =>{
+        var topside = new THREE.MeshBasicMaterial({color: '#AAAAAA'});
+        var bottomside = new THREE.MeshBasicMaterial({color: '#AAAAAA'});        
+        var leftside = new THREE.MeshBasicMaterial({color: '#AAAAAA'}); 
+        var rightside = new THREE.MeshBasicMaterial({color: '#AAAAAA'});
+        var backside = new THREE.MeshBasicMaterial( { map: texture } );
+        var frontside = new THREE.MeshBasicMaterial( { map: texture } );
+
+        var materials = [
+          rightside,          // Right side
+          leftside,          // Left side
+          topside, // Top side
+          bottomside, // Bottom side
+          backside,            // Back side
+          frontside          // Front side          
+        ];
+
+        return materials;
+    }
+
+    calculateAspectRatioFit = (srcWidth, srcHeight, maxWidth, maxHeight) => {
+
+        var ratio = Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
+
+        return { width: srcWidth*ratio, height: srcHeight*ratio };
     }
 
     retrievedModelUrlIsValid = (modelUrl) =>{

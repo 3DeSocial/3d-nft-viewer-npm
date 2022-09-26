@@ -20,7 +20,7 @@ export default class ExtraData3DParser {
 
   getModelList = () =>{
     this.models = this.extraData3D['3DModels'];
-    console.log('ExtraData3DParser: No of models: ',this.models.length);
+    //console.log('ExtraData3DParser: No of models: ',this.models.length);
   }
 
   getAvailableFormats = () =>{
@@ -30,10 +30,10 @@ export default class ExtraData3DParser {
     let formats = [];
     let that = this;
     this.models.forEach((model, idx)=>{
-      console.log('models idx:',idx);
-      console.log(model);
+      //console.log('models idx:',idx);
+      //console.log(model);
       let formatList = that.getFormatsForModel(model);
-      console.log('formatList: ',formatList);
+      //console.log('formatList: ',formatList);
       formats =  [...formats, ...formatList];
     });
 
@@ -63,7 +63,7 @@ export default class ExtraData3DParser {
           let versionString = format+'/'+version;
           versions.push(versionString);       
         } else {
-          console.log('"'+key.trim()+'"<>"'+format.trim()+'"');
+        //  console.log('"'+key.trim()+'"<>"'+format.trim()+'"');
 
         }
 

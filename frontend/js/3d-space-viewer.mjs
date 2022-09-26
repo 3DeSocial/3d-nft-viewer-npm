@@ -82,13 +82,12 @@ const params = {
             this.mouse = { x : 0, y : 0 };
             this.getContainer(this.config.el);
             this.initScene();
-            this.initInventory(options);        
             this.initRenderer(this.config.el);
             this.initSkybox();
-            this.initLighting();        
+            this.initLighting();
             this.loadScenery().then(()=>{
                 this.initCameraPlayer();                
-                that.placeAssets();
+               // that.placeAssets();
                 if(that.config.firstPerson){
                     that.initPlayerFirstPerson();
                 } else {
@@ -103,6 +102,8 @@ const params = {
                 this.animate();
                 this.controls.update();                
             });
+            this.initInventory(options);        
+
         });
     }
 
@@ -136,9 +137,9 @@ const params = {
                                                  scene: this.scene,
                                                  inventory: this.inventory,
                                                  sceneryLoader: this.sceneryLoader});    
-        this.layoutPlotter.placeUserAssets();
-        console.log('placeAssets: ',this.inventory.getItems());
-        console.log('placeAssets: ',this.inventory.getItemByHash('1e25c4f29d76c8989db411f5c3171d87ec715ca2ad01498cb47d77ba5df7c6e5'));
+        this.layoutPlotter.placeSceneAssets();
+        //console.log('placeAssets: ',this.inventory.getItems());
+        //console.log('placeAssets: ',this.inventory.getItemByHash('1e25c4f29d76c8989db411f5c3171d87ec715ca2ad01498cb47d77ba5df7c6e5'));
     }
 
     setFormat = (format) =>{
@@ -1115,9 +1116,12 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
 
     initInventory = (options) =>{
-
+        let items =[];
+        if(options.items){
+            items = options.items;
+        };
         this.inventory = new D3DInventory({ chainAPI: this.config.chainAPI,
-                                            items: options.items,
+                                            items: items,
                                             scene: this.scene,
                                             loader: this.loader,
                                             loaders: this.loaders,
@@ -1128,12 +1132,17 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                             nftsRoute: this.config.nftsRoute
                                         });
         this.sceneInventory = null;
-        if(this.config.sceneAssets){
+        if(options.sceneAssets){
             console.log('loading sceneAssets');
+
+            this.layoutPlotter = new LayoutPlotter({
+                                                 camera: this.camera,
+                                                 scene: this.scene,
+                                                 sceneryLoader: this.sceneryLoader});  
 
             this.sceneInventory = new D3DInventory({
                                             chainAPI: this.config.chainAPI,
-                                            items: this.config.sceneAssets,
+                                            items: options.sceneAssets,
                                             scene: this.scene,
                                             loader: this.loader,
                                             loaders: this.loaders,
@@ -1141,7 +1150,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                             depth: 3,
                                             height: 3,
                                             modelsRoute: this.config.modelsRoute,
-                                            nftsRoute: this.config.nftsRoute
+                                            nftsRoute: this.config.nftsRoute,
+                                            layoutPlotter: this.layoutPlotter
                                         });                    
         }
         
