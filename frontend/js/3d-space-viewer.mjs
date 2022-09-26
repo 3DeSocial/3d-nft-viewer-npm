@@ -118,9 +118,6 @@ const params = {
                 ...that.config.sceneryOptions
             };
 
-            console.log('create sceneryLoader for: ');
-            console.log(that.config.sceneryOptions);
-
             that.sceneryLoader = new SceneryLoader(sceneryOptions);
             that.sceneryLoader.loadScenery()
             .then((gltf)=>{
@@ -143,13 +140,11 @@ const params = {
     }
 
     setFormat = (format) =>{
-        console.log('setFormat: ',format);
         let loader = this.loaders.getLoaderForFormat(format);
         if(loader === false){
             throw('Error - No Loader Availble for File Format: '+format+' in D3DNFTViewer');
             return false;
         };
-        console.log('set loader');
         this.format = format;
         this.loader = loader;
     }
@@ -174,7 +169,6 @@ const params = {
 
     clearMesh = (obj, cb) =>{
         obj = this.loadedItem.mesh;
-        console.log('clearMesh: ',this.loadedItem.mesh);
         this.recursiveDestroy(obj,cb);
     }
 
@@ -204,7 +198,6 @@ const params = {
     }
 
     initContainer(parentDivEl){
-        console.log('container el: ',parentDivEl);
 
         if(this.containerInitialized){
             return true;
@@ -267,7 +260,6 @@ const params = {
 
     initRenderer = (el) =>{
 
-        console.log('CREATE RENDERER HERE!');
         //Create a WebGLRenderer
         this.renderer = new THREE.WebGLRenderer({
                 antialias: true,
@@ -400,12 +392,10 @@ const params = {
         this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
             case 2:
-            console.log('rmb');
             if(action.isOnWall && (!action.isOnFloor)){
                 //console.log('place 2d nft ',action.selectedPoint);
             };
             if(action.isOnFloor){
-                console.log('place 3d nft ',action.selectedPoint);
                 this.placeActiveItem(action.selectedPoint);
             };
             break;
@@ -415,9 +405,9 @@ const params = {
                 let item = action.selection.object.userData.owner;
                 if(item.config.nft){
                     let nftDisplayData = this.parseNFTDisplayData(item.config.nft);
-                    if(item.spot){
-                        nftDisplayData.spot = item.spot;
-                        console.log('spot index: ',item.spot.idx);
+                    if(item.config.spot){
+                        nftDisplayData.spot = item.config.spot;
+                        console.log('spot index: ',item.config.spot.idx);
 
                     };
                     this.displayInHUD(nftDisplayData);            
@@ -427,9 +417,7 @@ const params = {
                 //console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
                 //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
 
-            } else {
-                console.log('no owner: ',action.selection.object);
-            }
+            };
             break;
         }
     }
@@ -484,22 +472,22 @@ const params = {
        // this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
             case 1:
-            console.log('lmb');
+           // console.log('lmb');
             if(action.isOnFloor && (!action.isOnWall)){
-                console.log('move to ',action.selectedPoint);
+               // console.log('move to ',action.selectedPoint);
                 this.moveTo = action.selectedPoint.clone();
             }
             break;
             default:
-            console.log('default',action);
+          //  console.log('default',action);
             break;
         }
     }
 
     displayInHUD = (data) =>{
-        console.log(data);
+      //  console.log(data);
         let msg = 'Creator '+data.creator+' '+data.description;
-        console.log('msg: ',msg);
+      //  console.log('msg: ',msg);
         this.updateOverlayMsg(msg);
     }
 
@@ -613,7 +601,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             if(hit.point.z===selectedPoint.z){
                 return true;
             } else {
-                console.log('hit.point.z',hit.point.z,'selectedPoint.z',selectedPoint.z)
+                //console.log('hit.point.z',hit.point.z,'selectedPoint.z',selectedPoint.z)
                 return false;
             };
            // this.scene.add(new THREE.ArrowHelper( this.raycaster.ray.direction, this.raycaster.ray.origin, 1000, Math.random() * 0xffffff ));
@@ -626,7 +614,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let item = this.inventory.getItemByHash(nftPostHashHex);
         if(item){
             item.place(pos);
-            console.log('item placed');     
+          //  console.log('item placed');     
         } else {
             console.log('item not in inventory: ',nftPostHashHex);
         }
@@ -1116,11 +1104,13 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
 
     initInventory = (options) =>{
+        console.log('initInventory: this.config.imageProxyUrl',this.config.imageProxyUrl);
         let items =[];
         if(options.items){
             items = options.items;
         };
         this.inventory = new D3DInventory({ chainAPI: this.config.chainAPI,
+                                            imageProxyUrl: this.config.imageProxyUrl,    
                                             items: items,
                                             scene: this.scene,
                                             loader: this.loader,
@@ -1134,14 +1124,15 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         this.sceneInventory = null;
         if(options.sceneAssets){
             console.log('loading sceneAssets');
-
             this.layoutPlotter = new LayoutPlotter({
                                                  camera: this.camera,
                                                  scene: this.scene,
                                                  sceneryLoader: this.sceneryLoader});  
+            console.log('this.layoutPlotter',this.layoutPlotter);
 
             this.sceneInventory = new D3DInventory({
                                             chainAPI: this.config.chainAPI,
+                                            imageProxyUrl: this.config.imageProxyUrl,    
                                             items: options.sceneAssets,
                                             scene: this.scene,
                                             loader: this.loader,
@@ -1255,12 +1246,12 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                         this.initPlayerThirdPerson();
                                     };
                                 };
-                                console.log('start session walking');
+                              /*  console.log('start session walking');
                                 console.log('player rotation', this.player.rotation);
                                 console.log('camera.rotation', this.camera.rotation);
-                                console.log('character rotation',this.character.rotation);
+                                console.log('character rotation',this.character.rotation);*/
                                 let vrType = that.getVrTypeFromUI();
-                                console.log('180 degrees later: ',that.camera.rotation);
+                                //console.log('180 degrees later: ',that.camera.rotation);
 
                                 that.buildDolly(vrType);                                
                             } }
@@ -1274,11 +1265,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let selectedVrType = 'walking';
         let vrTypeSelect = document.getElementById('vrType');
         if(vrTypeSelect){
-            console.log('vrTypeSelect');
-            console.log(vrTypeSelect);
             selectedVrType = vrTypeSelect.options[vrTypeSelect.selectedIndex].value;
-        } else {
-            console.log('no vr type selection so fly by default');
         };
         return selectedVrType;
     }

@@ -18,6 +18,7 @@ export default class LayoutPlotter  {
         this.plotPoint = new THREE.Vector3();
         this.inventory = this.config.inventory;
         this.sceneryLoader = this.config.sceneryLoader;
+
     }
 
 
@@ -147,11 +148,8 @@ export default class LayoutPlotter  {
         };
         console.log('plotList2d: ',lists.length);
         lists.forEach((list,idx)=>{
-            console.log(list);
             let noPos = list.spots.length;
-            console.log('noPos: ',noPos);
             let noToPlace = (items.length>list.spots.length)?list.spots.length:items.length;
-            console.log('noToPlace: ',noToPlace); 
             if(noToPlace>0) {
                 for (var i = 0; i <= noToPlace; i++) {
                     let item = items[i];
@@ -184,27 +182,26 @@ export default class LayoutPlotter  {
         if(!this.posQ){
             this.initPosQ();
         };
-        console.log('this.posQ',this.posQ);
-
-        let spot = this.posQ.pop();
-        console.log('next spot',spot);
+        let spot = this.posQ.shift();
+        //console.log('next spot',spot);
         return spot;
       
     }
 
-initPosQ = () =>{
-    let that = this;
-    this.posQ = [];
-    this.sceneryLoader.loadFloorPlan(); 
-    let lists = this.sceneryLoader.lists;
-    console.log('initPosQ');
-    console.log(lists);
+    initPosQ = () =>{
+        let that = this;
+        this.posQ = [];
+        this.sceneryLoader.loadFloorPlan(); 
+        let lists = this.sceneryLoader.lists;
+        let allLists = {};
         lists.forEach((list,idx)=>{
             let noPos = list.spots.length;
             list.spots.forEach((spot)=>{
+                spot.idx =that.posQorigLen -(that.posQorigLen - that.posQ.length);
                 that.posQ.push(spot); 
             })
-        });   
+        }); 
+        return this.posQ.length;
     }
 
     plotCircle = (items, center, radius) =>{

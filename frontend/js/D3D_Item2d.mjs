@@ -5,7 +5,7 @@ class Item2d extends Item {
 
     constructor(config){
         let defaults = {
-            proxyURL: 'http://localhost:3001/proxy?url=',
+            imageProxyUrl: '',
             modelUrl: '',
             modelsRoute: 'models',
             nftsRoute: 'nfts',
@@ -45,11 +45,15 @@ class Item2d extends Item {
         this.isItem = true;
         let that = this;
         this.initMesh(this.config.nft).then((nftImgData)=>{
-                that.place(that.config.position);
+
+                that.place(that.config.pos);
+
                     if(that.config.rot){
                         nftImgData.mesh.rotateY(that.config.rot.y);
                     };
-                });
+                }).catch(err=>{
+                    console.log('no image, skip NFT');
+                })
     }
 
     hasAnimations = (obj) =>{
@@ -89,7 +93,7 @@ class Item2d extends Item {
         }
     }
     initItemEvents = () =>{
-        this.meshPlacedEvent = new CustomEvent('placed', {detail: {mesh: this.mesh}});
+        this.meshPlacedEvent = new CustomEvent('placed', {detail: {item: this}});
     }
 
     placeModel = (pos) =>{
@@ -112,13 +116,13 @@ class Item2d extends Item {
         };
         return new Promise((resolve,reject)=>{
             if(this.mesh){ // already loaded / created
-                console.log('place mesh');
-                console.log(this);
                 this.mesh.userData.owner = this;
                 this.mesh.position.copy(pos);
                 this.scene.add(this.mesh);
                 this.fixYCoord(this.mesh, pos);
-
+                let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
+                document.body.dispatchEvent(loadedEvent);
+                document.body.dispatchEvent(this.meshPlacedEvent);
                 resolve(this.mesh, pos);
             } else{
                 console.log('no mesh to place');
@@ -132,18 +136,23 @@ class Item2d extends Item {
         let that = this;
         return new Promise(( resolve, reject ) => {
             let imageUrl = nft.imageURLs[0];
-            console.log('initMesh for image: ',imageUrl);
-            let proxyImageURL = this.config.proxyURL +imageUrl;
+            if(!imageUrl){
+                reject('No image for NFT ',this.config.nftPostHashHex);
+                return false;
+            };
+            let proxyImageURL = that.config.imageProxyUrl +imageUrl;
+            if(imageUrl.indexOf('images.deso.org')>-1){
+                let proxyImageURL = imageUrl;
+            };
+
             let nftData = nft;
             var img = new Image();
 
                 img.onload = function(){
-
                   var height = this.height;
                   var width = this.width;
                   let dims = that.calculateAspectRatioFit(width, height, 4,2.75);
                   const textureLoader = new THREE.TextureLoader()
-                        textureLoader.crossOrigin = ""
                   const texture = textureLoader.load(this.src);
                   const geometry = new THREE.BoxGeometry( dims.width, dims.height, 0.10 );
                   const materials = that.createMats(texture);
@@ -542,21 +551,20 @@ scaleToFitScene = (obj3D, posVector) =>{
     }
 
     fixYCoord = (obj3D, posVector) =>{
+        //for a 2D NFT this means moving it up by half its height
         var helper = new THREE.BoxHelper(obj3D, 0x00ff00);
             helper.update();
 
         let lowestVertex = this.getBoxHelperVertices(helper);
         if(!lowestVertex){
-            console.log('no lowestVertex in');
-            console.log(obj3D);
             return false;
         };
         lowestVertex.applyMatrix4(helper.matrixWorld);
 
         if(posVector.y !== lowestVertex.y){
-            let yOffset = lowestVertex.y-posVector.y;
+            let yOffset = this.height/2;
             //console.log('yOffset: ',yOffset);
-            obj3D.position.setY(obj3D.position.y - yOffset);
+            obj3D.position.setY(obj3D.position.y + yOffset);
         };
     }
 

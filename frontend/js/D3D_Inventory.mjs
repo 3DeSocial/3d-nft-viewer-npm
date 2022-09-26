@@ -25,7 +25,7 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         this.loader = this.config.loader;
         this.chainAPI = new ChainAPI(this.config.chainAPI);
         this.activeItemIdx = 0;
-        if(this.config.items){
+        if((this.config.items)&&(this.config.layoutPlotter)){
             this.importToLayout();
         } else {
             if((this.config.items3d.length>0)||(this.config.items2d.length>0)){
@@ -55,10 +55,15 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
     }
 
     fetchNFTMeta = (nftList) =>{
-        
+
         let that = this;
-        return new Promise((resolve, reject) => {
-            nftList.forEach((nft)=>{
+        let noPositions = this.config.layoutPlotter.initPosQ();
+        let noNfts = nftList.length;
+        let noNftsToPlace = Math.min(noPositions,noNfts);
+            return new Promise((resolve, reject) => {
+            for (var i = 0; i < noNftsToPlace; i++) {
+                let nft = nftList[i];
+                let spot = that.config.layoutPlotter.getNextFreePos();
                 that.chainAPI.fetchPostDetail(nft).then((nftMeta)=>{
                   
                   /*let path3D = versions[0];
@@ -72,23 +77,22 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
 
                         let formats = extraDataParser.getAvailableFormats();                    
 
-                        let spot = this.config.layoutPlotter.getNextFreePos();
                         let item = this.initItem({pos:spot.pos, rot:spot.rot, nft:nftMeta, width: 2, height:2, depth:2, scene: that.scene, format: formats[0]});
-                        that.items3d.push(item);
+                            that.items3d.push(item);
+
 
                     } else {
-                        let spot = this.config.layoutPlotter.getNextFreePos();
-                        let item = this.initItem2d({position:spot.pos, rot:spot.rot, nft:nftMeta, width: 2, height:2, depth:2, scene: that.scene});
-                        that.items2d.push(item);
+
+                            let item = this.initItem2d({spot: spot, imageProxyUrl: that.config.imageProxyUrl, pos:spot.pos, rot:spot.rot, nft:nftMeta, width: 2, height:2, depth:2, scene: that.scene});
+                            that.items2d.push(item);
                      
                     }
                     if((that.items2d.length+that.items3d.length) == nftList.length){
-                        console.log('import complete');
                         resolve()
                     }
 
                 })
-            })
+            }
         });
     }
 
@@ -254,10 +258,10 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
 
         let itemParams = {
             three: THREE,
+            imageProxyUrl: opts.imageProxyUrl,
             scene: this.scene,
             height: opts.height,
-            width: this.config.width,
-            depth: this.config.depth,
+            width: opts.width,
             nftPostHashHex: nftPostHashHex,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
@@ -273,21 +277,19 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
             console.warn('!!!! NO NFT!!!2');
             console.log(opts);
         };
-
+        if(opts.spot){
+            itemParams.spot = opts.spot;
+        };
         if(opts.modelUrl){
             itemParams.modelUrl = opts.modelUrl;
         };
 
-        if(opts.position){
-            itemParams.position = opts.position;
-        }
-
         if(opts.pos){
-            itemParams.position = opts.pos;
+            itemParams.pos = opts.pos;
         }
 
         if(opts.rot){
-            itemParams.rotation = opts.rot;
+            itemParams.rot = opts.rot;
         }
 
         if(opts.width){
