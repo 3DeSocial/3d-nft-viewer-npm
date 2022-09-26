@@ -1123,12 +1123,10 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                         });
         this.sceneInventory = null;
         if(options.sceneAssets){
-            console.log('loading sceneAssets');
             this.layoutPlotter = new LayoutPlotter({
                                                  camera: this.camera,
                                                  scene: this.scene,
                                                  sceneryLoader: this.sceneryLoader});  
-            console.log('this.layoutPlotter',this.layoutPlotter);
 
             this.sceneInventory = new D3DInventory({
                                             chainAPI: this.config.chainAPI,
