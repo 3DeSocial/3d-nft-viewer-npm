@@ -196,8 +196,8 @@ export default class LayoutPlotter  {
         let allLists = {};
         lists.forEach((list,idx)=>{
             let noPos = list.spots.length;
-            list.spots.forEach((spot)=>{
-                spot.idx =that.posQorigLen -(that.posQorigLen - that.posQ.length);
+            list.spots.forEach((spot, idx)=>{
+                spot.idx = idx;
                 that.posQ.push(spot); 
             })
         }); 
