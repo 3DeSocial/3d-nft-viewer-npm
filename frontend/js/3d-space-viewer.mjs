@@ -396,7 +396,7 @@ const params = {
         if(!action.selectedPoint){
             return false;
         };
-        this.updateOverlayPos(action.selectedPoint);
+        //this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
             case 2:
             if(action.isOnWall && (!action.isOnFloor)){

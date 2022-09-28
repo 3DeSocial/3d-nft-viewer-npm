@@ -14,7 +14,7 @@ export default class HUD  {
             ...config
         };
         this.renderer = this.config.renderer;
-        this.width = 400;//window.innerWidth;
+        this.width = 600;//window.innerWidth;
         this.height = 300;//window.innerHeight;
      
     }
@@ -46,10 +46,7 @@ export default class HUD  {
         this.hudCanvas.height = this.height;
         // Get 2D context and draw something supercool.
         var hudBitmap = this.hudCanvas.getContext('2d');
-            hudBitmap.font = "Normal 40px Arial";
-            hudBitmap.textAlign = 'center';
-            hudBitmap.fillStyle = "rgba(245,245,245,0.75)";
-            hudBitmap.fillText(this.config.defaultContent, this.width, this.height);
+          
 
         this.hudBitmap = hudBitmap;
     }
@@ -81,8 +78,8 @@ export default class HUD  {
         // Create also a custom scene for HUD.
         this.sceneHUD = new THREE.Scene();
         this.sceneHUD.add(this.HUDplane);
+        this.HUDplane.position.y=-0.5;
         this.render();
-        console.log('hud init complete');
     }
 
     show = () =>{
