@@ -4,8 +4,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
-
+import { HUD, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import domtoimage from 'dom-to-image';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -74,6 +74,7 @@ const params = {
         this.camPos = new THREE.Vector3();
         this.raycaster = new THREE.Raycaster();
         this.objectsInMotion = []; // use for things being thrown etc
+
     }
 
     initSpace = (options) =>{
@@ -83,6 +84,7 @@ const params = {
             this.getContainer(this.config.el);
             this.initScene();
             this.initRenderer(this.config.el);
+            this.initHUD({renderer:that.renderer});
             this.initSkybox();
             this.initLighting();
             this.loadScenery().then(()=>{
@@ -107,6 +109,10 @@ const params = {
         });
     }
 
+    initHUD = (opts) => {
+        this.hud = new HUD(opts);
+        this.hud.init();
+    }
     loadScenery = () =>{
         let that = this;
         return new Promise((resolve,reject)=>{
@@ -262,6 +268,7 @@ const params = {
 
         //Create a WebGLRenderer
         this.renderer = new THREE.WebGLRenderer({
+                autoClear: false,
                 antialias: true,
                 alpha: true,
                 preserveDrawingBuffer: true
@@ -400,14 +407,14 @@ const params = {
             };
             break;
             default:
-            console.log(action.selection.object);
+            console.log('default:',action.selection.object);
             if(action.selection.object.userData.owner){
                 let item = action.selection.object.userData.owner;
                 if(item.config.nft){
                     let nftDisplayData = this.parseNFTDisplayData(item.config.nft);
                     if(item.config.spot){
                         nftDisplayData.spot = item.config.spot;
-                        console.log('spot index: ',item.config.spot.idx);
+                        console.log('spot id: ',item.config.spot.id, ', idx: ',item.config.spot.idx,', Y: ',item.config.spot.pos.y );
 
                     };
                     this.displayInHUD(nftDisplayData);            
@@ -417,7 +424,9 @@ const params = {
                 //console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
                 //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
 
-            };
+            } else {
+                console.log('no owner');
+            }
             break;
         }
     }
@@ -485,10 +494,19 @@ const params = {
     }
 
     displayInHUD = (data) =>{
-      //  console.log(data);
-        let msg = 'Creator '+data.creator+' '+data.description;
-      //  console.log('msg: ',msg);
+       console.log(data);
+        let msg = '<h3>Created By '+data.creator+'</h3><p>'+data.description+'</p>'
+        console.log('msg: ',msg);
         this.updateOverlayMsg(msg);
+        this.convertToCanvas();
+    }
+
+    convertToCanvas = (mesh) =>{
+        let that = this;
+        domtoimage.toPng(document.querySelector("#hud-content")).then(function (dataUrl) {
+            that.hud.updateHUDTexture(dataUrl)
+        });
+
     }
 
     updateOverlayPos = (pos) =>{
@@ -501,7 +519,7 @@ const params = {
     }
 
     updateOverlayMsg = (msg) =>{
-        document.querySelector('span#pos-display').innerHTML = msg;
+        document.querySelector('#hud-content').innerHTML = msg;
      
     }
 
@@ -850,6 +868,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
           //  this.controls.update();
         this.renderer.render(this.scene, this.camera);
+        this.hud.render();
+
     }
 
     updateObjects = (deltaTime) =>{

@@ -23,8 +23,7 @@ export default class HUD  {
     
         this.initSourceDiv();
         this.initHUDCanvas();
-        this.initHUDObject();
-        this.initHUDCamera();
+        this.initHUDCamera();       
 
     }
 
@@ -39,7 +38,14 @@ export default class HUD  {
         //document.body.append();
     }
 
+    updateHUD = (blob) =>{
+        this.initHUDObject(blob);
+        console.log('upate performed')
+    }
+
     initHUDCanvas = () =>{
+
+
 
         this.hudCanvas = document.createElement('canvas');
         this.hudCanvas.width = this.width;
@@ -49,40 +55,47 @@ export default class HUD  {
             hudBitmap.font = "Normal 40px Arial";
             hudBitmap.textAlign = 'center';
             hudBitmap.fillStyle = "rgba(245,245,245,0.75)";
-            hudBitmap.fillText(this.config.defaultContent, this.width, this.height);
+            hudBitmap.fillText(this.config.defaultContent, this.width / 2, this.height / 2);
 
         this.hudBitmap = hudBitmap;
     }
 
-    initHUDObject = () =>{
+    initHUDObject = (blob) =>{
+        this.hudTexture = null;
         // Create texture from rendered graphics.
-        this.hudTexture = new THREE.Texture(this.hudCanvas) 
+        this.hudTexture = new THREE.Texture(blob) 
         this.hudTexture.needsUpdate = true;
+        let dataUrl = URL.createObjectURL(blob);
+        let imgWidth, imgHeight;
+        var image = new Image();
+        image.src = dataUrl;
+        image.onload = function() { 
 
-        // Create HUD material.
-        this.hudMat = new THREE.MeshBasicMaterial( {
-            map: this.hudTexture,
-            depthTest: false,
-            transparent: true,
-            opacity: 0.5} );
+            that.hudTexture.image = image; 
+            that.hudTexture.needsUpdate = true; 
 
-        // Create plane to render the HUD. This plane fill the whole screen.
-        var planeGeometry = new THREE.PlaneGeometry( this.width, this.height );
-        this.HUDplane = new THREE.Mesh( planeGeometry, this.hudMat );
-        this.HUDplane.renderOrder = 9999;         
-        this.hudMat.needsUpdate = true;
+            // Create HUD material.
+            var material = new THREE.MeshBasicMaterial( {
+                map: this.hudTexture,
+                depthTest: false,
+                transparent: true,
+                opacity: 0.5} );
 
+            // Create plane to render the HUD. This plane fill the whole screen.
+            var planeGeometry = new THREE.PlaneGeometry( this.width, this.height );
+            this.HUDplane = new THREE.Mesh( planeGeometry, material );
+            this.HUDplane.renderOrder = 9999;         
+        };
+     
     }
 
     initHUDCamera = () =>{
         // Create the camera and set the viewport to match the screen dimensions.
-        this.cameraHUD = new THREE.OrthographicCamera(-this.width/2, this.width/2, this.height/2, -this.height/2, 0, 30 );
+        this.cameraHUD = new THREE.OrthographicCamera(-this.width/2, this.width/2, this.height/2, -this.height/2, 0, 1000 );
 
         // Create also a custom scene for HUD.
         this.sceneHUD = new THREE.Scene();
         this.sceneHUD.add(this.HUDplane);
-        this.render();
-        console.log('hud init complete');
     }
 
     show = () =>{
@@ -92,23 +105,6 @@ export default class HUD  {
     hide = () =>{
 
     }   
-
-    updateHUDTexture = (dataUrl)  =>{
-        let that = this;
-        var texture;
-        var imageElement = document.createElement('img');
-        imageElement.onload = function(e) {
-          const textureLoader = new THREE.TextureLoader()
-          const texture = textureLoader.load(this.src);
-            that.HUDplane.material.map = texture;
-            that.HUDplane.material.needsUpdate = true;
-        };
-        imageElement.src = dataUrl;
-        console.log('hudsize');
-        console.log(this.width,this.height);
-
-
-    }
 
     update = (message)  =>{
         this.hudTexture.needsUpdate = true;
