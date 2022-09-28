@@ -273,7 +273,7 @@ const params = {
                 alpha: true,
                 preserveDrawingBuffer: true
             });
-
+        this.renderer.autoClear =false;
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.renderer.shadowMap.enabled = true;
         this.renderer.xr.enabled = true;

@@ -14,8 +14,8 @@ export default class HUD  {
             ...config
         };
         this.renderer = this.config.renderer;
-        this.width = window.innerWidth;
-        this.height = window.innerHeight;
+        this.width = 400;//window.innerWidth;
+        this.height = 300;//window.innerHeight;
      
     }
 
@@ -63,8 +63,8 @@ export default class HUD  {
         this.hudMat = new THREE.MeshBasicMaterial( {
             map: this.hudTexture,
             depthTest: false,
-            transparent: true,
-            opacity: 0.5} );
+            transparent: true
+        });
 
         // Create plane to render the HUD. This plane fill the whole screen.
         var planeGeometry = new THREE.PlaneGeometry( this.width, this.height );
@@ -76,7 +76,7 @@ export default class HUD  {
 
     initHUDCamera = () =>{
         // Create the camera and set the viewport to match the screen dimensions.
-        this.cameraHUD = new THREE.OrthographicCamera(-this.width/2, this.width/2, this.height/2, -this.height/2, 0, 30 );
+        this.cameraHUD = new THREE.OrthographicCamera(-this.width, this.width, this.height, -this.height, 0, 30 );
 
         // Create also a custom scene for HUD.
         this.sceneHUD = new THREE.Scene();
@@ -100,21 +100,12 @@ export default class HUD  {
         imageElement.onload = function(e) {
           const textureLoader = new THREE.TextureLoader()
           const texture = textureLoader.load(this.src);
+          console.log('image width and height');
+          console.log(this.width, this.height);
             that.HUDplane.material.map = texture;
             that.HUDplane.material.needsUpdate = true;
         };
         imageElement.src = dataUrl;
-        console.log('hudsize');
-        console.log(this.width,this.height);
-
-
-    }
-
-    update = (message)  =>{
-        this.hudTexture.needsUpdate = true;
-        this.hudBitmap.clearRect(0, 0, this.hudCanvas.width, this.hudCanvas.height);
-        this.hudBitmap.fillText(message, this.width / 2, this.height / 2);
-
     }
 
     render = () =>{
