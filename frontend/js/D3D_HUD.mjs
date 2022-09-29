@@ -65,10 +65,9 @@ export default class HUD  {
 
     initHUDCamera = () =>{
         // Create the camera and set the viewport to match the screen dimensions.
-        this.cameraHUD = new THREE.OrthographicCamera(-this.width, this.width, this.height, -this.height, 0, 30 );
+        this.cameraHUD = new THREE.OrthographicCamera(-this.hudMat.map.image.width, this.hudMat.map.image.width, this.hudMat.map.image.width, -this.hudMat.map.image.width, 0, 30 );
                 const width = this.hudMat.map.image.width;
-                const height = this.hudMat.map.image.height;
-                this.cameraHUD.position.z = 10;
+                const height = this.hudMat.map.image.width;
 
         // Create also a custom scene for HUD.
         this.sceneHUD = new THREE.Scene();
