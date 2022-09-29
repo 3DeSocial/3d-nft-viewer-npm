@@ -55,18 +55,10 @@ export default class HUD  {
         // Create texture from rendered graphics.
         this.hudTexture = new THREE.Texture(this.hudCanvas) 
         this.hudTexture.needsUpdate = true;
+        this.hudMat = new THREE.SpriteMaterial( { map: this.hudTexture } );
 
-        // Create HUD material.
-        this.hudMat = new THREE.MeshBasicMaterial( {
-            map: this.hudTexture,
-            depthTest: false,
-            transparent: true
-        });
-
-        // Create plane to render the HUD. This plane fill the whole screen.
-        var planeGeometry = new THREE.PlaneGeometry( this.width, this.height );
-        this.HUDplane = new THREE.Mesh( planeGeometry, this.hudMat );
-        this.HUDplane.renderOrder = 9999;         
+        this.HUDplane =  new THREE.Sprite( this.hudMat );
+    //    this.HUDplane.renderOrder = 9999;         
         this.hudMat.needsUpdate = true;
 
     }
@@ -74,11 +66,14 @@ export default class HUD  {
     initHUDCamera = () =>{
         // Create the camera and set the viewport to match the screen dimensions.
         this.cameraHUD = new THREE.OrthographicCamera(-this.width, this.width, this.height, -this.height, 0, 30 );
+                const width = this.hudMat.map.image.width;
+                const height = this.hudMat.map.image.height;
+                this.cameraHUD.position.z = 10;
 
         // Create also a custom scene for HUD.
         this.sceneHUD = new THREE.Scene();
+                this.HUDplane.scale.set( width, height, 1 );        
         this.sceneHUD.add(this.HUDplane);
-        this.HUDplane.position.y=-0.5;
         this.render();
     }
 
