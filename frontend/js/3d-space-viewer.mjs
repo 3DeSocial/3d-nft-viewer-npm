@@ -423,7 +423,8 @@ const params = {
             };
             break;
             default:
-            console.log('default:',action.selection.object);
+
+                   // console.log('default:',action.selection.object);
             if(action.selection.object.userData.owner){
                 let item = action.selection.object.userData.owner;
                 if(item.config.nft){
@@ -442,6 +443,8 @@ const params = {
 
             } else {
                 console.log('no owner');
+                this.updateOverlayMsg('');
+                this.convertToCanvas();
             }
             break;
         }

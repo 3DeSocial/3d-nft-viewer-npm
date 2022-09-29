@@ -14,8 +14,8 @@ export default class HUD  {
             ...config
         };
         this.renderer = this.config.renderer;
-        this.width = 600;//window.innerWidth;
-        this.height = 300;//window.innerHeight;
+        this.width = window.innerWidth;//window.innerWidth;
+        this.height = window.innerHeight;//window.innerHeight;
      
     }
 
@@ -65,23 +65,21 @@ export default class HUD  {
 
     initHUDCamera = () =>{
         // Create the camera and set the viewport to match the screen dimensions.
-        this.cameraHUD = new THREE.OrthographicCamera(-this.hudMat.map.image.width, this.hudMat.map.image.width, this.hudMat.map.image.width, -this.hudMat.map.image.width, 0, 30 );
+        this.cameraHUD = new THREE.OrthographicCamera(-this.width/2, this.width/2, this.height, -this.height/2, 0, 30 );
                 const width = this.hudMat.map.image.width;
                 const height = this.hudMat.map.image.width;
-
         // Create also a custom scene for HUD.
         this.sceneHUD = new THREE.Scene();
-                this.HUDplane.scale.set( width, height, 1 );        
+                this.HUDplane.scale.set( width/2, height/2, 1 );        
         this.sceneHUD.add(this.HUDplane);
         this.render();
     }
 
     show = () =>{
-
     }
 
     hide = () =>{
-
+        this.sourceDiv.empty();
     }   
 
     updateHUDTexture = (dataUrl)  =>{
