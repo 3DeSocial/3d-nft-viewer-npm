@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { HUD, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { LoadingScreen, HUD, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 import domtoimage from 'dom-to-image';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
@@ -74,10 +74,13 @@ const params = {
         this.camPos = new THREE.Vector3();
         this.raycaster = new THREE.Raycaster();
         this.objectsInMotion = []; // use for things being thrown etc
+        this.initLoader(this.config.owner);
 
     }
 
     initSpace = (options) =>{
+        let sceneryloadingComplete = false
+        let nftLoadingComplete = false;
         return new Promise((resolve, reject) => {
             let that = this;
             this.mouse = { x : 0, y : 0 };
@@ -102,11 +105,24 @@ const params = {
                 this.resizeCanvas();   
                 this.renderer.render(this.scene,this.camera);
                 this.animate();
-                this.controls.update();                
+                this.controls.update();
+                sceneryloadingComplete = true;
+                if(nftLoadingComplete){
+                    this.loadingScreen.hide();
+                };
             });
-            this.initInventory(options);        
+            this.initInventory(options);
+            nftLoadingComplete = true;
+            if(sceneryloadingComplete){
+                this.loadingScreen.hide();
+            };
 
         });
+    }
+
+    initLoader = (ownerData) =>{
+        this.loadingScreen = new LoadingScreen(ownerData);
+        this.loadingScreen.render('.loader-ctr');
     }
 
     initHUD = (opts) => {
