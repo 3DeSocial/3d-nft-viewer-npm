@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import domtoimage from 'dom-to-image';
 
 export default class HUD  {
 
@@ -14,8 +15,11 @@ export default class HUD  {
             ...config
         };
         this.renderer = this.config.renderer;
-        this.width = window.innerWidth;//window.innerWidth;
-        this.height = window.innerHeight;//window.innerHeight;
+        this.screenDimensions =  new THREE.Vector4();
+        this.renderer.getViewport(this.screenDimensions);
+        this.width = this.screenDimensions.z;//window.innerWidth;
+        this.height = this.screenDimensions.w;//window.innerHeight;
+        console.log('this.screenDimensions',this.screenDimensions);
      
     }
 
@@ -58,6 +62,7 @@ export default class HUD  {
         this.hudMat = new THREE.SpriteMaterial( { map: this.hudTexture } );
 
         this.HUDplane =  new THREE.Sprite( this.hudMat );
+         //this.HUDplane.center.set(1,1);
     //    this.HUDplane.renderOrder = 9999;         
         this.hudMat.needsUpdate = true;
 
@@ -65,15 +70,39 @@ export default class HUD  {
 
     initHUDCamera = () =>{
         // Create the camera and set the viewport to match the screen dimensions.
-        this.cameraHUD = new THREE.OrthographicCamera(-this.width/2, this.width/2, this.height, -this.height/2, 0, 30 );
+        this.cameraHUD = new THREE.OrthographicCamera(-this.width, this.width, this.height, -this.height, 0, 100 );
                 const width = this.hudMat.map.image.width;
                 const height = this.hudMat.map.image.width;
         // Create also a custom scene for HUD.
         this.sceneHUD = new THREE.Scene();
-                this.HUDplane.scale.set( width/2, height/2, 1 );        
+        this.HUDplane.scale.set( this.width, this.height, 1 );     
+        let ypos = (this.height/2);
+        let xpos = -(this.width/2);
+        console.log(xpos,ypos);
+        this.HUDplane.position.set(xpos,ypos);  
+
         this.sceneHUD.add(this.HUDplane);
         this.render();
     }
+
+    onWindowResize = ()=> {
+        console.log("reszing");
+
+        this.renderer.getViewport(this.screenDimensions);
+        this.width = this.screenDimensions.z;//window.innerWidth;
+        this.height = this.screenDimensions.w;//window.innerHeight;
+        this.HUDplane.scale.set( this.width, this.height, 1 );     
+
+      /*  const newAspect = this.width/this.height;
+
+        this.cameraHUD.left = (newAspect) / -2;
+        this.cameraHUD.right = (newAspect) / 2;
+        this.HUDplane.scale.set( this.width, this.height, 1 );        
+
+        this.cameraHUD.updateProjectionMatrix();*/
+
+    }
+
 
     show = () =>{
     }
@@ -81,6 +110,18 @@ export default class HUD  {
     hide = () =>{
         this.sourceDiv.empty();
     }   
+
+    clear = () =>{
+        this.updateOverlayMsg('');
+    }
+
+    updateOverlayMsg = (msg) =>{
+        document.querySelector('#hud-content').innerHTML = msg;    
+        let that = this;
+        domtoimage.toPng(document.querySelector("#hud-content")).then(function (dataUrl) {
+            that.updateHUDTexture(dataUrl)
+        });
+    }
 
     updateHUDTexture = (dataUrl)  =>{
         let that = this;

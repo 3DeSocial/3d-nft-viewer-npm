@@ -5,7 +5,6 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { LoadingScreen, HUD, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
-import domtoimage from 'dom-to-image';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -443,8 +442,7 @@ const params = {
 
             } else {
                 console.log('no owner');
-                this.updateOverlayMsg('');
-                this.convertToCanvas();
+                this.hud.clear();
             }
             break;
         }
@@ -516,16 +514,7 @@ const params = {
        console.log(data);
         let msg = '<h3>Created By '+data.creator+'</h3><p>'+data.description+'</p>'
         console.log('msg: ',msg);
-        this.updateOverlayMsg(msg);
-        this.convertToCanvas();
-    }
-
-    convertToCanvas = (mesh) =>{
-        let that = this;
-        domtoimage.toPng(document.querySelector("#hud-content")).then(function (dataUrl) {
-            that.hud.updateHUDTexture(dataUrl)
-        });
-
+        this.hud.updateOverlayMsg(msg);
     }
 
     updateOverlayPos = (pos) =>{
@@ -535,11 +524,6 @@ const params = {
         console.log(this.camera);
         console.log('controls status');
         console.log(this.controls)        */
-    }
-
-    updateOverlayMsg = (msg) =>{
-        document.querySelector('#hud-content').innerHTML = msg;
-     
     }
 
     raycast = ( e ) => {
