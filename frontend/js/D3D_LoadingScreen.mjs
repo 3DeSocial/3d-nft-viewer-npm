@@ -27,7 +27,7 @@ export default class LoadingScreen {
 						template +='<p class="loading-msg">'+data.loadingMsg+'</p>';
 						template +='<p class="loading-update">'+data.updateMsg+'</p>';
 						template +='<div class="spinner"></div>';
-						template +='<div class="social-logo"><p class="devby">3D Developed by</p><img src="/images/logoNFTZ.png"/></div>';						
+						template +='<div class="social-logo"><img src="/images/logoNFTZ.png"/></div>';						
 						template +='</div></div>';
         return template
     }
