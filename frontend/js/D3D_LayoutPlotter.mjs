@@ -190,6 +190,7 @@ export default class LayoutPlotter  {
 
     initPosQ = () =>{
         let that = this;
+        this.maxItems = 0;
         this.posQ = [];
         this.sceneryLoader.loadFloorPlan(); 
         let lists = this.sceneryLoader.lists;
@@ -201,6 +202,14 @@ export default class LayoutPlotter  {
                 that.posQ.push(spot); 
             })
         }); 
+        this.maxItems =this.posQ.length;
+        return this.posQ.length;
+    }
+
+    getMaxItemCount = () =>{
+        if(!this.posQ){
+            this.initPosQ();
+        };
         return this.posQ.length;
     }
 

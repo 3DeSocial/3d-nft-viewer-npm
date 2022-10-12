@@ -193,7 +193,8 @@ export default class SceneryLoader {
             collider.material.wireframe = true;
             collider.material.opacity = 0.5;
             collider.material.transparent = true;
-            if(this.config.visualize){
+            if(this.config.visualize===true){
+                console.log('visualise: ',this.config.visualize);
                 this.visualizer = new MeshBVHVisualizer( collider, 10 );
             }
 

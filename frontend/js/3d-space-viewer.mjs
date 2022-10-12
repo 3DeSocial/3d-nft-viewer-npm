@@ -14,8 +14,6 @@ let nextPos = new THREE.Vector3();
 const params = {
     debug: false,
     firstPerson: true,
-    displayCollider: true,
-    displayBVH: false,
     visualizeDepth: 10,
     gravity: - 30,
     playerSpeed: 10,
@@ -858,8 +856,10 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
               if ( this.collider ) {
 //console.log('got this.collider');
-                this.collider.visible = params.displayCollider;
-                this.sceneryLoader.visualizer.visible = params.displayBVH;
+                this.collider.visible = params.debug;
+                if(this.sceneryLoader.visualizer){
+                   this.sceneryLoader.visualizer.visible = params.debug;
+                }
 
                 const physicsSteps = params.physicsSteps;
 
@@ -1093,24 +1093,12 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }
 
-    start3D = () =>{
-
-        // start animation / controls
-        //this.parentDivEl.children[0].setAttribute('style','display:none;');                    
-      //  this.renderer.domElement.setAttribute('style','display:inline-block;');            
-
-      //  this.showOverlay();
-        
-        //this.animate();        
-    }
-
-
     initInventory = (options) =>{
-        console.log('initInventory: this.config.imageProxyUrl',this.config.imageProxyUrl);
         let items =[];
         if(options.items){
             items = options.items;
         };
+     
         this.inventory = new D3DInventory({ chainAPI: this.config.chainAPI,
                                             imageProxyUrl: this.config.imageProxyUrl,    
                                             items: items,
@@ -1121,15 +1109,19 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                             depth: this.config.sceneryOptions.scaleModelToDepth,
                                             height: this.config.sceneryOptions.scaleModelToHeight,
                                             modelsRoute: this.config.modelsRoute,
-                                            nftsRoute: this.config.nftsRoute
+                                            nftsRoute: this.config.nftsRoute,
+                                            loadingScreen: this.loadingScreen
                                         });
         this.sceneInventory = null;
         if(options.sceneAssets){
+
             this.layoutPlotter = new LayoutPlotter({
                                                  camera: this.camera,
                                                  scene: this.scene,
                                                  sceneryLoader: this.sceneryLoader});  
-
+            let maxItems =this.layoutPlotter.getMaxItemCount();
+                    this.loadingScreen.startLoading({items:options.sceneAssets.splice(options.sceneAssets.length - maxItems,maxItems),
+                                        name:'NFTs'});
             this.sceneInventory = new D3DInventory({
                                             chainAPI: this.config.chainAPI,
                                             imageProxyUrl: this.config.imageProxyUrl,    
@@ -1142,7 +1134,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                             height: 3,
                                             modelsRoute: this.config.modelsRoute,
                                             nftsRoute: this.config.nftsRoute,
-                                            layoutPlotter: this.layoutPlotter
+                                            layoutPlotter: this.layoutPlotter,
+                                            loadingScreen: this.loadingScreen
                                         });                    
         }
         

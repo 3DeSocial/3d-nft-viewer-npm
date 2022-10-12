@@ -179,7 +179,8 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
             isImage: false,
-            layout: opts.layout
+            layout: opts.layout,
+            loadingScreen: this.config.loadingScreen
         };
 
 
@@ -254,8 +255,7 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         let paramString = '';
         let params  = [];
         let nftsRoute = '';
-
-
+        let that = this;
         let itemParams = {
             three: THREE,
             imageProxyUrl: opts.imageProxyUrl,
@@ -266,7 +266,13 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
             isImage: false,
-            layout: opts.layout
+            layout: opts.layout,
+            loadingScreen: this.config.loadingScreen,
+            onLoad: ()=>{
+                console.log(this.config);
+                this.config.loadingScreen.completeLoading();
+            }
+
         };
 
 

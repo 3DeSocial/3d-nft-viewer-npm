@@ -123,6 +123,9 @@ class Item2d extends Item {
                 let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
                 document.body.dispatchEvent(loadedEvent);
                 document.body.dispatchEvent(this.meshPlacedEvent);
+                if(this.config.onLoad){
+                    this.config.onLoad();
+                };
                 resolve(this.mesh, pos);
             } else{
                 console.log('no mesh to place');

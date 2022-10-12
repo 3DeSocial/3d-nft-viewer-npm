@@ -3,9 +3,10 @@ export default class LoadingScreen {
     //return HTML template for loading screen
     constructor(config){
         let defaults = {
-              loadingMsg: 'Loading...',
-              updateMsg: 'Please wait a moment..',
-              description: 'This is a dynamically generated space displaying the latest NFTs created by <span class="ownername">'+config.ownerName+'</span>'
+            nftCount: 0,
+            loadingMsg: 'Loading...',
+            updateMsg: 'Please wait a moment..',
+            description: 'This is a dynamically generated space displaying the latest NFTs created by <span class="ownername">'+config.ownerName+'</span>'
         };
     
         this.config = {
@@ -14,6 +15,7 @@ export default class LoadingScreen {
         };
 
         this.config;
+        this.loadingItems = [];
 
 
     }
@@ -32,12 +34,27 @@ export default class LoadingScreen {
         return template
     }
 
+    startLoading = (toLoad)=>{
+        let that = this;
+        toLoad.items.forEach((item, idx)=>{
+            let loadItem = {'name':toLoad.name};
+            that.loadingItems.push(loadItem);
+            that.displayUpdate('Loading '+toLoad.name+' '+(idx+1)+' of '+this.loadingItems.length);
+        });
+        this.initialLoadLength =this.loadingItems.length;
+    }
+
+    completeLoading = () =>{
+        this.loadingItems.pop();
+        this.displayUpdate('NFTs to load '+(this.loadingItems.length));
+
+    }
     displayMsg = (msg) =>{
-    	document.querySelector('loading-msg').innerHTML = msg;
+    	document.querySelector('.loading-msg').innerHTML = msg;
     }	
 
     displayUpdate = (msg) =>{
-    	document.querySelector('loading-update').innerHTML = msg;
+    	document.querySelector('.loading-update').innerHTML = msg;
     }
 
     render  = (ctrCls) =>{
