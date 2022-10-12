@@ -103,7 +103,6 @@ const params = {
                 this.renderer.render(this.scene,this.camera);
                 this.animate();
                 sceneryloadingComplete = true;
-                console.log('this.controls.target.y: ', this.controls.target.y, 'this.player.position.y: ', this.player.position.y);
 
                 if(nftLoadingComplete){
                     this.loadingScreen.hide();
@@ -422,17 +421,24 @@ const params = {
         };
         //this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
+            case 1:
+            if(action.isOnFloor){
+                this.moveTo = action.selectedPoint.clone();
+            };
+            break;            
             case 2:
             if(action.isOnWall && (!action.isOnFloor)){
                 //console.log('place 2d nft ',action.selectedPoint);
             };
             if(action.isOnFloor){
-                this.placeActiveItem(action.selectedPoint);
+                this.moveTo = action.selectedPoint.clone();
+
+               // this.placeActiveItem(action.selectedPoint);
             };
             break;
             default:
 
-                   // console.log('default:',action.selection.object);
+            //console.log('default:',action);
             if(action.selection.object.userData.owner){
                 let item = action.selection.object.userData.owner;
                 if(item.config.nft){
@@ -450,7 +456,6 @@ const params = {
                 //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
 
             } else {
-                console.log('no owner');
                 if(this.hud){
                     this.hud.clear();
                 }
@@ -591,7 +596,7 @@ const params = {
     isOnFloor = (selectedPoint, meshToCheck) =>{
 
         let origin = selectedPoint.clone();
-            origin.setY(origin.y+1);
+            origin.setY(origin.y+2);
 
         let dest = selectedPoint.clone();
             dest.setY(-1000); //raycast downwards from selected point.
@@ -821,15 +826,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         
         
     animate = () =>{
-        console.log('start animation loop');
-/*
-        window.setInterval(()=>{
-        if (this.renderer.xr.isPresenting === true) {
-            this.vrControls.checkControllers();
-        }             *
-    },1)*/
-
-
         this.renderer.setAnimationLoop(this.render);
     }
     

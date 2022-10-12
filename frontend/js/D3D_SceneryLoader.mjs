@@ -24,8 +24,6 @@ export default class SceneryLoader {
             ...config
         };
 
-        console.log(config);
-        
         this.loader = this.config.loader;
         this.scene = this.config.scene;
         this.height = this.config.height;
@@ -51,11 +49,9 @@ export default class SceneryLoader {
 
     hasListLayout = () =>{
         if(!this.config.floorPlan){
-            console.log('no floorPlan')
             return false;
         }
-        console.log('hasListLayout:');
-        console.log(this.config.floorPlan);
+
         let lists =  this.config.floorPlan.filter(plan => plan.type == 'list');
         return (lists.length>0);
     }
@@ -73,15 +69,9 @@ export default class SceneryLoader {
         return new Promise((resolve, reject) => {
             this.gltfLoader = new GLTFLoader();
             this.gltfLoader.load(this.config.sceneryPath, (res) => {
-                console.log('gltf loaded');
             	that.scaleScene(res.scene);
-                console.log('gltf scaled');
-
                 that.centerScene(res.scene);
-
-                console.log('gltf centered');
                 that.addScenery(res);
-                console.log('collider added');
                 resolve(res.scene);
             });
        });
@@ -203,8 +193,6 @@ export default class SceneryLoader {
     }
 
     addScenery = (gltf) =>{
-        console.log('addScenery');
-        console.log(this.config);
         const root = gltf.scene;
         this.sceneryMesh = root;
         this.scene.add(root);  

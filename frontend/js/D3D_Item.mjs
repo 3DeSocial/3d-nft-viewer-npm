@@ -138,7 +138,6 @@ export default class Item {
                         })
                     };
                 }).catch(err =>{
-                    console.log(this.config);
                     console.log(err);
                 })
             }

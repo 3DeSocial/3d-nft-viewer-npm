@@ -19,10 +19,7 @@ export default class VRButton {
     let vrButton = document.querySelector('div.view-vr-btn');
     if(vrButton){
       button = vrButton;
-      console.log('VRButton FOUND: ');
-      console.log(button);
     } else {
-      console.log('VRBUTTON CREATED!!!');
       button = document.createElement( 'button' );
       button.textContent = 'View In VR';
       button.id='VRButton';
@@ -77,9 +74,8 @@ export default class VRButton {
         button.style.opacity = '0.5';
 
       };
-console.log(button);
+
       button.onclick = function () {
-        console.log('VRButton click');
         if ( currentSession === null ) {
           options.onStartSession()
           // WebXR's requestReferenceSpace only works if the corresponding feature
@@ -91,16 +87,12 @@ console.log(button);
 
           const sessionInit = { optionalFeatures: [ 'local-floor', 'bounded-floor', 'hand-tracking', 'layers' ] };
           navigator.xr.requestSession( 'immersive-vr', sessionInit ).then( onSessionStarted );
-          console.log('session requested');
         } else {
-          console.log('click vr button: end session');
-
           currentSession.end();
 
         }
 
       };
-      console.log('onclick event added to vr button: ',button);
     }
 
     function disableButton() {
@@ -144,7 +136,6 @@ console.log(button);
     }
 
     if ( 'xr' in navigator ) {
-      console.log('xr found in navigator');
       if(button){
         button.id = 'VRButton';
         button.style.display = 'none';
@@ -153,7 +144,6 @@ console.log(button);
 
         navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
 
-        console.log('immersive-vr supported: ',supported);
         supported ? showEnterVR() : showWebXRNotFound();
 
         if ( supported && VRButton.xrSessionIsGranted ) {
@@ -165,12 +155,9 @@ console.log(button);
         } );
 
         return button;
-      } else {
-        console.log('button NOT found')
-      }
+      };
       
     } else {
-      console.log('xr NOT FOUND in navigator');
 
       const message = document.createElement( 'a' );
 
