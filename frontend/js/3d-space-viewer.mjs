@@ -16,8 +16,8 @@ const params = {
     firstPerson: true,
     visualizeDepth: 10,
     gravity: - 30,
-    playerSpeed: 10,
-    physicsSteps: 20,
+    playerSpeed: 8,
+    physicsSteps: 10,
     useShowroom: true};
 
  export default class D3DSpaceViewer {
@@ -363,6 +363,7 @@ const params = {
     }
 
     addListeners = ()=>{
+        document.addEventListener('contextmenu', event => event.preventDefault());
         this.addEventListenerResize();
         this.addEventListenerContextLost();
         this.addEventListenerExitFullScreen();
@@ -437,7 +438,10 @@ const params = {
             case 1:
             if(action.isOnFloor){
                 this.moveTo = action.selectedPoint.clone();
-            } else {
+            } 
+    
+            break;            
+            case 2:
             if(action.selection.object.userData.owner){
                 let item = action.selection.object.userData.owner;
                 if(item.config.nft){
@@ -456,18 +460,7 @@ const params = {
                 if(this.hud){
                     this.hud.clear();
                 }
-            }                
-            }
-            break;            
-            case 2:
-            if(action.isOnWall && (!action.isOnFloor)){
-                //console.log('place 2d nft ',action.selectedPoint);
-            };
-            if(action.isOnFloor){
-                this.moveTo = action.selectedPoint.clone();
-
-               // this.placeActiveItem(action.selectedPoint);
-            };
+            }   
             break;
             default:
 
@@ -546,11 +539,25 @@ const params = {
        // this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
             case 1:
-           // console.log('lmb');
-            if(action.isOnFloor && (!action.isOnWall)){
-               // console.log('move to ',action.selectedPoint);
-                this.moveTo = action.selectedPoint.clone();
-            }
+            if(action.selection.object.userData.owner){
+                let item = action.selection.object.userData.owner;
+                if(item.config.nft){
+                    let nftDisplayData = this.parseNFTDisplayData(item.config.nft);
+                    if(item.config.spot){
+                        nftDisplayData.spot = item.config.spot;
+                    };
+                    this.displayInHUD(nftDisplayData);            
+                }
+
+                //console.log(action.selection.object.userData.owner.config.nft);
+                //console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
+                //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
+
+            } else {
+                if(this.hud){
+                    this.hud.clear();
+                }
+            }   
             break;
             default:
           //  console.log('default',action);
