@@ -269,7 +269,6 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
             layout: opts.layout,
             loadingScreen: this.config.loadingScreen,
             onLoad: ()=>{
-                console.log(this.config);
                 this.config.loadingScreen.completeLoading();
             }
 

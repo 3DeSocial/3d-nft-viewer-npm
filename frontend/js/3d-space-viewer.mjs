@@ -126,7 +126,9 @@ const params = {
     }
 
     initHUD = (opts) => {
-        this.hud = new HUD(opts);
+        this.hud = new BrowserHud(opts);
+        this.hud = new VRHud(opts);
+
         this.hud.init();
     }
     loadScenery = () =>{
@@ -353,7 +355,7 @@ const params = {
         this.addEventListenerContextLost();
         this.addEventListenerExitFullScreen();
         this.addEventListenerKeys();
-      //  this.addEventListenerMouseClick();
+        this.addEventListenerMouseClick();
     }    
 
     addEventListenerKeys = ()=>{
