@@ -74,6 +74,7 @@ const params = {
         this.objectsInMotion = []; // use for things being thrown etc
         this.initLoader(this.config.owner);
 
+
     }
 
     initSpace = (options) =>{
@@ -88,6 +89,8 @@ const params = {
             this.initHUD();
             this.initSkybox();
             this.initLighting();
+            let linkViewFull = document.querySelector('#view-full');
+            this.addClickListenerFullScreen(linkViewFull);
             this.loadScenery().then(()=>{
                 this.initCameraPlayer();                
                // that.placeAssets();
@@ -106,7 +109,9 @@ const params = {
 
                 if(nftLoadingComplete){
                     this.loadingScreen.hide();
+                    document.getElementById('view-full').style.display='inline-block';
                     this.resizeCanvas();
+
 
                 };
             });
@@ -114,6 +119,9 @@ const params = {
             nftLoadingComplete = true;
             if(sceneryloadingComplete){
                 this.loadingScreen.hide();
+                document.getElementById('view-full').style.display='inline-block';
+                this.resizeCanvas();
+
             };
 
         });
@@ -821,6 +829,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         }
+        this.resizeCanvas();
     
     }
 
@@ -1374,7 +1383,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         }
     }
 
-    addClickListenerFullScreen = (ctr, el, modelUrl) => {
+    addClickListenerFullScreen = (el) => {
         let that = this;
 
         //console.log('adding listener for '+modelUrl);
