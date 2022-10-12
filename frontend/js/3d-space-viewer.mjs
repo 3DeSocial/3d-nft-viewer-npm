@@ -1459,7 +1459,7 @@ initPlayerFirstPerson = () => {
     that.player.position.copy(playerStartPos);
     that.character = new THREE.Mesh(
         new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
-        new THREE.MeshStandardMaterial({ transparent: (!params.debug), opacity: 0.5})
+        new THREE.MeshStandardMaterial({ transparent: (!params.debug), opacity: 0})
     );
 
     that.character.geometry.translate( 0, -1, 0 );
