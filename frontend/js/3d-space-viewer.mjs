@@ -12,8 +12,9 @@ let fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = fal
 let nextPos = new THREE.Vector3();
 
 const params = {
+    debug: false,
     firstPerson: true,
-    displayCollider: false,
+    displayCollider: true,
     displayBVH: false,
     visualizeDepth: 10,
     gravity: - 30,
@@ -40,7 +41,7 @@ const params = {
                     },
                     vrType: 'walking',
                     useOwnHandlers: true,
-                    lookAtStartPos: {x:0, y:4, z:-10}
+                    lookAtStartPos: {x:0,y:2,z:0}
                 };
         
         this.config = {
@@ -86,7 +87,7 @@ const params = {
             this.getContainer(this.config.el);
             this.initScene();
             this.initRenderer(this.config.el);
-            this.initHUD({renderer:that.renderer});
+           // this.initHUD({renderer:that.renderer});
             this.initSkybox();
             this.initLighting();
             this.loadScenery().then(()=>{
@@ -100,14 +101,16 @@ const params = {
                 this.initControls();
                 if ( 'xr' in navigator ) {
                     that.initVR();
-                }
-                this.resizeCanvas();   
+                }   
                 this.renderer.render(this.scene,this.camera);
                 this.animate();
-                this.controls.update();
                 sceneryloadingComplete = true;
+                console.log('this.controls.target.y: ', this.controls.target.y, 'this.player.position.y: ', this.player.position.y);
+
                 if(nftLoadingComplete){
                     this.loadingScreen.hide();
+                    this.resizeCanvas();
+
                 };
             });
             this.initInventory(options);
@@ -133,7 +136,8 @@ const params = {
         return new Promise((resolve,reject)=>{
 
             let sceneryOptions = {
-                ...{scene : that.scene,
+                ...{visualize:(params.debug),
+                    scene : that.scene,
                     castShadow: false,
                 receiveShadow : false},
                 ...that.config.sceneryOptions
@@ -246,7 +250,7 @@ const params = {
       //w  this.camera.position.set( 10, 10, - 10 );
         this.camera.far = 1000;
         this.camera.updateProjectionMatrix();        
-
+       // this.camera.lookAt(this.config.lookAtStartPos);
     }
 
     initCamera = () =>{
@@ -261,6 +265,11 @@ const params = {
     initControls = () =>{
         //Controls
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    let playerx = this.player.position.x;
+    let playery = this.player.position.y;
+    let playerz = this.player.position.z;
+    //this.camPos.set(playerx,(playery),playerz);
+    this.controls.target.set(playerx,(playery-1),(playerz+0.001));
         /*let cameraStartPos = new THREE.Vector3(this.config.cameraStartPos.x, this.config.cameraStartPos.y, this.config.cameraStartPos.z);
         this.camera.position.copy(cameraStartPos);
         this.camera.updateProjectionMatrix();        */
@@ -288,7 +297,7 @@ const params = {
                 alpha: true,
                 preserveDrawingBuffer: true
             });
-        this.renderer.autoClear =false;
+        this.renderer.autoClear =true;
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.renderer.shadowMap.enabled = true;
         this.renderer.xr.enabled = true;
@@ -346,7 +355,7 @@ const params = {
         this.addEventListenerContextLost();
         this.addEventListenerExitFullScreen();
         this.addEventListenerKeys();
-        this.addEventListenerMouseClick();
+      //  this.addEventListenerMouseClick();
     }    
 
     addEventListenerKeys = ()=>{
@@ -442,7 +451,9 @@ const params = {
 
             } else {
                 console.log('no owner');
-                this.hud.clear();
+                if(this.hud){
+                    this.hud.clear();
+                }
             }
             break;
         }
@@ -514,7 +525,9 @@ const params = {
        console.log(data);
         let msg = '<h3>Created By '+data.creator+'</h3><p>'+data.description+'</p>'
         console.log('msg: ',msg);
-        this.hud.updateOverlayMsg(msg);
+        if(this.hud){
+           this.hud.updateOverlayMsg(msg);
+        }
     }
 
     updateOverlayPos = (pos) =>{
@@ -836,17 +849,17 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             this.controls.maxDistance = 1e-4;
 
             } else {
-
+/*
                 this.controls.maxPolarAngle = Math.PI / 2;
                 this.controls.minDistance = 1;
                 this.controls.maxDistance = 20;
-
+*/
             }
 
               if ( this.collider ) {
 //console.log('got this.collider');
                 this.collider.visible = params.displayCollider;
-             //   visualizer.visible = params.displayBVH;
+                this.sceneryLoader.visualizer.visible = params.displayBVH;
 
                 const physicsSteps = params.physicsSteps;
 
@@ -869,10 +882,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             // TODO: limit the camera movement based on the this.collider
             // raycast in direction of camera and move it if it's further than the closest point
 
-          //  this.controls.update();
-        this.renderer.clear();
+        //this.controls.update();
         this.renderer.render(this.scene, this.camera);
-        this.hud.render();
+        //this.hud.render();
 
     }
 
@@ -888,40 +900,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
         })
     }
-
-     fitCameraToMesh=(loadedItem)=>{
-
-        console.log('fitCameraToMesh: ', loadedItem);
-        const box = new THREE.Box3().setFromObject(loadedItem.mesh);
-        const center = new THREE.Vector3();
-        const size = new THREE.Vector3();
-
-        box.getSize(size);
-        box.getCenter(center);
-
-        const maxSize = Math.max(size.x, size.y, size.z);
-        const fitHeightDistance = maxSize / (2 * Math.atan(Math.PI * this.camera.fov / 360));
-        const fitWidthDistance = fitHeightDistance / this.camera.aspect;
-
-        const distance = this.config.fitOffset * Math.max(fitHeightDistance, fitWidthDistance);
-        this.distance = distance;
-
-        const direction = this.controls.target.clone()
-            .sub(this.camera.position)
-            .normalize()
-            .multiplyScalar(distance);
-
-        this.controls.maxDistance = distance * 10;
-        this.controls.target.copy(center);
-
-        this.camera.near = distance / 100;
-        this.camera.far = distance * 100;
-        this.camera.updateProjectionMatrix();
-
-        this.camera.position.copy(this.controls.target).sub(direction);
-        this.controls.update();
-    }
-
 
     centerMeshInScene = (gltfScene) =>{
         let firstMesh = null;
@@ -1278,9 +1256,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                 that.buildDolly(vrType);                                
                             } }
         let vrButtonEl = VRButton.createButton(this.renderer, vrBtnOptions);
-        console.log('initVR');
-        console.log(vrButtonEl);
-
     }
     
     getVrTypeFromUI = () =>{
@@ -1293,7 +1268,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }
 
     setVrType = (vrType) => {
-        console.log('vrType: ',vrType);
         this.vrType = vrType;
     }
 
@@ -1494,7 +1468,7 @@ initPlayerFirstPerson = () => {
     that.player.position.copy(playerStartPos);
     that.character = new THREE.Mesh(
         new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
-        new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
+        new THREE.MeshStandardMaterial({ transparent: (!params.debug), opacity: 0.5})
     );
 
     that.character.geometry.translate( 0, -1, 0 );
@@ -1688,7 +1662,7 @@ initPlayerThirdPerson = () => {
     // adjust the camera
     this.camera.position.sub( this.controls.target );
     let playerx = this.player.position.x;
-    let playery = this.player.position.y+1;
+    let playery = this.player.position.y;
     let playerz = this.player.position.z;
     //this.camPos.set(playerx,(playery),playerz);
     this.controls.target.set(playerx,(playery),playerz);

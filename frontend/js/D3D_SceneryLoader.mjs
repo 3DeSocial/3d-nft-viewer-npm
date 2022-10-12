@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { MeshBVH } from '3d-nft-viewer';
+import { MeshBVH, MeshBVHVisualizer } from '3d-nft-viewer';
 let visualizer, geometries;
 
 export default class SceneryLoader {
@@ -191,11 +191,13 @@ export default class SceneryLoader {
             this.bvh = mergedGeometry.boundsTree;
             let collider = new THREE.Mesh( mergedGeometry );
             collider.material.wireframe = true;
-            collider.material.opacity = 0;
+            collider.material.opacity = 0.5;
             collider.material.transparent = true;
+            if(this.config.visualize){
+                this.visualizer = new MeshBVHVisualizer( collider, 10 );
+            }
 
         return collider;
-     //   visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
 
     }
 

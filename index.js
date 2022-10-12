@@ -18,4 +18,4 @@ import { ExtraData3DParser } from  './frontend/js/D3D_ExtraDataParser.mjs';
 import { LayoutPlotter } from  './frontend/js/D3D_LayoutPlotter.mjs';
 import { ChainAPI } from  './frontend/js/D3D_ChainAPI.mjs';
 import { LoadingScreen } from  './frontend/js/D3D_LoadingScreen.mjs'; 
-export {LoadingScreen, MeshBVH, VRButton, NFTViewerOverlay, ChainAPI, HUD, D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRControls, Item, Item2d, XRControllerModelFactory, SceneryLoader, SkyBoxLoader, LayoutPlotter}
+export {LoadingScreen, MeshBVH, MeshBVHVisualizer, VRButton, NFTViewerOverlay, ChainAPI, HUD, D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRControls, Item, Item2d, XRControllerModelFactory, SceneryLoader, SkyBoxLoader, LayoutPlotter}
