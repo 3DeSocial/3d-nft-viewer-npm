@@ -8,6 +8,7 @@ export default class HUD  {
         let defaults = {
             renderer: null,
             defaultContent: 'Initializing...',
+            scene: null
         };
     
         this.config = {
@@ -20,15 +21,18 @@ export default class HUD  {
         this.width = this.screenDimensions.z;//window.innerWidth;
         this.height = this.screenDimensions.w;//window.innerHeight;
         console.log('this.screenDimensions',this.screenDimensions);
+        this.scene = this.config.scene;
+        this.hudPos = new THREE.Vector3();
+        this.camera =this.config.camera;
+        this.player = this.config.player;
      
     }
 
     init = () =>{
     
         this.initSourceDiv();
-        this.initHUDCanvas();
         this.initHUDObject();
-        this.initHUDCamera();
+
 
     }
 
@@ -43,19 +47,39 @@ export default class HUD  {
         //document.body.append();
     }
 
-    initHUDCanvas = () =>{
+     initHUDObject = () =>{
+        let that = this;
+        this.hudMat = null;
+        this.hudTexture = null;
 
-        this.hudCanvas = document.createElement('canvas');
-        this.hudCanvas.width = this.width;
-        this.hudCanvas.height = this.height;
-        // Get 2D context and draw something supercool.
-        var hudBitmap = this.hudCanvas.getContext('2d');
-          
+        domtoimage.toPng(document.querySelector("#hud-content")).then(function (dataUrl) {
+            var imageElement = document.createElement('img');
+                imageElement.onload = function(e) {
+                    let textureLoader = new THREE.TextureLoader()
+                    that.hudTexture = textureLoader.load(this.src);
 
-        this.hudBitmap = hudBitmap;
+                    // Create HUD material.
+                     that.hudMat = new THREE.MeshBasicMaterial( {
+                        map: that.hudTexture,
+                        transparent: false,
+                        opacity: 0.75});
+
+                     const geometry = new THREE.BoxGeometry(this.width, this.height, 0.01);
+                    that.HUDplane = new THREE.Mesh( geometry, that.hudMat );
+that.HUDplane.scale.set(0.01,0.01,0.01);
+                that.HUDplane.material.needsUpdate = true;
+           //     that.HUDplane.position.set(-1000,-1000,-1000);
+                that.player.add(that.HUDplane);
+            };
+
+            imageElement.src = dataUrl;
+
+        });
+
     }
 
-    initHUDObject = () =>{
+
+ /*   initHUDObject = () =>{
         // Create texture from rendered graphics.
         this.hudTexture = new THREE.Texture(this.hudCanvas) 
         this.hudTexture.needsUpdate = true;
@@ -66,24 +90,9 @@ export default class HUD  {
     //    this.HUDplane.renderOrder = 9999;         
         this.hudMat.needsUpdate = true;
 
-    }
+    }*/
 
-    initHUDCamera = () =>{
-        // Create the camera and set the viewport to match the screen dimensions.
-        this.cameraHUD = new THREE.OrthographicCamera(-this.width, this.width, this.height, -this.height, 0, 100 );
-                const width = this.hudMat.map.image.width;
-                const height = this.hudMat.map.image.width;
-        // Create also a custom scene for HUD.
-        this.sceneHUD = new THREE.Scene();
-        this.HUDplane.scale.set( this.width, this.height, 1 );     
-        let ypos = (this.height/2);
-        let xpos = -(this.width/2);
-        console.log(xpos,ypos);
-        this.HUDplane.position.set(xpos,ypos);  
-
-        this.sceneHUD.add(this.HUDplane);
-        this.render();
-    }
+    
 
     onWindowResize = ()=> {
         console.log("reszing");
@@ -91,7 +100,7 @@ export default class HUD  {
         this.renderer.getViewport(this.screenDimensions);
         this.width = this.screenDimensions.z;//window.innerWidth;
         this.height = this.screenDimensions.w;//window.innerHeight;
-        this.HUDplane.scale.set( this.width, this.height, 1 );     
+   //     this.HUDplane.scale.set( this.width, this.height, 1 );     
 
       /*  const newAspect = this.width/this.height;
 
@@ -115,9 +124,14 @@ export default class HUD  {
         this.updateOverlayMsg('');
     }
 
-    updateOverlayMsg = (msg) =>{
+    updateOverlayMsg = (msg, pos) =>{
         document.querySelector('#hud-content').innerHTML = msg;    
         let that = this;
+        if(pos){
+
+        } else {
+            console.log('no position');
+        };
         domtoimage.toPng(document.querySelector("#hud-content")).then(function (dataUrl) {
             that.updateHUDTexture(dataUrl)
         });

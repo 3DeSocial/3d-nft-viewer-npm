@@ -86,25 +86,27 @@ const params = {
             this.getContainer(this.config.el);
             this.initScene();
             this.initRenderer(this.config.el);
-            this.initHUD({renderer:that.renderer});
             this.initSkybox();
             this.initLighting();
             this.loadScenery().then(()=>{
-                this.initCameraPlayer();                
+                this.initCameraPlayer();
+
                // that.placeAssets();
                 if(that.config.firstPerson){
                     that.initPlayerFirstPerson();
                 } else {
                     that.initPlayerThirdPerson();
                 }
+                this.initHUD({player: that.player, scene:that.scene, camera: that.camera ,renderer:that.renderer});
+
                 this.initControls();
                 if ( 'xr' in navigator ) {
                     that.initVR();
                 }
                 this.resizeCanvas();   
                 this.renderer.render(this.scene,this.camera);
+                this.controls.update();                
                 this.animate();
-                this.controls.update();
                 sceneryloadingComplete = true;
                 if(nftLoadingComplete){
                     this.loadingScreen.hide();
@@ -264,6 +266,7 @@ const params = {
         /*let cameraStartPos = new THREE.Vector3(this.config.cameraStartPos.x, this.config.cameraStartPos.y, this.config.cameraStartPos.z);
         this.camera.position.copy(cameraStartPos);
         this.camera.updateProjectionMatrix();        */
+        this.camera.updateProjectionMatrix();
         this.controls.update();
     }
 
@@ -288,7 +291,7 @@ const params = {
                 alpha: true,
                 preserveDrawingBuffer: true
             });
-        this.renderer.autoClear =false;
+      //  this.renderer.autoClear =false;
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.renderer.shadowMap.enabled = true;
         this.renderer.xr.enabled = true;
@@ -433,7 +436,7 @@ const params = {
                         console.log('spot id: ',item.config.spot.id, ', idx: ',item.config.spot.idx,', Y: ',item.config.spot.pos.y );
 
                     };
-                    this.displayInHUD(nftDisplayData);            
+                    this.displayInHUD(nftDisplayData, this.camera.position);            
                 }
 
                 //console.log(action.selection.object.userData.owner.config.nft);
@@ -510,11 +513,11 @@ const params = {
         }
     }
 
-    displayInHUD = (data) =>{
+    displayInHUD = (data, pos) =>{
        console.log(data);
         let msg = '<h3>Created By '+data.creator+'</h3><p>'+data.description+'</p>'
         console.log('msg: ',msg);
-        this.hud.updateOverlayMsg(msg);
+        this.hud.updateOverlayMsg(msg, pos);
     }
 
     updateOverlayPos = (pos) =>{
@@ -870,9 +873,46 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             // raycast in direction of camera and move it if it's further than the closest point
 
           //  this.controls.update();
-        this.renderer.clear();
+    //    this.renderer.clear();
         this.renderer.render(this.scene, this.camera);
-        this.hud.render();
+       // this.hud.render();
+
+    }
+
+ renderVR = () =>{
+        this.vrControls.checkControllers();
+
+        const delta = Math.min( this.clock.getDelta(), 0.1 );
+
+        //this.updateObjects(delta);
+
+          
+
+              if ( this.collider ) {
+//console.log('got this.collider');
+                this.collider.visible = params.displayCollider;
+             //   visualizer.visible = params.displayBVH;
+
+                const physicsSteps = params.physicsSteps;
+
+                for ( let i = 0; i < physicsSteps; i ++ ) {
+
+                        if(this.vrType==="walking"){
+                           this.updatePlayerVR( delta / physicsSteps );
+                        }
+                  
+
+                }
+
+            } else {
+  //              console.log('no this.collider');
+            }
+
+            // TODO: limit the camera movement based on the this.collider
+            // raycast in direction of camera and move it if it's further than the closest point
+
+          //  this.controls.update();
+        this.renderer.render(this.scene, this.camera);
 
     }
 
@@ -1261,6 +1301,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let vrBtnOptions = { btnCtr : 'div.view-vr-btn',
                              viewer: this,
                              onStartSession: ()=>{
+                                this.setAnimationLoop(null);
+                                this.renderer.setAnimationLoop(this.renderVR);
+
                                 if(!this.player){
                                     if(this.config.firstPerson){
                                         this.initPlayerFirstPerson();

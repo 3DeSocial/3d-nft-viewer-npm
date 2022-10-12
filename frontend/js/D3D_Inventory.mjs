@@ -62,6 +62,9 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         let noNftsToPlace = Math.min(noPositions,noNfts);
             return new Promise((resolve, reject) => {
             for (var i = 0; i < noNftsToPlace; i++) {
+                if(!nftList[i].imageURLs[0]){
+                    continue;
+                };
                 let nft = nftList[i];
                 let spot = that.config.layoutPlotter.getNextFreePos();
                 that.chainAPI.fetchPostDetail(nft).then((nftMeta)=>{
