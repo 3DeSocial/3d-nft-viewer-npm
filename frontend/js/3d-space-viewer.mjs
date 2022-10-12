@@ -560,7 +560,16 @@ const params = {
             }   
             break;
             default:
-          //  console.log('default',action);
+                if(action.selection.object.userData.owner){
+                    let item = action.selection.object.userData.owner;
+                    if(item.config.nft){
+                        let nftDisplayData = this.parseNFTDisplayData(item.config.nft);
+                        if(item.config.spot){
+                            nftDisplayData.spot = item.config.spot;
+                        };
+                        this.displayInHUD(nftDisplayData);            
+                    }
+                }
             break;
         }
     }
