@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { LoadingScreen, HUD, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -85,7 +85,7 @@ const params = {
             this.getContainer(this.config.el);
             this.initScene();
             this.initRenderer(this.config.el);
-           // this.initHUD({renderer:that.renderer});
+            this.initHUD();
             this.initSkybox();
             this.initLighting();
             this.loadScenery().then(()=>{
@@ -125,11 +125,16 @@ const params = {
     }
 
     initHUD = (opts) => {
-        this.hud = new BrowserHud(opts);
-        this.hud = new VRHud(opts);
-
+        this.hud = new HUDBrowser(opts);
         this.hud.init();
+        let that = this;
+        navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
+            if(supported){
+                that.hudVR = new HUDVR(opts);
+            }
+        });
     }
+
     loadScenery = () =>{
         let that = this;
         return new Promise((resolve,reject)=>{
@@ -424,7 +429,27 @@ const params = {
             case 1:
             if(action.isOnFloor){
                 this.moveTo = action.selectedPoint.clone();
-            };
+            } else {
+            if(action.selection.object.userData.owner){
+                let item = action.selection.object.userData.owner;
+                if(item.config.nft){
+                    let nftDisplayData = this.parseNFTDisplayData(item.config.nft);
+                    if(item.config.spot){
+                        nftDisplayData.spot = item.config.spot;
+                    };
+                    this.displayInHUD(nftDisplayData);            
+                }
+
+                //console.log(action.selection.object.userData.owner.config.nft);
+                //console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
+                //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
+
+            } else {
+                if(this.hud){
+                    this.hud.clear();
+                }
+            }                
+            }
             break;            
             case 2:
             if(action.isOnWall && (!action.isOnFloor)){
@@ -445,8 +470,7 @@ const params = {
                     let nftDisplayData = this.parseNFTDisplayData(item.config.nft);
                     if(item.config.spot){
                         nftDisplayData.spot = item.config.spot;
-                        console.log('spot id: ',item.config.spot.id, ', idx: ',item.config.spot.idx,', Y: ',item.config.spot.pos.y );
-
+                       // console.log('spot id: ',item.config.spot.id, ', idx: ',item.config.spot.idx,', Y: ',item.config.spot.pos.y );
                     };
                     this.displayInHUD(nftDisplayData);            
                 }
@@ -531,7 +555,7 @@ const params = {
         let msg = '<h3>Created By '+data.creator+'</h3><p>'+data.description+'</p>'
         console.log('msg: ',msg);
         if(this.hud){
-           this.hud.updateOverlayMsg(msg);
+           this.hud.show(msg);
         }
     }
 
@@ -1459,7 +1483,7 @@ initPlayerFirstPerson = () => {
     that.player.position.copy(playerStartPos);
     that.character = new THREE.Mesh(
         new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
-        new THREE.MeshStandardMaterial({ transparent: (!params.debug), opacity: 0.5})
+        new THREE.MeshStandardMaterial({ transparent: (!params.debug), opacity: 0})
     );
 
     that.character.geometry.translate( 0, -1, 0 );
