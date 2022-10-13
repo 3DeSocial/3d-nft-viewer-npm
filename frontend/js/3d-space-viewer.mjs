@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { Item, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -75,6 +75,37 @@ const params = {
         this.initLoader(this.config.owner);
 
 
+
+    }
+
+    loadUIAssets = () =>{
+        this.loadDiamond();
+        this.loadHeart();
+    }
+
+    loadDiamond = () =>{
+        this.uiAssets = [];
+
+        let itemConfig = {  scene: this.scene,
+                            format: 'glb',
+                            height:0.05,
+                            width:0.05,
+                            modelsRoute: this.config.modelsRoute,
+                            nftsRoute: this.config.nftsRoute,
+                            modelUrl:'  https://desodata.azureedge.net/unzipped/4fe3115f676918940b19fbdedaf210ad73979c9858bf7193761a24a900461a76/gltf/normal/diamond-centered.glb',
+                            nftPostHashHex:'4fe3115f676918940b19fbdedaf210ad73979c9858bf7193761a24a900461a76'};
+
+        this.uiAssets['diamond']= this.initItemForModel(itemConfig);
+        let newPos = new THREE.Vector3(0,0,100);
+
+
+        this.uiAssets['diamond'].place(newPos);
+        this.uiAssets['heart']= this.initItemForModel(itemConfig);
+        console.log(this.uiAssets);
+    }
+
+    loadHeart = () =>{
+
     }
 
     initSpace = (options) =>{
@@ -85,12 +116,12 @@ const params = {
             this.mouse = { x : 0, y : 0 };
             this.getContainer(this.config.el);
             this.initScene();
+            this.loadUIAssets();
             this.initRenderer(this.config.el);
             this.initHUD();
             this.initSkybox();
             this.initLighting();
-            let linkViewFull = document.querySelector('#view-full');
-            this.addClickListenerFullScreen(linkViewFull);
+
             this.loadScenery().then(()=>{
                 this.initCameraPlayer();                
                // that.placeAssets();
@@ -139,11 +170,16 @@ const params = {
         this.hud = new HUDBrowser(opts);
         this.hud.init();
         let that = this;
-        navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
-            if(supported){
-                that.hudVR = new HUDVR(opts);
-            }
-        });
+        if(!navigator.xr){
+            console.log('XR not supported on this device or browser');
+        } else {
+            navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
+                if(supported){
+                    that.hudVR = new HUDVR(opts);
+                }
+            });            
+        }
+
     }
 
     loadScenery = () =>{
@@ -372,8 +408,16 @@ const params = {
         this.addEventListenerExitFullScreen();
         this.addEventListenerKeys();
         this.addEventListenerMouseClick();
+        this.addEventListenersHUD()
     }    
 
+    addEventListenersHUD = ()=>{
+        let btnDiamond = document.querySelector('#give-diamond');
+            this.addClickListenerGiveDiamond(btnDiamond);
+
+        let btnHeart = document.querySelector('#give-heart');
+            this.addClickListenerGiveHeart(btnHeart);
+    }
     addEventListenerKeys = ()=>{
         let that = this;
 
@@ -490,6 +534,49 @@ const params = {
             }
             break;
         }
+    }
+
+    throwDiamond = ()=>{
+        let that = this;
+        let throwTime = performance.now();
+        let item = this.uiAssets['diamond'];
+        if(item){
+            console.log('throw diamond')
+            item.resetVelocity();
+            this.camera.getWorldDirection(item.direction);
+            item.place(this.player.position).then((mesh,pos)=>{
+                mesh.position.setY(this.player.position.y);
+                item.impulse = 1000 * ( 1 - Math.exp( ( throwTime - performance.now() ) * 0.001 ) );
+                item.velocity.copy( item.direction ).multiplyScalar( item.impulse );
+                item.velocity.addScaledVector(this.playerVelocity, 4 );
+                that.objectsInMotion[0] = item;
+             
+            })
+
+        } else {
+            console.log('no active item');
+        }   
+    }
+
+    throwHeart = ()=>{
+        let that = this;
+        let throwTime = performance.now();
+        let item = this.inventory.getActiveItem();
+        if(item){
+            item.resetVelocity();
+            this.camera.getWorldDirection(item.direction);
+            item.place(this.player.position).then((mesh,pos)=>{
+                mesh.position.setY(this.player.position.y+1);
+                item.impulse = 20 + 30 * ( 1 - Math.exp( ( throwTime - performance.now() ) * 0.001 ) );
+                item.velocity.copy( item.direction ).multiplyScalar( item.impulse );
+                item.velocity.addScaledVector(this.playerVelocity, 4 );
+                that.objectsInMotion[0] = item;
+             
+            })
+
+        } else {
+            console.log('no active item');
+        }   
     }
 
     throwActiveItem = ()=>{
@@ -976,12 +1063,10 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     updateObjects = (deltaTime) =>{
         this.objectsInMotion.forEach((item)=>{
             item.mesh.position.addScaledVector( item.velocity, deltaTime );
-            item.velocity.y += (params.gravity/1.5) * deltaTime;
-            if(item.nftPostHashHex!="7630999a903663b368d1d2c2b86e39e77f30625eaca646b43b180e2be0ba4428"){
-                item.mesh.rotation.y -= 0.005;     
-                item.mesh.rotation.x -= 0.005;     
-                item.mesh.rotation.z -= 0.005;     
-            }
+            item.velocity.y += -50 * deltaTime;
+            item.mesh.rotation.y -= 0.005;     
+            item.mesh.rotation.x -= 0.005;     
+            item.mesh.rotation.z -= 0.005;  
 
         })
     }
@@ -1105,7 +1190,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             e.stopPropagation();
             that.updateLink(el,'Loading..');
             that.initContainer(targetEl);
-            let item = that.initItemForModel(modelUrl);
+            let item = that.initItemForModel({modelUrl:modelUrl});
             that.mesh = item.model;
             let newPos = new THREE.Vector3(0,3.7,0);
             item.place(newPos).then((model,pos)=>{
@@ -1133,7 +1218,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                  
             that.initContainer(container);
            
-            let item = that.initItemForModel(modelUrl);
+            let item = that.initItemForModel({modelUrl:modelUrl});
                 that.mesh = item.model;
             let newPos = new THREE.Vector3(0,3.7,0);
             
@@ -1235,13 +1320,14 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let itemParams = {
             three: THREE,
             scene: this.scene,
-            height: this.config.scaleModelToHeight,
-            width: this.config.scaleModelToWidth,
-            depth: this.config.scaleModelToDepth,
+            height: opts.height,
+            width: opts.width,
+            depth: opts.depth,
             loader: this.loaders.getLoaderForFormat(opts.format),
             nftPostHashHex: nftPostHashHex,
             modelsRoute: this.config.modelsRoute,
-            nftsRoute: nftsRoute
+            nftsRoute: this.config.nftsRoute,
+
 
         };
         if(opts.nftRequestParams){
@@ -1260,18 +1346,18 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }
 
-    initItemForModel = (modelUrl) =>{
-        let urlParts = modelUrl.split('.');
+    initItemForModel = (opts) =>{
+        let urlParts = opts.modelUrl.split('.');
         let extension = urlParts[urlParts.length-1];
 
         let item = new Item({
             three: THREE,
             loader: this.loaders.getLoaderForFormat(extension),
             scene: this.scene,
-            height: this.config.scaleModelToHeight,
-            width: this.config.scaleModelToWidth,
-            depth: this.config.scaleModelToDepth,
-            modelUrl: modelUrl,
+            height: (opts.height)?opts.height:this.config.scaleModelToHeight,
+            width: (opts.width)?opts.width:this.config.scaleModelToWidth,
+            depth: (opts.depth)?opts.depth:this.config.scaleModelToDepth,
+            modelUrl: opts.modelUrl,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
             format:extension
@@ -1437,6 +1523,28 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         }
     }
 
+    addClickListenerGiveDiamond = (el) => {
+        let that = this;
+
+        //console.log('adding listener for '+modelUrl);
+        el.addEventListener("click", (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            that.throwDiamond();
+        });     
+    }    
+
+    addClickListenerGiveHeart = (el) => {
+        let that = this;
+
+        //console.log('adding listener for '+modelUrl);
+        el.addEventListener("click", (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            that.throwHeart();
+        });     
+    }    
+
     addClickListenerFullScreen = (el) => {
         let that = this;
 
@@ -1566,7 +1674,7 @@ initPlayerThirdPerson = () => {
 
     let that = this;
     let playerLoader = new GLTFLoader();
-    let item = that.initItemForModel('./characters/AstridCentered.glb');
+    let item = that.initItemForModel({modelUrl:'./characters/AstridCentered.glb'});
     this.mesh = item.model;
     let newPos = null;
     let playerFloor = 0;
