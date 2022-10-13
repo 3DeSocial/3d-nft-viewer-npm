@@ -110,6 +110,9 @@ const params = {
                 if(nftLoadingComplete){
                     this.loadingScreen.hide();
                     document.getElementById('view-full').style.display='inline-block';
+                    document.getElementById('give-diamond').style.display='inline-block';
+                    document.getElementById('give-heart').style.display='inline-block';
+
                     this.resizeCanvas();
 
 
