@@ -112,11 +112,10 @@ export default class Item {
             throw('Cant place at undefined position');
         };
         return new Promise((resolve,reject)=>{
-            if(this.mesh){
-                this.mesh.position.copy(pos);
-                this.scaleToFitScene(this.mesh, pos)
-                this.scene.add(this.mesh);
-                this.fixYCoord(this.mesh, pos);
+            if(that.mesh){
+                that.mesh.position.copy(pos);
+                that.scene.add(this.mesh);
+                that.fixYCoord(this.mesh, pos);
 
                 resolve(this.mesh, pos);
             } else{

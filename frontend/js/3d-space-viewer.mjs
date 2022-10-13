@@ -1,6 +1,7 @@
 export const name = 'd3dspaceviewer';
 // Find the latest version by visiting https://cdn.skypack.dev/three.
 import * as THREE from 'three';
+import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -88,8 +89,10 @@ const params = {
 
         let itemConfig = {  scene: this.scene,
                             format: 'glb',
-                            height:0.05,
-                            width:0.05,
+                            height:0.5,
+                            width:0.5,
+                            depth:0.5,
+
                             modelsRoute: this.config.modelsRoute,
                             nftsRoute: this.config.nftsRoute,
                             modelUrl:'  https://desodata.azureedge.net/unzipped/4fe3115f676918940b19fbdedaf210ad73979c9858bf7193761a24a900461a76/gltf/normal/diamond-centered.glb',
@@ -536,23 +539,30 @@ const params = {
         }
     }
 
-    throwDiamond = ()=>{
+    throwDiamond = (targetPos)=>{
         let that = this;
         let throwTime = performance.now();
         let item = this.uiAssets['diamond'];
+        let target = this.raycastAhead();
+        console.log('target');
+        console.log(target.object.position);
         if(item){
             console.log('throw diamond')
-            item.resetVelocity();
-            this.camera.getWorldDirection(item.direction);
-            item.place(this.player.position).then((mesh,pos)=>{
-                mesh.position.setY(this.player.position.y);
-                item.impulse = 1000 * ( 1 - Math.exp( ( throwTime - performance.now() ) * 0.001 ) );
-                item.velocity.copy( item.direction ).multiplyScalar( item.impulse );
-                item.velocity.addScaledVector(this.playerVelocity, 4 );
-                that.objectsInMotion[0] = item;
-             
+            item.place(this.camera.position).then((mesh)=>{
+                console.log(mesh);
+            anime({
+                targets: mesh.position,
+                x: target.object.position.x,
+                y: target.object.position.y,
+                z: target.object.position.z,
+                easing: 'spring',
+                //loop: false,
+                //direction: 'alternate',
+                duration: 4000
+            });
             })
-
+      
+            
         } else {
             console.log('no active item');
         }   
@@ -715,6 +725,25 @@ const params = {
         console.log(this.camera);
         console.log('controls status');
         console.log(this.controls)        */
+    }
+    raycastAhead = ( ) => {
+
+        let origin = this.camera.position;
+
+        let dest = origin.clone();
+            dest.setZ(1000); //raycast forward
+        let dir = new THREE.Vector3();
+        dir.subVectors( dest, origin ).normalize();
+        this.raycaster.set(origin,dir);
+        var intersects = this.raycaster.intersectObjects( this.scene.children, true );
+        let hit;
+        if(intersects[0]){   
+            hit = intersects[0];
+            return hit;
+        } else {
+            return false;
+        };
+
     }
 
     raycast = ( e ) => {
@@ -1349,8 +1378,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     initItemForModel = (opts) =>{
         let urlParts = opts.modelUrl.split('.');
         let extension = urlParts[urlParts.length-1];
-
-        let item = new Item({
+        let config = {
             three: THREE,
             loader: this.loaders.getLoaderForFormat(extension),
             scene: this.scene,
@@ -1361,7 +1389,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
             format:extension
-        });
+        }
+        let item = new Item(config);
+        console.log(config);
         return item;
 
     }
