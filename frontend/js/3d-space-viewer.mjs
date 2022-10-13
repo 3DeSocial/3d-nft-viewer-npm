@@ -170,7 +170,7 @@ const params = {
         this.hud = new HUDBrowser(opts);
         this.hud.init();
         let that = this;
-        if(!navigator.xr){
+        if ( 'xr' in navigator ) {
             console.log('XR not supported on this device or browser');
         } else {
             navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
