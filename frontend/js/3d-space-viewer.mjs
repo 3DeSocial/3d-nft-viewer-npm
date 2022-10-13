@@ -509,21 +509,31 @@ const params = {
             console.log('no active item');
         }   
     }
+
+    formatDate =(date)=> {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(date).toLocaleTimeString('en', options);
+    }
+
     parseNFTDisplayData = (nft) =>{
+        console.log(nft);
 
         let data = {
             creator: nft.profileEntryResponse.username,
             description: nft.body,
-            maxPrice: this.convertNanosToDeso(nft.maxprice,4),
+            maxPrice: (nft.maxPrice>0)?this.convertNanosToDeso(nft.maxPrice,4):0,
+            minPrice: (nft.minPrice>0)?this.convertNanosToDeso(nft.minPrice,4):0,
             isBuyNow: nft.isBuyNow,
             likeCount: nft.likeCount,
-            created:nft.created,
+            created:this.formatDate(nft.timeStamp / 1000000),
             diamondCount:nft.diamondCount,
             buyNowPrice: this.convertNanosToDeso(nft.buyNowPrice,4),
-            copies: nft.copies,
+            copies: nft.numNFTCopies,
+            copiesForSale: nft.numNFTCopiesForSale,            
             commentCount: nft.commentCount,
             nftzUrl: 'https://nftz.me/nft/'+nft.postHashHex,
-            postHashHex: +nft.postHashHex
+            postHashHex: +nft.postHashHex,
+            lastBidPrice: (nft.lastBidPrice>0)?this.convertNanosToDeso(nft.lastBidPrice,4):0,
         }
 
         return data;
@@ -575,9 +585,34 @@ const params = {
     }
 
     displayInHUD = (data) =>{
-       console.log(data);
-        let msg = '<h3>Created By '+data.creator+'</h3><p>'+data.description+'</p>'
-        console.log('msg: ',msg);
+        let msg = '<div class="flex-left">';
+                msg = msg+ '<h4>Minted By '+data.creator+'</h4><p>'+data.description+'</p></div>';
+
+                msg = msg+ '<div class="flex-right">';
+
+                msg = msg+ '<dt>Minted</dt>';
+                msg = msg+ '<dd>'+data.created+'</dd>';
+
+                msg = msg+ '<dt>Copies</dt>';
+                msg = msg+ '<dd>'+data.copies+'</dd>';            
+
+                msg = msg+ '<dt>Copies For Sale</dt>';
+                msg = msg+ '<dd>'+data.copiesForSale+'</dd>';                       
+                if(data.isBuyNow){
+                    msg = msg+ '<dt>Buy Now Price</dt>';
+                    msg = msg+ '<dd>'+data.buyNowPrice+' DeSo</dd>';                
+                };
+                msg = msg+ '<dt>Highest Sale Price</dt>';
+                msg = msg+ '<dd>'+data.maxPrice+' DeSo</dd>';
+
+                msg = msg+ '<dt>Last Bid Price</dt>';
+                msg = msg+ '<dd>'+data.lastBidPrice+' DeSo</dd>';                
+/*
+                msg = msg+ '<dt>Auction End Time:</dt>';
+                msg = msg+ '<dd>'+data.endTime+'</dd>';                
+*/
+                msg = msg+ '<dl>'
+                msg = msg+ '</div>'                
         if(this.hud){
            this.hud.show(msg);
         }
@@ -1042,7 +1077,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     
 
   openFullscreen =()=> {
-      var elem = this.renderer.domElement;
+      var elem = this.el;
       if (elem.requestFullscreen) {
         elem.requestFullscreen();
       } else if (elem.mozRequestFullScreen) { /* Firefox */
