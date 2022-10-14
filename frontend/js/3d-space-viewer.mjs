@@ -99,9 +99,7 @@ const params = {
                             nftPostHashHex:'4fe3115f676918940b19fbdedaf210ad73979c9858bf7193761a24a900461a76'};
 
         this.uiAssets['diamond']= this.initItemForModel(itemConfig);
-        let newPos = new THREE.Vector3(0,0,100);
-
-
+        let newPos = new THREE.Vector3(0,10000,0);
         this.uiAssets['diamond'].place(newPos);
     }
 
@@ -114,13 +112,11 @@ const params = {
 
                             modelsRoute: this.config.modelsRoute,
                             nftsRoute: this.config.nftsRoute,
-                            modelUrl:'  https://desodata.azureedge.net/unzipped/29c2c8f77e2a920ced265c1d89143f8959cdb3ee4c495357d943b126a782a0c5/gltf/normal/diamond-centered.glb',
+                            modelUrl:'  https://desodata.azureedge.net/unzipped/29c2c8f77e2a920ced265c1d89143f8959cdb3ee4c495357d943b126a782a0c5/gltf/normal/low_poly_heart.glb',
                             nftPostHashHex:'29c2c8f77e2a920ced265c1d89143f8959cdb3ee4c495357d943b126a782a0c5'};
 
         this.uiAssets['heart']= this.initItemForModel(itemConfig);
-        let newPos = new THREE.Vector3(0,0,100);
-
-
+        let newPos = new THREE.Vector3(0,10000,0);
         this.uiAssets['heart'].place(newPos);
     }
 
@@ -495,12 +491,13 @@ const params = {
             return false;
         };
         //this.updateOverlayPos(action.selectedPoint);
+        console.log('action.btnIndex: ',action.btnIndex);
         switch(parseInt(action.btnIndex)){
             case 1:
             if(action.isOnFloor){
                 this.moveTo = action.selectedPoint.clone();
             } else {
-                this.showSelectedMeshData(action);
+                this.selectTargetNFT(action);
             }
     
             break;            
@@ -518,7 +515,7 @@ const params = {
             let item = action.selection.object.userData.owner;
             console.log('target item');
             console.log(item);
-            this.selectTargetNFT(item);
+            this.selectTargetNFT(action);
             if(item.config.nft){
                 let nftDisplayData = this.parseNFTDisplayData(item.config.nft);
                 if(item.config.spot){
@@ -537,10 +534,11 @@ const params = {
             }
         }         
     }
-    selectTargetNFT = (item) =>{
-        this.actionTargetPos = item.getPosition();
-        console.log(this.actionTargetPos);
-      //  this.actionTarget.material.emissive.set( 0xffffff );
+    selectTargetNFT = (action) =>{
+        if(action.selection.object.userData.owner){
+            let item = action.selection.object.userData.owner;        
+            this.actionTargetPos = item.getPosition();
+        }
     }
 
     throwDiamond = ()=>{
@@ -592,6 +590,7 @@ const params = {
                 anime({
                     begin: function(anim) {
                         mesh.visible = true;
+                        mesh.lookAt(that.camera.position);
                     },
                     targets: mesh.position,
                     x: finish.x,
