@@ -546,7 +546,27 @@ const params = {
         if(action.selection.object.userData.owner){
             let item = action.selection.object.userData.owner;        
             this.actionTargetPos = item.getPosition();
+            this.enableActionBtns();
+        } else {
+             this.disableActionBtns();
         }
+    }
+
+    disableActionBtns = () =>{
+        let diamond = document.querySelector('#give-diamond');
+        diamond.classList.add("disabled");
+
+        let heart = document.querySelector('#give-heart');
+        heart.classList.add("disabled");
+    }
+
+    enableActionBtns = () =>{
+        let diamond = document.querySelector('#give-diamond');
+        diamond.classList.remove("disabled");
+        console.log('class remove');
+        let heart = document.querySelector('#give-heart');
+        heart.classList.remove("disabled");
+
     }
 
     throwDiamond = ()=>{
@@ -1559,6 +1579,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
+            if(e.target.classList.contains('disabled')){
+                return false;
+            };
             that.throwDiamond();
         });     
     }    
@@ -1570,6 +1593,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
+            if(e.target.classList.contains('disabled')){
+                return false;
+            };            
             that.throwHeart();
         });     
     }    
