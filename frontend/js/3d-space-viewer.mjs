@@ -74,7 +74,7 @@ const params = {
         this.raycaster = new THREE.Raycaster();
         this.objectsInMotion = []; // use for things being thrown etc
         this.initLoader(this.config.owner);
-        console.log('amint js version');
+        console.log('anime js version');
 
 
     }
@@ -103,12 +103,25 @@ const params = {
 
 
         this.uiAssets['diamond'].place(newPos);
-        this.uiAssets['heart']= this.initItemForModel(itemConfig);
-        console.log(this.uiAssets);
     }
 
     loadHeart = () =>{
+        let itemConfig = {  scene: this.scene,
+                            format: 'glb',
+                            height:0.5,
+                            width:0.5,
+                            depth:0.5,
 
+                            modelsRoute: this.config.modelsRoute,
+                            nftsRoute: this.config.nftsRoute,
+                            modelUrl:'  https://desodata.azureedge.net/unzipped/29c2c8f77e2a920ced265c1d89143f8959cdb3ee4c495357d943b126a782a0c5/gltf/normal/diamond-centered.glb',
+                            nftPostHashHex:'29c2c8f77e2a920ced265c1d89143f8959cdb3ee4c495357d943b126a782a0c5'};
+
+        this.uiAssets['heart']= this.initItemForModel(itemConfig);
+        let newPos = new THREE.Vector3(0,0,100);
+
+
+        this.uiAssets['heart'].place(newPos);
     }
 
     initSpace = (options) =>{
@@ -174,13 +187,11 @@ const params = {
         this.hud.init();
         let that = this;
         if ( 'xr' in navigator ) {
-            console.log('XR not supported on this device or browser');
-        } else {
             navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
                 if(supported){
                     that.hudVR = new HUDVR(opts);
                 }
-            });            
+            });     
         }
 
     }
@@ -540,7 +551,6 @@ const params = {
         let throwTime = performance.now();
         let item = this.uiAssets['diamond'];
         if(item){
-            console.log('throw diamond')
             let start = this.player.position.clone();
             start.y--;
 
@@ -562,31 +572,38 @@ const params = {
                     }                   
                 });
             })
-      
-            
-        } else {
-            console.log('no active item');
         }   
     }
 
     throwHeart = ()=>{
-        let that = this;
+         let that = this;
+        if(!that.actionTargetPos){
+            return false;
+        };
         let throwTime = performance.now();
-        let item = this.inventory.getActiveItem();
+        let item = this.uiAssets['heart'];
         if(item){
-            item.resetVelocity();
-            this.camera.getWorldDirection(item.direction);
-            item.place(this.player.position).then((mesh,pos)=>{
-                mesh.position.setY(this.player.position.y+1);
-                item.impulse = 20 + 30 * ( 1 - Math.exp( ( throwTime - performance.now() ) * 0.001 ) );
-                item.velocity.copy( item.direction ).multiplyScalar( item.impulse );
-                item.velocity.addScaledVector(this.playerVelocity, 4 );
-                that.objectsInMotion[0] = item;
-             
-            })
+            let start = this.player.position.clone();
+            start.y--;
 
-        } else {
-            console.log('no active item');
+            let finish = that.actionTargetPos.clone();
+
+            item.place(start).then((mesh)=>{
+                anime({
+                    begin: function(anim) {
+                        mesh.visible = true;
+                    },
+                    targets: mesh.position,
+                    x: finish.x,
+                    y: finish.y,
+                    z: finish.z,
+                    loop: false,
+                    duration: 4000,
+                    complete: function(anim) {
+                        mesh.visible = false;
+                    }                   
+                });
+            })
         }   
     }
 
