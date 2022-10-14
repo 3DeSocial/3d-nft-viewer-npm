@@ -587,10 +587,10 @@ const params = {
             let finish = that.actionTargetPos.clone();
 
             item.place(start).then((mesh)=>{
+                mesh.lookAt(finish);
                 anime({
                     begin: function(anim) {
                         mesh.visible = true;
-                        mesh.lookAt(that.camera.position);
                     },
                     targets: mesh.position,
                     x: finish.x,
