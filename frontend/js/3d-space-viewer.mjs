@@ -74,7 +74,7 @@ const params = {
         this.raycaster = new THREE.Raycaster();
         this.objectsInMotion = []; // use for things being thrown etc
         this.initLoader(this.config.owner);
-
+        console.log('amint js version');
 
 
     }
@@ -1013,7 +1013,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
         const delta = Math.min( this.clock.getDelta(), 0.1 );
 
-        this.updateObjects(delta);
 
             if ( params.firstPerson ) {
 
