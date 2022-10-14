@@ -127,6 +127,9 @@ const params = {
             let that = this;
             this.mouse = { x : 0, y : 0 };
             this.getContainer(this.config.el);
+            console.log('this.config.el:');
+
+            console.log(this.config.el);
             this.initScene();
             this.loadUIAssets();
             this.initRenderer(this.config.el);
@@ -372,6 +375,7 @@ const params = {
         if(el){
            el.appendChild(this.renderer.domElement);
         } else {
+            console.log('no el so hide');
             this.renderer.domElement.style.display = 'none';
             this.el.appendChild(this.renderer.domElement);
         };
@@ -427,6 +431,10 @@ const params = {
 
         let btnHeart = document.querySelector('#give-heart');
             this.addClickListenerGiveHeart(btnHeart);
+
+        let linkViewFull = document.querySelector('#view-full');  
+        this.addClickListenerFullScreen(linkViewFull);
+
     }
     addEventListenerKeys = ()=>{
         let that = this;
@@ -513,8 +521,8 @@ const params = {
     showSelectedMeshData =(action) =>{
         if(action.selection.object.userData.owner){
             let item = action.selection.object.userData.owner;
-            console.log('target item');
-            console.log(item);
+            console.log('target object');
+            console.log(action.selection.object);
             this.selectTargetNFT(action);
             if(item.config.nft){
                 let nftDisplayData = this.parseNFTDisplayData(item.config.nft);

@@ -330,8 +330,6 @@ scaleToFitScene = (obj3D, posVector) =>{
         } else {
             cbox.userData.owner = this; //set reference to Item
             that.scene.add(obj3D);    
-            console.log('added to scene: ');
-            console.log(obj3D);
         };
        
         cbox.updateMatrixWorld();    
