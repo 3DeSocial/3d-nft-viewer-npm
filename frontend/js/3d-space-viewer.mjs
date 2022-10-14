@@ -99,7 +99,7 @@ const params = {
                             nftPostHashHex:'4fe3115f676918940b19fbdedaf210ad73979c9858bf7193761a24a900461a76'};
 
         this.uiAssets['diamond']= this.initItemForModel(itemConfig);
-        let newPos = new THREE.Vector3(0,10000,0);
+        let newPos = new THREE.Vector3(0,1000,0);
         this.uiAssets['diamond'].place(newPos);
     }
 
@@ -116,7 +116,7 @@ const params = {
                             nftPostHashHex:'29c2c8f77e2a920ced265c1d89143f8959cdb3ee4c495357d943b126a782a0c5'};
 
         this.uiAssets['heart']= this.initItemForModel(itemConfig);
-        let newPos = new THREE.Vector3(0,10000,0);
+        let newPos = new THREE.Vector3(0,1000,0);
         this.uiAssets['heart'].place(newPos);
     }
 
@@ -555,9 +555,10 @@ const params = {
             let finish = that.actionTargetPos.clone();
 
             item.place(start).then((mesh)=>{
+                mesh.visible = true;                
                 anime({
                     begin: function(anim) {
-                        mesh.visible = true;
+
                     },
                     targets: mesh.position,
                     x: finish.x,
@@ -588,9 +589,10 @@ const params = {
 
             item.place(start).then((mesh)=>{
                 mesh.lookAt(finish);
+                mesh.visible = true;
+
                 anime({
                     begin: function(anim) {
-                        mesh.visible = true;
                     },
                     targets: mesh.position,
                     x: finish.x,
