@@ -488,78 +488,79 @@ const params = {
             case 1:
             if(action.isOnFloor){
                 this.moveTo = action.selectedPoint.clone();
-            } 
+            } else {
+                this.showSelectedMeshData(action);
+            }
     
             break;            
             case 2:
-            if(action.selection.object.userData.owner){
-                let item = action.selection.object.userData.owner;
-                if(item.config.nft){
-                    let nftDisplayData = this.parseNFTDisplayData(item.config.nft);
-                    if(item.config.spot){
-                        nftDisplayData.spot = item.config.spot;
-                    };
-                    this.displayInHUD(nftDisplayData);            
-                }
-
-                //console.log(action.selection.object.userData.owner.config.nft);
-                //console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
-                //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
-
-            } else {
-                if(this.hud){
-                    this.hud.clear();
-                }
-            }   
+                this.showSelectedMeshData(action);
             break;
             default:
-
-            //console.log('default:',action);
-            if(action.selection.object.userData.owner){
-                let item = action.selection.object.userData.owner;
-                if(item.config.nft){
-                    let nftDisplayData = this.parseNFTDisplayData(item.config.nft);
-                    if(item.config.spot){
-                        nftDisplayData.spot = item.config.spot;
-                       // console.log('spot id: ',item.config.spot.id, ', idx: ',item.config.spot.idx,', Y: ',item.config.spot.pos.y );
-                    };
-                    this.displayInHUD(nftDisplayData);            
-                }
-
-                //console.log(action.selection.object.userData.owner.config.nft);
-                //console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
-                //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
-
-            } else {
-                if(this.hud){
-                    this.hud.clear();
-                }
-            }
+                this.showSelectedMeshData(action)
             break;
         }
     }
 
-    throwDiamond = (targetPos)=>{
+    showSelectedMeshData =(action) =>{
+        if(action.selection.object.userData.owner){
+            let item = action.selection.object.userData.owner;
+            console.log('target item');
+            console.log(item);
+            this.selectTargetNFT(item);
+            if(item.config.nft){
+                let nftDisplayData = this.parseNFTDisplayData(item.config.nft);
+                if(item.config.spot){
+                    nftDisplayData.spot = item.config.spot;
+                };
+                this.displayInHUD(nftDisplayData);            
+            }
+
+            //console.log(action.selection.object.userData.owner.config.nft);
+            //console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
+            //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
+
+        } else {
+            if(this.hud){
+                this.hud.clear();
+            }
+        }         
+    }
+    selectTargetNFT = (item) =>{
+        this.actionTargetPos = item.getPosition();
+        console.log(this.actionTargetPos);
+      //  this.actionTarget.material.emissive.set( 0xffffff );
+    }
+
+    throwDiamond = ()=>{
         let that = this;
+        if(!that.actionTargetPos){
+            return false;
+        };
         let throwTime = performance.now();
         let item = this.uiAssets['diamond'];
-        let target = this.raycastAhead();
-        console.log('target');
-        console.log(target.object.position);
         if(item){
             console.log('throw diamond')
-            item.place(this.camera.position).then((mesh)=>{
-                console.log(mesh);
-            anime({
-                targets: mesh.position,
-                x: target.object.position.x,
-                y: target.object.position.y,
-                z: target.object.position.z,
-                easing: 'spring',
-                //loop: false,
-                //direction: 'alternate',
-                duration: 4000
-            });
+            let start = this.player.position.clone();
+            start.y--;
+
+            let finish = that.actionTargetPos.clone();
+
+            item.place(start).then((mesh)=>{
+                anime({
+                    begin: function(anim) {
+                        mesh.visible = true;
+                    },
+                    targets: mesh.position,
+                    x: finish.x,
+                    y: finish.y,
+                    z: finish.z,
+                    loop: false,
+                    duration: 4000,
+                    complete: function(anim) {
+                        mesh.visible = false;
+                    }                   
+                });
             })
       
             
@@ -649,37 +650,10 @@ const params = {
        // this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
             case 1:
-            if(action.selection.object.userData.owner){
-                let item = action.selection.object.userData.owner;
-                if(item.config.nft){
-                    let nftDisplayData = this.parseNFTDisplayData(item.config.nft);
-                    if(item.config.spot){
-                        nftDisplayData.spot = item.config.spot;
-                    };
-                    this.displayInHUD(nftDisplayData);            
-                }
-
-                //console.log(action.selection.object.userData.owner.config.nft);
-                //console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
-                //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
-
-            } else {
-                if(this.hud){
-                    this.hud.clear();
-                }
-            }   
+             this.showSelectedMeshData(action);
             break;
             default:
-                if(action.selection.object.userData.owner){
-                    let item = action.selection.object.userData.owner;
-                    if(item.config.nft){
-                        let nftDisplayData = this.parseNFTDisplayData(item.config.nft);
-                        if(item.config.spot){
-                            nftDisplayData.spot = item.config.spot;
-                        };
-                        this.displayInHUD(nftDisplayData);            
-                    }
-                }
+                this.showSelectedMeshData(action);
             break;
         }
     }
