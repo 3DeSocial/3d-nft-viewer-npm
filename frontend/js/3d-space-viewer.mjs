@@ -716,11 +716,19 @@ const params = {
             }
 
 
-            let start = this.player.position.clone();
-            start.y--;
 
-            let finish = that.actionTargetPos.clone();
+            let start, finish;
+            if(heartStatus){
+                start = this.player.position.clone();
+                start.y--;
 
+                finish = that.actionTargetPos.clone();
+            } else {
+                finish = this.player.position.clone();
+                finish.y--;
+
+                start = that.actionTargetPos.clone();            
+            }
             item.place(start).then((mesh)=>{
                 mesh.lookAt(finish);
                 mesh.visible = true;
@@ -1227,17 +1235,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         this.renderer.render(this.scene, this.camera);
         //this.hud.render();
 
-    }
-
-    updateObjects = (deltaTime) =>{
-        this.objectsInMotion.forEach((item)=>{
-            item.mesh.position.addScaledVector( item.velocity, deltaTime );
-            item.velocity.y += -50 * deltaTime;
-            item.mesh.rotation.y -= 0.005;     
-            item.mesh.rotation.x -= 0.005;     
-            item.mesh.rotation.z -= 0.005;  
-
-        })
     }
 
     centerMeshInScene = (gltfScene) =>{
