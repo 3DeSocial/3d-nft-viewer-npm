@@ -158,7 +158,9 @@ const params = {
                     document.getElementById('view-full').style.display='inline-block';
                     document.getElementById('give-diamond').style.display='inline-block';
                     document.getElementById('give-heart').style.display='inline-block';
-
+                  /*  document.querySelectorAll('.d3d-btn-top').forEach((el)=>{
+                      el.style.display='inline-block';
+                    });*/
                     this.resizeCanvas();
 
 
@@ -168,8 +170,14 @@ const params = {
             nftLoadingComplete = true;
             if(sceneryloadingComplete){
                 this.loadingScreen.hide();
-                document.getElementById('view-full').style.display='inline-block';
-                this.resizeCanvas();
+                    document.getElementById('view-full').style.display='inline-block';
+                    document.getElementById('give-diamond').style.display='inline-block';
+                    document.getElementById('give-heart').style.display='inline-block';
+              /*     document.querySelectorAll('.d3d-btn-top').forEach((el)=>{
+                      el.style.display='inline-block';
+                    })*/
+                    
+                    this.resizeCanvas();
 
             };
 
@@ -494,16 +502,45 @@ const params = {
     }
 
     checkMouse = (e) =>{
+        let that = this;
         let action = this.raycast(e);
         if(!action.selectedPoint){
             return false;
         };
-        //this.updateOverlayPos(action.selectedPoint);
-        console.log('action.btnIndex: ',action.btnIndex);
         switch(parseInt(action.btnIndex)){
             case 1:
             if(action.isOnFloor){
                 this.moveTo = action.selectedPoint.clone();
+                this.moveTo.setY(this.player.position.y);
+        //this.player.position.copy(this.moveTo);
+         anime({
+                    begin: function(anim) {
+
+                    },
+                    targets: this.player.position,
+                    x: this.moveTo.x,
+                    y: this.moveTo.y,
+                    z: this.moveTo.z,
+                    loop: false,
+                    duration: 250,
+                    easing: 'linear',
+                    complete: function(anim) {
+                     /*   // adjust the camera
+                        that.camera.position.sub( that.controls.target );
+                        let playerx = that.player.position.x;
+                        let playery = that.player.position.y;
+                        let playerz = that.player.position.z;
+                        that.controls.target.set(playerx,(playery),playerz);
+                        that.camera.position.add( that.controls.target );
+                      
+                        // if the player has fallen too far below the level reset their position to the start
+                        if ( that.player.position.y < - 25 ) {
+
+                            that.reset();
+
+                        }*/
+                    }                   
+                });                
             } else {
                 this.selectTargetNFT(action);
             }
@@ -563,7 +600,7 @@ const params = {
     enableActionBtns = () =>{
         let diamond = document.querySelector('#give-diamond');
         diamond.classList.remove("disabled");
-        console.log('class remove');
+
         let heart = document.querySelector('#give-heart');
         heart.classList.remove("disabled");
 
@@ -577,6 +614,14 @@ const params = {
         let throwTime = performance.now();
         let item = this.uiAssets['diamond'];
         if(item){
+            this.increaseDiamond();
+            let heartStatus = this.getHeartStatus();
+            if((this.getDiamondsToSendCount()===0)&&(!heartStatus)){
+                this.hideStatusBar(['heart','diamond-count','confirm']);
+            } else {
+                this.showStatusBar(['confirm','diamond-count']);
+            };
+
             let start = this.player.position.clone();
             start.y--;
 
@@ -602,6 +647,47 @@ const params = {
         }   
     }
 
+    getDiamondsToSendCount = ()=>{
+        let diamondCountEl = document.querySelector('#d-count');
+        return parseInt(diamondCountEl.innerHTML.trim());        
+    }
+    increaseDiamond =()=>{
+        let diamondCount = this.getDiamondsToSendCount();
+        if(diamondCount<5){
+            ++diamondCount;
+        } else {
+            diamondCount = 0;
+        };
+        let diamondCountEl = document.querySelector('#d-count');
+        diamondCountEl.innerHTML = String(diamondCount);
+    }
+
+    showStatusBar= (iconList) =>{
+        let statusbar = document.querySelector('.statusbar');
+        statusbar.style.display = 'inline-block';
+
+        if(iconList){
+            iconList.forEach((elId)=>{
+                let selector ='#'+elId;
+                let el = document.querySelector(selector);
+                el.style.display = 'inline-block';
+            })
+        }
+    }
+
+    hideStatusBar= (iconList) =>{
+        let statusbar = document.querySelector('.statusbar');
+        statusbar.style.display = 'none';
+
+        if(iconList){
+            iconList.forEach((elId)=>{
+                let selector ='#'+elId;
+                let el = document.querySelector(selector);
+                el.style.display = 'none';
+            })
+        }
+    }
+
     throwHeart = ()=>{
          let that = this;
         if(!that.actionTargetPos){
@@ -610,6 +696,17 @@ const params = {
         let throwTime = performance.now();
         let item = this.uiAssets['heart'];
         if(item){
+            let heartStatus = this.toggleHeart();
+            if(heartStatus){
+                this.showStatusBar(['heart','diamond-count','confirm']);
+            } else {
+                let diamondCount = this.getDiamondsToSendCount();
+                if(diamondCount==0){
+                    this.hideStatusBar(['heart','diamond-count','confirm']);
+                }
+            }
+
+
             let start = this.player.position.clone();
             start.y--;
 
@@ -636,6 +733,22 @@ const params = {
         }   
     }
 
+    toggleHeart = () =>{
+        let heartStatus = this.getHeartStatus();
+        let heartIcon = document.getElementById('heart');
+        if(heartStatus){
+            heartIcon.style.display = 'none';
+            return false;
+        } else {
+            heartIcon.style.display = 'inline-block';
+            return true;
+        }
+    }
+
+    getHeartStatus = () =>{
+        let heartIcon = document.getElementById('heart');
+        return (heartIcon.style.display === 'inline-block')?true:false;        
+    }
     throwActiveItem = ()=>{
         let that = this;
         let throwTime = performance.now();
@@ -663,7 +776,6 @@ const params = {
     }
 
     parseNFTDisplayData = (nft) =>{
-        console.log(nft);
 
         let data = {
             creator: nft.profileEntryResponse.username,
@@ -1410,7 +1522,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             format:extension
         }
         let item = new Item(config);
-        console.log(config);
         return item;
 
     }
@@ -1817,14 +1928,7 @@ initPlayerThirdPerson = () => {
         this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
 
     }
-    if(this.moveTo){
-        console.log('moving from ',this.player.position);
-        this.moveTo.setY(this.player.position.y);
-        console.log('moving to selectedPoint: ',this.moveTo);
-
-        this.player.position.copy(this.moveTo);
-        this.moveTo = false;
-    };
+ 
     this.player.updateMatrixWorld();
 
     // adjust player position based on collisions
@@ -1908,24 +2012,7 @@ initPlayerThirdPerson = () => {
     //this.camPos.set(playerx,(playery),playerz);
     this.controls.target.set(playerx,(playery),playerz);
     this.camera.position.add( this.controls.target );
-    if (this.renderer.xr.isPresenting) {
-        if(this.player.position){
-            
-            if(this.player.position.x){
-           let playerx = this.player.position.x;
-           let playery = this.player.position.y;
-           let playerz = this.player.position.z;
-
-        //   console.log('playerpos');
-          // console.log(playerx,playery,playerz);
-         
-            this.dolly.position.set(playerx,(playery+0.15),playerz);
-
-          // playerPos.y = playerPos.y + 1.5;
-            //this.camera.position.set(playerPos);
-        }
-        };
-    };
+  
     // if the player has fallen too far below the level reset their position to the start
     if ( this.player.position.y < - 25 ) {
 
