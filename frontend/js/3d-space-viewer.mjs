@@ -580,6 +580,12 @@ const params = {
         }         
     }
     selectTargetNFT = (action) =>{
+
+        let diamondCountEl = document.querySelector('#d-count');
+        diamondCountEl.innerHTML = String(0);
+        let heartIcon = document.getElementById('heart');
+        heartIcon.style.display = 'none';
+
         if(action.selection.object.userData.owner){
             let item = action.selection.object.userData.owner;        
             this.actionTargetPos = item.getPosition();
@@ -587,9 +593,9 @@ const params = {
         } else {
              this.disableActionBtns();
              this.hideStatusBar(['heart','diamond-count','confirm']);
-            let diamondCountEl = document.querySelector('#d-count');
-            diamondCountEl.innerHTML = String(0);             
         }
+
+
     }
 
     disableActionBtns = () =>{
