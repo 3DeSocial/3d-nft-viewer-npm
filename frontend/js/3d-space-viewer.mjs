@@ -586,6 +586,9 @@ const params = {
             this.enableActionBtns();
         } else {
              this.disableActionBtns();
+             this.hideStatusBar(['heart','diamond-count','confirm']);
+            let diamondCountEl = document.querySelector('#d-count');
+            diamondCountEl.innerHTML = String(0);             
         }
     }
 
