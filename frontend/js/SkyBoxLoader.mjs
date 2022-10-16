@@ -21,6 +21,35 @@ export default class SkyBoxLoader {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    getSkyPreviewPath(boxname){
+        if(this.config.skyBoxPath===''){
+            return false;
+        };
+
+        let skybox ='';
+
+        let skyBoxPath = this.config.skyBoxPath+'/'+boxname+'/';
+
+        switch(boxname){
+            case 'bluecloud':
+                return skyBoxPath+'bluecloud_ft.jpg';
+            break;
+            case 'yellowcloud':
+               return skyBoxPath+'yellowcloud_ft.jpg';
+            break;
+            case 'browncloud':
+                return skyBoxPath+'browncloud_ft.jpg';
+            break;
+            case 'lightblue':
+                return skyBoxPath+'front.png';            
+            break;             
+            case 'blue':
+                return skyBoxPath+'bkg1_front.png';
+            break;
+        }
+        
+    }
+
     loadSkyBox(boxname){
         if(this.config.skyBoxPath===''){
             return false;

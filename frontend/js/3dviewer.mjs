@@ -250,7 +250,25 @@ const params = {
     }
 
     setSkyBox = (skyBoxName) =>{
+        if(!this.skyBoxLoader){
+            this.skyBoxLoader = new SkyBoxLoader({
+                scene: this.scene,
+                skyBoxPath: this.config.skyboxPath,
+                skyBoxList: this.config.skyBoxList
+            });            
+        }
         this.skyBoxLoader.setSkyBox(skyBoxName);
+    }
+
+    getSkyPreviewPath = (skyBoxName) =>{
+        if(!this.skyBoxLoader){
+            this.skyBoxLoader = new SkyBoxLoader({
+                scene: this.scene,
+                skyBoxPath: this.config.skyboxPath,
+                skyBoxList: this.config.skyBoxList
+            });            
+        };
+        return this.skyBoxLoader.getSkyPreviewPath(skyBoxName);
     }
 
     setBgColor = (color)=>{
@@ -752,10 +770,8 @@ const params = {
             if(this.sceneryLoader){ // TO DO - improve by using 0-half mesh height
                 floorY = this.sceneryLoader.getFloorY(); // use detected floor Y
             };
-            console.log('placeModel: floorY: ',floorY);
             let newPos = new THREE.Vector3(0,floorY,0);
             item.place(newPos).then((model,pos)=>{
-                console.log('viewer: placeModel complete');
                 that.mesh = model;
                 that.resizeCanvas();
                 resolve(item, model, pos);
@@ -764,7 +780,6 @@ const params = {
     }
 
     removeLoader = (hideElOnLoad) =>{
-        console.log('removeLoader');
         let img = document.querySelector('#'+hideElOnLoad);
         if(img){
             img.style.display = 'none';
@@ -816,8 +831,7 @@ const params = {
             itemParams.nftsRoute = this.config.nftsRoute +'?' +paramString;
         };
 
-console.log('initItem: itemParams.nftsRoute: ',itemParams.nftsRoute);
-console.log(opts);
+
         this.loadedItem = new Item(itemParams);                
         return this.loadedItem;
 
@@ -830,8 +844,6 @@ console.log(opts);
             format = urlParts[urlParts.length-1];            
         };
         let modelUrl = opts.modelUrl;
-
-console.log('initItem (Model)', format);
 
         let item = new Item({
             three: THREE,
@@ -874,8 +886,6 @@ console.log('initItem (Model)', format);
                                 that.buildDolly(vrType);                                
                             } }
         let vrButtonEl = VRButton.createButton(this.renderer, vrBtnOptions);
-        console.log('initVR');
-        console.log(vrButtonEl);
 
     }
 
@@ -883,8 +893,6 @@ console.log('initItem (Model)', format);
         let selectedVrType = 'flying';
         let vrTypeSelect = document.getElementById('vrType');
         if(vrTypeSelect){
-            console.log('vrTypeSelect');
-            console.log(vrTypeSelect);
             selectedVrType = vrTypeSelect.options[vrTypeSelect.selectedIndex].value;
         } else {
             console.log('no vr type selection so fly by default');
@@ -896,7 +904,6 @@ console.log('initItem (Model)', format);
         if(vrType){
             this.setVrType(vrType);
         };
-        console.log('buildDolly for ',this.vrType);        
         this.vrControls = new VRControls({  scene:this.scene,
                                             renderer: this.renderer,
                                             camera: this.camera,
@@ -971,7 +978,6 @@ console.log('initItem (Model)', format);
     addScenery = () =>{
         let that = this;
         if(this.sceneryMesh){
-                    console.log('adding ALREADY loaded sceneryMesh');
 
             this.scene.add(this.sceneryMesh);
             this.restrictCameraToRoom();
@@ -979,14 +985,11 @@ console.log('initItem (Model)', format);
             this.loadSceneryWithCollider().then(()=>{
                 if(this.loadedItem){
                     let floorY = this.sceneryLoader.getFloorY();
-                    console.log('addScenery: floorY: ',floorY);
                     let newPos = new THREE.Vector3(0,floorY,0);
         
                     this.loadedItem.moveTo(newPos);
                     that.resizeCanvas();                    
                     this.restrictCameraToRoom();                        
-                } else{
-                    console.log('no laoded item')
                 }
             });
         }
@@ -1126,9 +1129,6 @@ initPlayerFirstPerson = () => {
     that.character.updateMatrixWorld();
     that.scene.add( that.player );
     that.player.updateMatrixWorld();
-
-    console.log('player at: ',this.player.position);
-    console.log('camera at: ',this.player.position);
 
 }
 
