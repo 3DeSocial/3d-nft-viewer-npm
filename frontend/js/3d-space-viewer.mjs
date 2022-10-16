@@ -626,7 +626,7 @@ const params = {
             this.increaseDiamond();
             let heartStatus = this.getHeartStatus();
             if((this.getDiamondsToSendCount()===0)&&(!heartStatus)){
-                this.hideStatusBar(['heart','diamond-count','confirm']);
+                setTimeout( this.hideStatusBar(['heart','diamond-count','confirm']), 5000)
             } else {
                 this.showStatusBar(['confirm','diamond-count']);
             };
