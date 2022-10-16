@@ -1135,6 +1135,21 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             document.addEventListener('fullscreenchange', this.fsChangeHandler, false);
             document.addEventListener('MSFullscreenChange', this.fsChangeHandler, false);
         }
+
+        this.closeFullscreen();
+    }
+
+    /* Close fullscreen */
+    closeFullscreen = () =>{
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+      }
+      this.isFullScreen = false;            
+
     }
 
     fsChangeHandler = () =>{
@@ -1724,11 +1739,20 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
-            that.openFullscreen();
+            if(that.isFullScreen){
+                that.closeFullscreen();
+                that.toggleFullScreenBtnText(e.target,'Full Screen')                
+            } else {
+                that.openFullscreen();
+                that.toggleFullScreenBtnText(e.target, 'Exit Full Screen');
+            }
             that.resizeCanvas(true);
         });     
     }    
 
+    toggleFullScreenBtnText = (link, msg) =>{
+        link.innerHTML = msg;
+    }
     addClickListenerVR = (ctr, el, modelUrl) => {
         let that = this;
 
