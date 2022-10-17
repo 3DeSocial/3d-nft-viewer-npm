@@ -18,18 +18,38 @@ export default class HUD  {
         this.screenDimensions =  new THREE.Vector4();
         this.renderer.getViewport(this.screenDimensions);
         this.width = this.screenDimensions.z;//window.innerWidth;
-        this.height = this.screenDimensions.w;//window.innerHeight;
+        this.height = this.screenDimensions.w;//window.innerHeight
+        this.selectedItem = null;
         console.log('this.screenDimensions',this.screenDimensions);
      
+    }
+
+    setSelectedItem = (item) =>{
+        //store refrerence to selected item
+        this.selectedItem = item;
+
+        //show helper
+        this.selectedItem.isSelected = true;
+        if(!this.selectedItem.helper){
+           this.selectedItem.helper = new THREE.BoxHelper(item.mesh, 0xffffff);
+        };
+        this.config.scene.add(this.selectedItem.helper);
+
+    }
+
+    unSelectItem = () =>{
+        this.config.scene.remove(this.selectedItem.helper);
+        this.selectedItem.isSelected = false;
+        this.selectedItem = null;
     }
 
     init = () =>{
     
         this.initSourceDiv();
-        this.initHUDCanvas();
+    /*    this.initHUDCanvas();
         this.initHUDObject();
         this.initHUDCamera();
-
+*/
     }
 
     initSourceDiv = () =>{
@@ -42,6 +62,43 @@ export default class HUD  {
     createSourceDiv =()=>{
         //document.body.append();
     }
+
+    displayBuyNowPopUp = () =>{
+        let heartStatus = this.getHeartStatus();
+        let diamondCount = this.getDiamondsToSendCount();
+        let msg = '<div class="flex-left">';
+                msg = msg+ '<h4>Minted By '+data.creator+'</h4><p>'+data.description+'</p></div>';
+
+                msg = msg+ '<div class="flex-right">';
+
+                msg = msg+ '<dt>Minted</dt>';
+                msg = msg+ '<dd>'+data.created+'</dd>';
+
+                msg = msg+ '<dt>Copies</dt>';
+                msg = msg+ '<dd>'+data.copies+'</dd>';            
+
+                msg = msg+ '<dt>Copies For Sale</dt>';
+                msg = msg+ '<dd>'+data.copiesForSale+'</dd>';                       
+                if(data.isBuyNow){
+                    msg = msg+ '<dt>Buy Now Price</dt>';
+                    msg = msg+ '<dd>'+data.buyNowPrice+' DeSo</dd>';                
+                };
+                msg = msg+ '<dt>Highest Sale Price</dt>';
+                msg = msg+ '<dd>'+data.maxPrice+' DeSo</dd>';
+
+                msg = msg+ '<dt>Last Bid Price</dt>';
+                msg = msg+ '<dd>'+data.lastBidPrice+' DeSo</dd>';                
+/*
+                msg = msg+ '<dt>Auction End Time:</dt>';
+                msg = msg+ '<dd>'+data.endTime+'</dd>';                
+*/
+                msg = msg+ '<dl>'
+                msg = msg+ '</div>'                
+        if(this.hud){
+           this.hud.show(msg);
+        }
+    }
+    
 
     initHUDCanvas = () =>{
 

@@ -40,7 +40,18 @@ const params = {
                     },
                     vrType: 'walking',
                     useOwnHandlers: true,
-                    lookAtStartPos: {x:0,y:2,z:0}
+                    lookAtStartPos: {x:0,y:2,z:0},
+                    actionsAPI: {
+                        sendDiamonds: (pubKey,diamondCount) =>{
+
+                        },
+                        sendLike: (pubKey) =>{
+
+                        },
+                        unLike: (pubKey) =>{
+
+                        }
+                    }
                 };
         
         this.config = {
@@ -133,7 +144,7 @@ const params = {
             this.initScene();
             this.loadUIAssets();
             this.initRenderer(this.config.el);
-            this.initHUD();
+            this.initHUD({scene:that.scene});
             this.initSkybox();
             this.initLighting();
 
@@ -154,7 +165,7 @@ const params = {
                 sceneryloadingComplete = true;
 
                 if(nftLoadingComplete){
-                    this.loadingScreen.hide();
+                   this.loadingScreen.hide();
                     document.getElementById('view-full').style.display='inline-block';
                     document.getElementById('give-diamond').style.display='inline-block';
                     document.getElementById('give-heart').style.display='inline-block';
@@ -443,6 +454,8 @@ const params = {
         let linkViewFull = document.querySelector('#view-full');  
         this.addClickListenerFullScreen(linkViewFull);
 
+        let btnConfirm = document.querySelector('#confirm');
+            this.addClickListenerGiveDiamond(btnDiamond);
     }
     addEventListenerKeys = ()=>{
         let that = this;
@@ -509,7 +522,7 @@ const params = {
         };
         switch(parseInt(action.btnIndex)){
             case 1:
-            if(action.isOnFloor){
+            if((action.isOnFloor)&&(!action.isOnWall)){
                 this.moveTo = action.selectedPoint.clone();
                 this.moveTo.setY(this.player.position.y);
         //this.player.position.copy(this.moveTo);
@@ -579,20 +592,29 @@ const params = {
             }
         }         
     }
+
+    createSelectionHelper = () =>{
+        // ADDING A BOX HELPER DIRECTLY TO THE SCENE
+    }
     selectTargetNFT = (action) =>{
 
-        let diamondCountEl = document.querySelector('#d-count');
-        diamondCountEl.innerHTML = String(0);
-        let heartIcon = document.getElementById('heart');
-        heartIcon.style.display = 'none';
 
         if(action.selection.object.userData.owner){
-            let item = action.selection.object.userData.owner;        
+            let item = action.selection.object.userData.owner;     
+            if(!item.isSelected) {
+                this.hud.setSelectedItem(item);
+                let diamondCountEl = document.querySelector('#d-count');
+                diamondCountEl.innerHTML = String(0);
+                let heartIcon = document.getElementById('heart');
+                heartIcon.style.display = 'none';
+
+            };
             this.actionTargetPos = item.getPosition();
             this.enableActionBtns();
         } else {
-             this.disableActionBtns();
-             this.hideStatusBar(['heart','diamond-count','confirm']);
+            this.hud.unSelectItem();
+            this.disableActionBtns();
+            this.hideStatusBar(['heart','diamond-count','confirm']);
         }
 
 
@@ -624,8 +646,8 @@ const params = {
         let item = this.uiAssets['diamond'];
         if(item){
             this.increaseDiamond();
-            let heartStatus = this.getHeartStatus();
-            if((this.getDiamondsToSendCount()===0)&&(!heartStatus)){
+            let heartStatus = this.hud.getHeartStatus();
+            if((this.hud.getDiamondsToSendCount()===0)&&(!heartStatus)){
                 setTimeout( this.hideStatusBar(['heart','diamond-count','confirm']), 5000)
             } else {
                 this.showStatusBar(['confirm','diamond-count']);
@@ -656,12 +678,9 @@ const params = {
         }   
     }
 
-    getDiamondsToSendCount = ()=>{
-        let diamondCountEl = document.querySelector('#d-count');
-        return parseInt(diamondCountEl.innerHTML.trim());        
-    }
+
     increaseDiamond =()=>{
-        let diamondCount = this.getDiamondsToSendCount();
+        let diamondCount = this.hud.getDiamondsToSendCount();
         if(diamondCount<5){
             ++diamondCount;
         } else {
@@ -709,7 +728,7 @@ const params = {
             if(heartStatus){
                 this.showStatusBar(['heart','diamond-count','confirm']);
             } else {
-                let diamondCount = this.getDiamondsToSendCount();
+                let diamondCount = this.hud.getDiamondsToSendCount();
                 if(diamondCount==0){
                     this.hideStatusBar(['heart','diamond-count','confirm']);
                 }
@@ -751,7 +770,7 @@ const params = {
     }
 
     toggleHeart = () =>{
-        let heartStatus = this.getHeartStatus();
+        let heartStatus = this.hud.getHeartStatus();
         let heartIcon = document.getElementById('heart');
         if(heartStatus){
             heartIcon.style.display = 'none';
@@ -762,10 +781,7 @@ const params = {
         }
     }
 
-    getHeartStatus = () =>{
-        let heartIcon = document.getElementById('heart');
-        return (heartIcon.style.display === 'inline-block')?true:false;        
-    }
+  
     throwActiveItem = ()=>{
         let that = this;
         let throwTime = performance.now();
@@ -1136,7 +1152,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             document.addEventListener('MSFullscreenChange', this.fsChangeHandler, false);
         }
 
-        this.closeFullscreen();
     }
 
     /* Close fullscreen */
@@ -1704,6 +1719,28 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         }
     }
 
+    addClickListeneBuyNow = (el) => {
+        let that = this;
+
+        //console.log('adding listener for '+modelUrl);
+        el.addEventListener("click", (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            this.hud.displayConfirmationPopUp();
+        });     
+    } 
+
+    addClickListenerConfirmTransaction = (el) => {
+        let that = this;
+
+        //console.log('adding listener for '+modelUrl);
+        el.addEventListener("click", (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            this.hud.displayBuyNowPopUp();
+        });     
+    } 
+
     addClickListenerGiveDiamond = (el) => {
         let that = this;
 
@@ -1764,6 +1801,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             //that.resizeCanvas(true);
         });     
     }   
+
+
 
     openVR = (el) =>{
 
@@ -2188,8 +2227,7 @@ initPlayerThirdPerson = () => {
 
     reset = ()=> {
         this.playerVelocity.set( 0, 0, 0 );
-        this.player.position.set( 0, 5, 5 );
-        this.camera.position.set(0, 6.5, 5);
+        this.player.position.set(this.config.playerStartPos);
        // this.camera.position.set( this.player.position );
       //  this.controls.target.copy( this.player.position );
         //this.camera.position.add( this.player.position );
