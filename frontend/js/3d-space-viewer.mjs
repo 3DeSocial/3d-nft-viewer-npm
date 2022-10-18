@@ -455,7 +455,7 @@ const params = {
         this.addClickListenerFullScreen(linkViewFull);
 
         let btnConfirm = document.querySelector('#confirm');
-            this.addClickListenerGiveDiamond(btnDiamond);
+            this.addClickListenerGiveDiamond(btnConfirm);
     }
     addEventListenerKeys = ()=>{
         let that = this;
