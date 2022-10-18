@@ -43,8 +43,52 @@ export default class Item {
         this.velocity = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         this.rotVelocity = new THREE.Vector3();
-
+        this.nftDisplayData = this.parseNFTDisplayData();
+        console.log('Item:', this.nftDisplayData);
     }
+
+    parseNFTDisplayData = () =>{
+        let nft = this.config.nft;
+        console.log(this.config);
+        if(!this.config.nft){
+            return false;
+        } else {
+        console.log(this.config.nft);
+        }
+  if(!nft.profileEntryResponse){
+            console.log('no nft.profileEntryResponse');
+            return {};
+        };        
+        let data = {
+            creator: nft.profileEntryResponse.username,
+            description: nft.body,
+            maxPrice: (nft.maxPrice>0)?this.convertNanosToDeso(nft.maxPrice,4):0,
+            minPrice: (nft.minPrice>0)?this.convertNanosToDeso(nft.minPrice,4):0,
+            isBuyNow: nft.isBuyNow,
+            likeCount: nft.likeCount,
+            created:this.formatDate(nft.timeStamp / 1000000),
+            diamondCount:nft.diamondCount,
+            buyNowPrice: this.convertNanosToDeso(nft.buyNowPrice,4),
+            copies: nft.numNFTCopies,
+            copiesForSale: nft.numNFTCopiesForSale,            
+            commentCount: nft.commentCount,
+            nftzUrl: 'https://nftz.me/nft/'+nft.postHashHex,
+            postHashHex: +nft.postHashHex,
+            lastBidPrice: (nft.lastBidPrice>0)?this.convertNanosToDeso(nft.lastBidPrice,4):0,
+        }
+
+        return data;
+    }
+
+
+    convertNanosToDeso = (nanos, d) =>{
+        return (nanos / 1e9).toFixed(d)        
+    }
+
+    formatDate =(date)=> {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(date).toLocaleTimeString('en', options);
+    }    
 
     resetVelocity = ()=>{
         this.velocity.setX(0);

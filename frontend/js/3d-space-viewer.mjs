@@ -144,7 +144,8 @@ const params = {
             this.initScene();
             this.loadUIAssets();
             this.initRenderer(this.config.el);
-            this.initHUD({scene:that.scene});
+            this.initHUD({scene:that.scene,
+                            chainAPI: that.config.chainAPI});
             this.initSkybox();
             this.initLighting();
 
@@ -455,7 +456,7 @@ const params = {
         this.addClickListenerFullScreen(linkViewFull);
 
         let btnConfirm = document.querySelector('#confirm');
-            this.addClickListenerGiveDiamond(btnConfirm);
+            this.addClickListenerConfirmTransaction(btnConfirm);
     }
     addEventListenerKeys = ()=>{
         let that = this;
@@ -571,11 +572,9 @@ const params = {
     showSelectedMeshData =(action) =>{
         if(action.selection.object.userData.owner){
             let item = action.selection.object.userData.owner;
-            console.log('target object');
-            console.log(action.selection.object);
             this.selectTargetNFT(action);
             if(item.config.nft){
-                let nftDisplayData = this.parseNFTDisplayData(item.config.nft);
+                let nftDisplayData = item.nftDisplayData;
                 if(item.config.spot){
                     nftDisplayData.spot = item.config.spot;
                 };
@@ -593,16 +592,12 @@ const params = {
         }         
     }
 
-    createSelectionHelper = () =>{
-        // ADDING A BOX HELPER DIRECTLY TO THE SCENE
-    }
     selectTargetNFT = (action) =>{
 
 
         if(action.selection.object.userData.owner){
             let item = action.selection.object.userData.owner;     
             if(!item.isSelected) {
-                this.hud.unSelectItem();
                 this.hud.setSelectedItem(item);
                 this.showStatusBar(['confirm','diamond-count','select-preview']);
 
@@ -811,29 +806,6 @@ const params = {
             return new Date(date).toLocaleTimeString('en', options);
     }
 
-    parseNFTDisplayData = (nft) =>{
-
-        let data = {
-            creator: nft.profileEntryResponse.username,
-            description: nft.body,
-            maxPrice: (nft.maxPrice>0)?this.convertNanosToDeso(nft.maxPrice,4):0,
-            minPrice: (nft.minPrice>0)?this.convertNanosToDeso(nft.minPrice,4):0,
-            isBuyNow: nft.isBuyNow,
-            likeCount: nft.likeCount,
-            created:this.formatDate(nft.timeStamp / 1000000),
-            diamondCount:nft.diamondCount,
-            buyNowPrice: this.convertNanosToDeso(nft.buyNowPrice,4),
-            copies: nft.numNFTCopies,
-            copiesForSale: nft.numNFTCopiesForSale,            
-            commentCount: nft.commentCount,
-            nftzUrl: 'https://nftz.me/nft/'+nft.postHashHex,
-            postHashHex: +nft.postHashHex,
-            lastBidPrice: (nft.lastBidPrice>0)?this.convertNanosToDeso(nft.lastBidPrice,4):0,
-        }
-
-        return data;
-    }
-
     convertNanosToDeso = (nanos, d) =>{
         return (nanos / 1e9).toFixed(d)        
     }
@@ -858,7 +830,7 @@ const params = {
 
                 msg = msg+ '<div class="flex-right">';
 
-                msg = msg+ '<dt>Minted</dt>';
+                msg = msg+ '<dl><dt>Minted</dt>';
                 msg = msg+ '<dd>'+data.created+'</dd>';
 
                 msg = msg+ '<dt>Copies</dt>';
@@ -868,7 +840,7 @@ const params = {
                 msg = msg+ '<dd>'+data.copiesForSale+'</dd>';                       
                 if(data.isBuyNow){
                     msg = msg+ '<dt>Buy Now Price</dt>';
-                    msg = msg+ '<dd>'+data.buyNowPrice+' DeSo</dd>';                
+                    msg = msg+ '<dd></dd>';                
                 };
                 msg = msg+ '<dt>Highest Sale Price</dt>';
                 msg = msg+ '<dd>'+data.maxPrice+' DeSo</dd>';
@@ -879,7 +851,7 @@ const params = {
                 msg = msg+ '<dt>Auction End Time:</dt>';
                 msg = msg+ '<dd>'+data.endTime+'</dd>';                
 */
-                msg = msg+ '<dl>'
+                msg = msg+ '</dl>'
                 msg = msg+ '</div>'                
         if(this.hud){
            this.hud.show(msg);
@@ -1740,7 +1712,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
-            this.hud.displayBuyNowPopUp();
+            this.hud.displayConfirmationPopUp();
         });     
     } 
 
