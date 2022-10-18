@@ -603,6 +603,8 @@ const params = {
             let item = action.selection.object.userData.owner;     
             if(!item.isSelected) {
                 this.hud.setSelectedItem(item);
+                this.showStatusBar(['confirm','diamond-count','select-preview']);
+
                 let diamondCountEl = document.querySelector('#d-count');
                 diamondCountEl.innerHTML = String(0);
                 let heartIcon = document.getElementById('heart');
@@ -650,7 +652,7 @@ const params = {
             if((this.hud.getDiamondsToSendCount()===0)&&(!heartStatus)){
                 setTimeout( this.hideStatusBar(['heart','diamond-count','confirm']), 5000)
             } else {
-                this.showStatusBar(['confirm','diamond-count']);
+                this.showStatusBar(['confirm','diamond-count','select-preview']);
             };
 
             let start = this.player.position.clone();
@@ -726,11 +728,11 @@ const params = {
         if(item){
             let heartStatus = this.toggleHeart();
             if(heartStatus){
-                this.showStatusBar(['heart','diamond-count','confirm']);
+                this.showStatusBar(['heart','diamond-count','confirm','select-preview']);
             } else {
                 let diamondCount = this.hud.getDiamondsToSendCount();
                 if(diamondCount==0){
-                    this.hideStatusBar(['heart','diamond-count','confirm']);
+                    this.hideStatusBar(['heart','diamond-count','confirm','select-preview']);
                 }
             }
 

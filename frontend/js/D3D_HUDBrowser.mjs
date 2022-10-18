@@ -17,7 +17,9 @@ export default class HUDBrowser  {
      
      
         this.selectedItem = null;
-     
+        this.thumEl = document.querySelector('img#sp-img');
+        console.log(this.thumEl);
+
     }
 
     setSelectedItem = (item) =>{
@@ -30,15 +32,24 @@ export default class HUDBrowser  {
             this.selectedItem.helper =
            this.selectedItem.helper = new THREE.BoxHelper( item.mesh, 0x00FF00 );
         };
-        this.config.scene.add(this.selectedItem.helper);        
-
+        this.config.scene.add(this.selectedItem.helper); 
+        this.showSelectedThumbnail();       
+        let preview = document.querySelector('#select-preview');
+        preview.style.display = 'inline-block';
     }
     
+    showSelectedThumbnail = () =>{
+        console.log(this.selectedItem.config);
+        if(this.selectedItem.config.nft.imageURLs[0]){
+             this.thumEl.src = this.selectedItem.config.nft.imageURLs[0]; 
+        };
+    }
+
     createContainerBox = (mesh) =>{
 
         let newMeshBounds = new THREE.Box3().setFromObject( mesh );
         console.log('newMeshBounds',newMeshBounds);
-          let newLengthMeshBounds = {
+        let newLengthMeshBounds = {
             x: Math.abs(newMeshBounds.max.x - newMeshBounds.min.x)+0.5,
             y: Math.abs(newMeshBounds.max.y - newMeshBounds.min.y)+0.5,
         };      
@@ -71,6 +82,9 @@ export default class HUDBrowser  {
         this.config.scene.remove(this.selectedItem.helper);
         this.selectedItem.isSelected = false;
         this.selectedItem = null;
+        let preview = document.querySelector('#select-preview');
+        preview.style.display = 'none';
+
     }
 
 
