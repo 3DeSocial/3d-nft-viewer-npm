@@ -602,6 +602,7 @@ const params = {
         if(action.selection.object.userData.owner){
             let item = action.selection.object.userData.owner;     
             if(!item.isSelected) {
+                this.hud.unSelectItem();
                 this.hud.setSelectedItem(item);
                 this.showStatusBar(['confirm','diamond-count','select-preview']);
 
