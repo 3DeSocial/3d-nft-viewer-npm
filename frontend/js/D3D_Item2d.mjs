@@ -179,11 +179,8 @@ class Item2d extends Item {
                 console.log(nft);
                 return false;
             };
-            let proxyImageURL = imageUrl;
-            if(imageUrl.indexOf('images.deso.org')>-1){
-                proxyImageURL = that.config.imageProxyUrl +imageUrl;
-            };
-
+            let proxyImageURL = that.config.imageProxyUrl +imageUrl;
+            console.log('proxyImageURL:', proxyImageURL);
             let nftData = nft;
             var img = new Image();
 

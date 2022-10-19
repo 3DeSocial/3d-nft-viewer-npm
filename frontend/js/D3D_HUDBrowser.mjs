@@ -166,42 +166,9 @@ export default class HUDBrowser  {
                 msg = msg+ '<dl>'
                 msg = msg+ '</div>';
            this.show(msg);
-           this.addEventsToConfirmButtons({diamondCount:diamondCount,
-                                            heartStatus:heartStatus})
-    }
-
-    addEventsToConfirmButtons = (opts) =>{
-        let that = this;
-        let confirmLike = document.querySelector('#btn-cfn-like');
-            confirmLike.addEventListener('click',(e)=>{
-                if(opts.heartStatus===true){
-                    console.log('sending like to post ',this.selectedItem.config.nft.postHashHex);
-                    this.config.chainAPI.sendLike(this.selectedItem.config.nft.postHashHex);
-                };
-        })
-        let confirmDiamond =  document.querySelector('#btn-cfn-dmd');
-        if(confirmDiamond){
-            confirmDiamond.addEventListener('click',(e)=>{
-            console.log('sending '+opts.diamondCount+' diamonds to ',that.nftDisplayData.creator);
-                this.config.chainAPI.sendDiamonds(this.selectedItem.config.nft.postHashHex, opts.diamondCount);
-            })
-        };
-
-      /*  let confirmBid =  document.querySelector('#btn-cfn-bid');
-            confirmBid.addEventListener('click',(e)=>{
-            console.log('Bid ',that.nftDisplayData.creator);
-        })*/
-
-        let confirmBuy =  document.querySelector('#btn-cfn-buy');
-            if(confirmBuy){        
-                confirmBuy.addEventListener('click',(e)=>{
-                console.log('Buy ',this.selectedItem.config.nft.postHashHex,' from ',that.nftDisplayData.creator);
-                this.config.chainAPI.buyNow(this.selectedItem.config.nft.postHashHex, that.nftDisplayData.buyNowPrice);
-
-            })
-        }
 
     }
+
     initSourceDiv = () =>{
         let that = this;
 

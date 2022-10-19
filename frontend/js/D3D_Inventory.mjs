@@ -163,6 +163,7 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
                 if(itemData.nft){
                     itemConfig.nft = itemData.nft;               
                 };
+                itemConfig.imageProxyUrl = that.config.imageProxyUrl;
 
                     itemConfig.isImage = true;
                     item = this.initItem2d(itemConfig);

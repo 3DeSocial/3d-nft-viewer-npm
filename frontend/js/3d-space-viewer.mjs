@@ -425,6 +425,7 @@ const params = {
     }    
 
     addEventListenersHUD = ()=>{
+        let that = this;
         let btnDiamond = document.querySelector('#give-diamond');
             this.addClickListenerGiveDiamond(btnDiamond);
 
@@ -442,6 +443,16 @@ const params = {
 
         let btnViewDetail = document.querySelector('#view-detail');
             this.addClickListenerViewDetails(btnViewDetail);
+
+        let confirmDiamond =  document.querySelector('.confirm-transaction');
+            if(confirmDiamond){
+                confirmDiamond.addEventListener('click',(e)=>{
+                            let diamondCount = this.hud.getDiamondsToSendCount();
+
+                console.log('sending '+diamondCount+' to ',that.hud.selectedItem.config.nft.postHashHex);
+                this.config.chainAPI.sendDiamonds(that.hud.selectedItem.config.nft.postHashHex, diamondCount);
+            })
+        };
 
     }
     addEventListenerKeys = ()=>{
@@ -646,6 +657,7 @@ const params = {
             if((this.hud.getDiamondsToSendCount()===0)&&(!heartStatus)){
                 setTimeout( this.hideStatusBar(['heart','diamond-count']), 5000)
             } else {
+
                 this.showStatusBar(['diamond-count','select-preview','confirm-not','confirm']);
             };
 
