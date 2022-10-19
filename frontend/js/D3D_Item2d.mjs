@@ -46,7 +46,6 @@ class Item2d extends Item {
         let that = this;
        
         this.nftDisplayData = this.parseNFTDisplayData();
-        console.log('Item2d:', this.nftDisplayData);
 
     }
 
@@ -55,10 +54,7 @@ class Item2d extends Item {
         console.log(this.config);
         if(!this.config.nft){
             return false;
-        } else {
-            console.log('we have nft');
-        console.log(this.config.nft);
-        }
+        };
         if(!nft.profileEntryResponse){
             console.log('no nft.profileEntryResponse');
             return {};
@@ -151,11 +147,9 @@ class Item2d extends Item {
         if(typeof(pos)==='undefined'){
             throw('Cant place at undefined position');
         };
-        console.log('placing 2d mesh');
         return new Promise((resolve,reject)=>{
             if(this.mesh){ // already loaded / created
-                console.log('placing already created mesh aT',pos.y);
-                console.log(pos);
+
                 this.mesh.userData.owner = this;
                 this.mesh.position.copy(pos);
                 this.scene.add(this.mesh);
@@ -178,9 +172,6 @@ class Item2d extends Item {
     initMesh = async(nft) =>{
         let that = this;
         return new Promise(( resolve, reject ) => {
-            console.log('initMesh');
-            console.log(nft);
-            console.log(nft.imageURLs);
 
             let imageUrl = nft.imageURLs[0];
             if(!imageUrl){
@@ -190,21 +181,16 @@ class Item2d extends Item {
             };
             let proxyImageURL = imageUrl;
             if(imageUrl.indexOf('images.deso.org')>-1){
-                console.log('proxy required');
                 proxyImageURL = that.config.imageProxyUrl +imageUrl;
-            } else {
-                console.log('proxy NOT required');
             };
-            console.log('proxyImageURL: ',proxyImageURL);
+
             let nftData = nft;
             var img = new Image();
 
                 img.onload = function(){
-                    console.log('image loaded: ',nftData.postHashHex);
                   var height = this.height;
                   var width = this.width;
                   let dims = that.calculateAspectRatioFit(width, height, 4,2.25);
-                  console.log(dims);
                   const textureLoader = new THREE.TextureLoader()
                   const texture = textureLoader.load(this.src);
                   const geometry = new THREE.BoxGeometry( dims.width, dims.height, 0.10 );
@@ -212,7 +198,6 @@ class Item2d extends Item {
                   const nftMesh = new THREE.Mesh( geometry, materials );
                   that.mesh = nftMesh;
                   let nftImgData = {is3D:nft.is3D, nft:nftData, mesh: nftMesh, imageUrl: imageUrl, width:dims.width, height:dims.height};
-                  console.log('mesh created');
                   resolve(nftImgData);
             };
 

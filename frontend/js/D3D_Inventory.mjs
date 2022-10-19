@@ -164,27 +164,20 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
                     itemConfig.nft = itemData.nft;               
                 };
 
-                    console.log('init image..');
                     itemConfig.isImage = true;
                     item = this.initItem2d(itemConfig);
-                    console.log('inventory calling inti mesh');
-                    console.log(itemConfig);
+
                     item.initMesh(itemConfig).then((nftImgData)=>{
                         let spot = that.config.layoutPlotter.getNextFreePos();
-                        console.log('next spot y:');
-                        console.log( spot.pos.y );
-                        console.log(nftImgData.height);
+                      
                         let halfHeight = nftImgData.height/2;
                         spot.pos.y = spot.pos.y+halfHeight;
-                        console.log('new spot.pos.y: ',spot.pos.y);
+
                         item.place(spot.pos).then((mesh,pos)=>{
-                            console.log('placed ok');
                             if(spot.rot){
-                                console.log('rot ok');
                                 mesh.rotateY(spot.rot.y);
                             };
                             items.push(item);
-                            console.log('items.length: ',items.length, ' of ',noNfts);
                             if(items.length===itemList.length){
                                 console.log('all items placed');
                                 resolve(items);

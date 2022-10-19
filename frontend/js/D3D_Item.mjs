@@ -44,18 +44,14 @@ export default class Item {
         this.direction = new THREE.Vector3();
         this.rotVelocity = new THREE.Vector3();
         this.nftDisplayData = this.parseNFTDisplayData();
-        console.log('Item:', this.nftDisplayData);
     }
 
     parseNFTDisplayData = () =>{
         let nft = this.config.nft;
-        console.log(this.config);
         if(!this.config.nft){
             return false;
-        } else {
-        console.log(this.config.nft);
-        }
-  if(!nft.profileEntryResponse){
+        };
+        if(!nft.profileEntryResponse){
             console.log('no nft.profileEntryResponse');
             return {};
         };        

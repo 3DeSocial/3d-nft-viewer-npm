@@ -40,18 +40,7 @@ const params = {
                     },
                     vrType: 'walking',
                     useOwnHandlers: true,
-                    lookAtStartPos: {x:0,y:2,z:0},
-                    actionsAPI: {
-                        sendDiamonds: (pubKey,diamondCount) =>{
-
-                        },
-                        sendLike: (pubKey) =>{
-
-                        },
-                        unLike: (pubKey) =>{
-
-                        }
-                    }
+                    lookAtStartPos: {x:0,y:2,z:0}
                 };
         
         this.config = {
@@ -602,7 +591,12 @@ const params = {
                 let diamondCountEl = document.querySelector('#d-count');
                 diamondCountEl.innerHTML = String(0);
                 let heartIcon = document.getElementById('heart');
-                heartIcon.style.display = 'none';
+
+                if(this.config.chainAPI.getHeartStatus(item)){
+                    heartIcon.style.display = 'inline-block';
+                } else {
+                    heartIcon.style.display = 'none';
+                };
 
             };
             this.actionTargetPos = item.getPosition();
@@ -1476,7 +1470,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             let items2d =options.sceneAssets.splice(options.sceneAssets.length - maxItems,maxItems);
                     this.loadingScreen.startLoading({items:items2d,
                                         name:'NFTs'});
-console.log('init sceneInventory')
+
             this.sceneInventory = new D3DInventory({
                                             chainAPI: this.config.chainAPI,
                                             imageProxyUrl: this.config.imageProxyUrl,    
@@ -1492,8 +1486,6 @@ console.log('init sceneInventory')
                                             layoutPlotter: this.layoutPlotter,
                                             loadingScreen: this.loadingScreen
                                         });     
-
-                                        console.log('sceneInventory instanciated')               ;
         }
         
     }
