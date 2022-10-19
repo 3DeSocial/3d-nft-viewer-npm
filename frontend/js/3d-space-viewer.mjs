@@ -150,7 +150,8 @@ const params = {
             this.initLighting();
 
             this.loadScenery().then(()=>{
-                this.initCameraPlayer();                
+                this.initCameraPlayer();     
+                this.initInventory(options);
                // that.placeAssets();
                 if(that.config.firstPerson){
                     that.initPlayerFirstPerson();
@@ -178,20 +179,8 @@ const params = {
 
                 };
             });
-            this.initInventory(options);
-            nftLoadingComplete = true;
-            if(sceneryloadingComplete){
-                this.loadingScreen.hide();
-                    document.getElementById('view-full').style.display='inline-block';
-                    document.getElementById('give-diamond').style.display='inline-block';
-                    document.getElementById('give-heart').style.display='inline-block';
-              /*     document.querySelectorAll('.d3d-btn-top').forEach((el)=>{
-                      el.style.display='inline-block';
-                    })*/
-                    
-                    this.resizeCanvas();
 
-            };
+  
 
         });
     }
@@ -1441,7 +1430,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             items = options.items;
         };
      
-        this.inventory = new D3DInventory({ chainAPI: this.config.chainAPI,
+    /*    this.inventory = new D3DInventory({ chainAPI: this.config.chainAPI,
                                             imageProxyUrl: this.config.imageProxyUrl,    
                                             items: items,
                                             scene: this.scene,
@@ -1453,21 +1442,23 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                             modelsRoute: this.config.modelsRoute,
                                             nftsRoute: this.config.nftsRoute,
                                             loadingScreen: this.loadingScreen
-                                        });
+                                        });*/
         this.sceneInventory = null;
         if(options.sceneAssets){
-
+            console.log('starting scene inventory');
             this.layoutPlotter = new LayoutPlotter({
                                                  camera: this.camera,
                                                  scene: this.scene,
                                                  sceneryLoader: this.sceneryLoader});  
             let maxItems =this.layoutPlotter.getMaxItemCount();
-                    this.loadingScreen.startLoading({items:options.sceneAssets.splice(options.sceneAssets.length - maxItems,maxItems),
+            let items2d =options.sceneAssets.splice(options.sceneAssets.length - maxItems,maxItems);
+                    this.loadingScreen.startLoading({items:items2d,
                                         name:'NFTs'});
+console.log('init sceneInventory')
             this.sceneInventory = new D3DInventory({
                                             chainAPI: this.config.chainAPI,
                                             imageProxyUrl: this.config.imageProxyUrl,    
-                                            items: options.sceneAssets,
+                                            items2d: items2d,
                                             scene: this.scene,
                                             loader: this.loader,
                                             loaders: this.loaders,
@@ -1478,7 +1469,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                             nftsRoute: this.config.nftsRoute,
                                             layoutPlotter: this.layoutPlotter,
                                             loadingScreen: this.loadingScreen
-                                        });                    
+                                        });     
+
+                                        console.log('sceneInventory instanciated')               ;
         }
         
     }

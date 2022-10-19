@@ -25,13 +25,15 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         this.loader = this.config.loader;
         this.chainAPI = new ChainAPI(this.config.chainAPI);
         this.activeItemIdx = 0;
-        if((this.config.items)&&(this.config.layoutPlotter)){
-            this.importToLayout();
+        if((this.config.items3d.length>0)||(this.config.items2d.length>0)){
+            console.log('starting inventory load...');
+            this.load();
         } else {
-            if((this.config.items3d.length>0)||(this.config.items2d.length>0)){
-                this.load();
-            };
-        };
+            console.log('not data to load');
+            console.log(this.config.items2d.length);
+
+            console.log(this.config.items3d.length);
+        }
       
     }
 
@@ -98,67 +100,99 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
     }
 
     load = () =>{
-        let nfts2d = this.initItems(this.config.items2d);
-        if(nfts2d){
-           this.items2d = nfts2d;        
-        };
-        let nfts3d = this.initItems(this.config.items3d);
-        let allItems = [];
-            allItems = allItems.concat(nfts2d);
-            allItems = allItems.concat(nfts3d);
-        this.items = allItems;
+        let that = this;
+        console.log('load, loading ',this.config.items2d.length, ' from items2d');
+        this.initItems(this.config.items2d).then((nfts2d)=>{
+            if(nfts2d){
+                that.items2d = nfts2d;     
 
-        this.items3d = nfts3d
+               // let nfts3d = that.initItems(that.config.items3d);
+                let allItems = [];
+                    allItems = allItems.concat(nfts2d);
+                 //   allItems = allItems.concat(nfts3d);
+                that.items = allItems;
+
+                that.items3d = [];
+
+
+
+            };
+        })
+
         
     }
 
     initItems = (itemList)=>{
-
         let that = this;
         let items = [];
 
-        itemList.forEach((itemData)=>{
-            let item ;
-            let itemConfig;
-            if(itemData.params){
-                itemConfig = itemData.params;
-            } else {
-                itemConfig = itemData;
-            };
-            if(!itemConfig.width){
-                itemConfig.width = itemData.width;
-            }
-            if(!itemConfig.depth){
-                itemConfig.depth = itemData.depth;
-            }
-            if(!itemConfig.height){
-                itemConfig.height = itemData.height;
-            }
+        let noPositions = this.config.layoutPlotter.initPosQ();
+        let noNfts = itemList.length;
+        let noNftsToPlace = Math.min(noPositions,noNfts);
+        console.log('initItems ', itemList.length);
+        console.log(itemList);
+        return new Promise((resolve, reject) => {
 
-            itemConfig.three = THREE;
-            itemConfig.scene = this.scene;
-            itemConfig.loader = this.loader;
-            itemConfig.modelsRoute = this.config.modelsRoute;
-            itemConfig.nftsRoute = this.config.nftsRoute;
-            if(itemData.layout){
-                itemConfig.layout = itemData.layout;               
-            };
-            if(itemData.nft){
-                itemConfig.nft = itemData.nft;               
-            };
 
-            if(itemData.isImage){
-                itemConfig.isImage = itemData.isImage;
-                item = this.initItem2d(itemConfig)                
-            } else {
-                item = this.initItem(itemConfig)
-            }
-            if(item){
-                items.push(item);
-            }
+            itemList.forEach((itemData)=>{
+                let item ;
+                let itemConfig;
+                if(itemData.params){
+                    itemConfig = itemData.params;
+                } else {
+                    itemConfig = itemData;
+                };
+                if(!itemConfig.width){
+                    itemConfig.width = itemData.width;
+                }
+                if(!itemConfig.depth){
+                    itemConfig.depth = itemData.depth;
+                }
+                if(!itemConfig.height){
+                    itemConfig.height = itemData.height;
+                }
 
-        });
-        return items;
+                itemConfig.three = THREE;
+                itemConfig.scene = this.scene;
+                itemConfig.loader = this.loader;
+                itemConfig.modelsRoute = this.config.modelsRoute;
+                itemConfig.nftsRoute = this.config.nftsRoute;
+                if(itemData.layout){
+                    itemConfig.layout = itemData.layout;               
+                };
+                if(itemData.nft){
+                    itemConfig.nft = itemData.nft;               
+                };
+
+                    console.log('init image..');
+                    itemConfig.isImage = true;
+                    item = this.initItem2d(itemConfig);
+                    console.log('inventory calling inti mesh');
+                    console.log(itemConfig);
+                    item.initMesh(itemConfig).then((nftImgData)=>{
+                        let spot = that.config.layoutPlotter.getNextFreePos();
+                        console.log('next spot:');
+                        console.log(spot);
+                        item.place(spot.pos).then((mesh,pos)=>{
+                            console.log('placed ok');
+                            if(spot.rot){
+                                console.log('rot ok');
+                                mesh.rotateY(spot.rot.y);
+                            };
+                            items.push(item);
+                        });
+
+                        if(items.length===itemList.length){
+                            resolve(items);
+                        }
+                    }).catch(err=>{
+                        console.log('no image, skip NFT');
+                    })           
+               
+               
+
+            });
+        })      
 
     }
     
@@ -189,7 +223,7 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         if(opts.nft){
             itemParams.nft = opts.nft;
         } else {
-            console.warn('!!!! NO NFT!!!2');
+            console.warn('initItem: !!!! NO NFT!!!2');
             console.log(opts);
         };
 
@@ -220,6 +254,8 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         if(opts.mesh){
             itemParams.mesh = opts.mesh;
         } else {
+            console.log('no mesh calling getLoaderForFormat ');
+            console.log(opts);
              itemParams.loader = this.config.loaders.getLoaderForFormat(opts.format);
         };
 
@@ -280,8 +316,9 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         if(opts.nft){
             itemParams.nft = opts.nft;
         } else {
-            console.warn('!!!! NO NFT!!!2');
+            console.warn('initItem2d !!!! NO NFT!!!');
             console.log(opts);
+            itemParams.nft = opts
         };
         if(opts.spot){
             itemParams.spot = opts.spot;
