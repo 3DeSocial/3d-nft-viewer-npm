@@ -44,16 +44,7 @@ class Item2d extends Item {
         this.initItemEvents();
         this.isItem = true;
         let that = this;
-        this.initMesh(this.config.nft).then((nftImgData)=>{
-
-                that.place(that.config.pos);
-
-                    if(that.config.rot){
-                        nftImgData.mesh.rotateY(that.config.rot.y);
-                    };
-                }).catch(err=>{
-                    console.log('no image, skip NFT');
-                })
+       
         this.nftDisplayData = this.parseNFTDisplayData();
         console.log('Item2d:', this.nftDisplayData);
 
@@ -160,12 +151,15 @@ class Item2d extends Item {
         if(typeof(pos)==='undefined'){
             throw('Cant place at undefined position');
         };
+        console.log('placing 2d mesh');
         return new Promise((resolve,reject)=>{
             if(this.mesh){ // already loaded / created
+                console.log('placing already created mesh aT',pos.y);
+                console.log(pos);
                 this.mesh.userData.owner = this;
                 this.mesh.position.copy(pos);
                 this.scene.add(this.mesh);
-                this.fixYCoord(this.mesh, pos);
+               // this.fixYCoord(this.mesh, pos);
                 let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
                 document.body.dispatchEvent(loadedEvent);
                 document.body.dispatchEvent(this.meshPlacedEvent);
@@ -184,23 +178,33 @@ class Item2d extends Item {
     initMesh = async(nft) =>{
         let that = this;
         return new Promise(( resolve, reject ) => {
+            console.log('initMesh');
+            console.log(nft);
+            console.log(nft.imageURLs);
+
             let imageUrl = nft.imageURLs[0];
             if(!imageUrl){
                 reject('No image for NFT ',this.config.nftPostHashHex);
+                console.log(nft);
                 return false;
             };
-            let proxyImageURL = that.config.imageProxyUrl +imageUrl;
+            let proxyImageURL = imageUrl;
             if(imageUrl.indexOf('images.deso.org')>-1){
-                let proxyImageURL = imageUrl;
+                console.log('proxy required');
+                proxyImageURL = that.config.imageProxyUrl +imageUrl;
+            } else {
+                console.log('proxy NOT required');
             };
-
+            console.log('proxyImageURL: ',proxyImageURL);
             let nftData = nft;
             var img = new Image();
 
                 img.onload = function(){
+                    console.log('image loaded: ',nftData.postHashHex);
                   var height = this.height;
                   var width = this.width;
-                  let dims = that.calculateAspectRatioFit(width, height, 4,2.75);
+                  let dims = that.calculateAspectRatioFit(width, height, 4,2.25);
+                  console.log(dims);
                   const textureLoader = new THREE.TextureLoader()
                   const texture = textureLoader.load(this.src);
                   const geometry = new THREE.BoxGeometry( dims.width, dims.height, 0.10 );
@@ -208,6 +212,7 @@ class Item2d extends Item {
                   const nftMesh = new THREE.Mesh( geometry, materials );
                   that.mesh = nftMesh;
                   let nftImgData = {is3D:nft.is3D, nft:nftData, mesh: nftMesh, imageUrl: imageUrl, width:dims.width, height:dims.height};
+                  console.log('mesh created');
                   resolve(nftImgData);
             };
 

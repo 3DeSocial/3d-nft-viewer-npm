@@ -62,9 +62,7 @@ export default class D3DLoaders {
     }
 
     getLoaderForFormat = (format) =>{
-        if(!format){
-            throw "Loaders:getLoaderForFormat: Unknown format";
-        };
+ 
         format = format.toLowerCase();
         this.loadingManager = new THREE.LoadingManager();
         // add handler for TGA textures

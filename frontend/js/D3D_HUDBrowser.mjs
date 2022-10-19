@@ -97,6 +97,9 @@ export default class HUDBrowser  {
 
     }
 
+    getSelectedItem = ()=>{
+        return this.selectedItem;
+    }
 
     getDiamondsToSendCount = ()=>{
         let diamondCountEl = document.querySelector('#d-count');
@@ -118,6 +121,13 @@ export default class HUDBrowser  {
         console.log('action: Bid on', this.selectedItem.config.nft.postHashHex);
     }
 
+    openBuyNFT = () =>{
+        this.config.chainAPI.openBuyNFT(this.selectedItem.config.nft.postHashHex);
+    }
+
+    openNFTPage = () =>{
+        this.config.chainAPI.openNFTPage(this.selectedItem.config.nft.postHashHex);
+    }
 
     displayConfirmationPopUp = () =>{
 
