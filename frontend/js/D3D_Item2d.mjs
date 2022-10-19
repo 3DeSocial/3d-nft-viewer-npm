@@ -154,7 +154,8 @@ class Item2d extends Item {
         console.log('placing 2d mesh');
         return new Promise((resolve,reject)=>{
             if(this.mesh){ // already loaded / created
-                console.log('placing already created mesh');
+                console.log('placing already created mesh aT',pos.y);
+                console.log(pos);
                 this.mesh.userData.owner = this;
                 this.mesh.position.copy(pos);
                 this.scene.add(this.mesh);
@@ -202,7 +203,7 @@ class Item2d extends Item {
                     console.log('image loaded: ',nftData.postHashHex);
                   var height = this.height;
                   var width = this.width;
-                  let dims = that.calculateAspectRatioFit(width, height, 4,2.75);
+                  let dims = that.calculateAspectRatioFit(width, height, 4,2.25);
                   console.log(dims);
                   const textureLoader = new THREE.TextureLoader()
                   const texture = textureLoader.load(this.src);

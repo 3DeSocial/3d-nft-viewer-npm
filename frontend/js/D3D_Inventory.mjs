@@ -171,8 +171,12 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
                     console.log(itemConfig);
                     item.initMesh(itemConfig).then((nftImgData)=>{
                         let spot = that.config.layoutPlotter.getNextFreePos();
-                        console.log('next spot:');
-                        console.log(spot);
+                        console.log('next spot y:');
+                        console.log( spot.pos.y );
+                        console.log(nftImgData.height);
+                        let halfHeight = nftImgData.height/2;
+                        spot.pos.y = spot.pos.y+halfHeight;
+                        console.log('new spot.pos.y: ',spot.pos.y);
                         item.place(spot.pos).then((mesh,pos)=>{
                             console.log('placed ok');
                             if(spot.rot){
@@ -180,11 +184,14 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
                                 mesh.rotateY(spot.rot.y);
                             };
                             items.push(item);
+                            console.log('items.length: ',items.length, ' of ',noNfts);
+                            if(items.length===itemList.length){
+                                console.log('all items placed');
+                                resolve(items);
+                            }
                         });
 
-                        if(items.length===itemList.length){
-                            resolve(items);
-                        }
+
                     }).catch(err=>{
                         console.log('no image, skip NFT');
                     })           

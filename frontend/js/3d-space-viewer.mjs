@@ -166,18 +166,19 @@ const params = {
                 this.animate();
                 sceneryloadingComplete = true;
 
-                if(nftLoadingComplete){
-                   this.loadingScreen.hide();
-                    document.getElementById('view-full').style.display='inline-block';
-                    document.getElementById('give-diamond').style.display='inline-block';
-                    document.getElementById('give-heart').style.display='inline-block';
+                this.loadingScreen.hide();
+                document.getElementById('view-full').style.display='inline-block';
+                document.getElementById('give-diamond').style.display='inline-block';
+                document.getElementById('give-heart').style.display='inline-block';
+                document.getElementById('view-detail').style.display='inline-block';
+
                   /*  document.querySelectorAll('.d3d-btn-top').forEach((el)=>{
                       el.style.display='inline-block';
                     });*/
                     this.resizeCanvas();
 
 
-                };
+                
             });
 
   
@@ -444,8 +445,15 @@ const params = {
         let linkViewFull = document.querySelector('#view-full');  
         this.addClickListenerFullScreen(linkViewFull);
 
-        let btnConfirm = document.querySelector('#confirm');
-            this.addClickListenerConfirmTransaction(btnConfirm);
+        let btnBuy = document.querySelector('#buy-now');
+            this.addClickListenerBuyNow(btnBuy);
+
+        let btnViewPage = document.querySelector('#view-page');
+            this.addClickListenerViewPage(btnViewPage);
+
+        let btnViewDetail = document.querySelector('#view-detail');
+            this.addClickListenerViewDetails(btnViewDetail);
+
     }
     addEventListenerKeys = ()=>{
         let that = this;
@@ -589,7 +597,7 @@ const params = {
             if(!item.isSelected) {
                 this.hud.unSelectItem();
                 this.hud.setSelectedItem(item);
-                this.showStatusBar(['confirm','diamond-count','select-preview']);
+                this.showStatusBar(['diamond-count','select-preview']);
 
                 let diamondCountEl = document.querySelector('#d-count');
                 diamondCountEl.innerHTML = String(0);
@@ -602,7 +610,7 @@ const params = {
         } else {
             this.hud.unSelectItem();
             this.disableActionBtns();
-            this.hideStatusBar(['heart','diamond-count','confirm']);
+            this.hideStatusBar(['heart','diamond-count']);
         }
 
 
@@ -614,6 +622,9 @@ const params = {
 
         let heart = document.querySelector('#give-heart');
         heart.classList.add("disabled");
+
+        let detail = document.querySelector('#view-detail');
+        detail.classList.add("disabled");        
     }
 
     enableActionBtns = () =>{
@@ -622,6 +633,9 @@ const params = {
 
         let heart = document.querySelector('#give-heart');
         heart.classList.remove("disabled");
+
+        let detail = document.querySelector('#view-detail');
+        detail.classList.remove("disabled");
 
     }
 
@@ -636,9 +650,9 @@ const params = {
             this.increaseDiamond();
             let heartStatus = this.hud.getHeartStatus();
             if((this.hud.getDiamondsToSendCount()===0)&&(!heartStatus)){
-                setTimeout( this.hideStatusBar(['heart','diamond-count','confirm']), 5000)
+                setTimeout( this.hideStatusBar(['heart','diamond-count']), 5000)
             } else {
-                this.showStatusBar(['confirm','diamond-count','select-preview']);
+                this.showStatusBar(['diamond-count','select-preview']);
             };
 
             let start = this.player.position.clone();
@@ -686,7 +700,11 @@ const params = {
             iconList.forEach((elId)=>{
                 let selector ='#'+elId;
                 let el = document.querySelector(selector);
-                el.style.display = 'inline-block';
+                if(el){
+                    el.style.display = 'inline-block';
+                } else {
+                    console.log('not found: ',selector);
+                }                
             })
         }
     }
@@ -699,7 +717,11 @@ const params = {
             iconList.forEach((elId)=>{
                 let selector ='#'+elId;
                 let el = document.querySelector(selector);
-                el.style.display = 'none';
+                if(el){
+                   el.style.display = 'none';
+                } else {
+                    console.log('not found: ',selector);
+                }
             })
         }
     }
@@ -714,11 +736,11 @@ const params = {
         if(item){
             let heartStatus = this.toggleHeart();
             if(heartStatus){
-                this.showStatusBar(['heart','diamond-count','confirm','select-preview']);
+                this.showStatusBar(['heart','diamond-count','select-preview']);
             } else {
                 let diamondCount = this.hud.getDiamondsToSendCount();
                 if(diamondCount==0){
-                    this.hideStatusBar(['heart','diamond-count','confirm','select-preview']);
+                    this.hideStatusBar(['heart','diamond-count','select-preview']);
                 }
             }
 
@@ -1688,25 +1710,21 @@ console.log('init sceneInventory')
         }
     }
 
-    addClickListeneBuyNow = (el) => {
+    addClickListenerViewDetails = (el) => {
         let that = this;
 
         //console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
-            this.hud.displayConfirmationPopUp();
-        });     
-    } 
-
-    addClickListenerConfirmTransaction = (el) => {
-        let that = this;
-
-        //console.log('adding listener for '+modelUrl);
-        el.addEventListener("click", (e)=>{
-            e.preventDefault();
-            e.stopPropagation();
-            this.hud.displayConfirmationPopUp();
+            let item = that.hud.getSelectedItem();
+            if(item){
+                let nftDisplayData = item.nftDisplayData;
+                if(item.config.spot){
+                    nftDisplayData.spot = item.config.spot;
+                };
+                this.displayInHUD(nftDisplayData);                
+            }         
         });     
     } 
 
@@ -1737,6 +1755,35 @@ console.log('init sceneInventory')
             that.throwHeart();
         });     
     }    
+
+    addClickListenerBuyNow = (el) => {
+        let that = this;
+
+        //console.log('adding listener for '+modelUrl);
+        el.addEventListener("click", (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            if(e.target.classList.contains('disabled')){
+                return false;
+            };
+            this.hud.openBuyNFT()    
+        });     
+    } 
+
+
+    addClickListenerViewPage = (el) => {
+        let that = this;
+
+        //console.log('adding listener for '+modelUrl);
+        el.addEventListener("click", (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            if(e.target.classList.contains('disabled')){
+                return false;
+            };
+            this.hud.openNFTPage()           
+        });     
+    } 
 
     addClickListenerFullScreen = (el) => {
         let that = this;
