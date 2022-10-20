@@ -25,7 +25,7 @@ export default class LoadingScreen {
     	let template =  '<div class="loader-ctr" style="display:block;"><div class="inner">';
     					template +='<h1><span class="ownername">'+data.ownerName+'</span>\'s Gallery</h1>';
 						template +='<img class="owner-profile-pic" src="https://node.deso.org/api/v0/get-single-profile-picture/'+data.ownerPublicKey+'"/>';
-						template +='<p class="description"><pre>'+data.ownerDescription+'</pre></p>';
+						//template +='<p class="description"><pre>'+data.ownerDescription+'</pre></p>';
 						template +='<p class="loading-msg">'+data.loadingMsg+'</p>';
 						template +='<p class="loading-update">'+data.updateMsg+'</p>';
 						template +='<div class="spinner"></div>';
