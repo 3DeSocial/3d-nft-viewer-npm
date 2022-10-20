@@ -2223,7 +2223,7 @@ initPlayerThirdPerson = () => {
                     let playery = this.player.position.y;
                     let playerz = this.player.position.z;
          
-                    this.dolly.position.set(playerx,(playery+0.5),playerz);
+                    this.dolly.position.set(playerx,(playery),playerz);
                     this.dolly.rotation.copy(this.player.rotation);
                     this.player.rotateY(Math.PI);
                 }

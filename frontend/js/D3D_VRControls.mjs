@@ -73,11 +73,11 @@ class VRControls {
 
         //dolly for camera
         let dolly = new THREE.Group();
-        dolly.position.copy(this.config.playerStartPos);
+        let vrY = this.config.playerStartPos.y-1;
+        dolly.position.copy(this.config.player.position);
         dolly.name = 'dolly';
         this.scene.add(dolly);
         dolly.rotateY(0);
-
         dolly.add(this.camera);
         this.camera.position.copy(this.config.playerStartPos);
         this.camera.position.setY(this.camera.position.y+2);
@@ -87,6 +87,7 @@ class VRControls {
         dolly.add(controller2);
         dolly.add(controllerGrip1);
         dolly.add(controllerGrip2);
+        dolly.rotateY(Math.PI)
         this.dolly = dolly;
         return dolly;
     }
