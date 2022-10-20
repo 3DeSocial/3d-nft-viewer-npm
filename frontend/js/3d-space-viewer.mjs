@@ -591,23 +591,29 @@ const params = {
 
     selectTargetNFT = (action) =>{
 
+        let that = this;
 
         if(action.selection.object.userData.owner){
             let item = action.selection.object.userData.owner;     
             if(!item.isSelected) {
                 this.hud.unSelectItem();
-                this.hud.setSelectedItem(item);
-                this.showStatusBar(['diamond-count','select-preview','confirm-not','confirm']);
+                console.log('item.nftPostHashHex', item.nftPostHashHex);
+                this.chainAPI.getHeartStatus(item.nftPostHashHex).then((result)=>{
+                    console.log('getHeartStatus: ',result);
+                    that.hud.setSelectedItem(item);
+                    that.showStatusBar(['diamond-count','select-preview','confirm-not','confirm']);
 
-                let diamondCountEl = document.querySelector('#d-count');
-                diamondCountEl.innerHTML = String(0);
-                let heartIcon = document.getElementById('heart');
+                    let diamondCountEl = document.querySelector('#d-count');
+                    diamondCountEl.innerHTML = String(0);
+                    let heartIcon = document.getElementById('heart');
 
-                if(this.config.chainAPI.getHeartStatus(item)){
-                    heartIcon.style.display = 'inline-block';
-                } else {
-                    heartIcon.style.display = 'none';
-                };
+                    if(result){
+                        heartIcon.style.display = 'inline-block';
+                    } else {
+                        heartIcon.style.display = 'none';
+                };                    
+                })
+
 
             };
             this.actionTargetPos = item.getPosition();
