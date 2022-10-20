@@ -745,6 +745,7 @@ const params = {
         if(item){
             let heartStatus = this.toggleHeart();
             if(heartStatus){
+                this.config.chainAPI.sendLike(this.hud.selectedItem.config.nft.postHashHex);
                 this.showStatusBar(['heart','diamond-count','select-preview','confirm-not','confirm']);
             } else {
                 let diamondCount = this.hud.getDiamondsToSendCount();
