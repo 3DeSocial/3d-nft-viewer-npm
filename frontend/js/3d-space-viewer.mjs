@@ -592,14 +592,11 @@ const params = {
     selectTargetNFT = (action) =>{
 
         let that = this;
-
         if(action.selection.object.userData.owner){
             let item = action.selection.object.userData.owner;     
             if(!item.isSelected) {
-                this.hud.unSelectItem();
-                console.log('item.nftPostHashHex', item.nftPostHashHex);
-                this.chainAPI.getHeartStatus(item.nftPostHashHex).then((result)=>{
-                    console.log('getHeartStatus: ',result);
+                this.hud.unSelectItem(); // unselect prev
+                this.config.chainAPI.getHeartStatus(item.config.nft.postHashHex).then((result)=>{
                     that.hud.setSelectedItem(item);
                     that.showStatusBar(['diamond-count','select-preview','confirm-not','confirm']);
 

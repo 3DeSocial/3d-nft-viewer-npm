@@ -35,6 +35,7 @@ class Item2d extends Item {
         this.width = this.config.width;
         this.depth = this.config.depth;
         this.modelUrl = this.config.modelUrl;
+        this.nftPostHashHex = this.config.nft.postHashHex;
         this.mixer = null;
         this.action = null;
         this.mesh = this.config.mesh
