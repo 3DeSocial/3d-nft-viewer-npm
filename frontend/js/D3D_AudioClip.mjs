@@ -18,6 +18,7 @@ export default class AudioClip {
         this.camera = this.config.camera;
         this.camera.add( this.listener );
         this.sound = new THREE.PositionalAudio( this.listener );
+        this.mesh = this.config.mesh;
         this.loadSound()
         
     }
@@ -30,7 +31,7 @@ export default class AudioClip {
         audioLoader.load( this.path, function( buffer ) {
             that.sound.setBuffer( buffer );
             that.sound.setRefDistance( 20 );
-            that.attatchTo(that.config.mesh);
+            that.attatchTo(that.mesh);
         })
 
     }
