@@ -26,7 +26,6 @@ export default class AudioClip {
 
     loadSound = () =>{
         let that = this;
-        console.log('loading audio');
         const audioLoader = new THREE.AudioLoader();
         audioLoader.load( this.path, function( buffer ) {
             that.sound.setBuffer( buffer );
@@ -43,7 +42,7 @@ export default class AudioClip {
     }
 
     attatchTo  = (mesh) =>{
-        mesh.add();
+        mesh.add(this.sound);
     }
 }
 export {AudioClip}
