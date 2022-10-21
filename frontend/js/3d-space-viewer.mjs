@@ -5,7 +5,7 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { Item, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { AudioClip, Item, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -116,6 +116,23 @@ const params = {
                             nftPostHashHex:'29c2c8f77e2a920ced265c1d89143f8959cdb3ee4c495357d943b126a782a0c5'};
 
         this.uiAssets['heart']= this.initItemForModel(itemConfig);
+
+        console.log(this.uiAssets['heart'].mesh);
+        console.log('add sound');
+        this.uiAssets['heart'].audioGive = new AudioClip({
+            path: '/audio/yeah-7106.mp3',
+            mesh: this.uiAssets['heart'].mesh,
+            camera: this.camera
+        });
+        console.log(this.uiAssets['heart'].mesh);
+        console.log('add sound');
+        
+        this.uiAssets['heart'].audioTake = new AudioClip({
+            path: '/audio/aww-8277.mp3',
+            mesh: this.uiAssets['heart'].mesh,
+            camera: this.camera
+        });
+
         let newPos = new THREE.Vector3(0,1000,0);
         this.uiAssets['heart'].place(newPos);
     }
@@ -131,6 +148,7 @@ const params = {
 
             console.log(this.config.el);
             this.initScene();
+            this.initCameraPlayer();     
             this.loadUIAssets();
             this.initRenderer(this.config.el);
             this.initHUD({scene:that.scene,
@@ -139,7 +157,6 @@ const params = {
             this.initLighting();
 
             this.loadScenery().then(()=>{
-                this.initCameraPlayer();     
                 this.initInventory(options);
                // that.placeAssets();
                 if(that.config.firstPerson){
@@ -756,17 +773,20 @@ const params = {
 
 
 
-            let start, finish;
+            let start, finish, sound;
             if(heartStatus){
                 start = this.player.position.clone();
                 start.y--;
 
                 finish = that.actionTargetPos.clone();
+                item.audioGive.play();
             } else {
                 finish = this.player.position.clone();
                 finish.y--;
 
-                start = that.actionTargetPos.clone();            
+                start = that.actionTargetPos.clone();        
+                sound = item.audioTake;
+                item.audioTake.play();                
             }
             item.place(start).then((mesh)=>{
                 mesh.lookAt(finish);
@@ -1384,7 +1404,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             that.updateLink(el,'Loading..');
             that.initContainer(targetEl);
             let item = that.initItemForModel({modelUrl:modelUrl});
-            that.mesh = item.model;
+            that.mesh = item.mesh;
             let newPos = new THREE.Vector3(0,3.7,0);
             item.place(newPos).then((model,pos)=>{
                 that.resizeCanvas();
