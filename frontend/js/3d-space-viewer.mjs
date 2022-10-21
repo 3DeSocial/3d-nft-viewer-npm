@@ -85,6 +85,8 @@ const params = {
     }
 
     loadDiamond = () =>{
+        let that = this;
+
         this.uiAssets = [];
 
         let itemConfig = {  scene: this.scene,
@@ -98,17 +100,20 @@ const params = {
                             modelUrl:'  https://desodata.azureedge.net/unzipped/4fe3115f676918940b19fbdedaf210ad73979c9858bf7193761a24a900461a76/gltf/normal/diamond-centered.glb',
                             nftPostHashHex:'4fe3115f676918940b19fbdedaf210ad73979c9858bf7193761a24a900461a76'};
 
-        this.uiAssets['diamond']= this.initItemForModel(itemConfig);
-        this.uiAssets['diamond'].audioGive = new AudioClip({
-            path: '/audio/diamond.mp3',
-            mesh: this.uiAssets['diamond'].mesh,
-            camera: this.camera
-        });        
+        this.uiAssets['diamond'] = this.initItemForModel(itemConfig);
+       
         let newPos = new THREE.Vector3(0,1000,0);
-        this.uiAssets['diamond'].place(newPos);
+        this.uiAssets['diamond'].place(newPos).then((mesh,pos)=>{
+            that.uiAssets['diamond'].audioGive = new AudioClip({
+                path: '/audio/diamond.mp3',
+                mesh: mesh,
+                camera: this.camera
+            });           
+        })
     }
 
     loadHeart = () =>{
+        let that = this;
         let itemConfig = {  scene: this.scene,
                             format: 'glb',
                             height:0.5,
@@ -122,20 +127,22 @@ const params = {
 
         this.uiAssets['heart']= this.initItemForModel(itemConfig);
 
-        this.uiAssets['heart'].audioGive = new AudioClip({
-            path: '/audio/yeah-7106.mp3',
-            mesh: this.uiAssets['heart'].mesh,
-            camera: this.camera
-        });
- 
-        this.uiAssets['heart'].audioTake = new AudioClip({
-            path: '/audio/aww-8277.mp3',
-            mesh: this.uiAssets['heart'].mesh,
-            camera: this.camera
-        });
+        
 
         let newPos = new THREE.Vector3(0,1000,0);
-        this.uiAssets['heart'].place(newPos);
+        this.uiAssets['heart'].place(newPos).then((mesh,pos)=>{
+            that.uiAssets['heart'].audioGive = new AudioClip({
+                path: '/audio/yeah-7106.mp3',
+                mesh: mesh,
+                camera: this.camera
+            });
+     
+            that.uiAssets['heart'].audioTake = new AudioClip({
+                path: '/audio/aww-8277.mp3',
+                mesh: mesh,
+                camera: this.camera
+            });
+        })
     }
 
     initSpace = (options) =>{
@@ -567,7 +574,9 @@ const params = {
 
                         }*/
                     }                   
-                });                
+                });
+
+                
             } else {
                 this.selectTargetNFT(action);
             }
@@ -689,7 +698,7 @@ const params = {
                 mesh.visible = true;                
                 anime({
                     begin: function(anim) {
-
+                        item.audioGive.play();
                     },
                     targets: mesh.position,
                     x: finish.x,
@@ -698,10 +707,17 @@ const params = {
                     loop: false,
                     duration: 4000,
                     complete: function(anim) {
-                        item.audioGive.play();                        
                         mesh.visible = false;
                     }                   
                 });
+
+                anime({
+                    targets: this.player.rotation,
+                    y: Math.PI,
+                    loop: false,
+                    duration: 250,
+                    easing: 'spring'
+                });                
             })
         }   
     }
