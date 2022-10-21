@@ -99,6 +99,11 @@ const params = {
                             nftPostHashHex:'4fe3115f676918940b19fbdedaf210ad73979c9858bf7193761a24a900461a76'};
 
         this.uiAssets['diamond']= this.initItemForModel(itemConfig);
+        this.uiAssets['diamond'].audioGive = new AudioClip({
+            path: '/audio/diamond.mp3',
+            mesh: this.uiAssets['diamond'].mesh,
+            camera: this.camera
+        });        
         let newPos = new THREE.Vector3(0,1000,0);
         this.uiAssets['diamond'].place(newPos);
     }
@@ -117,16 +122,12 @@ const params = {
 
         this.uiAssets['heart']= this.initItemForModel(itemConfig);
 
-        console.log(this.uiAssets['heart'].mesh);
-        console.log('add sound');
         this.uiAssets['heart'].audioGive = new AudioClip({
             path: '/audio/yeah-7106.mp3',
             mesh: this.uiAssets['heart'].mesh,
             camera: this.camera
         });
-        console.log(this.uiAssets['heart'].mesh);
-        console.log('add sound');
-        
+ 
         this.uiAssets['heart'].audioTake = new AudioClip({
             path: '/audio/aww-8277.mp3',
             mesh: this.uiAssets['heart'].mesh,
@@ -144,9 +145,7 @@ const params = {
             let that = this;
             this.mouse = { x : 0, y : 0 };
             this.getContainer(this.config.el);
-            console.log('this.config.el:');
 
-            console.log(this.config.el);
             this.initScene();
             this.initCameraPlayer();     
             this.loadUIAssets();
@@ -699,6 +698,7 @@ const params = {
                     loop: false,
                     duration: 4000,
                     complete: function(anim) {
+                        item.audioGive.play();                        
                         mesh.visible = false;
                     }                   
                 });
