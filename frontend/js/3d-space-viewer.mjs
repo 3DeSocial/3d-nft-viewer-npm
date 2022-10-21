@@ -239,17 +239,6 @@ const params = {
         });
     }
 
-    placeAssets = () =>{
-        this.layoutPlotter = new LayoutPlotter({ sceneryLoader: this.sceneryLoader,
-                                                 camera: this.camera,
-                                                 scene: this.scene,
-                                                 inventory: this.inventory,
-                                                 sceneryLoader: this.sceneryLoader});    
-        this.layoutPlotter.placeSceneAssets();
-        //console.log('placeAssets: ',this.inventory.getItems());
-        //console.log('placeAssets: ',this.inventory.getItemByHash('1e25c4f29d76c8989db411f5c3171d87ec715ca2ad01498cb47d77ba5df7c6e5'));
-    }
-
     setFormat = (format) =>{
         let loader = this.loaders.getLoaderForFormat(format);
         if(loader === false){
@@ -1520,11 +1509,17 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                  camera: this.camera,
                                                  scene: this.scene,
                                                  sceneryLoader: this.sceneryLoader});  
+            
             let maxItems =this.layoutPlotter.getMaxItemCount();
-            let items2d =options.sceneAssets.splice(options.sceneAssets.length - maxItems,maxItems);
+            let items2d = options.sceneAssets.slice(0,maxItems);
+console.log('options.sceneAssets ',options.sceneAssets.length);
+
+            console.log('maxItems ',maxItems);
+
+
                     this.loadingScreen.startLoading({items:items2d,
                                         name:'NFTs'});
-
+console.log('passing assets to inventory ',items2d.length);
             this.sceneInventory = new D3DInventory({
                                             chainAPI: this.config.chainAPI,
                                             imageProxyUrl: this.config.imageProxyUrl,    

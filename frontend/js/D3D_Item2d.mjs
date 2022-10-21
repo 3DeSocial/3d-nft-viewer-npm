@@ -52,7 +52,6 @@ class Item2d extends Item {
 
     parseNFTDisplayData = () =>{
         let nft = this.config.nft;
-        console.log(this.config);
         if(!this.config.nft){
             return false;
         };
@@ -181,7 +180,7 @@ class Item2d extends Item {
                 return false;
             };
             let proxyImageURL = that.config.imageProxyUrl +imageUrl;
-
+console.log('loading image: ',proxyImageURL);
             let nftData = nft;
             var img = new Image();
 
