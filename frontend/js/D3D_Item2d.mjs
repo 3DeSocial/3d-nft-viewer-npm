@@ -181,7 +181,7 @@ class Item2d extends Item {
                 return false;
             };
             let proxyImageURL = that.config.imageProxyUrl +imageUrl;
-            console.log('proxyImageURL:', proxyImageURL);
+
             let nftData = nft;
             var img = new Image();
 
@@ -359,7 +359,6 @@ onErrorCallback = (e)=> {
 }
 
 scaleToFitScene = (obj3D, posVector) =>{
-    console.log('scaleToFitScene', this.config.width,this.config.height);
 
     let that = this;
 
@@ -636,15 +635,9 @@ scaleToFitScene = (obj3D, posVector) =>{
                 this.action.play();
                 this.animRunning = true;
                 this.mixer.addEventListener('finished',(e)=>{
-                    console.log('animation not running now');                    
                     that.setAnimRunning(false);
                 }, false);
-            } else {
-                console.log('animation', animIndex, 'doesnt exist');
             }
-        } else {
-            console.log('no animations: ');
-            console.log(this.mesh);
         }
     }
 
@@ -658,7 +651,6 @@ scaleToFitScene = (obj3D, posVector) =>{
 
     setAnimRunning =(value)=>{
         this.animRunning = value;
-        console.log('animation running set to: ',value);
     }
 
     shouldBeCentered = (children) =>{

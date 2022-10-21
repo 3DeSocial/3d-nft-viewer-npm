@@ -26,13 +26,7 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         this.chainAPI = new ChainAPI(this.config.chainAPI);
         this.activeItemIdx = 0;
         if((this.config.items3d.length>0)||(this.config.items2d.length>0)){
-            console.log('starting inventory load...');
             this.load();
-        } else {
-            console.log('not data to load');
-            console.log(this.config.items2d.length);
-
-            console.log(this.config.items3d.length);
         }
       
     }
@@ -129,8 +123,7 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         let noPositions = this.config.layoutPlotter.initPosQ();
         let noNfts = itemList.length;
         let noNftsToPlace = Math.min(noPositions,noNfts);
-        console.log('initItems ', itemList.length);
-        console.log(itemList);
+
         return new Promise((resolve, reject) => {
 
 
@@ -317,7 +310,7 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         if(opts.nft){
             itemParams.nft = opts.nft;
         } else {
-            console.warn('initItem2d !!!! NO NFT!!!');
+            console.log('initItem2d !!!! NO NFT!!!');
             console.log(opts);
             itemParams.nft = opts
         };

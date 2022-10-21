@@ -643,7 +643,7 @@ const params = {
         } else {
             this.hud.unSelectItem();
             this.disableActionBtns();
-            this.hideStatusBar(['heart','diamond-count']);
+            this.hideStatusBar(['heart','diamond-count','confirm']);
         }
 
 
@@ -683,7 +683,9 @@ const params = {
             this.increaseDiamond();
             let heartStatus = this.hud.getHeartStatus();
             if((this.hud.getDiamondsToSendCount()===0)&&(!heartStatus)){
-                setTimeout( this.hideStatusBar(['heart','diamond-count']), 5000)
+                setTimeout(()=>{
+                    this.hideStatusBar(['heart','diamond-count','confirm'])
+                }, 3000)
             } else {
 
                 this.showStatusBar(['diamond-count','select-preview','confirm-not','confirm']);

@@ -36,8 +36,6 @@ export default class AudioClip {
     }
 
     play = () =>{
-
-        console.log('playing sound');
         this.sound.play();
     }
 
