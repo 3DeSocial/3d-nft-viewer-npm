@@ -94,9 +94,6 @@ const params = {
                             height:0.5,
                             width:0.5,
                             depth:0.5,
-
-                            modelsRoute: this.config.modelsRoute,
-                            nftsRoute: this.config.nftsRoute,
                             modelUrl:'  https://desodata.azureedge.net/unzipped/4fe3115f676918940b19fbdedaf210ad73979c9858bf7193761a24a900461a76/gltf/normal/diamond-centered.glb',
                             nftPostHashHex:'4fe3115f676918940b19fbdedaf210ad73979c9858bf7193761a24a900461a76'};
 
@@ -104,6 +101,8 @@ const params = {
        
         let newPos = new THREE.Vector3(0,1000,0);
         this.uiAssets['diamond'].place(newPos).then((mesh,pos)=>{
+            mesh.visible = false;
+
             that.uiAssets['diamond'].audioGive = new AudioClip({
                 path: '/audio/diamond.mp3',
                 mesh: mesh,
@@ -131,6 +130,8 @@ const params = {
 
         let newPos = new THREE.Vector3(0,1000,0);
         this.uiAssets['heart'].place(newPos).then((mesh,pos)=>{
+            mesh.visible = false;
+
             that.uiAssets['heart'].audioGive = new AudioClip({
                 path: '/audio/yeah-7106.mp3',
                 mesh: mesh,
@@ -164,6 +165,7 @@ const params = {
 
             this.loadScenery().then(()=>{
                 this.initInventory(options);
+                this.initGhost();
                // that.placeAssets();
                 if(that.config.firstPerson){
                     that.initPlayerFirstPerson();
@@ -607,7 +609,8 @@ const params = {
 
         let that = this;
         if(action.selection.object.userData.owner){
-            let item = action.selection.object.userData.owner;     
+            let item = action.selection.object.userData.owner;   
+            console.log('is ghost: ',item.isGhost) ;
             if(!item.isSelected) {
                 this.hud.unSelectItem(); // unselect prev
                 this.config.chainAPI.getHeartStatus(item.config.nft.postHashHex).then((result)=>{
@@ -1483,6 +1486,123 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }
 
+    initGhost = () =>{
+        let that = this;
+        let itemConfig = {  scene: this.scene,
+                            format: 'glb',
+                            height:1.5,
+                            width:1.5,
+                            depth:1.5,
+                            modelUrl:'/models/ghostHQ.fbx'};
+
+        this.ghost = this.initItemForModel(itemConfig);
+        this.ghost.isGhost = true;
+
+
+        let playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(16,0,16), 2, -1);
+
+        let placePos = new THREE.Vector3(16,(playerFloor.y),16);
+        this.ghost.place(placePos).then((mesh, pos)=>{
+
+            that.ghost.creak = new AudioClip({
+                path: '/audio/dark-choir-singing-16805.mp3',
+                mesh: mesh,
+                camera: this.camera
+            });
+
+
+            that.ghost.atmo = new AudioClip({
+                    path: '/audio/old-ghost-abandoned-house-atmo-7020.mp3',
+                    mesh: mesh,
+                    camera: this.camera
+                });   
+
+            that.ghost.woo = new AudioClip({
+                    path: '/audio/classic-ghost-sound-95773.mp3',
+                    mesh: mesh,
+                    camera: this.camera
+                });         
+
+            that.ghost.imapact = new AudioClip({
+                    path: '/audio/halloween-impact-05-93808.mp3',
+                    mesh: mesh,
+                    camera: this.camera
+                });
+
+            that.animateGhost();
+
+        })
+
+    }
+
+
+    animateGhost = ()=>{
+
+        let that = this;
+            var tl = anime.timeline({
+              easing: 'linear',
+              duration: 20000,
+              loop: false,
+              complete: ()=>{
+                setTimeout(()=>{
+                    that.animateGhost();
+                },10000)
+              }
+            });
+            tl.add({
+                    targets: that.ghost.mesh.position,
+                    z: 16,
+                    x: -16,
+                    loop: false,
+                    easing: 'linear',
+                    duration: 5000,
+                    begin: ()=>{
+                        that.ghost.mesh.rotateY(-Math.PI/2)
+                        that.ghost.creak.play();
+                    }
+                });
+
+            tl.add({
+                    targets: that.ghost.mesh.position,
+                    x: -16,
+                    z: -16,
+                    loop: false,
+                    easing: 'linear',
+                    duration: 5000,
+                    begin: ()=>{
+                        that.ghost.mesh.rotateY(-Math.PI/2)                        
+                        that.ghost.woo.play()
+                    }
+                });
+
+            tl.add({
+                    targets: that.ghost.mesh.position,
+                    z: -16,
+                    x: 16,
+
+                    loop: false,
+                    easing: 'linear',
+                    duration: 5000,
+                    begin: ()=>{
+                        that.ghost.mesh.rotateY(-Math.PI/2)                        
+                        that.ghost.imapact.play()
+                    }
+            });
+
+            tl.add({
+                    targets: that.ghost.mesh.position,
+                    z: 16,
+                    x: 16,
+                    loop: false,
+                    easing: 'linear',
+                    duration: 5000,
+                    begin: ()=>{
+                        that.ghost.mesh.rotateY(-Math.PI/2)                        
+                        that.ghost.atmo.play()
+                    }
+            });   
+    }
+
     initInventory = (options) =>{
         let items =[];
         if(options.items){
@@ -1504,7 +1624,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                         });*/
         this.sceneInventory = null;
         if(options.sceneAssets){
-            console.log('starting scene inventory');
             this.layoutPlotter = new LayoutPlotter({
                                                  camera: this.camera,
                                                  scene: this.scene,
@@ -1512,14 +1631,10 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             
             let maxItems =this.layoutPlotter.getMaxItemCount();
             let items2d = options.sceneAssets.slice(0,maxItems);
-console.log('options.sceneAssets ',options.sceneAssets.length);
 
-            console.log('maxItems ',maxItems);
-
-
-                    this.loadingScreen.startLoading({items:items2d,
+            this.loadingScreen.startLoading({items:items2d,
                                         name:'NFTs'});
-console.log('passing assets to inventory ',items2d.length);
+
             this.sceneInventory = new D3DInventory({
                                             chainAPI: this.config.chainAPI,
                                             imageProxyUrl: this.config.imageProxyUrl,    

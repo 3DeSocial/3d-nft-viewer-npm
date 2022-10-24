@@ -155,7 +155,7 @@ export default class Item {
             if(that.mesh){
                 that.mesh.position.copy(pos);
                 that.scene.add(this.mesh);
-                that.fixYCoord(this.mesh, pos);
+                //that.fixYCoord(this.mesh, pos);
 
                 resolve(this.mesh, pos);
             } else{
@@ -170,6 +170,8 @@ export default class Item {
                         that.placeModel(pos)
                         .then((model)=>{
                             that.mesh = model;
+                            that.mesh.position.copy(pos);
+                            console.log('item init at pos', pos);
                             let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
                             document.body.dispatchEvent(loadedEvent);
                             document.body.dispatchEvent(this.meshPlacedEvent);
@@ -289,7 +291,7 @@ export default class Item {
                 };
               
                 this.scaleToFitScene(obj3D, posVector);
-                this.fixYCoord(obj3D, posVector);
+              //  this.fixYCoord(obj3D, posVector);
 
                 resolve(obj3D);
             },
