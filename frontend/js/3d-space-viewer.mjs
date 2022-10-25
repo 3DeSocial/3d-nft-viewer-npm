@@ -701,6 +701,7 @@ const params = {
 
         that.ghost.place(this.actionTargetPos).then((mesh,pos)=>{
             mesh.lookAt(this.camera.position);
+            console.log('play hit');
             that.ghostSounds.hit.play();            
         })
      
@@ -869,20 +870,19 @@ const params = {
                 mesh.visible = true;
 
                 anime({
-                    begin: function(anim) {
-                    },
                     targets: mesh.position,
                     x: finish.x,
                     y: finish.y,
                     z: finish.z,
                     loop: false,
-                    duration: 4000,
+                    duration: 2000,
+                    easing: 'linear',                    
                     complete: function(anim) {
-                        mesh.visible = false;
                         if(that.actionTargetItem.isGhost){
                             that.catchGhost();
-                        }                        
-                    }                   
+                        };
+                        mesh.visible = false;
+                    }
                 });
             })
         }   
@@ -890,6 +890,7 @@ const params = {
 
     catchGhost = ()=>{
         if(!this.ghostCaught){
+            this.ghostSounds.caught.play();            
             console.log('catchGhost triggered!!');
             this.config.chainAPI.catchGhost();
             this.ghostCaught = true;
@@ -898,16 +899,24 @@ const params = {
     }
 
     animateCatchGhost = () =>{
+        let that = this;
 
-        this.ghostSounds.caught.play();
         this.ghostHover.pause();    
-        this.ghostup = anime({
-                    targets: this.ghost.mesh.position,
-                    y: 100,
+        that.ghost.place(this.actionTargetPos).then((mesh,pos)=>{
+            mesh.lookAt(this.camera.position);
+            that.ghostup = anime({
+                    targets: that.ghost.mesh.position,
+                    y: 25,
                     loop: false,
-                    duration: 20,
-                    easing: 'linear'
+                    duration: 50000,
+                    easing: 'linear',
+                    complete: ()=>{
+                        that.ghost.mesh.visible = false;
+                    }
                 });        
+        })
+
+        
     }
 
     toggleHeart = () =>{
@@ -1622,13 +1631,13 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                             });       
 
             that.ghostSounds.hit = new AudioClip({
-                                path: 'ahhhh-37191.mp3',
+                                path: '/audio/ahhhh-37191.mp3',
                                 mesh: mesh,
                                 camera: this.camera
                             });       
 
             that.ghostSounds.caught = new AudioClip({
-                                path: 'angelic-voice-81921.mp3',
+                                path: '/audio/angelic-voice-81921.mp3',
                                 mesh: mesh,
                                 camera: this.camera
                             });      
@@ -1705,7 +1714,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                     easing: 'linear',
                     duration: 5000,
                     begin: ()=>{
-                        that.calcDirection(-2,0,12);
+                        that.calcDirection(-12,0,12);
                         that.ghostSounds.woo.play()
 
                     }
