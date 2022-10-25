@@ -881,7 +881,7 @@ const params = {
             if(!start){
                 return false;
             };
-            
+
             item.place(start).then((mesh)=>{
                 mesh.lookAt(finish);
                 mesh.visible = true;
@@ -1682,6 +1682,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                 },1000)
               }
             });
+
+
             tl.add({
                     targets: that.ghost.mesh.position,
                     x: -12,
@@ -1691,9 +1693,11 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                     easing: 'linear',
                     duration: 5000,
                     begin: ()=>{
-                        that.calcDirection(-12,0,12);
-                        that.ghostSounds.creak.play()
-                    }
+                        this.ghost.mesh.position.set(12,0,12);
+                        that.ghostSounds.creak.play();
+                        this.ghost.mesh.lookAt(-12,0,12);
+                        console.log('start 1');
+                    },
                 });
 
             tl.add({
@@ -1705,7 +1709,10 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                     easing: 'linear',
                     duration: 5000,
                     begin: ()=>{
-                        that.calcDirection(-12,0,-12);              
+                        console.log('start 2');
+                        this.ghost.mesh.position.set(-12,0,12);       
+                        this.ghost.mesh.lookAt(-12,0,-12);
+
                         that.ghostSounds.atmo.play()
                     }
                 });
@@ -1719,7 +1726,11 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                     easing: 'linear',
                     duration: 5000,
                     begin: ()=>{
-                        that.calcDirection(12,0,-12);
+                        console.log('start 3');
+
+                        this.ghost.mesh.position.set(-12,0,-12);       
+                        this.ghost.mesh.lookAt(12,0,-12);
+
                         that.ghostSounds.imapact.play()
                     }
             });
@@ -1733,11 +1744,16 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                     easing: 'linear',
                     duration: 5000,
                     begin: ()=>{
-                        that.calcDirection(-12,0,12);
+                         console.log('start 4');
+
+                        this.ghost.mesh.position.set(12,0,-12);       
+                        this.ghost.mesh.lookAt(12,0,12);
+                       // that.calcDirection(-12,0,12);
                         that.ghostSounds.woo.play()
 
                     }
             });   
+            
         that.ghost.tl = tl;
     }
 
