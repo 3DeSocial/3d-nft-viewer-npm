@@ -43,7 +43,7 @@ export default class AudioClip {
     }
 
     stop = () =>{
-        if(this.listener.isPlaying){
+        if(this.sound.source){
             this.sound.stop();
         }
     }    
