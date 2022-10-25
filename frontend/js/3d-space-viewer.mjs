@@ -544,7 +544,10 @@ const params = {
         switch(parseInt(action.btnIndex)){
             case 1:
             if((action.isOnFloor)&&(!action.isOnWall)){
-                this.moveTo = action.selectedPoint.clone();
+                let targetPoint = action.selectedPoint.clone();
+                let distance = this.player.position.distanceTo(targetPoint);
+                console.log('distance: ',distance);
+                this.moveTo = targetPoint;
                 this.moveTo.setY(this.player.position.y);
         //this.player.position.copy(this.moveTo);
          anime({
@@ -661,6 +664,8 @@ const params = {
                         this.hud.unSelectItem(); // unselect prev
                         this.config.chainAPI.getHeartStatus(item.config.nft.postHashHex).then((result)=>{
                             that.hud.setSelectedItem(item);
+                            that.actionTargetItem = item;
+                            that.actionTargetMesh = item.mesh;
                             that.showStatusBar(['diamond-count','select-preview','confirm-not','confirm']);
 
                             let diamondCountEl = document.querySelector('#d-count');
@@ -827,6 +832,7 @@ const params = {
 
     throwHeart = ()=>{
         let that = this;
+        let start, finish, sound;        
         let heartStatus = null;
         if(!that.actionTargetPos){
             return false;
@@ -835,38 +841,47 @@ const params = {
         let item = this.uiAssets['heart'];
         if(item){
 
-            if(this.actionTargetMesh){
+            if(this.actionTargetItem){
                 if(this.actionTargetItem.config.nft){
                     let heartStatus = this.toggleHeart();
+                    console.log(' new heartStatus:' ,heartStatus);
                     if(heartStatus){
+                        start = this.player.position.clone();
+                        start.y--;
+
+                        finish = that.actionTargetPos;
+                        item.audioGive.play();
                         this.config.chainAPI.sendLike(this.hud.selectedItem.config.nft.postHashHex);
                         this.showStatusBar(['heart','diamond-count','select-preview','confirm-not','confirm']);
                     } else {
+                        finish = this.player.position.clone();
+                        finish.y--;
+
+                        start = that.actionTargetPos.clone();        
+                        sound = item.audioTake;
+                        item.audioTake.play();              
+
                         let diamondCount = this.hud.getDiamondsToSendCount();
                         if(diamondCount==0){
                             this.hideStatusBar(['heart','diamond-count','select-preview','confirm-not','confirm']);
                         }
                     }
                 } else {
-                    heartStatus = true;
+                    console.log('target probably ghost');
+                    start = this.player.position.clone();
+                    start.y--;
+
+                    finish = that.actionTargetPos;
+                    item.audioGive.play();
                 }
+            } else {
+                console.log('no actionTargetItem - cant check heart status');
             }
             
-            let start, finish, sound;
-            if(heartStatus){
-                start = this.player.position.clone();
-                start.y--;
-
-                finish = that.actionTargetPos;
-                item.audioGive.play();
-            } else {
-                finish = this.player.position.clone();
-                finish.y--;
-
-                start = that.actionTargetPos.clone();        
-                sound = item.audioTake;
-                item.audioTake.play();                
-            }
+            if(!start){
+                return false;
+            };
+            
             item.place(start).then((mesh)=>{
                 mesh.lookAt(finish);
                 mesh.visible = true;
