@@ -284,6 +284,7 @@ export default class Item {
                 };
                 that.mesh = loadedItem;
                 that.mesh.userData.owner = this;
+                that.mesh.owner = this;                
                 let obj3D = this.convertToObj3D(loadedItem);
                 if(obj3D===false){
                     console.log('could not convert item for scene');

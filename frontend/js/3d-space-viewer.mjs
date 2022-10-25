@@ -74,6 +74,10 @@ const params = {
         this.raycaster = new THREE.Raycaster();
         this.objectsInMotion = []; // use for things being thrown etc
         this.initLoader(this.config.owner);
+        this.dirCalc = new THREE.Vector3(1, 1, 1);
+        this.newDir = new THREE.Vector3(1, 1, 1);
+        this.ghostCaught = false;
+
         console.log('anime js version');
 
 
@@ -165,7 +169,10 @@ const params = {
 
             this.loadScenery().then(()=>{
                 this.initInventory(options);
-                this.initGhost();
+                if(this.config.showGhost){
+                    this.initGhost();
+                };
+
                // that.placeAssets();
                 if(that.config.firstPerson){
                     that.initPlayerFirstPerson();
@@ -583,8 +590,13 @@ const params = {
     }
 
     showSelectedMeshData =(action) =>{
+        let item = null;
         if(action.selection.object.userData.owner){
-            let item = action.selection.object.userData.owner;
+            item = action.selection.object.userData.owner;
+        } else {
+            item = this.checkForParentOwner(action.selection.object)
+        };
+        if(item){
             this.selectTargetNFT(action);
             if(item.config.nft){
                 let nftDisplayData = item.nftDisplayData;
@@ -599,36 +611,71 @@ const params = {
             //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
 
         } else {
+            console.log('no owner: ', action.selection.object);
             if(this.hud){
                 this.hud.clear();
             }
         }         
     }
 
-    selectTargetNFT = (action) =>{
-
-        let that = this;
+    getItemForAction = (action) =>{
+        let item = null;
         if(action.selection.object.userData.owner){
-            let item = action.selection.object.userData.owner;   
-            console.log('is ghost: ',item.isGhost) ;
-            if(!item.isSelected) {
-                this.hud.unSelectItem(); // unselect prev
-                this.config.chainAPI.getHeartStatus(item.config.nft.postHashHex).then((result)=>{
-                    that.hud.setSelectedItem(item);
-                    that.showStatusBar(['diamond-count','select-preview','confirm-not','confirm']);
+            item = action.selection.object.userData.owner;
+        } else {
+            item = this.checkForParentOwner(action.selection.object)
+        };    
+        return item;    
+    }
 
-                    let diamondCountEl = document.querySelector('#d-count');
-                    diamondCountEl.innerHTML = String(0);
-                    let heartIcon = document.getElementById('heart');
+    checkForParentOwner = (mesh) =>{
+        let ownerFound = false;
+        while((mesh.parent)&&(!ownerFound)){
+            mesh = mesh.parent;
+            if(mesh.userData.owner){
+                ownerFound = true;
+            }
 
-                    if(result){
-                        heartIcon.style.display = 'inline-block';
-                    } else {
-                        heartIcon.style.display = 'none';
-                };                    
-                })
+        }
+        if(ownerFound){
+            return mesh.userData.owner;
+        } else {
+            return false;
+        }
+    }
 
+    selectTargetNFT = (action) =>{
+        this.actionTargetMesh = null;
+        let that = this;
+        let item = this.getItemForAction(action)
+        if(item){
+            if(item.isGhost){
+                this.actionTargetPos = item.getPosition();       
+                this.actionTargetItem = item;
+                this.targetGhost();
+            } else {
+                if(item.config){
+                    if(!item.isSelected) {
+                        this.hud.unSelectItem(); // unselect prev
+                        this.config.chainAPI.getHeartStatus(item.config.nft.postHashHex).then((result)=>{
+                            that.hud.setSelectedItem(item);
+                            that.showStatusBar(['diamond-count','select-preview','confirm-not','confirm']);
 
+                            let diamondCountEl = document.querySelector('#d-count');
+                            diamondCountEl.innerHTML = String(0);
+                            let heartIcon = document.getElementById('heart');
+
+                            if(result){
+                                heartIcon.style.display = 'inline-block';
+                            } else {
+                                heartIcon.style.display = 'none';
+                        };                    
+                        })
+                    };
+                } else {
+                    console.log('item has no config');
+                    console.log(item);
+                }
             };
             this.actionTargetPos = item.getPosition();
             this.enableActionBtns();
@@ -639,6 +686,26 @@ const params = {
         }
 
 
+    }
+
+    targetGhost = () =>{
+        let that = this;
+        clearTimeout(that.ghostTimer);
+
+        that.ghostSounds.imapact.stop()
+        that.ghostSounds.atmo.stop();
+        that.ghostSounds.woo.stop();
+        that.ghostSounds.creak.stop();
+      
+        that.ghost.tl.pause();
+
+        that.ghost.place(this.actionTargetPos).then((mesh,pos)=>{
+            mesh.lookAt(this.camera.position);
+            that.ghostSounds.hit.play();            
+        })
+     
+
+        this.actionTargetMesh = that.ghost.mesh;  
     }
 
     disableActionBtns = () =>{
@@ -704,14 +771,7 @@ const params = {
                         mesh.visible = false;
                     }                   
                 });
-
-                anime({
-                    targets: this.player.rotation,
-                    y: Math.PI,
-                    loop: false,
-                    duration: 250,
-                    easing: 'spring'
-                });                
+  
             })
         }   
     }
@@ -763,32 +823,38 @@ const params = {
     }
 
     throwHeart = ()=>{
-         let that = this;
+        let that = this;
+        let heartStatus = null;
         if(!that.actionTargetPos){
             return false;
         };
         let throwTime = performance.now();
         let item = this.uiAssets['heart'];
         if(item){
-            let heartStatus = this.toggleHeart();
-            if(heartStatus){
-                this.config.chainAPI.sendLike(this.hud.selectedItem.config.nft.postHashHex);
-                this.showStatusBar(['heart','diamond-count','select-preview','confirm-not','confirm']);
-            } else {
-                let diamondCount = this.hud.getDiamondsToSendCount();
-                if(diamondCount==0){
-                    this.hideStatusBar(['heart','diamond-count','select-preview','confirm-not','confirm']);
+
+            if(this.actionTargetMesh){
+                if(this.actionTargetItem.config.nft){
+                    let heartStatus = this.toggleHeart();
+                    if(heartStatus){
+                        this.config.chainAPI.sendLike(this.hud.selectedItem.config.nft.postHashHex);
+                        this.showStatusBar(['heart','diamond-count','select-preview','confirm-not','confirm']);
+                    } else {
+                        let diamondCount = this.hud.getDiamondsToSendCount();
+                        if(diamondCount==0){
+                            this.hideStatusBar(['heart','diamond-count','select-preview','confirm-not','confirm']);
+                        }
+                    }
+                } else {
+                    heartStatus = true;
                 }
             }
-
-
-
+            
             let start, finish, sound;
             if(heartStatus){
                 start = this.player.position.clone();
                 start.y--;
 
-                finish = that.actionTargetPos.clone();
+                finish = that.actionTargetPos;
                 item.audioGive.play();
             } else {
                 finish = this.player.position.clone();
@@ -813,10 +879,35 @@ const params = {
                     duration: 4000,
                     complete: function(anim) {
                         mesh.visible = false;
+                        if(that.actionTargetItem.isGhost){
+                            that.catchGhost();
+                        }                        
                     }                   
                 });
             })
         }   
+    }
+
+    catchGhost = ()=>{
+        if(!this.ghostCaught){
+            console.log('catchGhost triggered!!');
+            this.config.chainAPI.catchGhost();
+            this.ghostCaught = true;
+            this.animateCatchGhost();
+        }
+    }
+
+    animateCatchGhost = () =>{
+
+        this.ghostSounds.caught.play();
+        this.ghostHover.pause();    
+        this.ghostup = anime({
+                    targets: this.ghost.mesh.position,
+                    y: 100,
+                    loop: false,
+                    duration: 20,
+                    easing: 'linear'
+                });        
     }
 
     toggleHeart = () =>{
@@ -1488,50 +1579,64 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     initGhost = () =>{
         let that = this;
+        this.ghostSounds = [];
+
         let itemConfig = {  scene: this.scene,
                             format: 'glb',
-                            height:1.5,
-                            width:1.5,
-                            depth:1.5,
+                            height:2,
+                            width:2,
+                            depth:2,
                             modelUrl:'/models/ghostHQ.fbx'};
 
         this.ghost = this.initItemForModel(itemConfig);
         this.ghost.isGhost = true;
 
 
-        let playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(16,0,16), 2, -1);
+        let playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(12,0,12), 2, -1);
 
-        let placePos = new THREE.Vector3(16,(playerFloor.y),16);
+        let placePos = new THREE.Vector3(12,(playerFloor.y),12);
         this.ghost.place(placePos).then((mesh, pos)=>{
 
-            that.ghost.creak = new AudioClip({
-                path: '/audio/dark-choir-singing-16805.mp3',
-                mesh: mesh,
-                camera: this.camera
-            });
+            that.ghostSounds.creak = new AudioClip({
+                                    path: '/audio/dark-choir-singing-16805.mp3',
+                                    mesh: mesh,
+                                    camera: this.camera
+                                });
 
+            that.ghostSounds.atmo = new AudioClip({
+                                        path: '/audio/old-ghost-abandoned-house-atmo-7020.mp3',
+                                        mesh: mesh,
+                                        camera: this.camera
+                                    });
 
-            that.ghost.atmo = new AudioClip({
-                    path: '/audio/old-ghost-abandoned-house-atmo-7020.mp3',
-                    mesh: mesh,
-                    camera: this.camera
-                });   
+            that.ghostSounds.woo = new AudioClip({
+                                        path: '/audio/classic-ghost-sound-95773.mp3',
+                                        mesh: mesh,
+                                        camera: this.camera
+                                    });        
 
-            that.ghost.woo = new AudioClip({
-                    path: '/audio/classic-ghost-sound-95773.mp3',
-                    mesh: mesh,
-                    camera: this.camera
-                });         
+            that.ghostSounds.imapact = new AudioClip({
+                                path: '/audio/halloween-impact-05-93808.mp3',
+                                mesh: mesh,
+                                camera: this.camera
+                            });       
 
-            that.ghost.imapact = new AudioClip({
-                    path: '/audio/halloween-impact-05-93808.mp3',
-                    mesh: mesh,
-                    camera: this.camera
-                });
+            that.ghostSounds.hit = new AudioClip({
+                                path: 'ahhhh-37191.mp3',
+                                mesh: mesh,
+                                camera: this.camera
+                            });       
+
+            that.ghostSounds.caught = new AudioClip({
+                                path: 'angelic-voice-81921.mp3',
+                                mesh: mesh,
+                                camera: this.camera
+                            });      
 
             that.animateGhost();
-
+            that.startHover();
         })
+
 
     }
 
@@ -1539,68 +1644,92 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     animateGhost = ()=>{
 
         let that = this;
-            var tl = anime.timeline({
+            let tl = anime.timeline({
               easing: 'linear',
               duration: 20000,
               loop: false,
               complete: ()=>{
-                setTimeout(()=>{
+                that.ghostTimer = setTimeout(()=>{
                     that.animateGhost();
                 },10000)
               }
             });
             tl.add({
                     targets: that.ghost.mesh.position,
-                    z: 16,
-                    x: -16,
+                    x: -12,
+                    z: 12,                    
+
                     loop: false,
                     easing: 'linear',
                     duration: 5000,
                     begin: ()=>{
-                        that.ghost.mesh.rotateY(-Math.PI/2)
-                        that.ghost.creak.play();
+                        that.calcDirection(-12,0,12);
+                        that.ghostSounds.creak.play()
                     }
                 });
 
             tl.add({
                     targets: that.ghost.mesh.position,
-                    x: -16,
-                    z: -16,
+                    x: -12,
+                    z: -12,
+
                     loop: false,
                     easing: 'linear',
                     duration: 5000,
                     begin: ()=>{
-                        that.ghost.mesh.rotateY(-Math.PI/2)                        
-                        that.ghost.woo.play()
+                        that.calcDirection(-12,0,-12);              
+                        that.ghostSounds.atmo.play()
                     }
                 });
 
             tl.add({
                     targets: that.ghost.mesh.position,
-                    z: -16,
-                    x: 16,
+                    x: 12,
+                    z: -12,
 
                     loop: false,
                     easing: 'linear',
                     duration: 5000,
                     begin: ()=>{
-                        that.ghost.mesh.rotateY(-Math.PI/2)                        
-                        that.ghost.imapact.play()
+                        that.calcDirection(12,0,-12);
+                        that.ghostSounds.imapact.play()
                     }
             });
 
             tl.add({
                     targets: that.ghost.mesh.position,
-                    z: 16,
-                    x: 16,
+                    x: 12,
+                    z: 12,                    
+
                     loop: false,
                     easing: 'linear',
                     duration: 5000,
                     begin: ()=>{
-                        that.ghost.mesh.rotateY(-Math.PI/2)                        
-                        that.ghost.atmo.play()
+                        that.calcDirection(-2,0,12);
+                        that.ghostSounds.woo.play()
+
                     }
             });   
+        that.ghost.tl = tl;
+    }
+
+    startHover = () =>{
+        this.ghostHover = anime({
+                    begin: function(anim) {
+                      
+                    },
+                    targets: this.ghost.mesh.position,
+                    y: 2,
+                    loop: true,
+                    duration: 3000,
+                    easing: 'linear',
+                    direction: 'alternate'
+                });
+    }
+    calcDirection = (x,y,z) =>{
+        this.dirCalc.set(x,y,x);
+        this.newDir.addVectors(this.dirCalc, this.ghost.mesh.position);
+        this.ghost.mesh.lookAt(this.newDir);
     }
 
     initInventory = (options) =>{

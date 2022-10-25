@@ -36,8 +36,17 @@ export default class AudioClip {
     }
 
     play = () =>{
-        this.sound.play();
+        if(!this.listener.isPlaying){
+            this.sound.play();
+        }        
+
     }
+
+    stop = () =>{
+        if(this.listener.isPlaying){
+            this.sound.stop();
+        }
+    }    
 
     attatchTo  = (mesh) =>{
         mesh.add(this.sound);

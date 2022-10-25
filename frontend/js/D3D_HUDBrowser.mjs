@@ -33,10 +33,13 @@ export default class HUDBrowser  {
            this.selectedItem.helper = new THREE.BoxHelper( item.mesh, 0x00FF00 );
         };
         this.config.scene.add(this.selectedItem.helper); 
-        this.showSelectedThumbnail();       
-        let preview = document.querySelector('#select-preview');
-        preview.style.display = 'inline-block';
-        this.nftDisplayData = this.selectedItem.parseNFTDisplayData();        
+        if(this.selectedItem.config.nft){
+            this.showSelectedThumbnail();
+            let preview = document.querySelector('#select-preview');
+            preview.style.display = 'inline-block';
+            this.nftDisplayData = this.selectedItem.parseNFTDisplayData();               
+        } 
+     
     }
     
     showSelectedThumbnail = () =>{
