@@ -77,6 +77,8 @@ const params = {
         this.dirCalc = new THREE.Vector3(1, 1, 1);
         this.newDir = new THREE.Vector3(1, 1, 1);
         this.ghostCaught = false;
+        this.actionTargetItem = null;
+        this.actionTargetMesh = null;
 
         console.log('anime js version');
 
@@ -878,8 +880,10 @@ const params = {
                     duration: 2000,
                     easing: 'linear',                    
                     complete: function(anim) {
-                        if(that.actionTargetItem.isGhost){
-                            that.catchGhost();
+                        if(that.actionTargetItem){
+                            if(that.actionTargetItem.isGhost){
+                                that.catchGhost();
+                            };
                         };
                         mesh.visible = false;
                     }
