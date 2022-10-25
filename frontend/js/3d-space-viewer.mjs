@@ -1679,7 +1679,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
               complete: ()=>{
                 that.ghostTimer = setTimeout(()=>{
                     that.animateGhost();
-                },10000)
+                },1000)
               }
             });
             tl.add({
