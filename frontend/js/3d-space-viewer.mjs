@@ -201,7 +201,7 @@ const params = {
                         that.initGhost();
                     } else {
                         if(this.config.showGhost){
-                            let timeDelay = 5000*(Math.floor(Math.random() * 10) + 1);
+                            let timeDelay = 2000*(Math.floor(Math.random() * 10) + 1);
                             setTimeout(()=>{
                                 that.initGhost();
                             },timeDelay)
