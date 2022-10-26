@@ -938,34 +938,38 @@ const params = {
     animateCatchGhost = () =>{
         let that = this;
       
-        setTimeout(()=>{
-            this.ghostHover.pause();               
-            that.ghost.place(this.actionTargetPos).then((mesh,pos)=>{
+
+            this.ghostHover.pause();  
+            this.ghost.mesh.position.y=-1;
+            that.ghost.place(this.ghost.mesh.position).then((mesh,pos)=>{
                 mesh.lookAt(this.camera.position);     
-                let ghostSpot = this.ghost.mesh.position.clone()
-                ghostSpot.y = 10;
-                that.addSpotlight(ghostSpot);
-                that.lights.aLight.intensity = 0;                
-                that.ghostup = anime({
-                        begin: ()=>{
-                            that.ghostSounds.caught.play();            
-                        },
-                        targets: that.ghost.mesh.position,
-                        y: 25,
-                        loop: false,
-                        duration: 25000,
-                        easing: 'linear',
-                        complete: ()=>{
-                            that.ghost.mesh.visible = false;
-                            that.lights.aLight.color.setHex(0xffffff);
-                            that.lights.aLight.color.intensity = 1;    
-                            this.spotLight.remove();
-                            this.spotLight2.remove();       
-                            that.lights.switchOnDirectional();             
-                        }
-                    });        
+                setTimeout(()=>{                
+                    let ghostSpot = this.ghost.mesh.position.clone()
+                    ghostSpot.y = 10;
+                    that.addSpotlight(ghostSpot);
+                    that.lights.aLight.intensity = 0;                
+                    that.ghostup = anime({
+                            begin: ()=>{
+                                that.ghostSounds.caught.play();            
+                            },
+                            targets: that.ghost.mesh.position,
+                            y: 12.5,
+                            loop: false,
+                            duration: 25000,
+                            easing: 'linear',
+                            complete: ()=>{
+                                that.lights.switchOnDirectional();                                             
+                                that.ghost.mesh.visible = false;
+                                that.lights.aLight.color.setHex(0xffffff);
+                                that.lights.aLight.intensity = 1;    
+                                that.scene.remove(that.spotLight);
+                                that.scene.remove(that.spotLight2);       
+                                that.lights.switchOnDirectional();             
+                            }
+                        });        
+                    },3000)                
             })
-        },5000)
+
        
 
         
