@@ -171,9 +171,7 @@ const params = {
 
             this.loadScenery().then(()=>{
                 this.initInventory(options);
-                if(this.config.showGhost){
-                    this.initGhost();
-                };
+
 
                // that.placeAssets();
                 if(that.config.firstPerson){
@@ -199,9 +197,20 @@ const params = {
                       el.style.display='inline-block';
                     });*/
                     this.resizeCanvas();
+                    if(this.config.devGhost){
+                        that.initGhost();
+                    } else {
+                        if(this.config.showGhost){
+                            let timeDelay = 5000*(Math.floor(Math.random() * 10) + 1);
+                            setTimeout(()=>{
+                                that.initGhost();
+                            },timeDelay)
+                        };
+
+                    }
 
 
-                
+
             });
 
   
@@ -428,8 +437,17 @@ const params = {
     }
 
     initLighting = () =>{
+        let dLights = [{name:'above',intensity:0.75},
+        {name:'below',intensity:0},
+        {name:'left',intensity:0},
+        {name:'right',intensity:0},
+        {name:'front',intensity:0.5},
+        {name:'back',intensity:0.1}];
+
         this.lights = new Lighting({scene:this.scene,
-                                        createListeners: false});   
+                                        createListeners: false,
+                                        dLights: dLights});   
+        //this.addSpotlight();
     }
 
     initLoaders = () =>{
@@ -699,7 +717,7 @@ const params = {
         let that = this;
         clearTimeout(that.ghostTimer);
 
-        that.ghostSounds.imapact.stop()
+        that.ghostSounds.impact.stop()
         that.ghostSounds.atmo.stop();
         that.ghostSounds.woo.stop();
         that.ghostSounds.creak.stop();
@@ -709,7 +727,8 @@ const params = {
         that.ghost.place(this.actionTargetPos).then((mesh,pos)=>{
             mesh.lookAt(this.camera.position);
             console.log('play hit');
-            that.ghostSounds.hit.play();            
+            that.ghostSounds.hit.play();        
+
         })
      
 
@@ -909,8 +928,7 @@ const params = {
 
     catchGhost = ()=>{
         if(!this.ghostCaught){
-            this.ghostSounds.caught.play();            
-            console.log('catchGhost triggered!!');
+            this.ghostSounds.hit.play();
             this.config.chainAPI.catchGhost();
             this.ghostCaught = true;
             this.animateCatchGhost();
@@ -919,21 +937,36 @@ const params = {
 
     animateCatchGhost = () =>{
         let that = this;
-
-        this.ghostHover.pause();    
-        that.ghost.place(this.actionTargetPos).then((mesh,pos)=>{
-            mesh.lookAt(this.camera.position);
-            that.ghostup = anime({
-                    targets: that.ghost.mesh.position,
-                    y: 25,
-                    loop: false,
-                    duration: 50000,
-                    easing: 'linear',
-                    complete: ()=>{
-                        that.ghost.mesh.visible = false;
-                    }
-                });        
-        })
+      
+        setTimeout(()=>{
+            this.ghostHover.pause();               
+            that.ghost.place(this.actionTargetPos).then((mesh,pos)=>{
+                mesh.lookAt(this.camera.position);     
+                let ghostSpot = this.ghost.mesh.position.clone()
+                ghostSpot.y = 10;
+                that.addSpotlight(ghostSpot);
+                that.lights.aLight.intensity = 0;                
+                that.ghostup = anime({
+                        begin: ()=>{
+                            that.ghostSounds.caught.play();            
+                        },
+                        targets: that.ghost.mesh.position,
+                        y: 25,
+                        loop: false,
+                        duration: 25000,
+                        easing: 'linear',
+                        complete: ()=>{
+                            that.ghost.mesh.visible = false;
+                            that.lights.aLight.color.setHex(0xffffff);
+                            that.lights.aLight.color.intensity = 1;    
+                            this.spotLight.remove();
+                            this.spotLight2.remove();       
+                            that.lights.switchOnDirectional();             
+                        }
+                    });        
+            })
+        },5000)
+       
 
         
     }
@@ -1607,13 +1640,15 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     initGhost = () =>{
         let that = this;
+        this.lights.switchOffDirectional();
+
         this.ghostSounds = [];
 
         let itemConfig = {  scene: this.scene,
                             format: 'glb',
-                            height:2,
-                            width:2,
-                            depth:2,
+                            height:2.5,
+                            width:2.5,
+                            depth:2.5,
                             modelUrl:'/models/ghostHQ.fbx'};
 
         this.ghost = this.initItemForModel(itemConfig);
@@ -1643,7 +1678,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                         camera: this.camera
                                     });        
 
-            that.ghostSounds.imapact = new AudioClip({
+            that.ghostSounds.impact = new AudioClip({
                                 path: '/audio/halloween-impact-05-93808.mp3',
                                 mesh: mesh,
                                 camera: this.camera
@@ -1660,9 +1695,10 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                 mesh: mesh,
                                 camera: this.camera
                             });      
-
+            that.lights.aLight.intensity = 0.5;     
             that.animateGhost();
             that.startHover();
+       
         })
 
 
@@ -1672,6 +1708,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     animateGhost = ()=>{
 
         let that = this;
+
             let tl = anime.timeline({
               easing: 'linear',
               duration: 20000,
@@ -1693,10 +1730,12 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                     easing: 'linear',
                     duration: 5000,
                     begin: ()=>{
-                        this.ghost.mesh.position.set(12,0,12);
-                        that.ghostSounds.creak.play();
+                        that.ghostSounds.atmo.play();
+
+                        that.ghost.mesh.position.set(12,0,12);
                         this.ghost.mesh.lookAt(-12,0,12);
-                        console.log('start 1');
+
+                        that.lights.aLight.color.setHex(0x00ff00);
                     },
                 });
 
@@ -1709,11 +1748,12 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                     easing: 'linear',
                     duration: 5000,
                     begin: ()=>{
-                        console.log('start 2');
+                        that.ghostSounds.woo.play()
+
                         this.ghost.mesh.position.set(-12,0,12);       
                         this.ghost.mesh.lookAt(-12,0,-12);
 
-                        that.ghostSounds.atmo.play()
+                        that.lights.aLight.color.setHex(0xff0000);                        
                     }
                 });
 
@@ -1726,12 +1766,14 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                     easing: 'linear',
                     duration: 5000,
                     begin: ()=>{
-                        console.log('start 3');
+
+                        that.ghostSounds.creak.play()
 
                         this.ghost.mesh.position.set(-12,0,-12);       
                         this.ghost.mesh.lookAt(12,0,-12);
 
-                        that.ghostSounds.imapact.play()
+                        that.lights.aLight.color.setHex(0x00ff00);
+
                     }
             });
 
@@ -1744,12 +1786,11 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                     easing: 'linear',
                     duration: 5000,
                     begin: ()=>{
-                         console.log('start 4');
-
+                        that.ghostSounds.impact.play()
                         this.ghost.mesh.position.set(12,0,-12);       
                         this.ghost.mesh.lookAt(12,0,12);
-                       // that.calcDirection(-12,0,12);
-                        that.ghostSounds.woo.play()
+            
+                        that.lights.aLight.color.setHex(0xff0000);
 
                     }
             });   
@@ -1765,7 +1806,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                     targets: this.ghost.mesh.position,
                     y: 2,
                     loop: true,
-                    duration: 3000,
+                    duration: 2500,
                     easing: 'linear',
                     direction: 'alternate'
                 });
@@ -1774,6 +1815,40 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         this.dirCalc.set(x,y,x);
         this.newDir.addVectors(this.dirCalc, this.ghost.mesh.position);
         this.ghost.mesh.lookAt(this.newDir);
+    }
+
+    addSpotlight = (pos) =>{
+    let spotLight = new THREE.SpotLight( 0xffffff, 10 );
+        spotLight.position.copy(pos);
+        spotLight.position.y = 10;
+        spotLight.angle = Math.PI / 18;
+        spotLight.penumbra = 1;
+        spotLight.decay = 2;
+        spotLight.distance = 100;
+        spotLight.target = this.ghost.mesh;
+
+      
+        this.scene.add( spotLight );        
+        this.spotLight = spotLight;
+
+        let pos2 = pos.clone();
+
+    let spotLight2 = new THREE.SpotLight( 0xffffff, 10 );
+        spotLight2.position.copy(pos2);
+        spotLight2.position.y = -2;
+        spotLight2.angle = Math.PI / 12;
+        spotLight2.penumbra = 1;
+        spotLight2.decay = 2;
+        spotLight2.distance = 100;
+        spotLight2.target = this.ghost.mesh;
+
+      
+        this.scene.add( spotLight );      
+        this.scene.add( spotLight2 );   
+        this.spotLight = spotLight;        
+        this.spotLight2 = spotLight2;      
+   // let lightHelper = new THREE.SpotLightHelper( spotLight );
+  //  this.scene.add( lightHelper );
     }
 
     initInventory = (options) =>{

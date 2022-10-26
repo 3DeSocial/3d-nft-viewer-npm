@@ -125,14 +125,35 @@ export default class Lighting {
 
     }
 
+    switchOffDirectional = () =>{
+        this.dLighting.forEach((light)=>{
+            light.intensity = 0;
+        })
+    }
+
+    switchOnDirectional = () =>{
+        let that = this;
+        this.config.dLights.forEach((light)=>{
+            that.dLighting[light.name].intensity = light.intensity;
+            console.log('set ',light.name,' to ',light.intensity)
+        })
+    }    
+    initLightsForConfig = () =>{
+        //Add lights
+        if(this.confg.lights.aLight){
+            this.aLight = new THREE.AmbientLight(0xffffff, 0.25);
+            this.scene.add(this.aLight);
+        }        
+    }
+
     configureLight = (light) =>{
-        light.castShadow = true;
+   /*     light.castShadow = true;
         light.shadow.camera.top = 200;
         light.shadow.camera.bottom = -200;
         light.shadow.camera.left = - 200;
         light.shadow.camera.right = 200;
         light.shadow.camera.near = 0.1;
-        light.shadow.camera.far = 500;
+        light.shadow.camera.far = 500;*/
     }
     setDirectionAll(pos){
     	var that = this;
