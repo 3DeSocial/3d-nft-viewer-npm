@@ -79,6 +79,7 @@ const params = {
         this.ghostCaught = false;
         this.actionTargetItem = null;
         this.actionTargetMesh = null;
+        this.animations = [];
 
         console.log('anime js version');
 
@@ -964,7 +965,6 @@ const params = {
                                 that.lights.aLight.intensity = 1;    
                                 that.scene.remove(that.spotLight);
                                 that.scene.remove(that.spotLight2);       
-                                that.lights.switchOnDirectional();             
                             }
                         });        
                     },3000)                
@@ -1643,6 +1643,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }
 
     initGhost = () =>{
+        if(this.renderer.xr.isPresenting){
+            return false;
+        };
         let that = this;
         this.lights.switchOffDirectional();
 
@@ -1998,6 +2001,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let vrBtnOptions = { btnCtr : 'div.view-vr-btn',
                              viewer: this,
                              onStartSession: ()=>{
+                                this.stopAllAnimations();
+                                //this.initGhost();
                                 if(!this.player){
                                     if(this.config.firstPerson){
                                         this.initPlayerFirstPerson();
@@ -2009,12 +2014,39 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                 console.log('player rotation', this.player.rotation);
                                 console.log('camera.rotation', this.camera.rotation);
                                 console.log('character rotation',this.character.rotation);*/
-                                let vrType = that.getVrTypeFromUI();
+                                let vrType = 'walking';
                                 //console.log('180 degrees later: ',that.camera.rotation);
 
                                 that.buildDolly(vrType);                                
+                                that.initGhost();
+                                console.log('init ghost vr');
                             } }
         let vrButtonEl = VRButton.createButton(this.renderer, vrBtnOptions);
+    }
+    stopAllAnimations = () =>{
+        if(this.ghostTimer){
+            clearTimeout(this.ghostTimer);
+
+            this.ghostSounds.impact.stop()
+            this.ghostSounds.atmo.stop();
+            this.ghostSounds.woo.stop();
+            this.ghostSounds.creak.stop();
+            if(this.ghost){
+               this.ghost.tl.pause();
+            }
+
+            this.lights.switchOnDirectional();                                             
+            if(this.ghost.mesh){
+                this.scene.remove(this.ghost.mesh);
+            };
+
+            this.lights.aLight.color.setHex(0xffffff);
+            this.lights.aLight.intensity = 1; 
+            if(this.spotLight) {
+                this.scene.remove(this.spotLight);
+                this.scene.remove(this.spotLight2);         
+            }
+        }
     }
     
     getVrTypeFromUI = () =>{
