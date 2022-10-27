@@ -22,7 +22,7 @@ export default class LoadingScreen {
 
     renderTemplate = (data) =>{
     	data = {...this.config,...data};
-    	let template =  '<div class="loader-ctr" style="display:block;"><div class="inner">';
+    	let template =  '<div class="inner">';
     					template +='<h1><span class="ownername">'+data.ownerName+'</span>\'s Gallery</h1>';
 						template +='<img class="owner-profile-pic" src="https://node.deso.org/api/v0/get-single-profile-picture/'+data.ownerPublicKey+'"/>';
 						//template +='<p class="description"><pre>'+data.ownerDescription+'</pre></p>';
@@ -30,7 +30,7 @@ export default class LoadingScreen {
 						template +='<p class="loading-update">'+data.updateMsg+'</p>';
 						template +='<div class="spinner"></div>';
 						template +='<div class="social-logo"><p class="devby">3D Developed by</p><img src="/images/logoNFTZ.png"/></div>';						
-						template +='</div></div>';
+						template +='</div>';
         return template
     }
 
@@ -59,8 +59,9 @@ export default class LoadingScreen {
 
     render  = (ctrCls) =>{
     	let ctr = document.querySelector(ctrCls);
+
     	let frag = document.createRange().createContextualFragment(this.renderTemplate());
-    	ctr.replaceWith(frag);
+    	ctr.appendChild(frag);
 
     }
 
@@ -68,6 +69,10 @@ export default class LoadingScreen {
        let ls = document.querySelector('.loader-ctr');
         ls.style.display = 'none';
     }
-
+    
+    show = () =>{
+       let ls = document.querySelector('.loader-ctr');
+        ls.style.display = 'block';
+    }
 }
 export {LoadingScreen}

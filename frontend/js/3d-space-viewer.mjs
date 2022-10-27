@@ -518,7 +518,6 @@ const params = {
                     case 'Digit6': that.inventory.setActive(6); break;
                     case 'Digit7': that.inventory.setActive(7); break;
                     case 'Digit8': that.inventory.setActive(8); break;
-
                     case 'Space':
                         if ( that.playerIsOnGround ) {
 
@@ -2690,6 +2689,11 @@ initPlayerThirdPerson = () => {
    //     this.controls.update();
 
     }    
+
+    stopAnimationLoop = () =>{
+        this.renderer.setAnimationLoop(null);
+        console.log('render loop stopped');
+    }
 };
 
 export {D3DSpaceViewer}
