@@ -26,6 +26,9 @@ export default class Item {
         };
 
         this.loader = this.config.loader;
+        if(!this.loader){
+            console.log('cannot init item without loader is 3d? ',this.config.is3D,' hex: ',this.config.postHashHex);
+        };
         this.scene = this.config.scene;
         this.height = this.config.height;
         this.width = this.config.width;
@@ -244,6 +247,7 @@ export default class Item {
                 return;
             } else {
                 let url = this.config.nftsRoute;
+                console.log('fetchModelUrl: ',this.config.nftsRoute);
                 if(url.trim()===''){
                     reject('No nftsRoute or modelUrl exists for this item');
                     return;
@@ -272,7 +276,8 @@ export default class Item {
         let that = this;
 
         return new Promise((resolve,reject)=>{
-
+           // console.log('fetchModel: ',modelUrl);
+           // console.log('that.loader: ',that.loader);            
             that.loader.load(modelUrl, (root)=> {
                 that.root = root;
                 let loadedItem = null;

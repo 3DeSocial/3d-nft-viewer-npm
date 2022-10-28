@@ -18,6 +18,9 @@ export default class LayoutPlotter  {
         this.plotPoint = new THREE.Vector3();
         this.inventory = this.config.inventory;
         this.sceneryLoader = this.config.sceneryLoader;
+        if(this.sceneryLoader){
+            this.sceneryLoader.loadFloorPlan()
+        };
 
     }
 
@@ -139,7 +142,6 @@ export default class LayoutPlotter  {
     }    
 
     plotList2d = () =>{
-        this.sceneryLoader.loadFloorPlan(); 
         let lists = this.sceneryLoader.lists;
         let items = this.inventory.getItems2d();
         if(items.length===0){
@@ -177,6 +179,45 @@ export default class LayoutPlotter  {
         });
     }
 
+ plotList3d = () =>{
+        this.sceneryLoader.loadFloorPlan(); 
+        let lists = this.sceneryLoader.lists;
+        let items = this.inventory.getItems3d();
+        if(items.length===0){
+            console.log('inventory hs no 3d items');
+            return;
+        };
+        console.log('plotList3d: ',lists.length);
+        lists.forEach((list,idx)=>{
+            let noPos = list.spots.length;
+            let noToPlace = (items.length>list.spots.length)?list.spots.length:items.length;
+            if(noToPlace>0) {
+                for (var i = 0; i <= noToPlace; i++) {
+                    let item = items[i];
+                    let pos = list.spots[i].pos
+                    let rot = list.spots.rot;
+                    let dims = list.spots.dims;
+                    items[i].pos = pos;
+                    let plotPoint = new THREE.Vector3(pos.x,pos.y,pos.z);
+                   /* if(pos.maxHeight){
+                        item.setDimensions(dims.width, dims.height, 0.1);
+                        item.scaleToFitScene(item.mesh, pos);
+                    };*/
+
+                    item.spot = list.spots[i];
+                    item.spot.idx = i;
+                    this.plotItem(item,plotPoint).then((item)=>{
+                        if(item.spot.rot){
+                            item.mesh.rotateY(item.spot.rot.y);
+                        }       
+
+                    })
+                }
+            };
+
+        });
+    }    
+
     getNextFreePos = () =>{
 
         if(!this.posQ){
@@ -188,13 +229,25 @@ export default class LayoutPlotter  {
       
     }
 
+    getNextFreePos3d = () =>{
+
+        if(!this.posQ){
+            this.initPosQ();
+        };
+        console.log('getNextFreePos3d, places: ',this.posQ3D.length);
+        let spot = this.posQ3D.shift();
+        console.log('next spot',spot);
+        return spot;
+      
+    }
+
     initPosQ = () =>{
         let that = this;
         this.maxItems = 0;
         this.posQ = [];
         this.sceneryLoader.loadFloorPlan(); 
         let lists = this.sceneryLoader.lists;
-        let allLists = {};
+
         lists.forEach((list,idx)=>{
             let noPos = list.spots.length;
             list.spots.forEach((spot, idx)=>{
@@ -202,8 +255,21 @@ export default class LayoutPlotter  {
                 that.posQ.push(spot); 
             })
         }); 
-        this.maxItems =this.posQ.length;
-        return this.posQ.length;
+
+        this.posQ3D = [];
+
+        let lists3d = this.sceneryLoader.lists3d;
+
+        lists3d.forEach((list,idx)=>{
+            let noPos = list.spots.length;
+            list.spots.forEach((spot, idx)=>{
+                spot.idx = idx;
+                that.posQ3D.push(spot); 
+            })
+        }); 
+
+        this.maxItems =this.posQ.length+this.posQ3D.length;
+        return this.maxItems;
     }
 
     getMaxItemCount = () =>{
@@ -211,6 +277,13 @@ export default class LayoutPlotter  {
             this.initPosQ();
         };
         return this.posQ.length;
+    }
+
+    getMaxItemCount3D = () =>{
+        if(!this.posQ){
+            this.initPosQ();
+        };
+        return this.posQ3D.length;
     }
 
     plotCircle = (items, center, radius) =>{

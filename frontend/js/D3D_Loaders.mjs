@@ -93,6 +93,7 @@ export default class D3DLoaders {
             case 'gcode': return new GCodeLoader(this.loadingManager); break;
             case 'glb':
             case 'gltf':
+            case 'gtlf':
                         gltfLoader = new GLTFLoader(this.loadingManager); 
                     
                         dracoLoader = new DRACOLoader(this.loadingManager); 
