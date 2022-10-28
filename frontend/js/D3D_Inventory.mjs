@@ -128,6 +128,7 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
                             if(spot.rot){
                                 mesh.rotateY(spot.rot.y);
                             };
+
                             items.push(item);
                             that.items2d.push(item);                            
                             if(items.length===itemList.length){

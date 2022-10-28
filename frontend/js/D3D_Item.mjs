@@ -100,6 +100,10 @@ export default class Item {
         if(!obj){
             obj = this.root;
         };
+        if(!this.mesh){
+            console.log('no mesh, no animations');
+            return false;
+        };
         if(obj.animations){
             if(obj.animations.length>0){
                 this.animations = obj.animations;
@@ -158,7 +162,7 @@ export default class Item {
             if(that.mesh){
                 that.mesh.position.copy(pos);
                 that.scene.add(this.mesh);
-                //that.fixYCoord(this.mesh, pos);
+                that.fixYCoord(this.mesh, pos);
 
                 resolve(this.mesh, pos);
             } else{
@@ -175,6 +179,13 @@ export default class Item {
                             that.mesh = model;
                             that.mesh.position.copy(pos);
                             console.log('item init at pos', pos);
+                            if(this.hasAnimations(false)){
+                                this.startAnimation(0,THREE.LoopRepeat);
+                                console.log('animationstarted');
+                            } else {
+                                console.log('no animations');
+                                console.log(model);
+                            };
                             let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
                             document.body.dispatchEvent(loadedEvent);
                             document.body.dispatchEvent(this.meshPlacedEvent);
@@ -297,7 +308,7 @@ export default class Item {
                 };
               
                 this.scaleToFitScene(obj3D, posVector);
-              //  this.fixYCoord(obj3D, posVector);
+                this.fixYCoord(obj3D, posVector);
 
                 resolve(obj3D);
             },
