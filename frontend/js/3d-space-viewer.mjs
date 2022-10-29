@@ -1892,9 +1892,12 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 console.log('options.sceneAssets');
 console.log(options.sceneAssets);
             let items3d = options.sceneAssets;
+            let spookyNFTs = options.sceneAssets.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'||nft.postHashHex=='8e0bbd53cd4932294649c109957167e385367836f0ec39cc4cc3d04691fffca7'));
+            console.log('spookyNFTs:');
+ console.log(spookyNFTs);      
  console.log(items3d);        
+            items3d = items3d.concat(spookyNFTs)
             items3d = items3d.slice(0,maxItems3D);    
-
             this.loadingScreen.startLoading({items:items2d,
                                         name:'NFTs'});
 
