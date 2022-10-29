@@ -20,7 +20,8 @@ export default class ExtraData3DParser {
 
   getModelList = () =>{
     this.models = this.extraData3D['3DModels'];
-    //console.log('ExtraData3DParser: No of models: ',this.models.length);
+
+    return this.models;
   }
 
   getAvailableFormats = () =>{

@@ -26,6 +26,9 @@ export default class Item {
         };
 
         this.loader = this.config.loader;
+        if(!this.loader){
+            console.log('cannot init item without loader is 3d? ',this.config.is3D,' hex: ',this.config.postHashHex);
+        };
         this.scene = this.config.scene;
         this.height = this.config.height;
         this.width = this.config.width;
@@ -97,6 +100,10 @@ export default class Item {
         if(!obj){
             obj = this.root;
         };
+        if(!this.mesh){
+            console.log('no mesh, no animations');
+            return false;
+        };
         if(obj.animations){
             if(obj.animations.length>0){
                 this.animations = obj.animations;
@@ -155,7 +162,7 @@ export default class Item {
             if(that.mesh){
                 that.mesh.position.copy(pos);
                 that.scene.add(this.mesh);
-                //that.fixYCoord(this.mesh, pos);
+                that.fixYCoord(this.mesh, pos);
 
                 resolve(this.mesh, pos);
             } else{
@@ -172,6 +179,13 @@ export default class Item {
                             that.mesh = model;
                             that.mesh.position.copy(pos);
                             console.log('item init at pos', pos);
+                            if(this.hasAnimations(false)){
+                                this.startAnimation(0,THREE.LoopRepeat);
+                                console.log('animationstarted');
+                            } else {
+                                console.log('no animations');
+                                console.log(model);
+                            };
                             let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
                             document.body.dispatchEvent(loadedEvent);
                             document.body.dispatchEvent(this.meshPlacedEvent);
@@ -244,6 +258,7 @@ export default class Item {
                 return;
             } else {
                 let url = this.config.nftsRoute;
+                console.log('fetchModelUrl: ',this.config.nftsRoute);
                 if(url.trim()===''){
                     reject('No nftsRoute or modelUrl exists for this item');
                     return;
@@ -272,7 +287,8 @@ export default class Item {
         let that = this;
 
         return new Promise((resolve,reject)=>{
-
+           // console.log('fetchModel: ',modelUrl);
+           // console.log('that.loader: ',that.loader);            
             that.loader.load(modelUrl, (root)=> {
                 that.root = root;
                 let loadedItem = null;
@@ -292,7 +308,7 @@ export default class Item {
                 };
               
                 this.scaleToFitScene(obj3D, posVector);
-              //  this.fixYCoord(obj3D, posVector);
+                this.fixYCoord(obj3D, posVector);
 
                 resolve(obj3D);
             },

@@ -62,6 +62,8 @@ export default class SceneryLoader {
         this.centerPiece = this.config.floorPlan.filter(plan => plan.type == 'centerPiece');
         this.rows = this.config.floorPlan.filter(plan => plan.type == 'rows');
         this.lists =  this.config.floorPlan.filter(plan => plan.type == 'list');
+        this.lists3d =  this.config.floorPlan.filter(plan => plan.type == 'list3d');     
+
     }
 	loadScenery = () =>{
         let that = this;
