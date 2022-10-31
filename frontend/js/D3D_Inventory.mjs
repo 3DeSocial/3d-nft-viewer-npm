@@ -206,11 +206,12 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
                                                               endPoint:'https://desodata.azureedge.net/unzipped/'});
 
                 let spot = that.config.layoutPlotter.getNextFreePos3d();
+                let yPos = that.config.layoutPlotter.findFloorAt(spot.pos,4,0); 
+                spot.pos.y = yPos;
+
                 let formats = extraDataParser.getAvailableFormats();                    
                 let models = extraDataParser.getModelList();
-                console.log('models 0:', models);
                 let modelUrl = extraDataParser.getModelPath(0,'gltf','any');
-                console.log('modelUrl: ',modelUrl);    
 
                 let item = null;  
                 if(modelUrl){

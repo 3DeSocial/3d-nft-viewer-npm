@@ -22,9 +22,15 @@ export default class LayoutPlotter  {
             this.sceneryLoader.loadFloorPlan()
         };
 
+        this.posVector = new THREE.Vector3();
+
     }
 
 
+    findFloorAt = (plotPoint, ceilingY, floorY) =>{
+        this.posVector.set(plotPoint.x, plotPoint.y, plotPoint.z);
+        return this.config.sceneryLoader.findFloorAt(this.posVector, ceilingY, floorY);
+    }
 
     placeSceneAssets = () =>{
         let itemsToPlace = this.sceneInventory.getItems();

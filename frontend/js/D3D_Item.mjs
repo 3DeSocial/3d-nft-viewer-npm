@@ -104,13 +104,20 @@ export default class Item {
             console.log('no mesh, no animations');
             return false;
         };
-        if(obj.animations){
-            if(obj.animations.length>0){
-                this.animations = obj.animations;
+        if(this.root.animations){
+            if(this.root.animations.length>0){
+                this.animations = this.root.animations;
                 return true;
             };            
         }
 
+        if(this.mesh.animations){
+            if(this.mesh.animations.length>0){
+                this.animations = this.mesh.animations;
+                return true;
+            };            
+        }
+        
         if(!obj.children){
             return false;
         }
@@ -179,12 +186,14 @@ export default class Item {
                             that.mesh = model;
                             that.mesh.position.copy(pos);
                             console.log('item init at pos', pos);
-                            if(this.hasAnimations(false)){
-                                this.startAnimation(0,THREE.LoopRepeat);
+                            if(that.hasAnimations(false)){
+                                that.startAnimation(0,THREE.LoopRepeat);
                                 console.log('animationstarted');
                             } else {
-                                console.log('no animations');
+                                console.log('no animations',this.config.postHashHex);
                                 console.log(model);
+                                console.log('root: ');
+                                console.log(that.root);
                             };
                             let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
                             document.body.dispatchEvent(loadedEvent);
@@ -559,6 +568,7 @@ scaleToFitScene = (obj3D, posVector) =>{
     }
 
     fixYCoord = (obj3D, posVector) =>{
+        console.log('fixYCoord ' );
         var helper = new THREE.BoxHelper(obj3D, 0x00ff00);
             helper.update();
 
@@ -569,10 +579,10 @@ scaleToFitScene = (obj3D, posVector) =>{
             return false;
         };
         lowestVertex.applyMatrix4(helper.matrixWorld);
-
+console.log(' posVector.y: ', posVector.y,' lowestVertex.y ',lowestVertex.y);
         if(posVector.y !== lowestVertex.y){
             let yOffset = lowestVertex.y-posVector.y;
-            //console.log('yOffset: ',yOffset);
+            console.log('yOffset: ',yOffset);
             obj3D.position.setY(obj3D.position.y - yOffset);
         };
     }

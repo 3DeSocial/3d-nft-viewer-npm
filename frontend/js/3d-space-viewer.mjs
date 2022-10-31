@@ -342,16 +342,15 @@ const params = {
     }
     initCameraPlayer = () =>{
         // camera setup
-        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
       //w  this.camera.position.set( 10, 10, - 10 );
-        this.camera.far = 1000;
         this.camera.updateProjectionMatrix();        
        // this.camera.lookAt(this.config.lookAtStartPos);
     }
 
     initCamera = () =>{
         //Create a camera
-        this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/600, 0.01, 1000 );
+        this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/600, 0.01, 100 );
         //Only gotcha. Set a non zero vector3 as the camera position.
 //        this.camera.rotation.setX(0);
 
@@ -399,6 +398,7 @@ const params = {
         this.renderer.xr.enabled = true;
         //the following increases the resolution on Quest
         this.renderer.xr.setFramebufferScaleFactor(2.0);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
 
         this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         this.renderer.setClearColor( 0x000000, 1 );
