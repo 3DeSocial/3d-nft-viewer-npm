@@ -96,14 +96,44 @@ export default class Item {
         this.direction.set(0,0,0)
     }
 
+    hasArmature = () =>{
+        let that = this;
+        this.armature = null;
+        this.modelChildren = [];
+        console.log('this.root: ');
+        console.log(this.root);
+
+        if(this.root.armature){
+            console.log('armature found in root');
+            this.armature = this.root.armature;
+        };
+        if(!this.root.scene.children){
+            console.log('scene has no children');
+            return;
+        }
+        console.log('this.root.scene.children');
+        console.log(this.root.scene.children);
+
+
+        this.root.scene.children.forEach((el)=>{
+            console.log(el.name);
+            if(el.name === 'Armature'){
+                console.log('found armature.');
+                that.armature = el;
+            } else {
+                that.modelChildren.push(el);
+                console.log('add child: ',el.name)
+            }
+        });
+
+        return (!this.armature === null);
+    }
+
     hasAnimations = (obj) =>{
         if(!obj){
             obj = this.root;
         };
-        if(!this.mesh){
-            console.log('no mesh, no animations');
-            return false;
-        };
+
         if(this.root.animations){
             if(this.root.animations.length>0){
                 this.animations = this.root.animations;
@@ -184,9 +214,9 @@ export default class Item {
                         that.placeModel(pos)
                         .then((model)=>{
                             that.mesh = model;
-                            that.mesh.position.copy(pos);
                             console.log('item init at pos', pos);
                             if(that.hasAnimations(false)){
+                                console.log('hasAnimations');
                                 that.startAnimation(0,THREE.LoopRepeat);
                                 console.log('animationstarted');
                             } else {
@@ -306,20 +336,30 @@ export default class Item {
                     loadedItem = root.scene;
                 } else {
                     loadedItem = root;
-                };
-                that.mesh = loadedItem;
-                that.mesh.userData.owner = this;
-                that.mesh.owner = this;                
-                let obj3D = this.convertToObj3D(loadedItem);
-                if(obj3D===false){
-                    console.log('could not convert item for scene');
-                    return false;
-                };
-              
-                this.scaleToFitScene(obj3D, posVector);
-                this.fixYCoord(obj3D, posVector);
+                };     
+                           
+                if(that.hasArmature()){
+                    console.log('armature detected');
+                    console.log(this.armature);
+                } else {
 
-                resolve(obj3D);
+                    that.mesh = loadedItem;
+                    that.mesh.userData.owner = this;
+                    that.mesh.owner = this;                
+                    let obj3D = this.convertToObj3D(loadedItem);
+                    if(obj3D===false){
+                        console.log('could not convert item for scene');
+                        return false;
+                    };
+                  
+                    this.scaleToFitScene(obj3D, posVector);
+                    console.log('DO fix Y coord');
+                    this.fixYCoord(obj3D, posVector);    
+                    resolve(obj3D);
+
+                }
+               
+
             },
             this.onProgressCallback,
             this.onErrorCallback);
@@ -387,19 +427,17 @@ scaleToFitScene = (obj3D, posVector) =>{
         cbox.position.copy(posVector);
 
         // center of box is position so move up by 50% of newLengthMeshBounds.y
-        let yOffset = newLengthMeshBounds.y/2;
-        cbox.position.setY(cbox.position.y+yOffset);
-        cbox.add(obj3D);
-        obj3D.updateWorldMatrix();
+        //let yOffset = newLengthMeshBounds.y/2;
+        //cbox.position.setY(cbox.position.y+yOffset);
+        //cbox.add(obj3D);
+        //obj3D.updateWorldMatrix();
 
-        if(this.isImage){
-            obj3D.userData.owner = this;
-            that.scene.add(obj3D);
-        } else {
-            cbox.userData.owner = this; //set reference to Item
-            that.scene.add(obj3D);    
-        };
-       
+        cbox.userData.owner = this; //set reference to Item
+        that.scene.add(obj3D);    
+        obj3D.position.copy(posVector);
+        console.log('set position after render in scale');
+       console.log('scaleToFitScene wants to add');
+       console.log(obj3D);
         cbox.updateMatrixWorld();    
     }
 
