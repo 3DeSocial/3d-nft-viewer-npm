@@ -26,6 +26,7 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         this.loader = this.config.loader;
         this.chainAPI = new ChainAPI(this.config.chainAPI);
         this.activeItemIdx = 0;
+        this.placedItems3D = [];
         if((this.config.items3d.length>0)||(this.config.items2d.length>0)){
             this.load();
         }
@@ -237,6 +238,7 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
                         mesh.rotateY(spot.rot.y);
                     };
                     items.push(item);
+                    this.placedItems3D.push(item);
                     that.items3d.push(item); 
                     if(items.length===itemList.length){
                         console.log('all 3d items placed');
@@ -484,6 +486,15 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
             this.activeItemIdx = index;
             console.log('Item ',index,' is active.');
         }
+    }
+
+    updateAnimations = (delta) =>{
+        //update all visible items running animations in sceneInventory
+        this.placedItems3D.forEach((item)=>{
+            if((item.mixer !== null)){
+                item.mixer.update( delta );
+            };
+        })
     }
  }
 export {D3DInventory};

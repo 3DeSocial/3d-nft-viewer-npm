@@ -1445,9 +1445,14 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             // raycast in direction of camera and move it if it's further than the closest point
 
         //this.controls.update();
+        this.updateAnimations(delta);
         this.renderer.render(this.scene, this.camera);
         //this.hud.render();
 
+    }
+
+    updateAnimations = (delta)=>{
+        this.sceneInventory.updateAnimations(delta);
     }
 
     centerMeshInScene = (gltfScene) =>{
