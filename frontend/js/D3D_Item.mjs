@@ -100,22 +100,28 @@ export default class Item {
         let that = this;
         this.armature = null;
         this.modelChildren = [];
+        let scene;
         console.log('this.root: ');
         console.log(this.root);
 
         if(this.root.armature){
             console.log('armature found in root');
             this.armature = this.root.armature;
+            return true;
         };
-        if(!this.root.scene.children){
-            console.log('scene has no children');
-            return;
+
+        if(this.root.scene){
+            scene = this.root.scene;
+        } else {
+            scene = this.root;
         }
-        console.log('this.root.scene.children');
-        console.log(this.root.scene.children);
 
-
-        this.root.scene.children.forEach((el)=>{
+        if(!scene.children){
+            console.log('scene has no children');
+            return false;
+        }
+   
+        scene.children.forEach((el)=>{
             console.log(el.name);
             if(el.name === 'Armature'){
                 console.log('found armature.');
@@ -337,12 +343,12 @@ export default class Item {
                 } else {
                     loadedItem = root;
                 };     
-                           
+            /*               
                 if(that.hasArmature()){
                     console.log('armature detected');
                     console.log(this.armature);
                 } else {
-
+*/
                     that.mesh = loadedItem;
                     that.mesh.userData.owner = this;
                     that.mesh.owner = this;                
@@ -357,7 +363,7 @@ export default class Item {
                     this.fixYCoord(obj3D, posVector);    
                     resolve(obj3D);
 
-                }
+              //  }
                
 
             },
