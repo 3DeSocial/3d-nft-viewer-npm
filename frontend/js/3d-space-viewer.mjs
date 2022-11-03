@@ -201,7 +201,7 @@ const params = {
                     if(this.config.devGhost){
                         that.initGhost();
                     } else {
-                        if(this.config.showGhost){
+                        if((this.config.showGhost)&&(this.ghosts.length === 0)){
                             let timeDelay = 2000*(Math.floor(Math.random() * 10) + 1);
                             setTimeout(()=>{
                                 that.initGhost();
@@ -1894,13 +1894,11 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                 items2d = items2d.slice(0,maxItems);    
 
             let maxItems3D =this.layoutPlotter.getMaxItemCount3D();
-console.log('options.sceneAssets');
-console.log(options.sceneAssets);
+
             let items3d = options.sceneAssets;
             let spookyNFTs = options.sceneAssets.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'||nft.postHashHex=='8e0bbd53cd4932294649c109957167e385367836f0ec39cc4cc3d04691fffca7'));
-            console.log('spookyNFTs:');
- console.log(spookyNFTs);      
- console.log(items3d);        
+            this.ghosts = spookyNFTs.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'));
+
             items3d = items3d.concat(spookyNFTs)
             items3d = items3d.slice(0,maxItems3D);    
             this.loadingScreen.startLoading({items:items2d,
@@ -2035,7 +2033,6 @@ console.log(options.sceneAssets);
                                 //console.log('180 degrees later: ',that.camera.rotation);
 
                                 that.buildDolly(vrType);                                
-                                that.initGhost();
                                 console.log('init ghost vr');
                             } }
         let vrButtonEl = VRButton.createButton(this.renderer, vrBtnOptions);
@@ -2251,10 +2248,10 @@ console.log(options.sceneAssets);
             e.stopPropagation();
             if(that.isFullScreen){
                 that.closeFullscreen();
-                that.toggleFullScreenBtnText(e.target,'Full Screen')                
+                that.toggleFullScreenBtnText(e.target,'Full')                
             } else {
                 that.openFullscreen();
-                that.toggleFullScreenBtnText(e.target, 'Exit Full Screen');
+                that.toggleFullScreenBtnText(e.target, 'Exit');
             }
             that.resizeCanvas(true);
         });     
