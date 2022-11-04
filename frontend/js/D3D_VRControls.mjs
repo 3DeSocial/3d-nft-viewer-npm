@@ -71,25 +71,7 @@ class VRControls {
         controller1.add(line.clone());
         controller2.add(line.clone());
 
-        //dolly for camera
-        let dolly = new THREE.Group();
-        let vrY = this.config.playerStartPos.y-1;
-        dolly.position.copy(this.config.player.position);
-        dolly.name = 'dolly';
-        this.scene.add(dolly);
-        dolly.rotateY(0);
-        dolly.add(this.camera);
-        this.camera.position.copy(this.config.playerStartPos);
-        this.camera.position.setY(this.camera.position.y+2);
-        this.camera.rotateY(0);
-        //add the controls to the dolly also or they will not move with the dolly
-        dolly.add(controller1);
-        dolly.add(controller2);
-        dolly.add(controllerGrip1);
-        dolly.add(controllerGrip2);
-        dolly.rotateY(Math.PI)
-        this.dolly = dolly;
-        return dolly;
+
     }
 
     checkControllers = () =>{
@@ -168,7 +150,7 @@ class VRControls {
                                 //if thumbstick axis has moved beyond the minimum threshold from center, windows mixed reality seems to wander up to about .17 with no input
                                 if (Math.abs(value) > 0.5) {
                                     //set the speedFactor per axis, with acceleration when holding above threshold, up to a max speed
-                                    self.speedFactor[i] > 1
+                                    self.speedFactor[i] > 0.5
                                         ? (self.speedFactor[i] = 1)
                                         : (self.speedFactor[i] *= 1.001);
                                     //  console.log(value, self.speedFactor[i], i);
@@ -216,20 +198,20 @@ class VRControls {
                 //console.log(hand+ ' stick: right ',data.axes[2]);
                 switch(this.config.vrType){
                     case 'flying':
-                        this.flyRight(data);
+                        this.flyRight(data, value);
                     break;
                     default:
-                        this.moveRight(data);
+                        this.moveRight(data, value);
                     break;
                 }
             } else if (data.axes[2] < 0) {
                 //console.log(hand+ ' stick: left',data.axes[2]);
                 switch(this.config.vrType){
                     case 'flying':
-                        this.flyLeft(data);
+                        this.flyLeft(data, value);
                     break;
                     default:
-                        this.moveLeft(data);
+                        this.moveLeft(data, value);
                     break;
                 }
             };
@@ -264,20 +246,20 @@ class VRControls {
                 //console.log(hand+ ' stick: right ',data.axes[2],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
-                        this.flyBackward(data);
+                        this.flyBackward(data, value);
                     break;
                     default:
-                        this.moveBackward(data);
+                        this.moveBackward(data, value);
                     break;
                 }
             } else if (data.axes[3] < 0){
                 //console.log(hand + ' stick: forward',data.axes[3],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
-                        this.flyForward(data);
+                        this.flyForward(data, value);
                     break;
                     default:
-                        this.moveForward(data);
+                        this.moveForward(data, value);
                     break;
                 }             
             };
@@ -292,7 +274,7 @@ class VRControls {
         return false;
     }
 
-    flyForward = (data) => {
+    flyForward = (data, value) => {
      /*   let nextPos = new THREE.Vector3();
         nextPos.copy(this.dolly.position);
         nextPos.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
@@ -303,7 +285,7 @@ class VRControls {
 
     }
 
-    moveForward = (data) =>{
+    moveForward = (data, value) =>{
 
      /*   let nextPos = new THREE.Vector3();
         nextPos.copy(this.dolly.position);
@@ -314,7 +296,7 @@ class VRControls {
 
     }
 
-    flyBackward = (data) => {
+    flyBackward = (data, value) => {
         this.dolly.position.x -= this.cameraVector.x * this.flyingSpeedFactor[3] * data.axes[3];
         this.dolly.position.z -= this.cameraVector.z * this.flyingSpeedFactor[3] * data.axes[3];
     }
@@ -322,13 +304,13 @@ class VRControls {
         this.config.moveBack(data);
     }
 
-    flyLeft = (data) => {
+    flyLeft = (data, value) => {
         this.dolly.position.x -= this.cameraVector.z * this.flyingSpeedFactor[2] * data.axes[2];
         this.dolly.position.z += this.cameraVector.x * this.flyingSpeedFactor[2] * data.axes[2];        
     }
 
-    moveLeft = (data) => {
-        this.config.moveLeft(data);
+    moveLeft = (data, value) => {
+        this.config.moveLeft(data, value);
     }
 
     flyRight = (data) => {

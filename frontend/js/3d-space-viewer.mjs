@@ -5,7 +5,7 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { AudioClip, Item, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { PlayerVR, AudioClip, Item, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -615,6 +615,9 @@ const params = {
 
     showSelectedMeshData =(action) =>{
         let item = null;
+        if(!action.selection){
+            return false;
+        };
         if(action.selection.object.userData.owner){
             item = action.selection.object.userData.owner;
         } else {
@@ -1396,7 +1399,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     
     render = () =>{
          if (this.renderer.xr.isPresenting === true) {
-            this.vrControls.checkControllers();
+            if(this.vrControls){
+                this.vrControls.checkControllers();
+            }
         }  
 
         const delta = Math.min( this.clock.getDelta(), 0.1 );
@@ -1429,7 +1434,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
                     if (this.renderer.xr.isPresenting === true) {
                         if(this.vrType==="walking"){
-                           this.updatePlayerVR( delta / physicsSteps );
+                           this.updatePlayerVR( delta );
                         }
                     } else {
                        this.updatePlayer( delta / physicsSteps );
@@ -1445,7 +1450,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             // raycast in direction of camera and move it if it's further than the closest point
 
         //this.controls.update();
-        this.updateAnimations(delta);
+    //    this.updateAnimations(delta);
         this.renderer.render(this.scene, this.camera);
         //this.hud.render();
 
@@ -2016,27 +2021,14 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let vrBtnOptions = { btnCtr : 'div.view-vr-btn',
                              viewer: this,
                              onStartSession: ()=>{
-                                this.stopAllAnimations();
-                                //this.initGhost();
-                                if(!this.player){
-                                    if(this.config.firstPerson){
-                                        this.initPlayerFirstPerson();
-                                    } else {
-                                        this.initPlayerThirdPerson();
-                                    };
-                                };
-                              /*  console.log('start session walking');
-                                console.log('player rotation', this.player.rotation);
-                                console.log('camera.rotation', this.camera.rotation);
-                                console.log('character rotation',this.character.rotation);*/
-                                let vrType = 'walking';
-                                //console.log('180 degrees later: ',that.camera.rotation);
 
-                                that.buildDolly(vrType);                                
-                                console.log('init ghost vr');
+                                let vrType = 'walking';
+
+                                that.initVRSession(vrType);                                
                             } }
         let vrButtonEl = VRButton.createButton(this.renderer, vrBtnOptions);
     }
+
     stopAllAnimations = () =>{
         if(this.ghostTimer){
             clearTimeout(this.ghostTimer);
@@ -2076,51 +2068,56 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         this.vrType = vrType;
     }
 
-    buildDolly = (vrType) =>{
-        if(vrType){
-            this.setVrType(vrType);
-        };
-        console.log('buildDolly for ',this.vrType);        
-        this.vrControls = new VRControls({  scene:this.scene,
-                                            renderer: this.renderer,
-                                            camera: this.camera,
-                                            player: this.player,
-                                            playerStartPos: this.config.playerStartPos,
-                                            vrType: this.vrType,
-                                            moveUp: (data)=>{
-                                                return;
-                                            },
-                                            moveDown:(data)=>{
-                                                return;
-                                            },
-                                            moveLeft:(data)=>{
-                                                lftPressed = true;
-                                            },
-                                            moveRight:(data)=>{
-                                                rgtPressed = true;
-                                                return;
-                                            },
-                                            moveForward:(data)=>{
-                                                fwdPressed = true;
-                                                return;
-                                            },
-                                            moveBack:(data)=>{
-                                                bkdPressed = true;
-                                                return;
+    initVRSession = (vrType) =>{
+        let that = this;
 
+        this.controlProxy = {};
+        this.vrControls = new VRControls({  renderer: this.renderer,
+                                            scene:this.scene,
+                                            vrType: 'walking',
+                                            moveUp: (data, value)=>{
+                                                that.controlProxy.data = data;
+                                                that.controlProxy.value = value;
+                                                that.controlProxy.dir = 'u';                                                
+                                            },
+                                            moveDown:(data, value)=>{
+                                                that.controlProxy.data = data;
+                                                that.controlProxy.value = value;
+                                                that.controlProxy.dir = 'd';                                              },
+                                            moveLeft:(data, value)=>{
+                                                that.controlProxy.data = data;
+                                                that.controlProxy.value = value;
+                                                that.controlProxy.dir = 'l';  
+                                            },                                            
+                                            moveRight:(data, value)=>{
+                                                that.controlProxy.data = data;
+                                                that.controlProxy.value = value;
+                                                that.controlProxy.dir = 'r';                                                   return;
+                                            },
+                                            moveForward:(data, value)=>{
+                                                that.controlProxy.data = data;
+                                                that.controlProxy.value = value;
+                                                that.controlProxy.dir = 'f';                                                   return;
+                                            },
+                                            moveBack:(data, value)=>{
+                                                that.controlProxy.data = data;
+                                                that.controlProxy.value = value;
+                                                that.controlProxy.dir = 'b';                                                   return;
                                             },
                                             rotateLeft: (data, value)=>{
-                                                this.dolly.rotateY(THREE.MathUtils.degToRad(Math.abs(value)));
-                                                this.player.rotateY(THREE.MathUtils.degToRad(Math.abs(value)));
-                                                return;
+                                                that.controlProxy.data = data;
+                                                that.controlProxy.value = value;
+                                                that.controlProxy.dir = 'rl';                                                   
                                             },
                                             rotateRight: (data, value)=>{
-                                                this.dolly.rotateY(-THREE.MathUtils.degToRad(Math.abs(value)));
-                                                this.player.rotateY(-THREE.MathUtils.degToRad(Math.abs(value)));
-                                                return;
-                                            }
+                                                that.controlProxy.data = data;
+                                                that.controlProxy.value = value;
+                                                that.controlProxy.dir = 'rr';                                              }
                                         });
-            this.dolly = this.vrControls.buildControllers();
+        this.playerVR = new PlayerVR({  camera: this.camera,
+                                        controlProxy: this.controlProxy,
+                                        playerStartPos: this.player.position.clone()});
+
     }
 
     addScenery = () =>{
@@ -2561,8 +2558,15 @@ initPlayerThirdPerson = () => {
 
 }
 
+    updatePlayerVR = (delta) =>{
+        if(!this.playerVR){
+            return false;
+        };
 
- updatePlayerVR = (delta) =>{
+        this.playerVR.moveDolly(delta);
+    }
+
+ updatePlayerVROld = (delta) =>{
         this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
         let speedFactor = params.playerSpeed * delta *10;
 
