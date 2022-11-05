@@ -2118,6 +2118,14 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                         controlProxy: this.controlProxy,
                                         playerStartPos: this.player.position.clone()});
 
+        this.collisionChecker = new CollisionChecker({  sceneCollider: this.collider,
+                                                        dollyProxy: this.playerVR.dolly,
+                                                        updatePos = (pos) =>{
+                                                            this.playerVR.setPos(pos)
+                                                        }
+                                                    });
+
+
     }
 
     addScenery = () =>{

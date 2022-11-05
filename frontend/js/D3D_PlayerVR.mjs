@@ -24,6 +24,8 @@ export default class PlayerVR {
         this.q = new THREE.Quaternion();        // rotation
         this.speed = 2;
         this.proxy = this.config.controlProxy;
+        this.playerCollider = null;
+        this.collisionChecker = this.config.collisionChecker;
        // this.loadModels();
 
 
@@ -58,35 +60,6 @@ export default class PlayerVR {
         return false;
     }
 
-    init = () => {
-
-        this.dolly = this.buildDolly();
-        // character
-
-        let mat = new THREE.MeshStandardMaterial();
-            mat.opacity = 0;
-            mat.transparent = true;
-
-        this.player = new THREE.Mesh(
-            new THREE.BoxGeometry( 1, 1, 1),
-            mat
-        );
-
-        this.player.capsuleInfo = {
-            radius: 0.75,
-            segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
-        };
-     /*   this.player.castShadow = true;
-        this.player.receiveShadow = true;
-        this.player.material.shadowSide = 2;*/
-        this.player.rotateY(0);
-    
-        this.player.position.set(0, 2, 0);
-        this.scene.add( this.player );        
-      /*  this.reset();*/
-    }
-
-
     buildDolly = () =>{
 
         this.dolly = new THREE.Object3D();
@@ -96,8 +69,24 @@ export default class PlayerVR {
         this.dolly.position.copy(this.config.playerStartPos);
         this.dolly.add( this.camera );
         this.dummyCam = new THREE.Object3D();
-        this.camera.add( this.dummyCam );        
+        this.camera.add( this.dummyCam );       
+        this.playerCollider = this.buildPlayerCollider();
+        this.dolly.add(this.playerCollider);
 
+    }
+
+    buildPlayerCollider = () =>{
+        let pColl = new THREE.Mesh(
+            new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
+            new THREE.MeshStandardMaterial({ transparent: false, opacity: 0})
+        );
+
+        pColl.translate( 0, -1, 0 );
+        pColl.capsuleInfo = {
+            radius: 0.5,
+            segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
+        };
+        return pColl;
     }
 
     moveDolly = (delta) =>{
@@ -109,13 +98,24 @@ export default class PlayerVR {
             const quaternion = this.dolly.quaternion.clone();   
             //Get rotation for movement from the headset pose
             this.dolly.quaternion.copy( this.dummyCam.getWorldQuaternion(this.q) );
-            this.dolly.translateZ(-delta*this.speed);
+            let blocked = this.checkCollider();
+            if(!blocked){
+                this.dolly.translateZ(-delta*this.speed);
+            };
             this.dolly.quaternion.copy( quaternion );
 
         }
     }
 
+    setPos = (pos)=>{
+        //update position
+        this.dolly.position.copy(pos)
+    }
 
+    checkCollider = () =>{
+        this.config.checkCollider()
+    }
+    
     loadModels = ()=> {
         const loader = new GLTFLoader();
     loader.setPath('./characters/');
