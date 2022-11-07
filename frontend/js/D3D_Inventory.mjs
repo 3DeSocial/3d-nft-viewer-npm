@@ -198,6 +198,11 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
 
                 console.log(itemData);
 
+                if(!itemData.path3D){
+                    console.log('no path3D on itemData');
+                    console.log(itemData);
+                    console.log(itemConfig);
+                };
                 /*let path3D = versions[0];
                 let params;
                 if(path3D.indexOf('.')>-1){ // there is a file extension

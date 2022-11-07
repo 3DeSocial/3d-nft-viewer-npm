@@ -1890,12 +1890,11 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                  sceneryLoader: this.sceneryLoader});  
             
             let maxItems =this.layoutPlotter.getMaxItemCount();
-            let items2d = options.sceneAssets.filter(nft => !nft.is3D);     
-                items2d = items2d.slice(0,maxItems);    
+            let items2d = options.sceneAssets.filter(nft => ((!nft.is3D)&&(nft.imageURLs[0])));     
 
             let maxItems3D =this.layoutPlotter.getMaxItemCount3D();
 
-            let items3d = options.sceneAssets;
+            let items3d = options.sceneAssets.filter(nft => nft.is3D);
             let spookyNFTs = options.sceneAssets.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'||nft.postHashHex=='8e0bbd53cd4932294649c109957167e385367836f0ec39cc4cc3d04691fffca7'));
             this.ghosts = spookyNFTs.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'));
 
