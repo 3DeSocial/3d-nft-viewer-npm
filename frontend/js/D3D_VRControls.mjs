@@ -110,17 +110,19 @@ class VRControls {
                                     if (value === 1) {
                                         //console.log("Button" + i + "Down");
                                         if (data.handedness == 'left') {
-                                            //console.log("Left Paddle Down");
                                             if (i == 1) {
+                                                console.log("Left Paddle Down",value);
+
+                                                this.handleLeftControllerButtons(value, i);
                                              //   self.player.rotateY(-THREE.MathUtils.degToRad(1));
                                             }
                                             if (i == 3) {
-                                                self.dolly.position.copy(this.config.playerStartPos);
+                                               // self.dolly.position.copy(this.config.playerStartPos);
                                             }
                                         } else {
                                             //console.log("Right Paddle Down");
                                             if (i == 1) {
-                                               // self.player.rotateY(THREE.MathUtils.degToRad(1));
+                                                this.handleRightControllerButtons(value, i);
                                             }
                                         }
                                     } else {
@@ -129,12 +131,18 @@ class VRControls {
                                         if (i == 1) {
                                             //use the paddle buttons to rotate
                                             if (data.handedness == 'left') {
-                                                //console.log("Left Paddle Down");
+                                                console.log("Left Paddle Down");
+                                                this.handleLeftControllerButtons(value, i);
+
                                              //   self.player.rotateY(
                                               //      -THREE.MathUtils.degToRad(Math.abs(value))
                                                // );
                                             } else {
-                                                //console.log("Right Paddle Down");
+                                                console.log("Right Paddle Down");
+
+                                                this.handleRightControllerButtons(value, i);
+
+
                                            //     self.player.rotateY(
                                              //      THREE.MathUtils.degToRad(Math.abs(value))
                                                // );
@@ -187,9 +195,17 @@ class VRControls {
 
     }
 
+    handleLeftControllerButtons = (data, value) =>{
+        this.moveForward(data, value);
+    }
+
     handleRightController = (data, value) =>{
         this.handleRightThumbstick('right',data, value);
 
+    }
+
+    handleRightControllerButtons = (data, value) =>{
+        this.moveForward(data, value);
     }
 
     handleLeftThumbstick = (hand, data, value) =>{
@@ -292,7 +308,7 @@ class VRControls {
         nextPos.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
         nextPos.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
         this.dolly.lookAt(nextPos);      */
-        this.config.moveForward(data);        
+        this.config.moveForward(data, value);        
 
     }
 
@@ -301,7 +317,7 @@ class VRControls {
         this.dolly.position.z -= this.cameraVector.z * this.flyingSpeedFactor[3] * data.axes[3];
     }
     moveBackward = (data) => {
-        this.config.moveBack(data);
+        this.config.moveBack(data, value);   
     }
 
     flyLeft = (data, value) => {
@@ -319,7 +335,7 @@ class VRControls {
     }
 
     moveRight = (data) => {
-        this.config.moveRight(data);
+        this.config.moveRight(data, value);   
     }
 
     flyUp = (data) => {
@@ -327,7 +343,7 @@ class VRControls {
     }
 
     moveUp = (data) => {
-        this.config.moveUp(data);
+        this.config.moveUp(data, value);   
     }
 
     flyDown = (data) =>{
@@ -335,7 +351,7 @@ class VRControls {
     }
 
     moveDown = (data) => {
-        this.config.moveDown(data);
+        this.config.moveDown(data, value);   
         
     }
 

@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { CollisionChecker } from '3d-nft-viewer';
 
 
 export default class PlayerVR {
@@ -19,13 +21,20 @@ export default class PlayerVR {
         
         this.avatar = null;
         this.camera =this.config.camera;
+        this.playerCollider = null;        
         this.buildDolly();
         this.dir = new THREE.Vector3();
         this.q = new THREE.Quaternion();        // rotation
         this.speed = 2;
         this.proxy = this.config.controlProxy;
-        this.playerCollider = null;
-        this.collisionChecker = this.config.collisionChecker;
+        this.oldPos = new THREE.Vector3();
+        this.collisionChecker = new CollisionChecker({  sceneCollider: this.config.sceneCollider,
+                                                        playerCollider: this.playerCollider,
+                                                        dollyProxy: this.dolly,
+                                                        updatePos: (pos) =>{
+                                                            this.setPos(pos)
+                                                        }
+                                                    });
        // this.loadModels();
 
 
@@ -81,7 +90,7 @@ export default class PlayerVR {
             new THREE.MeshStandardMaterial({ transparent: false, opacity: 0})
         );
 
-        pColl.translate( 0, -1, 0 );
+        pColl.geometry.translate( 0, -1, 0 );
         pColl.capsuleInfo = {
             radius: 0.5,
             segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
@@ -94,16 +103,19 @@ export default class PlayerVR {
             console.log('no dolly');
             return false;
         };
+        this.oldPos.copy(this.dolly.position);
         if(this.proxy.dir === 'f'){
             const quaternion = this.dolly.quaternion.clone();   
             //Get rotation for movement from the headset pose
             this.dolly.quaternion.copy( this.dummyCam.getWorldQuaternion(this.q) );
-            let blocked = this.checkCollider();
-            if(!blocked){
-                this.dolly.translateZ(-delta*this.speed);
-            };
+            this.dolly.translateZ(-delta*this.speed);
+
             this.dolly.quaternion.copy( quaternion );
 
+            let blocked = this.collisionChecker.checkCollisions(this.oldPos, delta);
+            if(blocked){
+                this.dolly.position.copy(this.oldPos);
+            }
         }
     }
 
@@ -113,7 +125,7 @@ export default class PlayerVR {
     }
 
     checkCollider = () =>{
-        this.config.checkCollider()
+        this.collisionChecker.checkScene(this.oldPos);
     }
     
     loadModels = ()=> {

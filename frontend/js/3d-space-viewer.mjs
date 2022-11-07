@@ -2083,7 +2083,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                             moveDown:(data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
-                                                that.controlProxy.dir = 'd';                                              },
+                                                that.controlProxy.dir = 'd';
+                                            },
                                             moveLeft:(data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
@@ -2092,38 +2093,36 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                             moveRight:(data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
-                                                that.controlProxy.dir = 'r';                                                   return;
+                                                that.controlProxy.dir = 'r';
                                             },
                                             moveForward:(data, value)=>{
+                                                console.log('moveForward ',value);
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
-                                                that.controlProxy.dir = 'f';                                                   return;
+                                                that.controlProxy.dir = 'f';                                                   
                                             },
                                             moveBack:(data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
-                                                that.controlProxy.dir = 'b';                                                   return;
+                                                that.controlProxy.dir = 'b';
                                             },
                                             rotateLeft: (data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
-                                                that.controlProxy.dir = 'rl';                                                   
+                                                that.controlProxy.dir = 'rl';
                                             },
                                             rotateRight: (data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
-                                                that.controlProxy.dir = 'rr';                                              }
+                                                that.controlProxy.dir = 'rr';
+                                            }
                                         });
         this.playerVR = new PlayerVR({  camera: this.camera,
                                         controlProxy: this.controlProxy,
-                                        playerStartPos: this.player.position.clone()});
+                                        playerStartPos: this.player.position.clone(),
+                                        sceneCollider: this.sceneryLoader.collider});
 
-        this.collisionChecker = new CollisionChecker({  sceneCollider: this.collider,
-                                                        dollyProxy: this.playerVR.dolly,
-                                                        updatePos = (pos) =>{
-                                                            this.playerVR.setPos(pos)
-                                                        }
-                                                    });
+
 
 
     }

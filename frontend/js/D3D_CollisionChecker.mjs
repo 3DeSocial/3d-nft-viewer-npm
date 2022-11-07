@@ -4,8 +4,7 @@ export default class CollisionChecker  {
 
     constructor(config) {
         
-        this.sceneCollider = this.config.sceneCollider;
-        this.dollyProxy = this.config.dollyProxy;
+
         let defaults = {
             sceneCollider: null,
             dollyProxy: null,
@@ -18,6 +17,11 @@ export default class CollisionChecker  {
             ...defaults,
             ...config
         };
+
+        this.sceneCollider = this.config.sceneCollider;
+        this.playerCollider = this.config.playerCollider;
+
+        this.dollyProxy = this.config.dollyProxy;
         this.playerVelocity = new THREE.Vector3();
         this.tempVector = new THREE.Vector3();
         this.tempVector2 = new THREE.Vector3();
@@ -28,11 +32,10 @@ export default class CollisionChecker  {
     }
 
 
-    checkCollisions = () =>{
-        this.origDollyPos.copy(this.dollyProxy);
+    checkCollisions = (oldPos, delta) =>{
 
         // adjust player position based on collisions
-        const capsuleInfo = this.playersceneCollider.capsuleInfo;
+        const capsuleInfo = this.playerCollider.capsuleInfo;
         this.tempBox.makeEmpty();
         this.tempMat.copy( this.sceneCollider.matrixWorld ).invert();
         this.tempSegment.copy( capsuleInfo.segment );
@@ -93,6 +96,11 @@ export default class CollisionChecker  {
         // adjust the player model
         this.dollyProxy.position.add( deltaVector );
 
+        if(!oldPos.equals(this.dollyProxy.position)){
+            //send updated pos back if different
+            this.updatePos(this.dollyProxy.position)
+        };
+        
         if ( ! this.playerIsOnGround ) {
 
             deltaVector.normalize();
@@ -105,13 +113,12 @@ export default class CollisionChecker  {
 
         }
 
-        if(!this.origDollyPos.equals(this.dollyProxy.position)){
-            //send updated pos back if different
-            this.updatePos(this.dollyProxy.position)
-        };
+
     }
 
     updatePos = (dollyPos) =>{
         this.config.updatePos(dollyPos);
     }
+}
+
 export {CollisionChecker}
