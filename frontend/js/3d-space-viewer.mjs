@@ -2124,10 +2124,14 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                 that.controlProxy.dir = null;
                                             }
                                         });
-        this.playerVR = new PlayerVR({  camera: this.camera,
+        this.playerVR = new PlayerVR({  controllers: this.vrControls.controllers,
+                                        grips: this.vrControls.grips,
+                                        camera: this.camera,
                                         controlProxy: this.controlProxy,
                                         playerStartPos: this.player.position.clone(),
                                         sceneCollider: this.sceneryLoader.collider});
+
+        this.scene.add(this.playerVR.dolly);
 
 
 

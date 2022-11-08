@@ -25,9 +25,14 @@ export default class PlayerVR {
         this.buildDolly();
         this.dir = new THREE.Vector3();
         this.q = new THREE.Quaternion();        // rotation
-        this.speed = 0.02;
+        this.speed = 0.25;
         this.proxy = this.config.controlProxy;
         this.oldPos = new THREE.Vector3();
+        this.newPos = new THREE.Vector3();        
+        this.playerVelocity = new THREE.Vector3();
+        this.gravity = -15;
+        this.playerIsOnGround = true;
+
         this.collisionChecker = new CollisionChecker({  sceneCollider: this.config.sceneCollider,
                                                         playerCollider: this.playerCollider,
                                                         dollyProxy: this.dolly,
@@ -72,22 +77,35 @@ export default class PlayerVR {
     buildDolly = () =>{
 
         this.dolly = new THREE.Object3D();
-        this.camera.position.set( 0, 1.6, 0 );
+        let startY = this.config.playerStartPos.y + 1.5;
+        this.camera.position.set( 0, startY, 0 );
         this.camera.rotation.set(0,0,0);
-        this.dolly = new THREE.Object3D(  );
+        this.dolly = new THREE.Object3D();
+
+console.log('buildDolly this.config.playerStartPos');
+console.log(this.config.playerStartPos);
         this.dolly.position.copy(this.config.playerStartPos);
         this.dolly.add( this.camera );
+
+        this.dolly.add(this.config.controllers[0]);
+        this.dolly.add(this.config.grips[0]);
+        this.dolly.add(this.config.controllers[1]);
+        this.dolly.add(this.config.grips[1]);
+
+        console.log('addded controllers and grips to group');
         this.dummyCam = new THREE.Object3D();
-        this.camera.add( this.dummyCam );       
+        this.camera.add( this.dummyCam );
         this.playerCollider = this.buildPlayerCollider();
         this.dolly.add(this.playerCollider);
+        this.playerCollider.position.copy(this.config.playerStartPos);
+        this.playerCollider.updateMatrixWorld();
 
     }
 
     buildPlayerCollider = () =>{
         let pColl = new THREE.Mesh(
             new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
-            new THREE.MeshStandardMaterial({ transparent: false, opacity: 0})
+            new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.5})
         );
 
         pColl.geometry.translate( 0, -1, 0 );
@@ -103,29 +121,46 @@ export default class PlayerVR {
             console.log('no dolly');
             return false;
         };
-        this.oldPos.copy(this.dolly.position);
-        if(this.proxy.dir === 'f'){
-            const quaternion = this.dolly.quaternion.clone();   
-            //Get rotation for movement from the headset pose
-            this.dolly.quaternion.copy( this.dummyCam.getWorldQuaternion(this.q) );
-            this.dolly.translateZ(-delta*this.speed);
+        this.newPos.copy(this.dolly.position); // coppy current for ajusting
+        
+        //this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * this.gravity;
+        //this.dolly.position.addScaledVector( this.playerVelocity, delta );
 
-            this.dolly.quaternion.copy( quaternion );
+        const quaternion = this.dolly.quaternion.clone();   
+        this.dolly.quaternion.copy( this.dummyCam.getWorldQuaternion(this.q) );        
+        
+        let speedFactor = delta*this.speed;
 
-            let blocked = this.collisionChecker.checkCollisions(this.oldPos, delta);
-            if(blocked){
-                this.dolly.position.copy(this.oldPos);
-            }
-        }
+        switch(this.proxy.dir){
+            case 'f':
+                this.dolly.translateZ(-speedFactor);
+            break;
+            case 'b':
+                this.dolly.translateZ(speedFactor);            
+            break;
+            case 'l':
+                this.dolly.translateX(-speedFactor);
+            break;
+            case 'r':
+                this.dolly.translateX(speedFactor);
+            break;
+
+            case 'rr':
+            break;
+
+            case 'rl':
+            break;  
+        };
+
+        this.dolly.quaternion.copy( quaternion );
+        this.collisionChecker.checkCollisions(this.newPos, delta);
+        console.log('dolly has moved');
+        this.setPos(this.newPos);
     }
 
     setPos = (pos)=>{
         //update position
         this.dolly.position.copy(pos)
-    }
-
-    checkCollider = () =>{
-        this.collisionChecker.checkScene(this.oldPos);
     }
     
     loadModels = ()=> {

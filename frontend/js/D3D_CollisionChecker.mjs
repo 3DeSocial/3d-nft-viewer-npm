@@ -94,14 +94,8 @@ export default class CollisionChecker  {
         deltaVector.normalize().multiplyScalar( offset );
 
         // adjust the player model
-        this.dollyProxy.position.add( deltaVector );
-
-        if(!oldPos.equals(this.dollyProxy.position)){
-            //send updated pos back if different
-            this.updatePos(this.dollyProxy.position)
-        };
-        
-        if ( ! this.playerIsOnGround ) {
+        oldPos.add( deltaVector );
+      /*  if ( ! this.playerIsOnGround ) {
 
             deltaVector.normalize();
             this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
@@ -111,7 +105,7 @@ export default class CollisionChecker  {
             this.playerVelocity.set( 0, 0, 0 );
 
 
-        }
+        }*/
 
 
     }
