@@ -28,7 +28,10 @@ class VRControls {
             },
             flyBack:(data, value)=>{
                
-            },            
+            },
+            stopMoving:()=>{
+
+            },
             onSelectStart: () =>{
 
             },
@@ -310,7 +313,7 @@ class VRControls {
                     break;
                 }
             } else if (data.axes[3] < 0){
-                console.log(hand + ' stick: forward',data.axes[3],this.config.vrType);
+                //console.log(hand + ' stick: forward',data.axes[3],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
                         this.flyForward(data, value);

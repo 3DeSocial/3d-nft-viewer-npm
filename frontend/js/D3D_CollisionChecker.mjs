@@ -95,7 +95,7 @@ export default class CollisionChecker  {
 
         // adjust the player model
         oldPos.add( deltaVector );
-      /*  if ( ! this.playerIsOnGround ) {
+       if ( ! this.playerIsOnGround ) {
 
             deltaVector.normalize();
             this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
@@ -105,7 +105,7 @@ export default class CollisionChecker  {
             this.playerVelocity.set( 0, 0, 0 );
 
 
-        }*/
+        }
 
 
     }

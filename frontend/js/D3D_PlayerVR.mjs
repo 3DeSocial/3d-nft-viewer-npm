@@ -30,8 +30,7 @@ export default class PlayerVR {
         this.oldPos = new THREE.Vector3();
         this.newPos = new THREE.Vector3();        
         this.playerVelocity = new THREE.Vector3();
-        this.gravity = -15;
-        this.playerIsOnGround = true;
+        this.gravity = 0.5;
 
         this.collisionChecker = new CollisionChecker({  sceneCollider: this.config.sceneCollider,
                                                         playerCollider: this.playerCollider,
@@ -104,11 +103,11 @@ console.log(this.config.playerStartPos);
 
     buildPlayerCollider = () =>{
         let pColl = new THREE.Mesh(
-            new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
+            new RoundedBoxGeometry( 1.0, 2.0, 1.0, 10, 0.5 ),
             new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.5})
         );
 
-        pColl.geometry.translate( 0, -1, 0 );
+        pColl.geometry.translate( 0, - 0.5, 0 );
         pColl.capsuleInfo = {
             radius: 0.5,
             segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
@@ -121,28 +120,32 @@ console.log(this.config.playerStartPos);
             console.log('no dolly');
             return false;
         };
+
+        let gravityFactor = delta * this.gravity;
+
+        this.dolly.translateY(-gravityFactor);     
+
+
         this.newPos.copy(this.dolly.position); // coppy current for ajusting
-        
-        //this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * this.gravity;
-        //this.dolly.position.addScaledVector( this.playerVelocity, delta );
 
         const quaternion = this.dolly.quaternion.clone();   
         this.dolly.quaternion.copy( this.dummyCam.getWorldQuaternion(this.q) );        
         
         let speedFactor = delta*this.speed;
 
+
         switch(this.proxy.dir){
             case 'f':
-                this.dolly.translateZ(-speedFactor);
+                this.dolly.translateZ(speedFactor);
             break;
             case 'b':
-                this.dolly.translateZ(speedFactor);            
+                this.dolly.translateZ(-speedFactor);            
             break;
             case 'l':
-                this.dolly.translateX(-speedFactor);
+                this.dolly.translateX(speedFactor);
             break;
             case 'r':
-                this.dolly.translateX(speedFactor);
+                this.dolly.translateX(-speedFactor);
             break;
 
             case 'rr':
@@ -154,7 +157,6 @@ console.log(this.config.playerStartPos);
 
         this.dolly.quaternion.copy( quaternion );
         this.collisionChecker.checkCollisions(this.newPos, delta);
-        console.log('dolly has moved');
         this.setPos(this.newPos);
     }
 

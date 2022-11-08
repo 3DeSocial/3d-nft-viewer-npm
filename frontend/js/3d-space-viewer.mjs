@@ -2095,7 +2095,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                 that.controlProxy.dir = 'r';
                                             },
                                             moveForward:(data, value)=>{
-                                                console.log('moveForward ',value);
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'f';                                                   
