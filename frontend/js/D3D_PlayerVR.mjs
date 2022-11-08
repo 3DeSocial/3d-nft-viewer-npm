@@ -25,7 +25,7 @@ export default class PlayerVR {
         this.buildDolly();
         this.dir = new THREE.Vector3();
         this.q = new THREE.Quaternion();        // rotation
-        this.speed = 2;
+        this.speed = 0.02;
         this.proxy = this.config.controlProxy;
         this.oldPos = new THREE.Vector3();
         this.collisionChecker = new CollisionChecker({  sceneCollider: this.config.sceneCollider,

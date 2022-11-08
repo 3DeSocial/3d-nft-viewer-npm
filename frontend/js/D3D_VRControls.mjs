@@ -10,7 +10,14 @@ class VRControls {
 
 		let defaults = {
 			renderer: null,
-			scene: null
+			scene: null,
+            onSelectStart: () =>{
+
+            },
+            onSelectEnd: () => {
+
+            }
+
 		};
 
 		this.config = {
@@ -31,22 +38,28 @@ class VRControls {
     	this.renderer = this.config.renderer;
     	this.scene = this.config.scene;
     	this.camera = this.config.camera;
+        this.buildControllers();
+        this.setUpSelectEvents();
 
     }
 
-    buildControllers() {
+    buildControllers = () =>{
+
+        this.controllers = [];
         // controllers
         let controller1 = this.renderer.xr.getController(0);
         controller1.name = 'left';
         //controller1.addEventListener("selectstart", onSelectStart);
         //controller1.addEventListener("selectend", onSelectEnd);
         this.scene.add(controller1);
+        this.controllers.push(controller1);
 
         let controller2 = this.renderer.xr.getController(1);
         controller2.name = 'right';
         //controller2.addEventListener("selectstart", onSelectStart);
         //controller2.addEventListener("selectend", onSelectEnd);
         this.scene.add(controller2);
+        this.controllers.push(controller2);
 
         var controllerModelFactory = new XRControllerModelFactory(new GLTFLoader());
 
@@ -70,8 +83,15 @@ class VRControls {
 
         controller1.add(line.clone());
         controller2.add(line.clone());
+    }
 
 
+    setUpSelectEvents = ()=>{
+    
+        this.controllers.forEach( (controller) => {
+            controller.addEventListener( 'selectstart', onSelectStart );
+            controller.addEventListener( 'selectend', onSelectEnd );
+        });        
     }
 
     checkControllers = () =>{
