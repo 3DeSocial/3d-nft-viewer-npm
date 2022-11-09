@@ -345,13 +345,17 @@ const params = {
         // camera setup
         this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
       //w  this.camera.position.set( 10, 10, - 10 );
-        this.camera.updateProjectionMatrix();        
+        this.camera.updateProjectionMatrix(); 
+        this.camera.add( this.audioListener );
+       
        // this.camera.lookAt(this.config.lookAtStartPos);
     }
 
     initCamera = () =>{
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/600, 0.01, 100 );
+        this.camera.add( this.audioListener );
+        
         //Only gotcha. Set a non zero vector3 as the camera position.
 //        this.camera.rotation.setX(0);
 
@@ -1676,43 +1680,37 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             that.ghostSounds.creak = new AudioClip({
                                     path: '/audio/dark-choir-singing-16805.mp3',
                                     mesh: mesh,
-                                    camera: this.camera,
-                                    listener: this.audioListener
+                                    listener: that.audioListener
                                 });
 
             that.ghostSounds.atmo = new AudioClip({
                                         path: '/audio/old-ghost-abandoned-house-atmo-7020.mp3',
                                         mesh: mesh,
-                                        camera: this.camera,
-                                        listener: this.audioListener
+                                        listener: that.audioListener
                                     });
 
             that.ghostSounds.woo = new AudioClip({
                                         path: '/audio/classic-ghost-sound-95773.mp3',
                                         mesh: mesh,
-                                        camera: this.camera,
-                                        listener: this.audioListener
+                                        listener: that.audioListener
                                     });        
 
             that.ghostSounds.impact = new AudioClip({
                                 path: '/audio/halloween-impact-05-93808.mp3',
                                 mesh: mesh,
-                                camera: this.camera,
-                                listener: this.audioListener
+                                listener: that.audioListener
                             });       
 
             that.ghostSounds.hit = new AudioClip({
                                 path: '/audio/ahhhh-37191.mp3',
                                 mesh: mesh,
-                                camera: this.camera,
-                                listener: this.audioListener
+                                listener: that.audioListener
                             });       
 
             that.ghostSounds.caught = new AudioClip({
                                 path: '/audio/angelic-voice-81921.mp3',
                                 mesh: mesh,
-                                camera: this.camera,
-                                listener: this.audioListener
+                                listener: that.audioListener
                             });      
             that.lights.aLight.intensity = 0.5;     
             that.animateGhost();

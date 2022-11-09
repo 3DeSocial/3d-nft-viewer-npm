@@ -26,7 +26,7 @@ export default class Item {
         };
 
         this.loader = this.config.loader;
-        if(!this.loader){
+        if(!this.loader && this.config.is3D){
             console.log('cannot init item without loader is 3d? ',this.config.is3D,' hex: ',this.config.postHashHex);
         };
         this.scene = this.config.scene;

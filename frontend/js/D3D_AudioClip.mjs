@@ -14,9 +14,7 @@ export default class AudioClip {
         };
 
         this.path = this.config.path;
-        this.listener = new THREE.AudioListener();
-        this.camera = this.config.camera;
-        this.camera.add( this.listener );
+        this.listener = this.config.listener;
         this.sound = new THREE.PositionalAudio( this.listener );
         this.mesh = this.config.mesh;
         this.loadSound()
