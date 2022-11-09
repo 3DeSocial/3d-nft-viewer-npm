@@ -80,9 +80,7 @@ const params = {
         this.actionTargetItem = null;
         this.actionTargetMesh = null;
         this.animations = [];
-
-        console.log('anime js version');
-
+        this.audioListener = new THREE.AudioListener();
 
     }
 
@@ -113,7 +111,8 @@ const params = {
             that.uiAssets['diamond'].audioGive = new AudioClip({
                 path: '/audio/diamond.mp3',
                 mesh: mesh,
-                camera: this.camera
+                camera: this.camera,
+                listener: this.audioListener
             });           
         })
     }
@@ -142,13 +141,15 @@ const params = {
             that.uiAssets['heart'].audioGive = new AudioClip({
                 path: '/audio/yeah-7106.mp3',
                 mesh: mesh,
-                camera: this.camera
+                camera: this.camera,
+                listener: this.audioListener
             });
      
             that.uiAssets['heart'].audioTake = new AudioClip({
                 path: '/audio/aww-8277.mp3',
                 mesh: mesh,
-                camera: this.camera
+                camera: this.camera,
+                listener: this.audioListener
             });
         })
     }
@@ -1675,37 +1676,43 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             that.ghostSounds.creak = new AudioClip({
                                     path: '/audio/dark-choir-singing-16805.mp3',
                                     mesh: mesh,
-                                    camera: this.camera
+                                    camera: this.camera,
+                                    listener: this.audioListener
                                 });
 
             that.ghostSounds.atmo = new AudioClip({
                                         path: '/audio/old-ghost-abandoned-house-atmo-7020.mp3',
                                         mesh: mesh,
-                                        camera: this.camera
+                                        camera: this.camera,
+                                        listener: this.audioListener
                                     });
 
             that.ghostSounds.woo = new AudioClip({
                                         path: '/audio/classic-ghost-sound-95773.mp3',
                                         mesh: mesh,
-                                        camera: this.camera
+                                        camera: this.camera,
+                                        listener: this.audioListener
                                     });        
 
             that.ghostSounds.impact = new AudioClip({
                                 path: '/audio/halloween-impact-05-93808.mp3',
                                 mesh: mesh,
-                                camera: this.camera
+                                camera: this.camera,
+                                listener: this.audioListener
                             });       
 
             that.ghostSounds.hit = new AudioClip({
                                 path: '/audio/ahhhh-37191.mp3',
                                 mesh: mesh,
-                                camera: this.camera
+                                camera: this.camera,
+                                listener: this.audioListener
                             });       
 
             that.ghostSounds.caught = new AudioClip({
                                 path: '/audio/angelic-voice-81921.mp3',
                                 mesh: mesh,
-                                camera: this.camera
+                                camera: this.camera,
+                                listener: this.audioListener
                             });      
             that.lights.aLight.intensity = 0.5;     
             that.animateGhost();
