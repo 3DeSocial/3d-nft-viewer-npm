@@ -224,7 +224,7 @@ class VRControls {
                                         }
                                     }
                                 } else {
-     
+                                    this.config.stopMoving();
                                 }
                             });
                         }

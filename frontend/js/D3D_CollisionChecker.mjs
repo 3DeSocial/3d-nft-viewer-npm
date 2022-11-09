@@ -7,7 +7,6 @@ export default class CollisionChecker  {
 
         let defaults = {
             sceneCollider: null,
-            dollyProxy: null,
             updatePos: () =>{
 
             }
@@ -21,7 +20,6 @@ export default class CollisionChecker  {
         this.sceneCollider = this.config.sceneCollider;
         this.playerCollider = this.config.playerCollider;
 
-        this.dollyProxy = this.config.dollyProxy;
         this.playerVelocity = new THREE.Vector3();
         this.tempVector = new THREE.Vector3();
         this.tempVector2 = new THREE.Vector3();
@@ -41,8 +39,8 @@ export default class CollisionChecker  {
         this.tempSegment.copy( capsuleInfo.segment );
 
         // get the position of the capsule in the local space of the this.collider
-        this.tempSegment.start.applyMatrix4( this.dollyProxy.matrixWorld ).applyMatrix4( this.tempMat );
-        this.tempSegment.end.applyMatrix4( this.dollyProxy.matrixWorld ).applyMatrix4( this.tempMat );
+        this.tempSegment.start.applyMatrix4( this.playerCollider.matrixWorld ).applyMatrix4( this.tempMat );
+        this.tempSegment.end.applyMatrix4( this.playerCollider.matrixWorld ).applyMatrix4( this.tempMat );
 
         // get the axis aligned bounding box of the capsule
         this.tempBox.expandByPoint( this.tempSegment.start );
@@ -85,7 +83,7 @@ export default class CollisionChecker  {
 
         // check how much the this.collider was moved
         const deltaVector = this.tempVector2;
-        deltaVector.subVectors( newPosition, this.dollyProxy.position );
+        deltaVector.subVectors( newPosition, this.playerCollider.position );
 
         // if the player was primarily adjusted vertically we assume it's on something we should consider ground
         this.playerIsOnGround = deltaVector.y > Math.abs( delta * this.playerVelocity.y * 0.25 );

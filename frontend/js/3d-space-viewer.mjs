@@ -2121,6 +2121,11 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                             onSelectEnd: ()=>{
                                                 console.log('button up');
                                                 that.controlProxy.dir = null;
+                                            },
+                                            stopMoving: ()=>{
+                                                that.controlProxy.data = null;
+                                                that.controlProxy.value = null;
+                                                that.controlProxy.dir = null;
                                             }
                                         });
         this.playerVR = new PlayerVR({  controllers: this.vrControls.controllers,
