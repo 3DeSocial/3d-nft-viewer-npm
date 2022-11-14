@@ -526,13 +526,11 @@ const params = {
 
                         that.controlProxy.dir = 'rl';
                         that.controlProxy.rot = 'rl';
-                        console.log('rotate left spaceViewer');
                         break;
                     case 'KeyP': 
 
                         that.controlProxy.dir = 'rr';
                         that.controlProxy.rot = 'rr';
-                        console.log('rotate right spaceViewer');
                         break;
                     case 'KeyM': that.throwActiveItem(); break;
 
@@ -2158,7 +2156,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                 that.controlProxy.dir =null;  
                                             },
                                             cancelRotate: ()=>{
-                                                console.log('cancelRotate');
                                                 that.controlProxy.isRotating = false;
                                                 that.controlProxy.rot = null;
                                             }

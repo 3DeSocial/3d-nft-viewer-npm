@@ -31,6 +31,7 @@ export default class PlayerVR {
         this.newPos = new THREE.Vector3();        
         this.playerVelocity = new THREE.Vector3();
         this.gravity = 0.5;
+        this.gravityVector = new THREE.Vector3(0,-1,0);
         this.worldDir = new THREE.Vector3();
 
         this.collisionChecker = new CollisionChecker({  sceneCollider: this.config.sceneCollider,
@@ -76,7 +77,7 @@ export default class PlayerVR {
 
     buildDolly = () =>{
 
-        let startY = this.config.playerStartPos.y + 1.5;
+        let startY = this.config.playerStartPos.y + 1.25;
         this.camera.position.set( 0, startY, 0 );
         this.camera.rotation.set(0,0,0);
         this.dolly = new THREE.Group();
@@ -125,24 +126,22 @@ console.log(this.config.playerStartPos);
 
         let gravityFactor = delta * this.gravity;
 
-        this.dolly.translateY(-gravityFactor);     
-
         this.newPos.copy(this.dolly.position); // coppy current for ajusting
 
-        const quaternion = this.dolly.quaternion.clone();  
+    //    const quaternion = this.dolly.quaternion.clone();  
 
 
-        this.dolly.quaternion.copy( this.dummyCam.getWorldQuaternion(this.q) );        
+       // this.dolly.quaternion.copy( this.dummyCam.getWorldQuaternion(this.q) );        
         
         let speedFactor = delta*this.speed;
 
 
         switch(this.proxy.dir){
             case 'f':
-                this.dolly.translateZ(speedFactor);
+                this.dolly.position.addScaledVector( this.worldDir, speedFactor );
             break;
             case 'b':
-                this.dolly.translateZ(-speedFactor);            
+                this.dolly.position.addScaledVector( this.worldDir, -speedFactor );
             break;
             case 'l':
                 this.dolly.translateX(speedFactor);
@@ -152,7 +151,7 @@ console.log(this.config.playerStartPos);
             break;
         }           
 
-        this.dolly.quaternion.copy( quaternion );
+   //     this.dolly.quaternion.copy( quaternion );
 
         if(this.proxy.rot){
            if(!this.proxy.isRotating){
@@ -160,26 +159,18 @@ console.log(this.config.playerStartPos);
                 switch(this.proxy.rot){
                     case 'rr':
                         this.proxy.isRotating = true;
-                        console.log('rotateY rot rr, current:');
-                        console.log(this.worldDir);
-                        this.dolly.rotateY(-Math.PI/2)
+
+                        this.dolly.rotateY(-Math.PI/4)
                         this.proxy.rot = null;
-                        console.log('AFter');
                         this.dolly.getWorldDirection(this.worldDir);                    
-                        console.log(this.worldDir);
-                        this.proxy.rot = null;     
+                        this.proxy.rot = null;
 
                     break;
                     case 'rl':
-                        this.proxy.isRotating = true;
-                        
-                          console.log('rotateYrot  rl');
-                        console.log(this.worldDir);                      
-                        this.dolly.rotateY(Math.PI/2)
-                        console.log('AFter');
+                        this.proxy.isRotating = true;                      
+                        this.dolly.rotateY(Math.PI/4)
                         this.dolly.getWorldDirection(this.worldDir);                    
-                        console.log(this.worldDir);
-                        this.proxy.rot = null;     
+                        this.proxy.rot = null;
 
                     break;  
                 };
