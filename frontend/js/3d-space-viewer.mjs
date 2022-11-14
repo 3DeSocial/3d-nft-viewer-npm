@@ -9,7 +9,7 @@ import { PlayerVR, AudioClip, Item, LoadingScreen, HUDBrowser, HUDVR, SceneryLoa
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
-let fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = false;
+let fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = false, rotlftPressed = false, rotRgtPressed = false;
 let nextPos = new THREE.Vector3();
 
 const params = {
@@ -80,6 +80,7 @@ const params = {
         this.actionTargetItem = null;
         this.actionTargetMesh = null;
         this.animations = [];
+        this.controlProxy = {};
 
         console.log('anime js version');
 
@@ -503,10 +504,36 @@ const params = {
         window.addEventListener( 'keydown', function ( e ) {
                 switch ( e.code ) {
 
-                    case 'KeyW': fwdPressed = true; break;
-                    case 'KeyS': bkdPressed = true; break;
-                    case 'KeyD': rgtPressed = true; break;
-                    case 'KeyA': lftPressed = true; break;
+                    case 'KeyW':
+                        fwdPressed = true; 
+                        that.controlProxy.dir = 'f';                         
+
+                          break;
+                    case 'KeyS':
+                        bkdPressed = true; 
+                        that.controlProxy.dir = 'b';                         
+
+                        break;
+                    case 'KeyD': 
+                        rgtPressed = true; 
+                        that.controlProxy.dir = 'r';                         
+                        break;
+                    case 'KeyA': 
+                        lftPressed = true; 
+                        that.controlProxy.dir = 'l'; 
+                        break;
+                    case 'KeyO': 
+
+                        that.controlProxy.dir = 'rl';
+                        that.controlProxy.rot = 'rl';
+                        console.log('rotate left spaceViewer');
+                        break;
+                    case 'KeyP': 
+
+                        that.controlProxy.dir = 'rr';
+                        that.controlProxy.rot = 'rr';
+                        console.log('rotate right spaceViewer');
+                        break;
                     case 'KeyM': that.throwActiveItem(); break;
 
                     case 'Digit0': that.inventory.setActive(0); break;
@@ -2107,28 +2134,33 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                             rotateLeft: (data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
-                                                that.controlProxy.dir = 'rl';
+                                                that.controlProxy.rot = 'rl';
+                                                console.log('rotate left spaceViewer');
+
                                             },
                                             rotateRight: (data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
-                                                that.controlProxy.dir = 'rr';
+                                                that.controlProxy.rot = 'rr';
+
+                                                console.log('rotate right spaceViewer');
+
                                             },
                                             onSelectStart: ()=>{
-                                                console.log('button down');
-                                                that.controlProxy.data = null;
-                                                that.controlProxy.value = null;
-                                                that.controlProxy.dir = null;
+                                                console.log('onSelectStart')   
                                             },
                                             onSelectEnd: ()=>{
-                                                that.controlProxy.data = null;
-                                                that.controlProxy.value = null;
-                                                that.controlProxy.dir =null;
+                                             console.log('onSelectEnd')   
                                             },
                                             stopMoving: ()=>{
                                                 that.controlProxy.data = null;
                                                 that.controlProxy.value = null;
                                                 that.controlProxy.dir =null;  
+                                            },
+                                            cancelRotate: ()=>{
+                                                console.log('cancelRotate');
+                                                that.controlProxy.isRotating = false;
+                                                that.controlProxy.rot = null;
                                             }
                                         });
 

@@ -200,7 +200,6 @@ class VRControls {
                                 //handlers for thumbsticks
                                 // console.log('axes: ',i);
                                 //if thumbstick axis has flyd beyond the minimum threshold from center, windows mixed reality seems to wander up to about .17 with no input
-                                if (Math.abs(value) > 0.5) {
                                     //set the speedFactor per axis, with acceleration when holding above threshold, up to a max speed
                                     self.speedFactor[i] > 0.5
                                         ? (self.speedFactor[i] = 1)
@@ -223,9 +222,7 @@ class VRControls {
                                             this.handleRightController(data, value);
                                         }
                                     }
-                                } else {
-                                    this.config.stopMoving();
-                                }
+                               
                             });
                         }
                         this.prevGamePads.set(source, data);
@@ -275,7 +272,9 @@ class VRControls {
                     break;
                 }
             };
-        };
+        } else {
+            this.config.stopMoving();
+        }
 
         if(this.isOverMovementThreshold(data.axes[3])){
             if(data.axes[3] > 0){
@@ -285,7 +284,9 @@ class VRControls {
                 //console.log(hand + ' stick: forward',data.axes[3]);
                 this.flyDown(data, value);
             };
-        };
+        } else {
+            this.config.stopMoving();
+        }
 
     }
 
@@ -298,7 +299,9 @@ class VRControls {
                 //console.log(hand+ ' stick: left',data.axes[2]);
                 this.rotateLeft(data, value);
             };
-        };
+        } else {
+            this.config.cancelRotate();
+        }
 
         if(this.isOverMovementThreshold(data.axes[3])){
              //   console.log(hand+ ' stick: back',data.axes[3]);
@@ -323,7 +326,9 @@ class VRControls {
                     break;
                 }             
             };
-        };
+        } else {
+            this.config.stopMoving();
+        }
 
     }
 
@@ -412,11 +417,15 @@ class VRControls {
     }
 
     rotateLeft = (data,value) => {
+    console.log('VRControla rotateLeft')
+
         this.config.rotateLeft(data,value);
     }
 
     rotateRight = (data,value) => {
+    console.log('VRControla rotateRight')
         this.config.rotateRight(data,value);
+    console.log('rotated right');
     }
 
 	/*dollyMove = () =>{
