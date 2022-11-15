@@ -155,7 +155,6 @@ class VRControls {
                                         //console.log("Button" + i + "Down");
                                         if (data.handedness == 'left') {
                                             if (i == 1) {
-                                                console.log("Left Paddle Down",value);
 
                                                 this.handleLeftControllerButtons(value, i);
                                              //   self.player.rotateY(-THREE.MathUtils.degToRad(1));
@@ -182,7 +181,6 @@ class VRControls {
                                               //      -THREE.MathUtils.degToRad(Math.abs(value))
                                                // );
                                             } else {
-                                                console.log("Right Paddle Down");
 
                                                 this.handleRightControllerButtons(value, i);
 
@@ -208,7 +206,7 @@ class VRControls {
                                     if (i == 2) {
                                         //left and right axis on thumbsticks
                                         if (data.handedness == 'left') {
-                                            this.handleRightController(data, value);
+                                            this.handleLeftController(data, value);
                                         } else {
                                             this.handleRightController(data, value);
 
@@ -217,7 +215,7 @@ class VRControls {
                                     if (i == 3) {
                                         //up and down axis on thumbsticks
                                         if (data.handedness == 'left') {
-                                            this.handleRightController(data, value);
+                                            this.handleLeftController(data, value);
                                         } else {
                                             this.handleRightController(data, value);
                                         }
@@ -250,41 +248,65 @@ class VRControls {
     }
 
     handleLeftThumbstick = (hand, data, value) =>{
+
+        let forward = true;
         if(this.isOverMovementThreshold(data.axes[2])){
             if (data.axes[2] > 0) {
-                //console.log(hand+ ' stick: right ',data.axes[2]);
+                console.log(hand+ ' stick: right ',data.axes[2]);
                 switch(this.config.vrType){
                     case 'flying':
                         this.flyRight(data, value);
                     break;
                     default:
+                        console.log('move right');
                         this.moveRight(data, value);
                     break;
                 }
             } else if (data.axes[2] < 0) {
-                //console.log(hand+ ' stick: left',data.axes[2]);
+                console.log(hand+ ' stick: left',data.axes[2]);
                 switch(this.config.vrType){
                     case 'flying':
                         this.flyLeft(data, value);
                     break;
                     default:
+                        console.log('move left');
                         this.moveLeft(data, value);
                     break;
                 }
             };
         } else {
-            this.config.stopMoving();
+            forward = false;
         }
 
+        let left = true;
         if(this.isOverMovementThreshold(data.axes[3])){
+             //   console.log(hand+ ' stick: back',data.axes[3]);
             if(data.axes[3] > 0){
-                //console.log(hand+ ' stick: back',data.axes[3]);
-                this.flyUp(data, value);
+                console.log(hand+ ' stick: right ',data.axes[2],this.config.vrType);
+                switch(this.config.vrType){
+                    case 'flying':
+                        this.flyBackward(data, value);
+                    break;
+                    default:
+                        this.moveBackward(data, value);
+                    break;
+                }
             } else if (data.axes[3] < 0){
-                //console.log(hand + ' stick: forward',data.axes[3]);
-                this.flyDown(data, value);
+                console.log(hand + ' stick: forward',data.axes[3],this.config.vrType);
+                switch(this.config.vrType){
+                    case 'flying':
+                        this.flyForward(data, value);
+                    break;
+                    default:
+                        this.moveForward(data, value);
+                    break;
+                }             
             };
         } else {
+            left = false;
+        }
+
+        if((left === false)&&(forward===false)){
             this.config.stopMoving();
         }
 
