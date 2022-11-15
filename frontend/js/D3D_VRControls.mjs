@@ -208,7 +208,7 @@ class VRControls {
                                     if (i == 2) {
                                         //left and right axis on thumbsticks
                                         if (data.handedness == 'left') {
-                                            this.handleLeftController(data, value);
+                                            this.handleRightController(data, value);
                                         } else {
                                             this.handleRightController(data, value);
 
@@ -217,7 +217,7 @@ class VRControls {
                                     if (i == 3) {
                                         //up and down axis on thumbsticks
                                         if (data.handedness == 'left') {
-                                            this.handleLeftController(data, value);
+                                            this.handleRightController(data, value);
                                         } else {
                                             this.handleRightController(data, value);
                                         }
