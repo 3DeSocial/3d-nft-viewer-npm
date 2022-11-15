@@ -106,6 +106,8 @@ export default class ExtraData3DParser {
 
     // path format <endpoint>/<format>/<version>/<anyfilename>.<format>
     let searchPath = this.endPoint+'/'+this.nftPostHashHex +'/'+format+'/'+version;
+        searchPath = searchPath.replaceAll(' ','%2520')
+        searchPath = searchPath.replaceAll('%20','%2520');
     return searchPath;
   }
 };

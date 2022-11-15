@@ -47,6 +47,27 @@ export default class Item {
         this.direction = new THREE.Vector3();
         this.rotVelocity = new THREE.Vector3();
         this.nftDisplayData = this.parseNFTDisplayData();
+        if(this.config.modelUrl){
+            console.log('check modelUrl');
+            this.getFormatFromModelUrl();
+        } else {
+            console.log('no modelUrl');
+        }
+
+    }
+
+    getFormatFromModelUrl = () =>{
+        let parts = this.config.modelUrl.split('.');
+        let format = parts[parts.length-1];
+
+        console.log('model url: ',this.config.modelUr);
+
+        console.log('format detected: ',format);
+        console.log('format supplied: ',this.config.format);
+        if(format!=this.config.format){
+            this.config.format = format;
+        }
+
     }
 
     parseNFTDisplayData = () =>{
@@ -359,8 +380,15 @@ export default class Item {
                     };
                   
                     this.scaleToFitScene(obj3D, posVector);
+                    if(this.config.format==='vrm'){
+                        console.log('rotate VRM 180 degrees');
+                        obj3D.rotateY(Math.PI);
+                        
+                    } else {
+                        console.log('format: '+this.config.format);
+                    }
                     console.log('DO fix Y coord');
-                    this.fixYCoord(obj3D, posVector);    
+                    this.fixYCoord(obj3D, posVector); 
                     resolve(obj3D);
 
               //  }
@@ -781,12 +809,6 @@ console.log(' posVector.y: ', posVector.y,' lowestVertex.y ',lowestVertex.y);
 
     rotateItem = () =>{
 
-    }
-
-    addToScene = (model) =>{
-        this.scene.add(model);
-     //   console.log('model added to scene');
-       // console.log(this.scene);
     }
 
 }
