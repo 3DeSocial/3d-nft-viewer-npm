@@ -85,16 +85,16 @@ class VRControls {
         // controllers
         let controller1 = this.renderer.xr.getController(0);
         controller1.name = 'left';
-        controller1.addEventListener("selectstart", onSelectStartLeft);
-        controller1.addEventListener("selectend", onSelectEndLeft);
+        controller1.addEventListener("selectstart", this.config.onSelectStartLeft);
+        controller1.addEventListener("selectend", this.config.onSelectEndLeft);
       //  this.scene.add(controller1);
         this.controllers.push(controller1);
 
         let controller2 = this.renderer.xr.getController(1);
         controller2.name = 'right';
-        controller2.addEventListener("selectstart", onSelectStartRightRight);
-        controller2.addEventListener("selectend", onSelectEnd);
-        this.scene.add(controller2);
+        controller2.addEventListener("selectstart", this.config.onSelectStartRight);
+        controller2.addEventListener("selectend", this.config.onSelectEndRight);
+       // this.scene.add(controller2);
         this.controllers.push(controller2);
 
         var controllerModelFactory = new XRControllerModelFactory(new GLTFLoader());
