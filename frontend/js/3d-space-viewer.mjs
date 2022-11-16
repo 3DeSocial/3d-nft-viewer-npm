@@ -344,7 +344,6 @@ const params = {
     initCameraPlayer = () =>{
         // camera setup
         this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
-      //w  this.camera.position.set( 10, 10, - 10 );
         this.camera.updateProjectionMatrix();        
        // this.camera.lookAt(this.config.lookAtStartPos);
     }
@@ -2144,11 +2143,20 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                 console.log('rotate right spaceViewer');
 
                                             },
-                                            onSelectStart: ()=>{
-                                                console.log('onSelectStart')   
+                                            onSelectStartLeft: ()=>{
+                                                console.log('onSelectStart paddle down');
+                                            //    that.controlProxy.rot = 'rl';                                                
                                             },
-                                            onSelectEnd: ()=>{
-                                             console.log('onSelectEnd')   
+                                            onSelectEndLeft: ()=>{
+                                             console.log('onSelectEnd paddle up')   
+                                            },
+                                            onSelectStartRight: ()=>{
+                                                console.log('onSelectStart paddle down')   
+;
+                                            //    that.controlProxy.rot = 'rl';                                                
+                                            },
+                                            onSelectEndRight: ()=>{
+                                             console.log('onSelectEnd paddle up')   
                                             },
                                             stopMoving: ()=>{
                                                 that.controlProxy.data = null;

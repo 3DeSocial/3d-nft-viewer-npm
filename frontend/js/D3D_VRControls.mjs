@@ -37,7 +37,22 @@ class VRControls {
             },
             onSelectEnd: () => {
 
-            }
+            },
+             onSelectStartLeft: ()=>{
+                                                console.log('onSelectStart paddle down');
+                                            //    that.controlProxy.rot = 'rl';                                                
+                                            },
+                                            onSelectEndLeft: ()=>{
+                                             console.log('onSelectEnd paddle up')   
+                                            },
+                                            onSelectStartRight: ()=>{
+                                                console.log('onSelectStart paddle down')   
+;
+                                            //    that.controlProxy.rot = 'rl';                                                
+                                            },
+                                            onSelectEndRight: ()=>{
+                                             console.log('onSelectEnd paddle up')   
+                                            },
 
 		};
 
@@ -60,7 +75,6 @@ class VRControls {
     	this.scene = this.config.scene;
     	this.camera = this.config.camera;
         this.buildControllers();
-        this.setUpSelectEvents();
 
     }
 
@@ -71,15 +85,15 @@ class VRControls {
         // controllers
         let controller1 = this.renderer.xr.getController(0);
         controller1.name = 'left';
-        //controller1.addEventListener("selectstart", onSelectStart);
-        //controller1.addEventListener("selectend", onSelectEnd);
+        controller1.addEventListener("selectstart", onSelectStartLeft);
+        controller1.addEventListener("selectend", onSelectEndLeft);
       //  this.scene.add(controller1);
         this.controllers.push(controller1);
 
         let controller2 = this.renderer.xr.getController(1);
         controller2.name = 'right';
-        //controller2.addEventListener("selectstart", onSelectStart);
-        //controller2.addEventListener("selectend", onSelectEnd);
+        controller2.addEventListener("selectstart", onSelectStartRightRight);
+        controller2.addEventListener("selectend", onSelectEnd);
         this.scene.add(controller2);
         this.controllers.push(controller2);
 
@@ -107,15 +121,6 @@ class VRControls {
 
         controller1.add(line.clone());
         controller2.add(line.clone());
-    }
-
-
-    setUpSelectEvents = ()=>{
-        let that = this;
-        this.controllers.forEach( (controller) => {
-            controller.addEventListener( 'selectstart', that.config.onSelectStart );
-            controller.addEventListener( 'selectend', that.config.onSelectEnd );
-        });        
     }
 
     checkControllers = () =>{
