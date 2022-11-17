@@ -32,6 +32,7 @@ const params = {
     constructor(config) {
 
         let defaults = {
+                    animations: ['/mixamo/Arm_Stretching.fbx', '/mixamo/Looking_Around.fbx','/mixamo/Strut_Walking.fbx','/mixamo/Dancing_Twerk.fbx','/mixamo/Flair.fbx','/mixamo/Headspin_Start.fbx','/mixamo/HipHop_Dancing.fbx','/mixamo/Strut_Walking.fbx','/mixamo/Victory.fbx'],
                     firstPerson: true,
                     bgColor: 0x000000,
                     el: document.body,
@@ -498,13 +499,14 @@ const params = {
           if(this.loadedItem){
               if((this.loadedItem.mixer !== null)){
                     this.loadedItem.mixer.update( delta );
-                } else {
-                    console.log('mixer is null');
+                    // only update mesh if required by animation
+                    if(this.loadedItem.mesh.update){
+                        this.loadedItem.mesh.update();
+                    };
+
                 };
 
-                if(this.loadedItem.update){
-                    this.loadedItem.update();
-                };
+
             }
 
         this.renderer.render(this.scene, this.camera);
@@ -883,7 +885,7 @@ const params = {
         };
 
         if(format==='vrm'){
-            console.log('VRM init');
+            config.animations = this.config.animations;
             item = new ItemVRM(config);
         } else {
             item = new Item(config);

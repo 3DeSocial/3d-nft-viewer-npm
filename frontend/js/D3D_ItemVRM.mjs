@@ -1,7 +1,12 @@
 import * as THREE from 'three';
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
-import { VRMLoaderPlugin } from '@pixiv/three-vrm';
+import * as THREE_VRM from '@pixiv/three-vrm';
 
+let currentVrm = undefined;
+let currentAnimationUrl = undefined;
+let currentMixer = undefined;
+const helperRoot = new THREE.Group();
 
     /**
      * A map from Mixamo rig name to VRM Humanoid bone name
@@ -66,6 +71,7 @@ export default class ItemVRM {
 
     constructor(config){
         let defaults = {
+            animations: [], // all possible animations
             animationUrl:'/mixamo/Victory.fbx',
             modelUrl: '',
             modelsRoute: 'models',
@@ -135,112 +141,134 @@ export default class ItemVRM {
 
     // mixamo animation
     loadMixamo = ( animationUrl ) => {
+        let that = this;
+
+        currentAnimationUrl = animationUrl;
 
         // create AnimationMixer for VRM
-        this.mixer = new THREE.AnimationMixer( this.mesh);
-
+        currentMixer = new THREE.AnimationMixer( currentVrm.scene );
+        this.mixer = currentMixer;
         // Load animation
-        this.loadMixamoAnimation( animationUrl, this.mesh ).then( ( clip ) => {
+        this.loadMixamoAnimation( animationUrl, currentVrm ).then( ( clip ) => {
 
             // Apply the loaded animation to mixer and play
-             console.log('clip loaded...');
-             console.log(clip);
-            this.action = this.mixer.clipAction(clip);
-            this.action.setLoop(THREE.LoopRepeat);
-            this.action.play();
-            console.log('playing clip');
+            console.log('playing clip: ',animationUrl);
+
+          //  let animation = this.animations[animIndex];
+                 
+                this.action = currentMixer.clipAction(clip);
+                this.action.setLoop(THREE.LoopOnce);
+                this.action.clampWhenFinished  = true;
+                this.action.play();
+                this.animRunning = true;
+                this.mixer.addEventListener('finished',(e)=>{
+                    that.setAnimRunning(false);
+
+                    that.playNextAnim(animationUrl);
+                }, false);            
 
         } );
 
+
     }
 
-    loadMixamoAnimation = ( url) => {
-        let vrm = this.mesh;
+    playNextAnim = (animationUrl) =>{
+        let animIndex = this.config.animations.indexOf(animationUrl);
+        animIndex++;
 
-        const loader = new FBXLoader(); // A loader which loads FBX
-        return loader.loadAsync( url ).then( ( asset ) => {
+        if(!this.config.animations[animIndex]){
+            animIndex = 0;
+        }
 
-            const clip = THREE.AnimationClip.findByName( asset.animations, 'mixamo.com' ); // extract the AnimationClip
+        this.loadMixamo(this.config.animations[animIndex]);
+    }
 
-            const tracks = []; // KeyframeTracks compatible with VRM will be added here
+    loadMixamoAnimation = ( url, vrm ) => {
 
-            const restRotationInverse = new THREE.Quaternion();
-            const parentRestWorldRotation = new THREE.Quaternion();
-            const _quatA = new THREE.Quaternion();
-            const _vec3 = new THREE.Vector3();
+    const loader = new FBXLoader(); // A loader which loads FBX
+    return loader.loadAsync( url ).then( ( asset ) => {
 
-            // Adjust with reference to hips height.
-            const motionHipsHeight = asset.getObjectByName( 'mixamorigHips' ).position.y;
-            const vrmHipsY = vrm.humanoid?.getNormalizedBoneNode( 'hips' ).getWorldPosition( _vec3 ).y;
-            const vrmRootY = vrm.scene.getWorldPosition( _vec3 ).y;
-            const vrmHipsHeight = Math.abs( vrmHipsY - vrmRootY );
-            const hipsPositionScale = vrmHipsHeight / motionHipsHeight;
+        const clip = THREE.AnimationClip.findByName( asset.animations, 'mixamo.com' ); // extract the AnimationClip
 
-            clip.tracks.forEach( ( track ) => {
+        const tracks = []; // KeyframeTracks compatible with VRM will be added here
 
-                // Convert each tracks for VRM use, and push to `tracks`
-                const trackSplitted = track.name.split( '.' );
-                const mixamoRigName = trackSplitted[ 0 ];
-                const vrmBoneName = mixamoVRMRigMap[ mixamoRigName ];
-                const vrmNodeName = vrm.humanoid?.getNormalizedBoneNode( vrmBoneName )?.name;
-                const mixamoRigNode = asset.getObjectByName( mixamoRigName );
+        const restRotationInverse = new THREE.Quaternion();
+        const parentRestWorldRotation = new THREE.Quaternion();
+        const _quatA = new THREE.Quaternion();
+        const _vec3 = new THREE.Vector3();
 
-                if ( vrmNodeName != null ) {
+        // Adjust with reference to hips height.
+        const motionHipsHeight = asset.getObjectByName( 'mixamorigHips' ).position.y;
+        const vrmHipsY = vrm.humanoid?.getNormalizedBoneNode( 'hips' ).getWorldPosition( _vec3 ).y;
+        const vrmRootY = vrm.scene.getWorldPosition( _vec3 ).y;
+        const vrmHipsHeight = Math.abs( vrmHipsY - vrmRootY );
+        const hipsPositionScale = vrmHipsHeight / motionHipsHeight;
 
-                    const propertyName = trackSplitted[ 1 ];
+        clip.tracks.forEach( ( track ) => {
 
-                    // Store rotations of rest-pose.
-                    mixamoRigNode.getWorldQuaternion( restRotationInverse ).invert();
-                    mixamoRigNode.parent.getWorldQuaternion( parentRestWorldRotation );
+            // Convert each tracks for VRM use, and push to `tracks`
+            const trackSplitted = track.name.split( '.' );
+            const mixamoRigName = trackSplitted[ 0 ];
+            const vrmBoneName = mixamoVRMRigMap[ mixamoRigName ];
+            const vrmNodeName = vrm.humanoid?.getNormalizedBoneNode( vrmBoneName )?.name;
+            const mixamoRigNode = asset.getObjectByName( mixamoRigName );
 
-                    if ( track instanceof THREE.QuaternionKeyframeTrack ) {
+            if ( vrmNodeName != null ) {
 
-                        // Retarget rotation of mixamoRig to NormalizedBone.
-                        for ( let i = 0; i < track.values.length; i += 4 ) {
+                const propertyName = trackSplitted[ 1 ];
 
-                            const flatQuaternion = track.values.slice( i, i + 4 );
+                // Store rotations of rest-pose.
+                mixamoRigNode.getWorldQuaternion( restRotationInverse ).invert();
+                mixamoRigNode.parent.getWorldQuaternion( parentRestWorldRotation );
 
-                            _quatA.fromArray( flatQuaternion );
+                if ( track instanceof THREE.QuaternionKeyframeTrack ) {
 
-                            // 親のレスト時ワールド回転 * トラックの回転 * レスト時ワールド回転の逆
-                            _quatA
-                                .premultiply( parentRestWorldRotation )
-                                .multiply( restRotationInverse );
+                    // Retarget rotation of mixamoRig to NormalizedBone.
+                    for ( let i = 0; i < track.values.length; i += 4 ) {
 
-                            _quatA.toArray( flatQuaternion );
+                        const flatQuaternion = track.values.slice( i, i + 4 );
 
-                            flatQuaternion.forEach( ( v, index ) => {
+                        _quatA.fromArray( flatQuaternion );
 
-                                track.values[ index + i ] = v;
+                        // 親のレスト時ワールド回転 * トラックの回転 * レスト時ワールド回転の逆
+                        _quatA
+                            .premultiply( parentRestWorldRotation )
+                            .multiply( restRotationInverse );
 
-                            } );
+                        _quatA.toArray( flatQuaternion );
 
-                        }
+                        flatQuaternion.forEach( ( v, index ) => {
 
-                        tracks.push(
-                            new THREE.QuaternionKeyframeTrack(
-                                `${vrmNodeName}.${propertyName}`,
-                                track.times,
-                                track.values.map( ( v, i ) => ( vrm.meta?.metaVersion === '0' && i % 2 === 0 ? - v : v ) ),
-                            ),
-                        );
+                            track.values[ index + i ] = v;
 
-                    } else if ( track instanceof THREE.VectorKeyframeTrack ) {
-
-                        const value = track.values.map( ( v, i ) => ( vrm.meta?.metaVersion === '0' && i % 3 !== 1 ? - v : v ) * hipsPositionScale );
-                        tracks.push( new THREE.VectorKeyframeTrack( `${vrmNodeName}.${propertyName}`, track.times, value ) );
+                        } );
 
                     }
 
+                    tracks.push(
+                        new THREE.QuaternionKeyframeTrack(
+                            `${vrmNodeName}.${propertyName}`,
+                            track.times,
+                            track.values.map( ( v, i ) => ( vrm.meta?.metaVersion === '0' && i % 2 === 0 ? - v : v ) ),
+                        ),
+                    );
+
+                } else if ( track instanceof THREE.VectorKeyframeTrack ) {
+
+                    const value = track.values.map( ( v, i ) => ( vrm.meta?.metaVersion === '0' && i % 3 !== 1 ? - v : v ) * hipsPositionScale );
+                    tracks.push( new THREE.VectorKeyframeTrack( `${vrmNodeName}.${propertyName}`, track.times, value ) );
+
                 }
 
-            } );
-
-            return new THREE.AnimationClip( 'vrmAnimation', clip.duration, tracks );
+            }
 
         } );
 
-    }
+        return new THREE.AnimationClip( 'vrmAnimation', clip.duration, tracks );
+
+    } );
+
+}
 
 
     parseNFTDisplayData = () =>{
@@ -295,11 +323,9 @@ export default class ItemVRM {
         this.armature = null;
         this.modelChildren = [];
         let scene;
-        console.log('this.root: ');
-        console.log(this.root);
+
 
         if(this.root.armature){
-            console.log('armature found in root');
             this.armature = this.root.armature;
             return true;
         };
@@ -311,18 +337,14 @@ export default class ItemVRM {
         }
 
         if(!scene.children){
-            console.log('scene has no children');
             return false;
         }
    
         scene.children.forEach((el)=>{
-            console.log(el.name);
             if(el.name === 'Armature'){
-                console.log('found armature.');
                 that.armature = el;
             } else {
                 that.modelChildren.push(el);
-                console.log('add child: ',el.name)
             }
         });
 
@@ -414,10 +436,6 @@ export default class ItemVRM {
                         that.placeModel(pos)
                         .then((model)=>{
                             that.mesh = model;
-                            if(that.config.animationUrl){
-                                console.log('try load animation: ',that.config.animationUrl);
-                                that.loadMixamo(that.config.animationUrl);
-                            };
                             let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
                             document.body.dispatchEvent(loadedEvent);
                             document.body.dispatchEvent(this.meshPlacedEvent);
@@ -515,85 +533,77 @@ export default class ItemVRM {
     }
 
     fetchModel = async(modelUrl, posVector) =>{
-        
+        currentAnimationUrl = this.config.animationUrl;
         let that = this;
 
+        helperRoot.renderOrder = 10000;
+        this.scene.add( helperRoot );
+        helperRoot.position.copy(posVector);
+
+        const loader = new GLTFLoader();
+        loader.crossOrigin = 'anonymous';
+
+        helperRoot.clear();
+
+        loader.register( ( parser ) => {
+
+            return new THREE_VRM.VRMLoaderPlugin( parser, {  autoUpdateHumanBones: true } );
+
+        } );
+
         return new Promise((resolve,reject)=>{
-           // console.log('fetchModel: ',modelUrl);
-           // console.log('that.loader: ',that.loader);            
-            that.loader.load(modelUrl, (root)=> {
-                that.root = root;
-                let loadedItem = null;
-                if(root.userData.vrm){
-                    console.log('vrm loaded vrm prop');
-                    loadedItem = root.userData.vrm;
-                } else {
-                    console.log('vrm using root')
-                    loadedItem = root;
-                };
+           
+                loader.load(
+                    // URL of the VRM you want to load
+                    modelUrl,
 
+                    // called when the resource is loaded
+                    ( gltf ) => {
+                        this.root = gltf;
+                        const vrm = gltf.userData.vrm;
 
+                        if ( currentVrm ) {
 
-                // add the loaded vrm to the scene
-                this.scene.add(loadedItem.scene);
+                            this.scene.remove( currentVrm.scene );
 
+                            THREE_VRM.VRMUtils.deepDispose( currentVrm.scene );
 
+                        }
 
-            // Disable frustum culling
-            root.scene.traverse( ( obj ) => {
+                        // put the model to the scene
+                        currentVrm = vrm;
+                        this.scene.add( vrm.scene );
+                        vrm.scene.position.copy(posVector);
+                        // Disable frustum culling
+                        vrm.scene.traverse( ( obj ) => {
 
-                obj.frustumCulled = false;
+                            obj.frustumCulled = false;
 
-            } );
+                        } );
 
-                that.mesh = loadedItem;
-                that.mesh.userData.owner = this;
-                that.mesh.owner = this;
-console.log('loaded vvrm...');
-            console.log( loadedItem );                
-            /*               
-                if(that.hasArmature()){
-                    console.log('armature detected');
-                    console.log(this.armature);
-                } else {
-*/
-                /*    that.mesh = loadedItem;
-                    that.mesh.userData.owner = this;
-                    that.mesh.owner = this;                
-                    let obj3D = this.convertToObj3D(loadedItem);
-                    if(obj3D===false){
-                        console.log('could not convert item for scene');
-                        return false;
-                    };
-                    this.scene.add(obj3D);
-                   // this.scaleToFitScene(obj3D, posVector);
-                    if(this.config.format==='vrm'){
-                        console.log('rotate VRM 180 degrees');
-                        obj3D.rotateY(Math.PI);
-                        
-                    } else {
-                        console.log('format: '+this.config.format);
-                    }
-                    console.log('DO fix Y coord');
-                    this.fixYCoord(obj3D, posVector); */
-                    resolve(this.mesh);
+                        if ( currentAnimationUrl ) {
 
-              //  }
-               
+                            this.loadMixamo( currentAnimationUrl );
 
-            },
-            this.onProgressCallback,
-            this.onErrorCallback);
+                        }
 
-        })
-      
-    }
+                        // rotate if the VRM is VRM0.0
+                        THREE_VRM.VRMUtils.rotateVRM0( vrm );
 
-onProgressCallback = ()=> {}
-onErrorCallback = (e)=> {
-    console.log('loading error');
-    console.log(e);
-}
+                        resolve(currentVrm);
+
+                    },
+
+                    // called while loading is progressing
+                //    ( progress ) => console.log( 'Loading model...', 100.0 * ( progress.loaded / progress.total ), '%' ),
+
+                    // called when loading has errors
+                    ( error ) => console.error( error ),
+                );
+
+            })
+          
+        }
 
 scaleToFitScene = (obj3D, posVector) =>{
 
