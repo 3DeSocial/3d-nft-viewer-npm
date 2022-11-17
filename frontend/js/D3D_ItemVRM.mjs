@@ -93,6 +93,7 @@ export default class ItemVRM {
             ...config
         };
 
+        this.isVRM = true;
         this.loader = this.config.loader;
         if(!this.loader && this.config.is3D){
             console.log('cannot init item without loader is 3d? ',this.config.is3D,' hex: ',this.config.postHashHex);
@@ -116,7 +117,7 @@ export default class ItemVRM {
         this.rotVelocity = new THREE.Vector3();
         this.nftDisplayData = this.parseNFTDisplayData();
         if(this.config.modelUrl){
-            console.log('check modelUrl');
+            console.log('check modelUrl: ',this.config.modelUrl);
             this.getFormatFromModelUrl();
         } else {
             console.log('no modelUrl');
@@ -419,12 +420,15 @@ export default class ItemVRM {
         };
         return new Promise((resolve,reject)=>{
             if(that.mesh){
+                console.log('ItemVRM mesh already exists');
                 that.mesh.position.copy(pos);
                 that.scene.add(this.mesh);
                 that.fixYCoord(this.mesh, pos);
 
                 resolve(this.mesh, pos);
             } else{
+                console.log('ItemVRM fetchModelUrl required');
+
                 this.fetchModelUrl()
                 .then((modelUrl)=>{
                     if(!that.retrievedModelUrlIsValid(modelUrl)){
@@ -436,6 +440,8 @@ export default class ItemVRM {
                         that.placeModel(pos)
                         .then((model)=>{
                             that.mesh = model;
+                            console.log('ItemVRM mesh placed');
+
                             let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
                             document.body.dispatchEvent(loadedEvent);
                             document.body.dispatchEvent(this.meshPlacedEvent);
@@ -534,6 +540,8 @@ export default class ItemVRM {
 
     fetchModel = async(modelUrl, posVector) =>{
         currentAnimationUrl = this.config.animationUrl;
+
+        console.log('fetchModel with anim: ',currentAnimationUrl);
         let that = this;
 
         helperRoot.renderOrder = 10000;
@@ -595,7 +603,7 @@ export default class ItemVRM {
                     },
 
                     // called while loading is progressing
-                //    ( progress ) => console.log( 'Loading model...', 100.0 * ( progress.loaded / progress.total ), '%' ),
+                    ( progress ) => console.log( 'Loading model...', 100.0 * ( progress.loaded / progress.total ), '%' ),
 
                     // called when loading has errors
                     ( error ) => console.error( error ),

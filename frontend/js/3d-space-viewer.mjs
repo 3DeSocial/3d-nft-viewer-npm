@@ -5,7 +5,7 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { AudioClip, Item, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -26,6 +26,7 @@ const params = {
     constructor(config) {
 
         let defaults = {
+                    animations: ['/mixamo/Arm_Stretching.fbx', '/mixamo/Looking_Around.fbx','/mixamo/Strut_Walking.fbx','/mixamo/Dancing_Twerk.fbx','/mixamo/Flair.fbx','/mixamo/Headspin_Start.fbx','/mixamo/HipHop_Dancing.fbx','/mixamo/Strut_Walking.fbx','/mixamo/Victory.fbx'],            
                     avatarSize: {width: 1, height:1, depth:1},
                     el: document.body,
                     ctrClass: 'data-nft', // Attribute of div containing nft preview area for a single nft
@@ -164,7 +165,7 @@ const params = {
 
             this.initScene();
             this.initCameraPlayer();     
-            this.loadUIAssets();
+          //  this.loadUIAssets();
             this.initRenderer(this.config.el);
             this.initHUD({scene:that.scene,
                             chainAPI: that.config.chainAPI});
@@ -1909,6 +1910,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                         name:'NFTs'});
 
             this.sceneInventory = new D3DInventory({
+                                            animations: this.config.animations,
                                             chainAPI: this.config.chainAPI,
                                             imageProxyUrl: this.config.imageProxyUrl,    
                                             items2d: items2d,
@@ -1964,6 +1966,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }
 
     initItemForModel = (opts) =>{
+        let item = null;
+
         let urlParts = opts.modelUrl.split('.');
         let extension = urlParts[urlParts.length-1];
         let config = {
@@ -1978,7 +1982,16 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             nftsRoute: this.config.nftsRoute,
             format:extension
         }
-        let item = new Item(config);
+
+        console.log('init item for model format: ',extension.toLowerCase());
+        if(extension.trim().toLowerCase()==='vrm'){
+            config.animations = this.config.animations;
+            item = new ItemVRM(config);
+            console.log('return vrm item');
+        } else {
+            item = new Item(config);
+        };
+
         return item;
 
     }

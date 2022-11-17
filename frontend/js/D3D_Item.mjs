@@ -24,6 +24,7 @@ export default class Item {
             ...defaults,
             ...config
         };
+        this.isVRM = false;
 
         this.loader = this.config.loader;
         if(!this.loader && this.config.is3D){
