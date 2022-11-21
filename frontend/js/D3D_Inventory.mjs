@@ -69,6 +69,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         this.initItems3d(this.config.items3d).then((nfts3d)=>{
             if(nfts3d){
                 that.items3d = nfts3d;     
+                console.log('3d items placed: ',nfts3d);
             };
 
         })
@@ -245,10 +246,15 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                 console.log(item);
                 item.place(spot.pos).then((mesh,pos)=>{
                     console.log('placed at ',spot.pos,mesh);
-                    if(spot.rot){
+                    if(spot.rot){                    
+                        if(item.isVRM){
+                            mesh.scene.rotateY(spot.rot.y);
+                        };
+
                         if(mesh.rotateY){
                             mesh.rotateY(spot.rot.y);
-                        }
+                        };
+
                     };
                     items.push(item);
                     this.placedItems3D.push(item);

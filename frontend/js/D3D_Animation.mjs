@@ -1,10 +1,12 @@
 import * as THREE from 'three';
 
-import { VOXMesh } from "three/examples/jsm/loaders/VOXLoader.js";
-export default class Item {
+import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
+
+export default class Animation {
 
     constructor(config){
         let defaults = {
+            format: 'fbx',
             modelUrl: '',
             modelsRoute: 'models',
             nftsRoute: 'nfts',
@@ -27,26 +29,16 @@ export default class Item {
         this.isVRM = false;
 
         this.loader = this.config.loader;
-        if(!this.loader && this.config.is3D){
-            console.log('cannot init item without loader is 3d? ',this.config.is3D,' hex: ',this.config.postHashHex);
-        };
-        this.scene = this.config.scene;
-        this.height = this.config.height;
-        this.width = this.config.width;
-        this.depth = this.config.depth;
+    
+      
         this.modelUrl = this.config.modelUrl;
         this.mixer = null;
-        this.action = null;
+       
         this.mesh = this.config.mesh
         this.animRunning = false;
         this.animations = null;
-        this.actions = this.config.actions;
-        this.initItemEvents();
-        this.isItem = true;
-        this.isImage = this.config.isImage;
-        this.velocity = new THREE.Vector3();
-        this.direction = new THREE.Vector3();
-        this.rotVelocity = new THREE.Vector3();
+        this.isItem = false;
+        this.isImage = false;
         this.nftDisplayData = this.parseNFTDisplayData();
         if(this.config.modelUrl){
             console.log('check modelUrl');
@@ -57,19 +49,6 @@ export default class Item {
 
     }
 
-    getFormatFromModelUrl = () =>{
-        let parts = this.config.modelUrl.split('.');
-        let format = parts[parts.length-1];
-
-        console.log('model url: ',this.config.modelUr);
-
-        console.log('format detected: ',format);
-        console.log('format supplied: ',this.config.format);
-        if(format!=this.config.format){
-            this.config.format = format;
-        }
-
-    }
 
     parseNFTDisplayData = () =>{
         let nft = this.config.nft;
@@ -231,7 +210,7 @@ export default class Item {
 
                 resolve(this.mesh, pos);
             } else{
-                this.fetchModelUrl()
+                this.fetchAnimUrl()
                 .then((modelUrl)=>{
                     if(!that.retrievedModelUrlIsValid(modelUrl)){
                         reject('Invalid ModelUrl in ExtraData: '+modelUrl);
@@ -315,7 +294,7 @@ export default class Item {
 
     }
     
-    fetchModelUrl = async() =>{
+    fetchAnimUrl = async() =>{
         let that = this;
 
         return new Promise((resolve,reject)=>{
@@ -325,7 +304,7 @@ export default class Item {
                 return;
             } else {
                 let url = this.config.nftsRoute;
-                console.log('fetchModelUrl: ',this.config.nftsRoute);
+                console.log('fetchAnimUrl: ',this.config.nftsRoute);
                 if(url.trim()===''){
                     reject('No nftsRoute or modelUrl exists for this item');
                     return;
@@ -808,4 +787,4 @@ console.log(' posVector.y: ', posVector.y,' lowestVertex.y ',lowestVertex.y);
 
 }
 
-export {Item}
+export {Animation}

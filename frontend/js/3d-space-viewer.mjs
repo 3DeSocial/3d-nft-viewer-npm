@@ -26,7 +26,7 @@ const params = {
     constructor(config) {
 
         let defaults = {
-                    animations: ['/mixamo/Arm_Stretching.fbx', '/mixamo/Looking_Around.fbx','/mixamo/Strut_Walking.fbx','/mixamo/Dancing_Twerk.fbx','/mixamo/Flair.fbx','/mixamo/Headspin_Start.fbx','/mixamo/HipHop_Dancing.fbx','/mixamo/Strut_Walking.fbx','/mixamo/Victory.fbx'],            
+                    animations: ['/mixamo/Arm_Stretching.fbx', '/mixamo/Looking_Around.fbx','/mixamo/Strut_Walking.fbx','/mixamo/Victory.fbx'],            
                     avatarSize: {width: 1, height:1, depth:1},
                     el: document.body,
                     ctrClass: 'data-nft', // Attribute of div containing nft preview area for a single nft
