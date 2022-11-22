@@ -5,7 +5,7 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import {AnimLoader, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -1905,29 +1905,57 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             this.ghosts = spookyNFTs.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'));
 
             items3d = items3d.concat(spookyNFTs)
-            items3d = items3d.slice(0,maxItems3D);    
+            let items3dToRender = items3d.slice(0,maxItems3D);   
+
+            if(items2d.length===0){
+                items2d = items3d.slice(maxItems3D);
+                //display 2d images of 3d items if there are no more 2d images
+            };
+
+
             this.loadingScreen.startLoading({items:items2d,
                                         name:'NFTs'});
 
-            this.sceneInventory = new D3DInventory({
-                                            animations: this.config.animations,
-                                            chainAPI: this.config.chainAPI,
-                                            imageProxyUrl: this.config.imageProxyUrl,    
-                                            items2d: items2d,
-                                            items3d: items3d,
-                                            scene: this.scene,
-                                            loader: this.loader,
-                                            loaders: this.loaders,
-                                            width: 3,
-                                            depth: 3,
-                                            height: 3,
-                                            modelsRoute: this.config.modelsRoute,
-                                            nftsRoute: this.config.nftsRoute,
-                                            layoutPlotter: this.layoutPlotter,
-                                            loadingScreen: this.loadingScreen
-                                        });     
+            let sceneInvConfig = {          
+                                animations: this.config.animations,
+                                chainAPI: this.config.chainAPI,
+                                imageProxyUrl: this.config.imageProxyUrl,    
+                                items2d: items2d,
+                                items3d: items3dToRender,
+                                scene: this.scene,
+                                loader: this.loader,
+                                loaders: this.loaders,
+                                width: 3,
+                                depth: 3,
+                                height: 3,
+                                modelsRoute: this.config.modelsRoute,
+                                nftsRoute: this.config.nftsRoute,
+                                layoutPlotter: this.layoutPlotter,
+                                loadingScreen: this.loadingScreen
+                                }
+
+            let haveVRM = this.haveVRM(items3dToRender);
+            if(haveVRM){
+                this.animLoader = this.initAnimLoader({animHashes:[ '287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4',
+                                                                    '8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85',
+                                                                    '95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2',
+                                                                    '1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2']});
+
+                sceneInvConfig.animLoader = this.animLoader;
+
+            }
+            this.sceneInventory = new D3DInventory(sceneInvConfig);     
         }
         
+    }
+
+    haveVRM = (items3dToRender) =>{
+        console.log(items3dToRender);
+        //items3dToRender.filter(item=>(item.nft.))
+        return true; //test
+    }
+    initAnimLoader = (config) =>{
+        return new AnimLoader(config);
     }
 
     initItem = (opts) =>{

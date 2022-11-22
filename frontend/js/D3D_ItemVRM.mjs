@@ -2,8 +2,6 @@ import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import * as THREE_VRM from '@pixiv/three-vrm';
-import { Animation } from '3d-nft-viewer';
-
 const helperRoot = new THREE.Group();
 
     /**
@@ -141,8 +139,8 @@ export default class ItemVRM {
 
             console.log('itemParams');
             console.log(itemParams);
-            let anim = new Animation(itemParams);                
-                anim.fetchAnimUrl(postHashHex).then((loadedAnimurl)=>{
+                         
+                this.config.animLoader.fetchAnimUrl(postHashHex).then((loadedAnimurl)=>{
                 console.log('retrieved animation URL: ',loadedAnimurl);
                 loadedAnimurl = 'https://desodata.azureedge.net/unzipped/95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2/fbx/normal/Happy_Idle.fbx'
                 resolve(loadedAnimurl)
@@ -160,41 +158,59 @@ export default class ItemVRM {
             // create AnimationMixer for VRM
             if(!this.currentMixer){
                this.currentMixer = new THREE.AnimationMixer( this.currentVrm.scene );
+               this.currentMixer.addEventListener('finished',(e)=>{
+                console.log('finished a clip');
+                        that.setAnimRunning(false);
+                        that.currentAnim = that.config.animLoader.fetchRandAnim();
+                        that.currentAnimationUrl = that.currentAnim.url;
+
+                        console.log('fetchModel with anim: ',that.currentAnimationUrl);   
+                        if(that.currentAnimationUrl){
+                            that.loadMixamo( that.currentAnimationUrl );
+                        }
+
+                        //that.mesh.scene.position.copy(this.config.pos);
+                    }, false);
             };
+
             this.mixer = this.currentMixer;
-            // Load animation
-            this.loadMixamoAnimation( animationUrl, this.currentVrm ).then( ( clip ) => {
-
-                // Apply the loaded animation to mixer and play
-                console.log('playing clip: ',animationUrl);
-
-             
-                    this.action = this.currentMixer.clipAction(clip);
-                    this.action.setLoop(THREE.LoopRepeat);
+/*
+            if(this.currentAnim.action){
+                // no need to Load animation
+                    console.log('currentAnim has action: ', this.currentAnim.url);
+                    this.action = this.currentAnim.action;
+                    this.action.setLoop(THREE.LoopOnce);
                     this.action.clampWhenFinished  = true;
                     this.action.play();
                     this.animRunning = true;
-                    /*this.mixer.addEventListener('finished',(e)=>{
-                        that.setAnimRunning(false);
+                    console.log('set animRunning for ', this.currentAnim.url)
+                    
+            } else {*/
 
-                     //   that.mesh.scene.position.copy(this.config.pos);
-                    }, false);            */
+                        // Load animation
+                    console.log('currentAnim needs some action: ', this.currentAnim.url);
 
-            } );
+                this.loadMixamoAnimation( animationUrl, this.currentVrm ).then( ( clip ) => {
+
+                    // Apply the loaded animation to mixer and play
+
+                        that.currentAnim.action = that.currentMixer.clipAction(clip);
+                        that.action = that.currentMixer.clipAction(clip);
+                        that.action.setLoop(THREE.LoopOnce);
+                        that.action.clampWhenFinished  = true;
+                        that.action.play();
+                        that.animRunning = true;
+                    console.log('set animRunning for ', this.currentAnim.url)
+
+                } );
+
+
+              //  }
+
+
         }
 
 
-    }
-
-    playNextAnim = (animationUrl) =>{
-        let animIndex = this.config.animations.indexOf(animationUrl);
-        animIndex++;
-
-        if(!this.config.animations[animIndex]){
-            animIndex = 0;
-        }
-
-        this.loadMixamo(this.config.animations[animIndex]);
     }
 
     loadMixamoAnimation = ( url, vrm ) => {
@@ -550,135 +566,72 @@ export default class ItemVRM {
     fetchModel = async(modelUrl, posVector) =>{
         let that = this;
         return new Promise((resolve,reject)=>{
-           const loader = new GLTFLoader();
-        loader.crossOrigin = 'anonymous';
+            const   loader = new GLTFLoader();
+                    loader.crossOrigin = 'anonymous';
 
-        loader.register( ( parser ) => {
+                    loader.register( ( parser ) => {
 
-            return new THREE_VRM.VRMLoaderPlugin( parser, {  autoUpdateHumanBones: true } );
+                        return new THREE_VRM.VRMLoaderPlugin( parser, {  autoUpdateHumanBones: true } );
 
-        } );
+                    } );
                 
-        if(this.config.defaultAnimPostHashHex){
-            this.loadMixamoNFT(this.config.defaultAnimPostHashHex).then((currentAnimationUrl)=>{
-                console.log('fetchModel with anim: ',this.currentAnimationUrl);
+            that.currentAnim = that.config.animLoader.fetchRandAnim();
+            that.currentAnimationUrl = that.currentAnim.url;
+            console.log('fetchModel with anim: ',that.currentAnimationUrl);
+            loader.load(
+                // URL of the VRM you want to load
+                modelUrl,
 
-                that.currentAnimationUrl = currentAnimationUrl;
+                // called when the resource is loaded
+                ( gltf ) => {
+                    that.root = gltf;
+                    const vrm = gltf.userData.vrm;
 
-                loader.load(
-                    // URL of the VRM you want to load
-                    modelUrl,
+                    if ( that.currentVrm ) {
 
-                    // called when the resource is loaded
-                    ( gltf ) => {
-                        this.root = gltf;
-                        const vrm = gltf.userData.vrm;
+                        that.scene.remove( that.currentVrm.scene );
 
-                        if ( this.currentVrm ) {
+                        THREE_VRM.VRMUtils.deepDispose( that.currentVrm.scene );
 
-                            this.scene.remove( this.currentVrm.scene );
+                    }
 
-                            THREE_VRM.VRMUtils.deepDispose( this.currentVrm.scene );
-
-                        }
-
-                        // put the model to the scene
-                        this.currentVrm = vrm;
-                        this.scene.add( vrm.scene );
-                        vrm.scene.position.copy(posVector);
+                    // put the model to the scene
+                    that.currentVrm = vrm;
+                    that.scene.add( vrm.scene );
+                    vrm.scene.position.copy(posVector);
 
 
-                        // Disable frustum culling
-                        vrm.scene.traverse( ( obj ) => {
+                    // Disable frustum culling
+                    vrm.scene.traverse( ( obj ) => {
 
-                            obj.frustumCulled = false;
+                        obj.frustumCulled = false;
 
-                        } );
+                    } );
 
-                        that.fixYCoord(vrm.scene, posVector);
+                    that.fixYCoord(vrm.scene, posVector);
 
-                        if ( this.currentAnimationUrl ) {
+                    if ( that.currentAnimationUrl ) {
 
-                            this.loadMixamo( this.currentAnimationUrl );
+                        that.loadMixamo( that.currentAnimationUrl );
 
-                        }
+                    }
 
-                        // rotate if the VRM is VRM0.0
-                        THREE_VRM.VRMUtils.rotateVRM0( vrm );
+                    // rotate if the VRM is VRM0.0
+                    THREE_VRM.VRMUtils.rotateVRM0( vrm );
 
-                        resolve(this.currentVrm);
+                    resolve(that.currentVrm);
 
-                    },
+                },
 
-                    // called while loading is progressing
-                    ( progress ) => ()=>{},//console.log( 'Loading model...', 100.0 * ( progress.loaded / progress.total ), '%' ),
+                // called while loading is progressing
+                ( progress ) => ()=>{},//console.log( 'Loading model...', 100.0 * ( progress.loaded / progress.total ), '%' ),
 
-                    // called when loading has errors
-                    ( error ) => console.error( error, this.config.nft.postHashHex ),
-                );
-
-            })
-        } else {
-                console.log('fetchModel with NO anim');
-
-
-                loader.load(
-                    // URL of the VRM you want to load
-                    modelUrl,
-
-                    // called when the resource is loaded
-                    ( gltf ) => {
-                        this.root = gltf;
-                        const vrm = gltf.userData.vrm;
-
-                        if ( this.currentVrm ) {
-
-                            this.scene.remove( this.currentVrm.scene );
-
-                            THREE_VRM.VRMUtils.deepDispose( this.currentVrm.scene );
-
-                        }
-
-                        // put the model to the scene
-                        this.currentVrm = vrm;
-                        this.scene.add( vrm.scene );
-                        vrm.scene.position.copy(posVector);
-
-
-                        // Disable frustum culling
-                        vrm.scene.traverse( ( obj ) => {
-
-                            obj.frustumCulled = false;
-
-                        } );
-
-                        that.fixYCoord(vrm.scene, posVector);
-
-                        if ( this.currentAnimationUrl ) {
-
-                            this.loadMixamo( this.currentAnimationUrl );
-
-                        }
-
-                        // rotate if the VRM is VRM0.0
-                        THREE_VRM.VRMUtils.rotateVRM0( vrm );
-
-                        resolve(this.currentVrm);
-
-                    },
-
-                    // called while loading is progressing
-                    ( progress ) => ()=>{},//console.log( 'Loading model...', 100.0 * ( progress.loaded / progress.total ), '%' ),
-
-                    // called when loading has errors
-                    ( error ) => console.error( error, this.config.nft.postHashHex ),
-                );
-
-            }
-
-    })    
+                // called when loading has errors
+                ( error ) => console.error( error, that.config.nft.postHashHex ),
+            );
           
-}
+        })
+    }
 
 scaleToFitScene = (obj3D, posVector) =>{
 

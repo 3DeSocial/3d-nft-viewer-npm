@@ -357,7 +357,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         console.log('initItem decide format from: ',opts.format.toLowerCase());
         if(opts.format.toLowerCase()==='vrm'){
             console.log('woohoo VRM');
-            itemParams.animations = this.config.animations;
+            itemParams.animLoader = this.config.animLoader;
             item = new ItemVRM(itemParams);
             console.log(item);
         } else {

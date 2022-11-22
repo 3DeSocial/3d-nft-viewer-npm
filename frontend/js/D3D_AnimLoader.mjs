@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 
-export default class Animation {
+export default class AnimLoader {
 
     constructor(config){
         let defaults = {
@@ -39,101 +39,49 @@ export default class Animation {
         this.animations = null;
         this.isItem = false;
         this.isImage = false;
-        this.nftDisplayData = this.parseNFTDisplayData();
         if(this.config.modelUrl){
             console.log('check modelUrl');
             this.getFormatFromModelUrl();
         } else {
             console.log('no modelUrl');
         }
-
+        this.preloadAnims();
     }
 
-
-    parseNFTDisplayData = () =>{
-        let nft = this.config.nft;
-        if(!this.config.nft){
-            return false;
-        };
-        if(!nft.profileEntryResponse){
-            console.log('no nft.profileEntryResponse');
-            return {};
-        };        
-        let data = {
-            creator: nft.profileEntryResponse.username,
-            description: nft.body,
-            maxPrice: (nft.maxPrice>0)?this.convertNanosToDeso(nft.maxPrice,4):0,
-            minPrice: (nft.minPrice>0)?this.convertNanosToDeso(nft.minPrice,4):0,
-            isBuyNow: nft.isBuyNow,
-            likeCount: nft.likeCount,
-            created:this.formatDate(nft.timeStamp / 1000000),
-            diamondCount:nft.diamondCount,
-            buyNowPrice: this.convertNanosToDeso(nft.buyNowPrice,4),
-            copies: nft.numNFTCopies,
-            copiesForSale: nft.numNFTCopiesForSale,            
-            commentCount: nft.commentCount,
-            nftzUrl: 'https://nftz.me/nft/'+nft.postHashHex,
-            postHashHex: +nft.postHashHex,
-            lastBidPrice: (nft.lastBidPrice>0)?this.convertNanosToDeso(nft.lastBidPrice,4):0,
-        }
-
-        return data;
-    }
-
-
-    convertNanosToDeso = (nanos, d) =>{
-        return (nanos / 1e9).toFixed(d)        
-    }
-
-    formatDate =(date)=> {
-            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-            return new Date(date).toLocaleTimeString('en', options);
-    }    
-
-    resetVelocity = ()=>{
-        this.velocity.setX(0);
-        this.velocity.setY(0);
-        this.velocity.setZ(0);
-        this.direction.set(0,0,0)
-    }
-
-    hasArmature = () =>{
+    preloadAnims = () =>{
         let that = this;
-        this.armature = null;
-        this.modelChildren = [];
-        let scene;
-        console.log('this.root: ');
-        console.log(this.root);
+        let url =this.createAnimRequest();
+        console.log('requestString: ',url);
 
-        if(this.root.armature){
-            console.log('armature found in root');
-            this.armature = this.root.armature;
-            return true;
-        };
 
-        if(this.root.scene){
-            scene = this.root.scene;
-        } else {
-            scene = this.root;
+        fetch(url,{ method: "get"})
+                .then(response => response.text())
+                .then((data)=>{
+                    this.animPosts = data;
+                });
+
+
+        this.animUrls =  [  {hex:'1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2',url:'https://desodata.azureedge.net/unzipped/1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2/fbx/normal/Arm_Stretching.fbx'},
+                            {hex:'95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2',url:'https://desodata.azureedge.net/unzipped/95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2/fbx/normal/Happy_Idle.fbx'},
+                            {hex:'8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85',url:'https://desodata.azureedge.net/unzipped/8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85/fbx/normal/Warrior_Idle.fbx'},
+                            {hex:'287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4',url:'https://desodata.azureedge.net/unzipped/287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4/fbx/normal/Victory.fbx'}];
+
+        this.lastPlayed = 0;
+    }
+
+    createAnimRequest = () =>{
+        return 'https://nftzapi.azurewebsites.net/api/post/getposts?hexesStr='+this.config.animHashes.join(',');
+    }
+
+    playNextAnim = (animationUrl) =>{
+        let animIndex = this.config.animations.indexOf(animationUrl);
+        animIndex++;
+
+        if(!this.config.animations[animIndex]){
+            animIndex = 0;
         }
 
-        if(!scene.children){
-            console.log('scene has no children');
-            return false;
-        }
-   
-        scene.children.forEach((el)=>{
-            console.log(el.name);
-            if(el.name === 'Armature'){
-                console.log('found armature.');
-                that.armature = el;
-            } else {
-                that.modelChildren.push(el);
-                console.log('add child: ',el.name)
-            }
-        });
-
-        return (!this.armature === null);
+        this.loadMixamo(this.config.animations[animIndex]);
     }
 
     hasAnimations = (obj) =>{
@@ -180,72 +128,7 @@ export default class Animation {
             return false;
         }
     }
-    initItemEvents = () =>{
-        this.meshPlacedEvent = new CustomEvent('placed', {detail: {mesh: this.mesh}});
-    }
-
-    placeModel = (pos) =>{
-        let that = this;
-        return new Promise((resolve,reject)=>{
-            this.fetchModel(this.modelUrl, pos)
-            .then((model)=>{
-                resolve(model);
-            }).catch((err=>{
-                console.log( err);
-            }))
-        })
-    
-    }
-
-    place = (pos) =>{
-        let that = this;
-        if(typeof(pos)==='undefined'){
-            throw('Cant place at undefined position');
-        };
-        return new Promise((resolve,reject)=>{
-            if(that.mesh){
-                that.mesh.position.copy(pos);
-                that.scene.add(this.mesh);
-                that.fixYCoord(this.mesh, pos);
-
-                resolve(this.mesh, pos);
-            } else{
-                this.fetchAnimUrl()
-                .then((modelUrl)=>{
-                    if(!that.retrievedModelUrlIsValid(modelUrl)){
-                        reject('Invalid ModelUrl in ExtraData: '+modelUrl);
-                        return;
-                    } else {
-                        //console.log('validated modelUrl: ',modelUrl);
-                        that.modelUrl = modelUrl;
-                        that.placeModel(pos)
-                        .then((model)=>{
-                            that.mesh = model;
-                            console.log('item init at pos', pos);
-                            if(that.hasAnimations(false)){
-                                console.log('hasAnimations');
-                                that.startAnimation(0,THREE.LoopRepeat);
-                                console.log('animationstarted');
-                            } else {
-                                console.log('no animations',this.config.postHashHex);
-                                console.log(model);
-                                console.log('root: ');
-                                console.log(that.root);
-                            };
-                            let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
-                            document.body.dispatchEvent(loadedEvent);
-                            document.body.dispatchEvent(this.meshPlacedEvent);
-                            resolve(model, pos);
-                        })
-                    };
-                }).catch(err =>{
-                    console.log(err);
-                })
-            }
-        });
-
-    }
-
+  
     retrievedModelUrlIsValid = (modelUrl) =>{
         if(typeof(modelUrl)==='undefined'){
             return false;        
@@ -262,39 +145,7 @@ export default class Animation {
         return true;
     }
 
-    remove = () =>{
-        this.scene.remove(this.mesh.children[0]);
-    }
-    moveTo = (pos)=>{
-       // console.log('current: ',this.mesh.position);
-       // console.log('moveto: ',pos);
-        this.mesh.position.copy(pos);
-    }
-
-    centerMeshInScene = (gltfScene) =>{
-        let firstMesh = null;
-
-        if(gltfScene.children.length === 1){
-            firstMesh = gltfScene.children[0];
-            firstMesh.geometry.center();
-            return firstMesh;            
-        } else {
-            gltfScene.traverse( c => {
-
-                if ( c.isMesh ) {
-
-                    firstMesh = c;
-                    firstMesh.geometry.center();
-                    return firstMesh;  
-                }
-
-            } );
-        }
-
-
-    }
-    
-    fetchAnimUrl = async() =>{
+  /*  fetchAnimUrl = async() =>{
         let that = this;
 
         return new Promise((resolve,reject)=>{
@@ -326,6 +177,26 @@ export default class Animation {
             }
         })
         
+    }*/
+
+    fetchAnimUrl = (hex) => {
+        return (this.animUrls[hex])?this.animUrls[hex]:false;
+
+    }
+
+    fetchRandAnimUrl = () =>{
+        let animIdx = this.getRandomInt(0,this.animUrls.length-1);
+        return this.animUrls[animIdx].url;
+    }
+
+
+    fetchRandAnim = () =>{
+        let animIdx = this.getRandomInt(0,this.animUrls.length-1);
+        return this.animUrls[animIdx];
+    }
+
+    getRandomInt = (min, max) => {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
     fetchModel = async(modelUrl, posVector) =>{
@@ -349,6 +220,8 @@ export default class Animation {
                     console.log('armature detected');
                     console.log(this.armature);
                 } else {
+}
+}
 */
                     that.mesh = loadedItem;
                     that.mesh.userData.owner = this;
@@ -787,4 +660,4 @@ console.log(' posVector.y: ', posVector.y,' lowestVertex.y ',lowestVertex.y);
 
 }
 
-export {Animation}
+export {AnimLoader}
