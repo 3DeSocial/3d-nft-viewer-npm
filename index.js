@@ -19,5 +19,8 @@ import { D3DInventory } from  './frontend/js/D3D_Inventory.mjs';
 import { ExtraData3DParser } from  './frontend/js/D3D_ExtraDataParser.mjs';
 import { LayoutPlotter } from  './frontend/js/D3D_LayoutPlotter.mjs';
 import { ChainAPI } from  './frontend/js/D3D_ChainAPI.mjs';
+import { CollisionChecker } from  './frontend/js/D3D_CollisionChecker.mjs';
 import { LoadingScreen } from  './frontend/js/D3D_LoadingScreen.mjs'; 
-export {AudioClip, LoadingScreen, MeshBVH, MeshBVHVisualizer, VRButton, NFTViewerOverlay, ChainAPI, HUDBrowser, HUDVR, D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRControls, Item, Item2d, XRControllerModelFactory, SceneryLoader, SkyBoxLoader, LayoutPlotter}
+import { PlayerVR } from  './frontend/js/D3D_PlayerVR.mjs'; 
+
+export {PlayerVR, AudioClip, CollisionChecker, LoadingScreen, MeshBVH, MeshBVHVisualizer, VRButton, NFTViewerOverlay, ChainAPI, HUDBrowser, HUDVR, D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRControls, Item, Item2d, XRControllerModelFactory, SceneryLoader, SkyBoxLoader, LayoutPlotter}

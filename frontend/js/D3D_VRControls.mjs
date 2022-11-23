@@ -10,7 +10,50 @@ class VRControls {
 
 		let defaults = {
 			renderer: null,
-			scene: null
+			scene: null,
+            flyUp: (data, value)=>{
+                                                          
+            },
+            flyDown:(data, value)=>{
+              
+            },
+            flyLeft:(data, value)=>{
+                
+            },                                            
+            flyRight:(data, value)=>{
+              
+            },
+            flyForward:(data, value)=>{
+                                                        
+            },
+            flyBack:(data, value)=>{
+               
+            },
+            stopMoving:()=>{
+
+            },
+            onSelectStart: () =>{
+
+            },
+            onSelectEnd: () => {
+
+            },
+             onSelectStartLeft: ()=>{
+                                                console.log('onSelectStart paddle down');
+                                            //    that.controlProxy.rot = 'rl';                                                
+                                            },
+                                            onSelectEndLeft: ()=>{
+                                             console.log('onSelectEnd paddle up')   
+                                            },
+                                            onSelectStartRight: ()=>{
+                                                console.log('onSelectStart paddle down')   
+;
+                                            //    that.controlProxy.rot = 'rl';                                                
+                                            },
+                                            onSelectEndRight: ()=>{
+                                             console.log('onSelectEnd paddle up')   
+                                            },
+
 		};
 
 		this.config = {
@@ -31,32 +74,40 @@ class VRControls {
     	this.renderer = this.config.renderer;
     	this.scene = this.config.scene;
     	this.camera = this.config.camera;
+        this.buildControllers();
 
     }
 
-    buildControllers() {
+    buildControllers = () =>{
+
+        this.controllers = [];
+        this.grips = [];
         // controllers
         let controller1 = this.renderer.xr.getController(0);
         controller1.name = 'left';
-        //controller1.addEventListener("selectstart", onSelectStart);
-        //controller1.addEventListener("selectend", onSelectEnd);
-        this.scene.add(controller1);
+        controller1.addEventListener("selectstart", this.config.onSelectStartLeft);
+        controller1.addEventListener("selectend", this.config.onSelectEndLeft);
+      //  this.scene.add(controller1);
+        this.controllers.push(controller1);
 
         let controller2 = this.renderer.xr.getController(1);
         controller2.name = 'right';
-        //controller2.addEventListener("selectstart", onSelectStart);
-        //controller2.addEventListener("selectend", onSelectEnd);
-        this.scene.add(controller2);
+        controller2.addEventListener("selectstart", this.config.onSelectStartRight);
+        controller2.addEventListener("selectend", this.config.onSelectEndRight);
+       // this.scene.add(controller2);
+        this.controllers.push(controller2);
 
         var controllerModelFactory = new XRControllerModelFactory(new GLTFLoader());
 
         let controllerGrip1 = this.renderer.xr.getControllerGrip(0);
         controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
-        this.scene.add(controllerGrip1);
+        //this.scene.add(controllerGrip1);
+        this.grips.push(controllerGrip1);
 
         let controllerGrip2 = this.renderer.xr.getControllerGrip(1);
         controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
-        this.scene.add(controllerGrip2);
+       // this.scene.add(controllerGrip2);
+        this.grips.push(controllerGrip2);
 
         //Raycaster Geometry
         var geometry = new THREE.BufferGeometry().setFromPoints([
@@ -70,26 +121,6 @@ class VRControls {
 
         controller1.add(line.clone());
         controller2.add(line.clone());
-
-        //dolly for camera
-        let dolly = new THREE.Group();
-        let vrY = this.config.playerStartPos.y-1;
-        dolly.position.copy(this.config.player.position);
-        dolly.name = 'dolly';
-        this.scene.add(dolly);
-        dolly.rotateY(0);
-        dolly.add(this.camera);
-        this.camera.position.copy(this.config.playerStartPos);
-        this.camera.position.setY(this.camera.position.y+2);
-        this.camera.rotateY(0);
-        //add the controls to the dolly also or they will not move with the dolly
-        dolly.add(controller1);
-        dolly.add(controller2);
-        dolly.add(controllerGrip1);
-        dolly.add(controllerGrip2);
-        dolly.rotateY(Math.PI)
-        this.dolly = dolly;
-        return dolly;
     }
 
     checkControllers = () =>{
@@ -128,17 +159,18 @@ class VRControls {
                                     if (value === 1) {
                                         //console.log("Button" + i + "Down");
                                         if (data.handedness == 'left') {
-                                            //console.log("Left Paddle Down");
                                             if (i == 1) {
+
+                                                this.handleLeftControllerButtons(value, i);
                                              //   self.player.rotateY(-THREE.MathUtils.degToRad(1));
                                             }
                                             if (i == 3) {
-                                                self.dolly.position.copy(this.config.playerStartPos);
+                                               // self.dolly.position.copy(this.config.playerStartPos);
                                             }
                                         } else {
                                             //console.log("Right Paddle Down");
                                             if (i == 1) {
-                                               // self.player.rotateY(THREE.MathUtils.degToRad(1));
+                                                this.handleRightControllerButtons(value, i);
                                             }
                                         }
                                     } else {
@@ -147,12 +179,17 @@ class VRControls {
                                         if (i == 1) {
                                             //use the paddle buttons to rotate
                                             if (data.handedness == 'left') {
-                                                //console.log("Left Paddle Down");
+                                                console.log("Left Paddle Down");
+                                                this.handleLeftControllerButtons(value, i);
+
                                              //   self.player.rotateY(
                                               //      -THREE.MathUtils.degToRad(Math.abs(value))
                                                // );
                                             } else {
-                                                //console.log("Right Paddle Down");
+
+                                                this.handleRightControllerButtons(value, i);
+
+
                                            //     self.player.rotateY(
                                              //      THREE.MathUtils.degToRad(Math.abs(value))
                                                // );
@@ -165,10 +202,9 @@ class VRControls {
                             data.axes.forEach((value, i) => {
                                 //handlers for thumbsticks
                                 // console.log('axes: ',i);
-                                //if thumbstick axis has moved beyond the minimum threshold from center, windows mixed reality seems to wander up to about .17 with no input
-                                if (Math.abs(value) > 0.5) {
+                                //if thumbstick axis has flyd beyond the minimum threshold from center, windows mixed reality seems to wander up to about .17 with no input
                                     //set the speedFactor per axis, with acceleration when holding above threshold, up to a max speed
-                                    self.speedFactor[i] > 1
+                                    self.speedFactor[i] > 0.5
                                         ? (self.speedFactor[i] = 1)
                                         : (self.speedFactor[i] *= 1.001);
                                     //  console.log(value, self.speedFactor[i], i);
@@ -189,9 +225,7 @@ class VRControls {
                                             this.handleRightController(data, value);
                                         }
                                     }
-                                } else {
-     
-                                }
+                               
                             });
                         }
                         this.prevGamePads.set(source, data);
@@ -205,45 +239,81 @@ class VRControls {
 
     }
 
+    handleLeftControllerButtons = (data, value) =>{
+        this.moveForward(data, value);
+    }
+
     handleRightController = (data, value) =>{
         this.handleRightThumbstick('right',data, value);
 
     }
 
+    handleRightControllerButtons = (data, value) =>{
+        this.moveForward(data, value);
+    }
+
     handleLeftThumbstick = (hand, data, value) =>{
+
+        let forward = true;
         if(this.isOverMovementThreshold(data.axes[2])){
             if (data.axes[2] > 0) {
-                //console.log(hand+ ' stick: right ',data.axes[2]);
+                console.log(hand+ ' stick: right ',data.axes[2]);
                 switch(this.config.vrType){
                     case 'flying':
-                        this.flyRight(data);
+                        this.flyRight(data, value);
                     break;
                     default:
-                        this.moveRight(data);
+                        console.log('move right');
+                        this.moveRight(data, value);
                     break;
                 }
             } else if (data.axes[2] < 0) {
-                //console.log(hand+ ' stick: left',data.axes[2]);
+                console.log(hand+ ' stick: left',data.axes[2]);
                 switch(this.config.vrType){
                     case 'flying':
-                        this.flyLeft(data);
+                        this.flyLeft(data, value);
                     break;
                     default:
-                        this.moveLeft(data);
+                        console.log('move left');
+                        this.moveLeft(data, value);
                     break;
                 }
             };
-        };
+        } else {
+            forward = false;
+        }
 
+        let left = true;
         if(this.isOverMovementThreshold(data.axes[3])){
+             //   console.log(hand+ ' stick: back',data.axes[3]);
             if(data.axes[3] > 0){
-                //console.log(hand+ ' stick: back',data.axes[3]);
-                this.flyUp(data, value);
+                console.log(hand+ ' stick: right ',data.axes[2],this.config.vrType);
+                switch(this.config.vrType){
+                    case 'flying':
+                        this.flyBackward(data, value);
+                    break;
+                    default:
+                        this.moveBackward(data, value);
+                    break;
+                }
             } else if (data.axes[3] < 0){
-                //console.log(hand + ' stick: forward',data.axes[3]);
-                this.flyDown(data, value);
+                console.log(hand + ' stick: forward',data.axes[3],this.config.vrType);
+                switch(this.config.vrType){
+                    case 'flying':
+                        this.flyForward(data, value);
+                    break;
+                    default:
+                        this.moveForward(data, value);
+                    break;
+                }             
             };
-        };
+        } else {
+            left = false;
+        }
+
+        if((left === false)&&(forward===false)){
+            this.config.stopMoving();
+        }
 
     }
 
@@ -256,32 +326,36 @@ class VRControls {
                 //console.log(hand+ ' stick: left',data.axes[2]);
                 this.rotateLeft(data, value);
             };
-        };
+        } else {
+            this.config.cancelRotate();
+        }
 
         if(this.isOverMovementThreshold(data.axes[3])){
              //   console.log(hand+ ' stick: back',data.axes[3]);
             if(data.axes[3] > 0){
-                //console.log(hand+ ' stick: right ',data.axes[2],this.config.vrType);
+                console.log(hand+ ' stick: right ',data.axes[2],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
-                        this.flyBackward(data);
+                        this.flyBackward(data, value);
                     break;
                     default:
-                        this.moveBackward(data);
+                        this.moveBackward(data, value);
                     break;
                 }
             } else if (data.axes[3] < 0){
                 //console.log(hand + ' stick: forward',data.axes[3],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
-                        this.flyForward(data);
+                        this.flyForward(data, value);
                     break;
                     default:
-                        this.moveForward(data);
+                        this.moveForward(data, value);
                     break;
                 }             
             };
-        };
+        } else {
+            this.config.stopMoving();
+        }
 
     }
 
@@ -292,77 +366,93 @@ class VRControls {
         return false;
     }
 
-    flyForward = (data) => {
+    flyForward = (data, value) => {
      /*   let nextPos = new THREE.Vector3();
         nextPos.copy(this.dolly.position);
         nextPos.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
         nextPos.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
         this.dolly.lookAt(nextPos);*/
-        this.dolly.position.x -= this.cameraVector.x * this.flyingSpeedFactor[3] * data.axes[3];
-        this.dolly.position.z -= this.cameraVector.z * this.flyingSpeedFactor[3] * data.axes[3];
+      //  this.dolly.position.x -= this.cameraVector.x * this.flyingSpeedFactor[3] * data.axes[3];
+        //this.dolly.position.z -= this.cameraVector.z * this.flyingSpeedFactor[3] * data.axes[3];
+        this.config.flyForward(data, value);        
+
 
     }
 
-    moveForward = (data) =>{
+    moveForward = (data, value) =>{
 
      /*   let nextPos = new THREE.Vector3();
         nextPos.copy(this.dolly.position);
         nextPos.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
         nextPos.z -= this.cameraVector.z * this.speedFactor[3] * data.axes[3];
         this.dolly.lookAt(nextPos);      */
-        this.config.moveForward(data);        
+        this.config.moveForward(data, value);        
 
     }
 
-    flyBackward = (data) => {
-        this.dolly.position.x -= this.cameraVector.x * this.flyingSpeedFactor[3] * data.axes[3];
-        this.dolly.position.z -= this.cameraVector.z * this.flyingSpeedFactor[3] * data.axes[3];
+    flyBackward = (data, value) => {
+      //  this.dolly.position.x -= this.cameraVector.x * this.flyingSpeedFactor[3] * data.axes[3];
+       // this.dolly.position.z -= this.cameraVector.z * this.flyingSpeedFactor[3] * data.axes[3];
+        this.config.flyBack(data, value);   
+
     }
-    moveBackward = (data) => {
-        this.config.moveBack(data);
+    moveBackward = (data, value) => {
+        this.config.moveBack(data, value);   
     }
 
-    flyLeft = (data) => {
-        this.dolly.position.x -= this.cameraVector.z * this.flyingSpeedFactor[2] * data.axes[2];
-        this.dolly.position.z += this.cameraVector.x * this.flyingSpeedFactor[2] * data.axes[2];        
+    flyLeft = (data, value) => {
+        this.config.flyLeft(data, value);
+
+        //this.dolly.position.x -= this.cameraVector.z * this.flyingSpeedFactor[2] * data.axes[2];
+        //this.dolly.position.z += this.cameraVector.x * this.flyingSpeedFactor[2] * data.axes[2];        
     }
 
-    moveLeft = (data) => {
-        this.config.moveLeft(data);
+    moveLeft = (data, value) => {
+        this.config.moveLeft(data, value);
     }
 
-    flyRight = (data) => {
-        this.dolly.position.x -= this.cameraVector.z * this.flyingSpeedFactor[2] * data.axes[2];
-        this.dolly.position.z += this.cameraVector.x * this.flyingSpeedFactor[2] * data.axes[2];        
+    flyRight = (data, value) => {
+        this.config.flyRight(data, value);   
+
+     //   this.dolly.position.x -= this.cameraVector.z * this.flyingSpeedFactor[2] * data.axes[2];
+       // this.dolly.position.z += this.cameraVector.x * this.flyingSpeedFactor[2] * data.axes[2];        
     }
 
-    moveRight = (data) => {
-        this.config.moveRight(data);
+    moveRight = (data, value) => {
+        this.config.moveRight(data, value);   
     }
 
-    flyUp = (data) => {
-        this.dolly.position.y += this.flyingSpeedFactor[3] * data.axes[3];
+    flyUp = (data, value) => {
+       // this.dolly.position.y += this.flyingSpeedFactor[3] * data.axes[3];
+        this.config.flyUp(data, value);   
+
     }
 
-    moveUp = (data) => {
-        this.config.moveUp(data);
+    moveUp = (data, value) => {
+        this.config.moveUp(data, value);   
     }
 
-    flyDown = (data) =>{
-        this.dolly.position.y += this.flyingSpeedFactor[3] * data.axes[3];
+    flyDown = (data, value) =>{
+        this.config.flyDown(data, value);   
+
+       // this.dolly.position.y += this.flyingSpeedFactor[3] * data.axes[3];
     }
 
-    moveDown = (data) => {
-        this.config.moveDown(data);
+    moveDown = (data, value) => {
+        this.config.moveDown(data, value);   
         
     }
 
     rotateLeft = (data,value) => {
+    console.log('VRControla rotateLeft')
+
         this.config.rotateLeft(data,value);
     }
 
     rotateRight = (data,value) => {
+    console.log('VRControla rotateRight')
         this.config.rotateRight(data,value);
+    console.log('rotated right');
     }
 
 	/*dollyMove = () =>{
