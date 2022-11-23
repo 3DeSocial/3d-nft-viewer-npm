@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export const name = 'd3d-inventory';
 let loader;
 
-import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
+import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
 
  class D3DInventory {
     
@@ -69,6 +69,7 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         this.initItems3d(this.config.items3d).then((nfts3d)=>{
             if(nfts3d){
                 that.items3d = nfts3d;     
+                console.log('3d items placed: ',nfts3d);
             };
 
         })
@@ -222,25 +223,38 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
                 let item = null;  
                 if(modelUrl){
                     item = this.initItem({modelUrl: modelUrl, nftPostHashHex: itemData.postHashHex, pos:spot.pos, rot:spot.rot, nft:itemData, width: 3, height:3, depth:3, scene: that.scene, format: formats[0]});
+                    console.log('item returned. have modelUrl: ',modelUrl, ' format: ',formats[0]);
                 } else {
 
 
-                let versions = extraDataParser.getAvailableVersions(0,'gltf');
-                console.log('versions:', versions);
-                if( versions[0]){
-                   let path3D = versions[0];
-                }
-                let nftRequestParams = {
-                    postHex: itemData.postHashHex,
-                    path: '/'+path3D,
-                    format: 'gltf'
-                  };
+                    let versions = extraDataParser.getAvailableVersions(0,'gltf');
+                    console.log('versions:', versions);
+                    if( versions[0]){
+                       let path3D = versions[0];
+                    }
+                    let nftRequestParams = {
+                        postHex: itemData.postHashHex,
+                        path: '/'+path3D,
+                        format: 'gltf'
+                      };
                     item = this.initItem({nftRequestParams: nftRequestParams, nftPostHashHex: itemData.postHashHex, pos:spot.pos, rot:spot.rot, nft:itemData, width: 3, height:3, depth:3, scene: that.scene, format: formats[0]});
-                }                
+                    console.log('item API request requried for modelUrl: ',modelUrl, ' format: ',formats[0]);
+
+                }      
+
+                console.log('placing item of format ',formats[0]);
+                console.log(item);
                 item.place(spot.pos).then((mesh,pos)=>{
                     console.log('placed at ',spot.pos,mesh);
-                    if(spot.rot){
-                        mesh.rotateY(spot.rot.y);
+                    if(spot.rot){                    
+                        if(item.isVRM){
+                            mesh.scene.rotateY(spot.rot.y);
+                        };
+
+                        if(mesh.rotateY){
+                            mesh.rotateY(spot.rot.y);
+                        };
+
                     };
                     items.push(item);
                     this.placedItems3D.push(item);
@@ -260,7 +274,7 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         let paramString = '';
         let params  = [];
         let nftsRoute = '';
-
+        let item = null;
 
         let itemParams = {
             three: THREE,
@@ -273,7 +287,8 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
             nftsRoute: this.config.nftsRoute,
             isImage: false,
             layout: opts.layout,
-            loadingScreen: this.config.loadingScreen
+            loadingScreen: this.config.loadingScreen,
+            format: opts.format
         };
 
 
@@ -338,7 +353,21 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
                 return false;
             };              
         };
-        return new Item(itemParams);
+
+        console.log('initItem decide format from: ',opts.format.toLowerCase());
+        if(opts.format.toLowerCase()==='vrm'){
+            console.log('woohoo VRM');
+            itemParams.animLoader = this.config.animLoader;
+            item = new ItemVRM(itemParams);
+            console.log(item);
+        } else {
+            console.log('Booo not VRM');
+
+            item = new Item(config);
+        };
+
+
+        return item;
 
     }
 
@@ -498,6 +527,10 @@ import { Item, Item2d, ChainAPI, ExtraData3DParser } from '3d-nft-viewer';
         this.placedItems3D.forEach((item)=>{
             if((item.mixer !== null)){
                 item.mixer.update( delta );
+
+                if(item.mesh.update){
+                    item.mesh.update();
+                };
             };
         })
     }

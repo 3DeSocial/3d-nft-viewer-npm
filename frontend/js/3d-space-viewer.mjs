@@ -5,7 +5,7 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { PlayerVR, AudioClip, Item, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { PlayerVR, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -26,6 +26,7 @@ const params = {
     constructor(config) {
 
         let defaults = {
+                    animations: ['/mixamo/Arm_Stretching.fbx', '/mixamo/Looking_Around.fbx','/mixamo/Strut_Walking.fbx','/mixamo/Victory.fbx'],            
                     avatarSize: {width: 1, height:1, depth:1},
                     el: document.body,
                     ctrClass: 'data-nft', // Attribute of div containing nft preview area for a single nft
@@ -165,7 +166,7 @@ const params = {
 
             this.initScene();
             this.initCameraPlayer();     
-            this.loadUIAssets();
+          //  this.loadUIAssets();
             this.initRenderer(this.config.el);
             this.initHUD({scene:that.scene,
                             chainAPI: that.config.chainAPI});
@@ -1933,30 +1934,52 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             this.ghosts = spookyNFTs.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'));
 
             items3d = items3d.concat(spookyNFTs)
-            items3d = items3d.slice(0,maxItems3D);    
+            let items3dToRender = items3d.slice(0,maxItems3D);   
+
+            if(items2d.length===0){
+                items2d = items3d.slice(maxItems3D);
+                //display 2d images of 3d items if there are no more 2d images
+            };
+
+
             this.loadingScreen.startLoading({items:items2d,
                                         name:'NFTs'});
 
-            this.sceneInventory = new D3DInventory({
-                                            chainAPI: this.config.chainAPI,
-                                            imageProxyUrl: this.config.imageProxyUrl,    
-                                            items2d: items2d,
-                                            items3d: items3d,
-                                            scene: this.scene,
-                                            loader: this.loader,
-                                            loaders: this.loaders,
-                                            width: 3,
-                                            depth: 3,
-                                            height: 3,
-                                            modelsRoute: this.config.modelsRoute,
-                                            nftsRoute: this.config.nftsRoute,
-                                            layoutPlotter: this.layoutPlotter,
-                                            loadingScreen: this.loadingScreen
-                                        });     
+            let sceneInvConfig = {          
+                                animations: this.config.animations,
+                                chainAPI: this.config.chainAPI,
+                                imageProxyUrl: this.config.imageProxyUrl,    
+                                items2d: items2d,
+                                items3d: items3dToRender,
+                                scene: this.scene,
+                                loader: this.loader,
+                                loaders: this.loaders,
+                                width: 3,
+                                depth: 3,
+                                height: 3,
+                                modelsRoute: this.config.modelsRoute,
+                                nftsRoute: this.config.nftsRoute,
+                                layoutPlotter: this.layoutPlotter,
+                                loadingScreen: this.loadingScreen
+                                }
+
+            let haveVRM = this.haveVRM(items3dToRender);
+            if(haveVRM){
+               
+                sceneInvConfig.animLoader = true;
+
+            }
+            this.sceneInventory = new D3DInventory(sceneInvConfig);     
         }
         
     }
 
+    haveVRM = (items3dToRender) =>{
+        console.log(items3dToRender);
+        //items3dToRender.filter(item=>(item.nft.))
+        return true; //test
+    }
+    
     initItem = (opts) =>{
 
         let nftPostHashHex = opts.nftPostHashHex;
@@ -1993,6 +2016,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }
 
     initItemForModel = (opts) =>{
+        let item = null;
+
         let urlParts = opts.modelUrl.split('.');
         let extension = urlParts[urlParts.length-1];
         let config = {
@@ -2007,7 +2032,16 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             nftsRoute: this.config.nftsRoute,
             format:extension
         }
-        let item = new Item(config);
+
+        console.log('init item for model format: ',extension.toLowerCase());
+        if(extension.trim().toLowerCase()==='vrm'){
+            config.animations = this.config.animations;
+            item = new ItemVRM(config);
+            console.log('return vrm item');
+        } else {
+            item = new Item(config);
+        };
+
         return item;
 
     }

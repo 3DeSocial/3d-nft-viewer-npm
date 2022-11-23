@@ -1,10 +1,77 @@
 import * as THREE from 'three';
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
+import * as THREE_VRM from '@pixiv/three-vrm';
+import {AnimLoader} from '3d-nft-viewer';
+const helperRoot = new THREE.Group();
 
-import { VOXMesh } from "three/examples/jsm/loaders/VOXLoader.js";
-export default class Item {
+    /**
+     * A map from Mixamo rig name to VRM Humanoid bone name
+     */
+    const mixamoVRMRigMap = {
+        mixamorigHips: 'hips',
+        mixamorigSpine: 'spine',
+        mixamorigSpine1: 'chest',
+        mixamorigSpine2: 'upperChest',
+        mixamorigNeck: 'neck',
+        mixamorigHead: 'head',
+        mixamorigLeftShoulder: 'leftShoulder',
+        mixamorigLeftArm: 'leftUpperArm',
+        mixamorigLeftForeArm: 'leftLowerArm',
+        mixamorigLeftHand: 'leftHand',
+        mixamorigLeftHandThumb1: 'leftThumbMetacarpal',
+        mixamorigLeftHandThumb2: 'leftThumbProximal',
+        mixamorigLeftHandThumb3: 'leftThumbDistal',
+        mixamorigLeftHandIndex1: 'leftIndexProximal',
+        mixamorigLeftHandIndex2: 'leftIndexIntermediate',
+        mixamorigLeftHandIndex3: 'leftIndexDistal',
+        mixamorigLeftHandMiddle1: 'leftMiddleProximal',
+        mixamorigLeftHandMiddle2: 'leftMiddleIntermediate',
+        mixamorigLeftHandMiddle3: 'leftMiddleDistal',
+        mixamorigLeftHandRing1: 'leftRingProximal',
+        mixamorigLeftHandRing2: 'leftRingIntermediate',
+        mixamorigLeftHandRing3: 'leftRingDistal',
+        mixamorigLeftHandPinky1: 'leftLittleProximal',
+        mixamorigLeftHandPinky2: 'leftLittleIntermediate',
+        mixamorigLeftHandPinky3: 'leftLittleDistal',
+        mixamorigRightShoulder: 'rightShoulder',
+        mixamorigRightArm: 'rightUpperArm',
+        mixamorigRightForeArm: 'rightLowerArm',
+        mixamorigRightHand: 'rightHand',
+        mixamorigRightHandPinky1: 'rightLittleProximal',
+        mixamorigRightHandPinky2: 'rightLittleIntermediate',
+        mixamorigRightHandPinky3: 'rightLittleDistal',
+        mixamorigRightHandRing1: 'rightRingProximal',
+        mixamorigRightHandRing2: 'rightRingIntermediate',
+        mixamorigRightHandRing3: 'rightRingDistal',
+        mixamorigRightHandMiddle1: 'rightMiddleProximal',
+        mixamorigRightHandMiddle2: 'rightMiddleIntermediate',
+        mixamorigRightHandMiddle3: 'rightMiddleDistal',
+        mixamorigRightHandIndex1: 'rightIndexProximal',
+        mixamorigRightHandIndex2: 'rightIndexIntermediate',
+        mixamorigRightHandIndex3: 'rightIndexDistal',
+        mixamorigRightHandThumb1: 'rightThumbMetacarpal',
+        mixamorigRightHandThumb2: 'rightThumbProximal',
+        mixamorigRightHandThumb3: 'rightThumbDistal',
+        mixamorigLeftUpLeg: 'leftUpperLeg',
+        mixamorigLeftLeg: 'leftLowerLeg',
+        mixamorigLeftFoot: 'leftFoot',
+        mixamorigLeftToeBase: 'leftToes',
+        mixamorigRightUpLeg: 'rightUpperLeg',
+        mixamorigRightLeg: 'rightLowerLeg',
+        mixamorigRightFoot: 'rightFoot',
+        mixamorigRightToeBase: 'rightToes',
+    };
+
+export default class ItemVRM {
+
 
     constructor(config){
         let defaults = {
+            defaultAnimPostHashHex: '95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2',
+            format: 'vrm',
+            animations: [], // all possible animations
+            animationUrl:'/mixamo/Victory.fbx',
             modelUrl: '',
             modelsRoute: 'models',
             nftsRoute: 'nfts',
@@ -24,12 +91,15 @@ export default class Item {
             ...defaults,
             ...config
         };
-        this.isVRM = false;
 
+        this.isVRM = true;
         this.loader = this.config.loader;
         if(!this.loader && this.config.is3D){
             console.log('cannot init item without loader is 3d? ',this.config.is3D,' hex: ',this.config.postHashHex);
         };
+        this.mixer = undefined;
+        this.currentVrm = undefined;
+        this.currentAnimationUrl = undefined;
         this.scene = this.config.scene;
         this.height = this.config.height;
         this.width = this.config.width;
@@ -48,28 +118,151 @@ export default class Item {
         this.direction = new THREE.Vector3();
         this.rotVelocity = new THREE.Vector3();
         this.nftDisplayData = this.parseNFTDisplayData();
-        if(this.config.modelUrl){
-            console.log('check modelUrl');
-            this.getFormatFromModelUrl();
-        } else {
-            console.log('no modelUrl');
+        if(this.config.animLoader){
+            this.animLoader = this.initAnimLoader({animHashes:[ '287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4',
+                                                                    '8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85',
+                                                                    '95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2',
+                                                                    '1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2']});
         }
+
 
     }
 
-    getFormatFromModelUrl = () =>{
-        let parts = this.config.modelUrl.split('.');
-        let format = parts[parts.length-1];
 
-        console.log('model url: ',this.config.modelUr);
+    // mixamo animation
+    loadMixamo = ( currentAnim ) => {
+        let that = this;
 
-        console.log('format detected: ',format);
-        console.log('format supplied: ',this.config.format);
-        if(format!=this.config.format){
-            this.config.format = format;
-        }
+
+
+
+        this.currentAnimationUrl = currentAnim.url;
+        if(this.currentAnimationUrl){
+            // create AnimationMixer for VRM
+
+
+               
+
+                        // Load animation
+                    console.log('currentAnim needs some action: ', this.currentAnimationUrl);
+
+                this.loadMixamoAnimation( this.currentAnimationUrl, this.currentVrm ).then( ( clip ) => {
+
+                        // Apply the loaded animation to mixer and play
+                        that.currentAnim.action = that.startAnimClip(clip);
+                        console.log('set anim running, ', this.currentAnim.url)
+                } );
+
+
+              }
 
     }
+
+    startAnimClip = (clip) =>{
+
+        let action = this.mixer.clipAction(clip);
+            action.setLoop(THREE.LoopRepeat);
+            action.clampWhenFinished  = true;
+            action.play();
+        this.animRunning = true;    
+        return action;    
+    }
+
+    startAnimAction = (action)=>{
+        action.setLoop(THREE.LoopRepeat);
+        action.clampWhenFinished  = true;
+        action.play();
+        this.animRunning = true;    
+        return action;    
+    }
+
+    loadMixamoAnimation = ( url, vrm ) => {
+
+        const loader = new FBXLoader(); // A loader which loads FBX
+        return loader.loadAsync( url ).then( ( asset ) => {
+
+        const clip = THREE.AnimationClip.findByName( asset.animations, 'mixamo.com' ); // extract the AnimationClip
+
+        const tracks = []; // KeyframeTracks compatible with VRM will be added here
+
+        const restRotationInverse = new THREE.Quaternion();
+        const parentRestWorldRotation = new THREE.Quaternion();
+        const _quatA = new THREE.Quaternion();
+        const _vec3 = new THREE.Vector3();
+
+        // Adjust with reference to hips height.
+        const motionHipsHeight = asset.getObjectByName( 'mixamorigHips' ).position.y;
+        const vrmHipsY = vrm.humanoid?.getNormalizedBoneNode( 'hips' ).getWorldPosition( _vec3 ).y;
+        const vrmRootY = vrm.scene.getWorldPosition( _vec3 ).y;
+        const vrmHipsHeight = Math.abs( vrmHipsY - vrmRootY );
+        const hipsPositionScale = vrmHipsHeight / motionHipsHeight;
+
+        clip.tracks.forEach( ( track ) => {
+
+            // Convert each tracks for VRM use, and push to `tracks`
+            const trackSplitted = track.name.split( '.' );
+            const mixamoRigName = trackSplitted[ 0 ];
+            const vrmBoneName = mixamoVRMRigMap[ mixamoRigName ];
+            const vrmNodeName = vrm.humanoid?.getNormalizedBoneNode( vrmBoneName )?.name;
+            const mixamoRigNode = asset.getObjectByName( mixamoRigName );
+
+            if ( vrmNodeName != null ) {
+
+                const propertyName = trackSplitted[ 1 ];
+
+                // Store rotations of rest-pose.
+                mixamoRigNode.getWorldQuaternion( restRotationInverse ).invert();
+                mixamoRigNode.parent.getWorldQuaternion( parentRestWorldRotation );
+
+                if ( track instanceof THREE.QuaternionKeyframeTrack ) {
+
+                    // Retarget rotation of mixamoRig to NormalizedBone.
+                    for ( let i = 0; i < track.values.length; i += 4 ) {
+
+                        const flatQuaternion = track.values.slice( i, i + 4 );
+
+                        _quatA.fromArray( flatQuaternion );
+
+                        // 親のレスト時ワールド回転 * トラックの回転 * レスト時ワールド回転の逆
+                        _quatA
+                            .premultiply( parentRestWorldRotation )
+                            .multiply( restRotationInverse );
+
+                        _quatA.toArray( flatQuaternion );
+
+                        flatQuaternion.forEach( ( v, index ) => {
+
+                            track.values[ index + i ] = v;
+
+                        } );
+
+                    }
+
+                    tracks.push(
+                        new THREE.QuaternionKeyframeTrack(
+                            `${vrmNodeName}.${propertyName}`,
+                            track.times,
+                            track.values.map( ( v, i ) => ( vrm.meta?.metaVersion === '0' && i % 2 === 0 ? - v : v ) ),
+                        ),
+                    );
+
+                } else if ( track instanceof THREE.VectorKeyframeTrack ) {
+
+                    const value = track.values.map( ( v, i ) => ( vrm.meta?.metaVersion === '0' && i % 3 !== 1 ? - v : v ) * hipsPositionScale );
+                    tracks.push( new THREE.VectorKeyframeTrack( `${vrmNodeName}.${propertyName}`, track.times, value ) );
+
+                }
+
+            }
+
+        } );
+
+        return new THREE.AnimationClip( 'vrmAnimation', clip.duration, tracks );
+
+    } );
+
+}
+
 
     parseNFTDisplayData = () =>{
         let nft = this.config.nft;
@@ -77,7 +270,6 @@ export default class Item {
             return false;
         };
         if(!nft.profileEntryResponse){
-            console.log('no nft.profileEntryResponse');
             return {};
         };        
         let data = {
@@ -123,11 +315,9 @@ export default class Item {
         this.armature = null;
         this.modelChildren = [];
         let scene;
-        console.log('this.root: ');
-        console.log(this.root);
+
 
         if(this.root.armature){
-            console.log('armature found in root');
             this.armature = this.root.armature;
             return true;
         };
@@ -139,18 +329,14 @@ export default class Item {
         }
 
         if(!scene.children){
-            console.log('scene has no children');
             return false;
         }
    
         scene.children.forEach((el)=>{
-            console.log(el.name);
             if(el.name === 'Armature'){
-                console.log('found armature.');
                 that.armature = el;
             } else {
                 that.modelChildren.push(el);
-                console.log('add child: ',el.name)
             }
         });
 
@@ -242,17 +428,8 @@ export default class Item {
                         that.placeModel(pos)
                         .then((model)=>{
                             that.mesh = model;
-                            console.log('item init at pos', pos);
-                            if(that.hasAnimations(false)){
-                                console.log('hasAnimations');
-                                that.startAnimation(0,THREE.LoopRepeat);
-                                console.log('animationstarted');
-                            } else {
-                                console.log('no animations',this.config.postHashHex);
-                                console.log(model);
-                                console.log('root: ');
-                                console.log(that.root);
-                            };
+
+
                             let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
                             document.body.dispatchEvent(loadedEvent);
                             document.body.dispatchEvent(this.meshPlacedEvent);
@@ -350,58 +527,104 @@ export default class Item {
     }
 
     fetchModel = async(modelUrl, posVector) =>{
-        
         let that = this;
-
         return new Promise((resolve,reject)=>{
-           // console.log('fetchModel: ',modelUrl);
-           // console.log('that.loader: ',that.loader);            
-            that.loader.load(modelUrl, (root)=> {
-                that.root = root;
-                let loadedItem = null;
+            const   loader = new GLTFLoader();
+                    loader.crossOrigin = 'anonymous';
 
-                if(root.scene){
-                    loadedItem = root.scene;
-                } else {
-                    loadedItem = root;
-                };     
-            /*               
-                if(that.hasArmature()){
-                    console.log('armature detected');
-                    console.log(this.armature);
-                } else {
-*/
-                    that.mesh = loadedItem;
-                    that.mesh.userData.owner = this;
-                    that.mesh.owner = this;                
-                    let obj3D = this.convertToObj3D(loadedItem);
-                    if(obj3D===false){
-                        console.log('could not convert item for scene');
-                        return false;
+                    loader.register( ( parser ) => {
+
+                        return new THREE_VRM.VRMLoaderPlugin( parser, {  autoUpdateHumanBones: true } );
+
+                    } );
+
+            if(this.animLoader) {
+                that.currentAnim = that.animLoader.fetchRandAnim();
+                that.currentAnimationUrl = that.currentAnim.url;
+                console.log('fetchModel with anim: ',that.currentAnimationUrl);
+            }
+          
+            loader.load(
+                // URL of the VRM you want to load
+                modelUrl,
+
+                // called when the resource is loaded
+                ( gltf ) => {
+                    that.root = gltf;
+                    const vrm = gltf.userData.vrm;
+
+                    if ( that.currentVrm ) {
+
+                        that.scene.remove( that.currentVrm.scene );
+
+                        THREE_VRM.VRMUtils.deepDispose( that.currentVrm.scene );
+
+                    }
+
+                    // put the model to the scene
+                    that.currentVrm = vrm;
+                    that.scene.add( vrm.scene );
+
+                    if(!this.mixer && (this.animLoader)){
+                        this.mixer = new THREE.AnimationMixer( this.currentVrm.scene );
+                        this.mixer.addEventListener('finished',(e)=>{
+                            console.log('finished a clip');
+                            that.setAnimRunning(false);
+                            that.currentAnim = that.animLoader.fetchRandAnim();
+                             if(this.currentAnim.action){
+                                // no need to Load animation
+                                console.log('currentAnim has action: ', this.currentAnim.url);
+                                let action =  this.startAnimAction(this.currentAnim.action);
+                                    console.log('set animRunning for ', this.currentAnim.url)
+                            } else {
+                                that.loadMixamo( that.currentAnim );
+                            }
+
+                               
+                            
+
+                        //that.mesh.scene.position.copy(this.config.pos);
+                        }, false);
                     };
-                  
-                    this.scaleToFitScene(obj3D, posVector);
-                   
-                    console.log('DO fix Y coord');
-                    this.fixYCoord(obj3D, posVector); 
-                    resolve(obj3D);
 
-              //  }
-               
+                    vrm.scene.position.copy(posVector);
 
-            },
-            this.onProgressCallback,
-            this.onErrorCallback);
 
+                    // Disable frustum culling
+                    vrm.scene.traverse( ( obj ) => {
+
+                        obj.frustumCulled = false;
+
+                    } );
+
+                    that.fixYCoord(vrm.scene, posVector);
+
+                    if ( that.currentAnim ) {
+
+                        that.loadMixamo( that.currentAnim );
+
+                    }
+
+                    // rotate if the VRM is VRM0.0
+                    THREE_VRM.VRMUtils.rotateVRM0( vrm );
+
+                    resolve(that.currentVrm);
+
+                },
+
+                // called while loading is progressing
+                ( progress ) => ()=>{},//console.log( 'Loading model...', 100.0 * ( progress.loaded / progress.total ), '%' ),
+
+                // called when loading has errors
+                ( error ) => console.error( error, that.config.nft.postHashHex ),
+            );
+          
         })
-      
     }
 
-onProgressCallback = ()=> {}
-onErrorCallback = (e)=> {
-    console.log('loading error');
-    console.log(e);
-}
+initAnimLoader = (config) =>{
+        return new AnimLoader(config);
+    }
 
 scaleToFitScene = (obj3D, posVector) =>{
 
@@ -413,6 +636,8 @@ scaleToFitScene = (obj3D, posVector) =>{
         let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
 
         let meshBounds = null    
+        console.log('obj3D');
+        console.log(obj3D);
             meshBounds = new THREE.Box3().setFromObject( obj3D );
 
         // Calculate side lengths of scene (cube) bounding box
@@ -657,7 +882,7 @@ console.log(' posVector.y: ', posVector.y,' lowestVertex.y ',lowestVertex.y);
     startAnimation = (animIndex, loopType) =>{
 
         /* accepts 
-            THREE.LoopOnce
+            THREE.LoopRepeat
             THREE.LoopRepeat
             THREE.LoopPingPong */
 
@@ -808,4 +1033,4 @@ console.log(' posVector.y: ', posVector.y,' lowestVertex.y ',lowestVertex.y);
 
 }
 
-export {Item}
+export {ItemVRM}

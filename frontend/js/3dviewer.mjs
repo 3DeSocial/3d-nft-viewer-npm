@@ -4,9 +4,10 @@ import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { VRMLoaderPlugin } from '@pixiv/three-vrm';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-import {Item, Lighting, SceneryLoader, NFTViewerOverlay, D3DLoaders, VRButton, VRControls, SkyBoxLoader} from '3d-nft-viewer';
+import {ItemVRM, Item, Lighting, SceneryLoader, NFTViewerOverlay, D3DLoaders, VRButton, VRControls, SkyBoxLoader} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, collider, visualizer, player, controls, geometries;
@@ -31,6 +32,7 @@ const params = {
     constructor(config) {
 
         let defaults = {
+                    animations: ['/mixamo/Arm_Stretching.fbx', '/mixamo/Looking_Around.fbx','/mixamo/Strut_Walking.fbx','/mixamo/Dancing_Twerk.fbx','/mixamo/Flair.fbx','/mixamo/Headspin_Start.fbx','/mixamo/HipHop_Dancing.fbx','/mixamo/Strut_Walking.fbx','/mixamo/Victory.fbx'],
                     firstPerson: true,
                     bgColor: 0x000000,
                     el: document.body,
@@ -77,6 +79,8 @@ const params = {
         this.images = this.config.images
         environment = null;
         collider = null;
+        this.helperRoot = new THREE.Group();
+        this.helperRoot.renderOrder = 10000;
 
     }
 
@@ -86,6 +90,15 @@ const params = {
             throw('Error - No Loader Availble for File Format: '+format+' in D3DNFTViewer');
             return false;
         };
+        if(format.toLowerCase()==='vrm'){
+            this.scene.add( this.helperRoot );
+            console.log('vrm detected in viewer, using new method');
+            loader.register( ( parser ) => {
+
+            return new VRMLoaderPlugin( parser, { helperRoot: this.helperRoot, autoUpdateHumanBones: true } );
+
+        });
+        }
         this.format = format;
         this.loader = loader;
     }
@@ -486,7 +499,14 @@ const params = {
           if(this.loadedItem){
               if((this.loadedItem.mixer !== null)){
                     this.loadedItem.mixer.update( delta );
+                    // only update mesh if required by animation
+                    if(this.loadedItem.mesh.update){
+                        this.loadedItem.mesh.update();
+                    };
+
                 };
+
+
             }
 
         this.renderer.render(this.scene, this.camera);
@@ -656,6 +676,12 @@ const params = {
                 that.resizeCanvas();
                 previewImg.style.display = 'none';
                 this.renderer.domElement.style.display = 'inline-block';
+                if(item.mixer){
+                console.log('this item has a mixer');
+            } else {
+                console.log('this item has NO animation mixer');
+
+            }
             });
             el.setAttribute('style','display:none;');
             el.parentNode.getElementsByClassName('view-fullscreen-btn')[0].setAttribute('style','display:inline-block;');
@@ -839,13 +865,13 @@ const params = {
 
     initItemForModel = (opts) =>{
         let format = opts.format;
+        let item;
         if(typeof(format)==='undefined'){
             let urlParts = opts.modelUrl.split('.');
             format = urlParts[urlParts.length-1];            
         };
         let modelUrl = opts.modelUrl;
-
-        let item = new Item({
+        let config = {
             three: THREE,
             loader: this.loaders.getLoaderForFormat(format),
             scene: this.scene,
@@ -856,7 +882,15 @@ const params = {
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
             format:format
-        });
+        };
+
+        if(format==='vrm'){
+            config.animations = this.config.animations;
+            item = new ItemVRM(config);
+        } else {
+            item = new Item(config);
+        };
+
         return item;
 
     }

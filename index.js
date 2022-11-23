@@ -10,6 +10,8 @@ import { HUDBrowser } from './frontend/js/D3D_HUDBrowser.mjs';
 import { HUDVR } from './frontend/js/D3D_HUDVR.mjs';
 import { Item } from './frontend/js/D3D_Item.mjs';
 import { Item2d } from './frontend/js/D3D_Item2d.mjs';
+import { ItemVRM } from './frontend/js/D3D_ItemVRM.mjs';
+import { AnimLoader } from  './frontend/js/D3D_AnimLoader.mjs'; // fbx
 import { Lighting } from './frontend/js/D3D_Lighting.mjs';
 import { XRControllerModelFactory } from './frontend/webxr/XRControllerModelFactory.js';
 import { MeshBVH, acceleratedRaycast, MeshBVHVisualizer } from './frontend/js/index.module.mjs';
