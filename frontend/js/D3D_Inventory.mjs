@@ -195,9 +195,6 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                     itemConfig.nft = itemData.nft;               
                 };
 
-                console.log('itemData.postHashHex: ',itemData.postHashHex);
-
-                console.log(itemData);
 
                 if(!itemData.path3D){
                     console.log('no path3D on itemData');
@@ -354,15 +351,10 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
             };              
         };
 
-        console.log('initItem decide format from: ',opts.format.toLowerCase());
         if(opts.format.toLowerCase()==='vrm'){
-            console.log('woohoo VRM');
             itemParams.animLoader = this.config.animLoader;
             item = new ItemVRM(itemParams);
-            console.log(item);
         } else {
-            console.log('Booo not VRM');
-
             item = new Item(config);
         };
 

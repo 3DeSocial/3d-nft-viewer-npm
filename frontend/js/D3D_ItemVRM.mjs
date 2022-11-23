@@ -564,6 +564,7 @@ export default class ItemVRM {
                     // put the model to the scene
                     that.currentVrm = vrm;
                     that.scene.add( vrm.scene );
+                    vrm.scene.userData.owner = this; //set reference to 
 
                     if(!this.mixer && (this.animLoader)){
                         this.mixer = new THREE.AnimationMixer( this.currentVrm.scene );
@@ -632,12 +633,10 @@ scaleToFitScene = (obj3D, posVector) =>{
 
         //console.log('posVector:',posVector);
         let boxMesh = this.createContainerBox(posVector);
-        console.log(boxMesh);
         let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
 
         let meshBounds = null    
-        console.log('obj3D');
-        console.log(obj3D);
+
             meshBounds = new THREE.Box3().setFromObject( obj3D );
 
         // Calculate side lengths of scene (cube) bounding box
@@ -670,7 +669,6 @@ scaleToFitScene = (obj3D, posVector) =>{
         };
         
         let newMeshBounds = new THREE.Box3().setFromObject( obj3D );
-        //console.log('newMeshBounds',newMeshBounds);
         let newLengthMeshBounds = {
             x: Math.abs(newMeshBounds.max.x - newMeshBounds.min.x),
             y: Math.abs(newMeshBounds.max.y - newMeshBounds.min.y),
@@ -689,9 +687,7 @@ scaleToFitScene = (obj3D, posVector) =>{
         cbox.userData.owner = this; //set reference to Item
         that.scene.add(obj3D);    
         obj3D.position.copy(posVector);
-        console.log('set position after render in scale');
-       console.log('scaleToFitScene wants to add');
-       console.log(obj3D);
+
         cbox.updateMatrixWorld();    
     }
 
@@ -1018,7 +1014,7 @@ console.log(' posVector.y: ', posVector.y,' lowestVertex.y ',lowestVertex.y);
 
     getPosition = () =>{
         let copiedPos = new THREE.Vector3();
-            copiedPos.copy(this.mesh.position);
+            copiedPos.copy(this.mesh.scene.position);
           //  console.log('item pos: ', copiedPos);
             return copiedPos;
     }

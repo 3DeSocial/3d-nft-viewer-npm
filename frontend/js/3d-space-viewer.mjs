@@ -165,7 +165,7 @@ const params = {
 
             this.initScene();
             this.initCameraPlayer();     
-          //  this.loadUIAssets();
+            this.loadUIAssets();
             this.initRenderer(this.config.el);
             this.initHUD({scene:that.scene,
                             chainAPI: that.config.chainAPI});
@@ -570,8 +570,8 @@ const params = {
             if((action.isOnFloor)&&(!action.isOnWall)){
                 let targetPoint = action.selectedPoint.clone();
                 let distance = this.player.position.distanceTo(targetPoint);
-                console.log('distance: ',distance);
-                console.log(targetPoint.x, targetPoint.y, targetPoint.z);
+               // console.log('distance: ',distance);
+                //console.log(targetPoint.x, targetPoint.y, targetPoint.z);
                 this.moveTo = targetPoint;
                 this.moveTo.setY(this.player.position.y);
         //this.player.position.copy(this.moveTo);
@@ -621,6 +621,8 @@ const params = {
 
     showSelectedMeshData =(action) =>{
         let item = null;
+        console.log('showSelectedMeshData: ');
+        console.log(action);
         if(action.selection.object.userData.owner){
             item = action.selection.object.userData.owner;
         } else {
@@ -641,7 +643,7 @@ const params = {
             //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
 
         } else {
-            console.log('no owner: ', action.selection.object);
+           // console.log('no owner: ', action.selection.object);
             if(this.hud){
                 this.hud.clear();
             }
@@ -675,9 +677,13 @@ const params = {
     }
 
     selectTargetNFT = (action) =>{
+                console.log('selectTargetNFT: ');
+        console.log(action);
         this.actionTargetMesh = null;
         let that = this;
         let item = this.getItemForAction(action)
+        console.log('got Item:');
+        console.log(item);
         if(item){
             if(item.isGhost){
                 this.actionTargetPos = item.getPosition();       
