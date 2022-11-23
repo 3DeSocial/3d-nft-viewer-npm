@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import * as THREE_VRM from '@pixiv/three-vrm';
+import {AnimLoader} from '3d-nft-viewer';
 const helperRoot = new THREE.Group();
 
     /**
@@ -96,7 +97,7 @@ export default class ItemVRM {
         if(!this.loader && this.config.is3D){
             console.log('cannot init item without loader is 3d? ',this.config.is3D,' hex: ',this.config.postHashHex);
         };
-        this.currentMixer = undefined;
+        this.mixer = undefined;
         this.currentVrm = undefined;
         this.currentAnimationUrl = undefined;
         this.scene = this.config.scene;
@@ -117,106 +118,68 @@ export default class ItemVRM {
         this.direction = new THREE.Vector3();
         this.rotVelocity = new THREE.Vector3();
         this.nftDisplayData = this.parseNFTDisplayData();
-    }
-
-   
-    loadMixamoNFT = (postHashHex) =>{
-
-        return new Promise((resolve,reject)=>{
-
-            let postHashHex = '95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2';
-
-            let paramString = '';
-            let params  = [];
-            let nftsRoute = '';
-            let itemParams = {
-                loader: new FBXLoader(),
-                nftPostHashHex: postHashHex,
-                modelsRoute: this.config.modelsRoute,
-                nftsRoute: this.config.nftsRoute+'?postHex='+postHashHex+'?&format=fbx&path=normal/Happy_Idle.fbx'
-            };
-      //     api/post/get3DScene?postHex='+ post.postHashHex +'&path='+post.fullPath3D +'&format='+ format)
-
-            console.log('itemParams');
-            console.log(itemParams);
-                         
-                this.config.animLoader.fetchAnimUrl(postHashHex).then((loadedAnimurl)=>{
-                console.log('retrieved animation URL: ',loadedAnimurl);
-                loadedAnimurl = 'https://desodata.azureedge.net/unzipped/95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2/fbx/normal/Happy_Idle.fbx'
-                resolve(loadedAnimurl)
-            })
-
-        })
-       
-    }
-
-    // mixamo animation
-    loadMixamo = ( animationUrl ) => {
-        let that = this;
-        this.currentAnimationUrl = animationUrl;
-        if(this.currentAnimationUrl){
-            // create AnimationMixer for VRM
-            if(!this.currentMixer){
-               this.currentMixer = new THREE.AnimationMixer( this.currentVrm.scene );
-               this.currentMixer.addEventListener('finished',(e)=>{
-                console.log('finished a clip');
-                        that.setAnimRunning(false);
-                        that.currentAnim = that.config.animLoader.fetchRandAnim();
-                        that.currentAnimationUrl = that.currentAnim.url;
-
-                        console.log('fetchModel with anim: ',that.currentAnimationUrl);   
-                        if(that.currentAnimationUrl){
-                            that.loadMixamo( that.currentAnimationUrl );
-                        }
-
-                        //that.mesh.scene.position.copy(this.config.pos);
-                    }, false);
-            };
-
-            this.mixer = this.currentMixer;
-/*
-            if(this.currentAnim.action){
-                // no need to Load animation
-                    console.log('currentAnim has action: ', this.currentAnim.url);
-                    this.action = this.currentAnim.action;
-                    this.action.setLoop(THREE.LoopOnce);
-                    this.action.clampWhenFinished  = true;
-                    this.action.play();
-                    this.animRunning = true;
-                    console.log('set animRunning for ', this.currentAnim.url)
-                    
-            } else {*/
-
-                        // Load animation
-                    console.log('currentAnim needs some action: ', this.currentAnim.url);
-
-                this.loadMixamoAnimation( animationUrl, this.currentVrm ).then( ( clip ) => {
-
-                    // Apply the loaded animation to mixer and play
-
-                        that.currentAnim.action = that.currentMixer.clipAction(clip);
-                        that.action = that.currentMixer.clipAction(clip);
-                        that.action.setLoop(THREE.LoopOnce);
-                        that.action.clampWhenFinished  = true;
-                        that.action.play();
-                        that.animRunning = true;
-                    console.log('set animRunning for ', this.currentAnim.url)
-
-                } );
-
-
-              //  }
-
-
+        if(this.config.animLoader){
+            this.animLoader = this.initAnimLoader({animHashes:[ '287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4',
+                                                                    '8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85',
+                                                                    '95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2',
+                                                                    '1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2']});
         }
 
 
     }
 
+
+    // mixamo animation
+    loadMixamo = ( currentAnim ) => {
+        let that = this;
+
+
+
+
+        this.currentAnimationUrl = currentAnim.url;
+        if(this.currentAnimationUrl){
+            // create AnimationMixer for VRM
+
+
+               
+
+                        // Load animation
+                    console.log('currentAnim needs some action: ', this.currentAnimationUrl);
+
+                this.loadMixamoAnimation( this.currentAnimationUrl, this.currentVrm ).then( ( clip ) => {
+
+                        // Apply the loaded animation to mixer and play
+                        that.currentAnim.action = that.startAnimClip(clip);
+                        console.log('set anim running, ', this.currentAnim.url)
+                } );
+
+
+              }
+
+    }
+
+    startAnimClip = (clip) =>{
+
+        let action = this.mixer.clipAction(clip);
+            action.setLoop(THREE.LoopRepeat);
+            action.clampWhenFinished  = true;
+            action.play();
+        this.animRunning = true;    
+        return action;    
+    }
+
+    startAnimAction = (action)=>{
+        action.setLoop(THREE.LoopRepeat);
+        action.clampWhenFinished  = true;
+        action.play();
+        this.animRunning = true;    
+        return action;    
+    }
+
     loadMixamoAnimation = ( url, vrm ) => {
 
-    const loader = new FBXLoader(); // A loader which loads FBX
-    return loader.loadAsync( url ).then( ( asset ) => {
+        const loader = new FBXLoader(); // A loader which loads FBX
+        return loader.loadAsync( url ).then( ( asset ) => {
 
         const clip = THREE.AnimationClip.findByName( asset.animations, 'mixamo.com' ); // extract the AnimationClip
 
@@ -574,10 +537,13 @@ export default class ItemVRM {
                         return new THREE_VRM.VRMLoaderPlugin( parser, {  autoUpdateHumanBones: true } );
 
                     } );
-                
-            that.currentAnim = that.config.animLoader.fetchRandAnim();
-            that.currentAnimationUrl = that.currentAnim.url;
-            console.log('fetchModel with anim: ',that.currentAnimationUrl);
+
+            if(this.animLoader) {
+                that.currentAnim = that.animLoader.fetchRandAnim();
+                that.currentAnimationUrl = that.currentAnim.url;
+                console.log('fetchModel with anim: ',that.currentAnimationUrl);
+            }
+          
             loader.load(
                 // URL of the VRM you want to load
                 modelUrl,
@@ -598,6 +564,29 @@ export default class ItemVRM {
                     // put the model to the scene
                     that.currentVrm = vrm;
                     that.scene.add( vrm.scene );
+
+                    if(!this.mixer && (this.animLoader)){
+                        this.mixer = new THREE.AnimationMixer( this.currentVrm.scene );
+                        this.mixer.addEventListener('finished',(e)=>{
+                            console.log('finished a clip');
+                            that.setAnimRunning(false);
+                            that.currentAnim = that.animLoader.fetchRandAnim();
+                             if(this.currentAnim.action){
+                                // no need to Load animation
+                                console.log('currentAnim has action: ', this.currentAnim.url);
+                                let action =  this.startAnimAction(this.currentAnim.action);
+                                    console.log('set animRunning for ', this.currentAnim.url)
+                            } else {
+                                that.loadMixamo( that.currentAnim );
+                            }
+
+                               
+                            
+
+                        //that.mesh.scene.position.copy(this.config.pos);
+                        }, false);
+                    };
+
                     vrm.scene.position.copy(posVector);
 
 
@@ -610,9 +599,9 @@ export default class ItemVRM {
 
                     that.fixYCoord(vrm.scene, posVector);
 
-                    if ( that.currentAnimationUrl ) {
+                    if ( that.currentAnim ) {
 
-                        that.loadMixamo( that.currentAnimationUrl );
+                        that.loadMixamo( that.currentAnim );
 
                     }
 
@@ -631,6 +620,10 @@ export default class ItemVRM {
             );
           
         })
+    }
+
+initAnimLoader = (config) =>{
+        return new AnimLoader(config);
     }
 
 scaleToFitScene = (obj3D, posVector) =>{
@@ -889,7 +882,7 @@ console.log(' posVector.y: ', posVector.y,' lowestVertex.y ',lowestVertex.y);
     startAnimation = (animIndex, loopType) =>{
 
         /* accepts 
-            THREE.LoopOnce
+            THREE.LoopRepeat
             THREE.LoopRepeat
             THREE.LoopPingPong */
 

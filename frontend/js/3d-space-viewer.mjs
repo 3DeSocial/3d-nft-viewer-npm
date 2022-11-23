@@ -5,7 +5,7 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import {AnimLoader, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import {AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -1936,12 +1936,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
             let haveVRM = this.haveVRM(items3dToRender);
             if(haveVRM){
-                this.animLoader = this.initAnimLoader({animHashes:[ '287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4',
-                                                                    '8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85',
-                                                                    '95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2',
-                                                                    '1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2']});
-
-                sceneInvConfig.animLoader = this.animLoader;
+               
+                sceneInvConfig.animLoader = true;
 
             }
             this.sceneInventory = new D3DInventory(sceneInvConfig);     
@@ -1954,10 +1950,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         //items3dToRender.filter(item=>(item.nft.))
         return true; //test
     }
-    initAnimLoader = (config) =>{
-        return new AnimLoader(config);
-    }
-
+    
     initItem = (opts) =>{
 
         let nftPostHashHex = opts.nftPostHashHex;
