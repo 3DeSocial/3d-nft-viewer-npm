@@ -7,7 +7,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { VRMLoaderPlugin } from '@pixiv/three-vrm';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-import {ItemVRM, Item, Lighting, SceneryLoader, NFTViewerOverlay, D3DLoaders, VRButton, VRControls, SkyBoxLoader} from '3d-nft-viewer';
+import {ItemVRM, Item, Lighting, SceneryLoader, NFTViewerOverlay, D3DLoaders, VRButton, VRControlsSingle, SkyBoxLoader} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, collider, visualizer, player, controls, geometries;
@@ -938,7 +938,7 @@ const params = {
         if(vrType){
             this.setVrType(vrType);
         };
-        this.vrControls = new VRControls({  scene:this.scene,
+        this.vrControls = new VRControlsSingle({  scene:this.scene,
                                             renderer: this.renderer,
                                             camera: this.camera,
                                             player: this.player,

@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 import {XRControllerModelFactory} from '3d-nft-viewer';
-export const name = 'VRControls';
-class VRControls {
+export const name = 'VRControlsSingle';
+class VRControlsSingle {
 
 	   
 	constructor(config) {
@@ -557,4 +557,4 @@ class VRControls {
         return typeof obj[Symbol.iterator] === 'function';
     }
 }
-export {VRControls}
+export {VRControlsSingle}
