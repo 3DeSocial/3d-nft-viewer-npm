@@ -25,4 +25,4 @@ import { CollisionChecker } from  './frontend/js/D3D_CollisionChecker.mjs';
 import { LoadingScreen } from  './frontend/js/D3D_LoadingScreen.mjs'; 
 import { PlayerVR } from  './frontend/js/D3D_PlayerVR.mjs'; 
 
-export {PlayerVR, AudioClip, CollisionChecker, LoadingScreen, MeshBVH, MeshBVHVisualizer, VRButton, NFTViewerOverlay, ChainAPI, HUDBrowser, HUDVR, D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRControls, Item, Item2d, ItemVRM, XRControllerModelFactory, SceneryLoader, SkyBoxLoader, LayoutPlotter}
+export {AnimLoader, PlayerVR, AudioClip, CollisionChecker, LoadingScreen, MeshBVH, MeshBVHVisualizer, VRButton, NFTViewerOverlay, ChainAPI, HUDBrowser, HUDVR, D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRControls, Item, Item2d, ItemVRM, XRControllerModelFactory, SceneryLoader, SkyBoxLoader, LayoutPlotter}
