@@ -513,13 +513,16 @@ const params = {
     }
 
     fitCameraToMesh(loadedItem) {
-        console.log('fitCameraToMesh');
         if(!loadedItem.mesh){
             return false;
         };
-        console.log('fitCameraToMesh: have mesh');
 
-        const box = new THREE.Box3().setFromObject(loadedItem.mesh);
+        let mesh = loadedItem.mesh;
+        if(mesh.scene){
+            mesh = mesh.scene;
+        }
+
+        const box = new THREE.Box3().setFromObject(mesh);
         const center = new THREE.Vector3();
         const size = new THREE.Vector3();
 
@@ -718,9 +721,8 @@ const params = {
                 })
             } else {
                 this.placeModel(this.loadedItem).then((item)=>{
-                    console.log('model place by viewer');
                     this.removeLoader(hideElOnLoad);
-                  //this.cam  this.fitCameraToMesh(item);
+                    this.fitCameraToMesh(item);
                     resolve(item);
 
                 })
@@ -885,7 +887,7 @@ const params = {
         };
 
         if(format==='vrm'){
-            config.animations = this.config.animations;
+            config.animLoader = true; //load anims to apply to model
             item = new ItemVRM(config);
         } else {
             item = new Item(config);
