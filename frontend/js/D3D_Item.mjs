@@ -246,7 +246,7 @@ export default class Item {
                             if(that.hasAnimations(false)){
                                 console.log('hasAnimations');
                                 that.startAnimation(0,THREE.LoopRepeat);
-                                console.log('animationstarted');
+                                console.log('animation started');
                             } else {
                                 console.log('no animations',this.config.postHashHex);
                                 console.log(model);

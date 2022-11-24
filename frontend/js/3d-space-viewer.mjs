@@ -1,11 +1,13 @@
 export const name = 'd3dspaceviewer';
 // Find the latest version by visiting https://cdn.skypack.dev/three.
 import * as THREE from 'three';
+import * as CANNON from 'cannon';
+
 import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import {AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import {CannonHelper, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -82,7 +84,33 @@ const params = {
         this.actionTargetMesh = null;
         this.animations = [];
         this.audioListener = new THREE.AudioListener();
+        this.ballVector = new THREE.Vector3();
 
+    }
+
+    initWorld() {
+        this.dt = 1.0/60.0;
+        this.damping = 0.01;
+        const world = new CANNON.World();
+        world.gravity.set(0, -1, 0);
+        this.helper = new CannonHelper( this.scene, world);        
+        this.world = world; 
+        this.addGroundPlane()
+    }
+
+    addGroundPlane = () =>{
+    const groundShape = new CANNON.Plane()
+    const groundBody = new CANNON.Body({ mass: 0 })
+    groundBody.addShape(groundShape)
+    groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+    groundBody.addShape(groundShape);
+    this.world.add(groundBody);
+    this.helper.addVisual(groundBody);
+
+    }
+
+    setMasterVolume = (num) =>{
+        this.audioListener.setMasterVolume(num);
     }
 
     loadUIAssets = () =>{
@@ -171,10 +199,13 @@ const params = {
                             chainAPI: that.config.chainAPI});
             this.initSkybox();
             this.initLighting();
+         //   this.initWorld();
 
             this.loadScenery().then(()=>{
                 this.initInventory(options);
-
+                if(this.config.footballMode===true){
+                    this.initFootball();
+                }
 
                // that.placeAssets();
                 if(that.config.firstPerson){
@@ -187,6 +218,7 @@ const params = {
                     that.initVR();
                 }   
                 this.renderer.render(this.scene,this.camera);
+
                 this.animate();
                 sceneryloadingComplete = true;
 
@@ -195,7 +227,6 @@ const params = {
                 document.getElementById('give-diamond').style.display='inline-block';
                 document.getElementById('give-heart').style.display='inline-block';
                 document.getElementById('view-detail').style.display='inline-block';
-
                   /*  document.querySelectorAll('.d3d-btn-top').forEach((el)=>{
                       el.style.display='inline-block';
                     });*/
@@ -514,7 +545,11 @@ const params = {
                     case 'KeyD': rgtPressed = true; break;
                     case 'KeyA': lftPressed = true; break;
                     case 'KeyM': that.throwActiveItem(); break;
+                    case 'NumpadAdd': that.setMasterVolume(1); break;
+                    case 'NumpadSubtract': that.setMasterVolume(0); break;   
+                    case 'Numpad0': that.ball.position.copy(that.ballVector); break;        
 
+                    threeMesh                
                     case 'Digit0': that.inventory.setActive(0); break;
                     case 'Digit1': that.inventory.setActive(1); break;
                     case 'Digit2': that.inventory.setActive(2); break;
@@ -685,10 +720,18 @@ const params = {
         console.log('got Item:');
         console.log(item);
         if(item){
-            if(item.isGhost){
+            if(item.isGhost||item.isFootballPlayer){
                 this.actionTargetPos = item.getPosition();       
                 this.actionTargetItem = item;
-                this.targetGhost();
+                if(item.isGhost){
+                    this.targetGhost();
+                };
+                if(item.isFootballPlayer){
+                    this.targetFootballPlayer();
+                };
+                if(item.isFootball){
+                    this.targetFootball();
+                };
             } else {
                 if(item.config){
                     if(!item.isSelected) {
@@ -723,6 +766,14 @@ const params = {
             this.hideStatusBar(['heart','diamond-count','confirm']);
         }
 
+
+    }
+
+    targetFootballPlayer = () =>{
+
+    }
+
+    targetFootball = () =>{
 
     }
 
@@ -1261,6 +1312,13 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    getRandom = (min, max) => {
+        min = min*10;
+        max = max*10;
+        let randomInt = this.getRandomInt(min, max);
+        return randomInt/10;
+    }
+
     loadSkyBox = (boxname) => {
         if(this.config.skyboxPath===''){
             return false;
@@ -1412,7 +1470,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         }  
 
         const delta = Math.min( this.clock.getDelta(), 0.1 );
-
+        if(this.world){
+            this.updatePhysicsWorld();
+        };
 
             if ( params.firstPerson ) {
 
@@ -1465,6 +1525,16 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     updateAnimations = (delta)=>{
         this.sceneInventory.updateAnimations(delta);
+    }
+
+    updatePhysicsWorld =() =>{
+        this.world.step(this.dt); 
+        this.world.bodies.forEach( function(body){
+            if ( body.threeMesh !== undefined){
+                body.threeMesh.position.copy(body.position);
+                body.threeMesh.quaternion.copy(body.quaternion);
+            }
+        });
     }
 
     centerMeshInScene = (gltfScene) =>{
@@ -1659,6 +1729,85 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }
 
+    initFootball = () =>{
+        let that = this;
+
+        this.footballSounds = [];
+        // create a global audio source
+        const sound = new THREE.Audio( that.audioListener );
+        const audioLoader = new THREE.AudioLoader();
+              audioLoader.load( '/audio/soccer-stadium-10-6709.mp3', function( buffer ) {
+              sound.setBuffer( buffer );
+              sound.setLoop( true );
+              sound.setVolume( 0.5 );
+              sound.play();
+        });
+      
+
+        let itemConfig = {  scene: this.scene,
+                            format: 'fbx',
+                            height:2.5,
+                            width:2.5,
+                            depth:2.5,
+                            modelUrl:'/models/Soccer.fbx'};
+
+        this.footballPlayer = this.initItemForModel(itemConfig);
+        this.footballPlayer.isFootballPlayer = true;
+
+        let playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(1,0,0), 1, -2);
+
+        let placePos = new THREE.Vector3(-7,(playerFloor.y),3);
+        this.footballPlayer.place(placePos).then((mesh, pos)=>{
+            mesh.rotateY(Math.PI/4);
+            that.sceneInventory.items3d.push(this.footballPlayer);
+            that.sceneInventory.placedItems3D.push(this.footballPlayer);
+            placePos.y = -1.6927649250030519;
+            mesh.position.copy(placePos);
+        })
+
+        this.addBalls()
+    }
+
+    addBalls = () =>{
+        let that = this;
+        const size = 0.4;
+        this.bodies = [];
+        let ballShape = new CANNON.Sphere(size);
+        let x = this.getRandom(-10, 10);
+        let y = 3;
+        let z = this.getRandom(-0.3, 0.3);
+        let footballItem = this.createBallMesh();
+        this.ballVector.set(3,1,0);
+
+        let ballMesh = footballItem.place(this.ballVector).then((mesh, pos)=>{
+
+            const body = new CANNON.Body({
+                mass: 1,
+                position: new CANNON.Vec3(x,y,z),
+                ballShape
+            })
+
+            body.threeMesh = mesh;
+            that.ball=body;
+            that.world.addBody(body)
+            that.bodies.push(body);    
+        });
+
+       
+    }
+
+    createBallMesh = ()=>{
+    let itemConfig = {  scene: this.scene,
+                            format: 'glb',
+                            height:0.4,
+                            width:0.4,
+                            depth:0.4,
+                            modelUrl:'/models/Ball.glb'};
+
+        let football = this.initItemForModel(itemConfig);
+        return football;
+
+    }
     initGhost = () =>{
         if(this.renderer.xr.isPresenting){
             return false;

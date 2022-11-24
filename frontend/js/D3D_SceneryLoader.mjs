@@ -197,7 +197,7 @@ export default class SceneryLoader {
     addScenery = (gltf) =>{
         const root = gltf.scene;
         this.sceneryMesh = root;
-        this.scene.add(root);  
+     //   this.scene.add(root);  
         root.updateMatrixWorld();
         this.scene.updateMatrixWorld();
         this.collider = this.createCollider(root); 
@@ -249,8 +249,8 @@ export default class SceneryLoader {
 
      //   hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
        if(hit){
-       //  let planePos = new THREE.Vector3(0,hit.point.y,0);
-         //   this.addPlaneAtPos(planePos);
+         let planePos = new THREE.Vector3(0,hit.point.y,0);
+             //this.addPlaneAtPos(planePos);
 
             return hit.point.y+0.001;
        } else {
