@@ -1765,7 +1765,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             mesh.position.copy(placePos);
         })
 
-        this.addBalls()
+       // this.addBalls() WIP
     }
 
     addBalls = () =>{
