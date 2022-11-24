@@ -197,7 +197,7 @@ export default class SceneryLoader {
     addScenery = (gltf) =>{
         const root = gltf.scene;
         this.sceneryMesh = root;
-     //   this.scene.add(root);  
+        this.scene.add(root);  
         root.updateMatrixWorld();
         this.scene.updateMatrixWorld();
         this.collider = this.createCollider(root); 
