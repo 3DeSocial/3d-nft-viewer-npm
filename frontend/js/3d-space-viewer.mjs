@@ -1749,7 +1749,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                             height:2.5,
                             width:2.5,
                             depth:2.5,
-                            modelUrl:'/models/Soccer.fbx'};
+                            modelUrl:'https://desodata.azureedge.net/unzipped/ad368335588bf94631cd5705e1d473fcbc1ff15fe2f6950ec5faa785866e97b3/fbx/normal/Soccer.fbx'};
 
         this.footballPlayer = this.initItemForModel(itemConfig);
         this.footballPlayer.isFootballPlayer = true;
@@ -1802,7 +1802,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                             height:0.4,
                             width:0.4,
                             depth:0.4,
-                            modelUrl:'/models/Ball.glb'};
+                            modelUrl:'https://desodata.azureedge.net/unzipped/9a29163ac2711c721713666fb8dd2afdbb51533d8ac25487408cc06e4757c983/gltf/normal/Ball.glb'};
 
         let football = this.initItemForModel(itemConfig);
         return football;
