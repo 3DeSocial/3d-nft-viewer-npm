@@ -100,36 +100,41 @@ const params = {
         this.bodies = [];
 
         this.addGroundPlane();
-       // this.addWalls();
+        this.addWalls();
+        this.addBalls();
 
     }
 
     addGroundPlane = () =>{
-        const groundGeo = new THREE.PlaneGeometry(30, 30);
+        let floorWidth = 35;
+        let floorLength = 35;
+        const groundGeo = new THREE.PlaneGeometry(floorWidth, floorLength);
         const groundMat = new THREE.MeshBasicMaterial({ 
-            color: 0xffffff,
-            side: THREE.DoubleSide,
-            wireframe: true 
+            color: 0x666666,
+            side: THREE.DoubleSide
          });
-        const groundMesh = new THREE.Mesh(groundGeo, groundMat);
-       // this.scene.add(groundMesh);
+
+    //    const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+     //   this.scene.add(groundMesh);
 
         const groundPhysMat = new CANNON.Material();
         this.groundPhysMat = groundPhysMat;
         const groundBody = new CANNON.Body({
-            shape: new CANNON.Box(new CANNON.Vec3(15, 15, 0.1)),
+            shape: new CANNON.Box(new CANNON.Vec3(floorWidth, floorLength, 0.1)),
             type: CANNON.Body.STATIC,
-            material: groundPhysMat,
+            material: this.groundPhysMat,
             position: new CANNON.Vec3(0, -1.6927649250030519, 0)
         });
         this.world.addBody(groundBody);
         groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
-    //    groundBody.threeMesh = groundMesh; 
-      //  this.bodies.push(groundBody);
+  //      groundBody.threeMesh = groundMesh; 
+        this.bodies.push(groundBody);
     }
 
     addWalls = () =>{
         let world = this.world;
+        let floorWidth = 34;
+        let floorLength = 40;        
         // Materials
         const stone = new CANNON.Material('stone')
         const stone_stone = new CANNON.ContactMaterial(stone, stone, {
@@ -139,7 +144,7 @@ const params = {
         world.addContactMaterial(stone_stone)
 
 
-        const groundGeo = new THREE.PlaneGeometry(30, 30);
+   /*     const groundGeo = new THREE.PlaneGeometry(floorWidth, floorLength);
         const groundMat1 = new THREE.MeshBasicMaterial({ 
             color: 0xff0000,
             side: THREE.DoubleSide
@@ -164,42 +169,58 @@ const params = {
         this.scene.add(wallMesh2);
         this.scene.add(wallMesh3);
         this.scene.add(wallMesh4);
-
+*/
         // Plane -x
-        const planeShapeXmin = new CANNON.Plane()
-        const planeXmin = new CANNON.Body({ mass: 0, material: stone })
-        planeXmin.addShape(planeShapeXmin)
-        planeXmin.quaternion.setFromEuler(0, Math.PI / 2, 0)
-        planeXmin.position.set(-20, 0, 0)
-        world.addBody(planeXmin);
-        planeXmin.threeMesh = wallMesh1;
+
+        const planeShapeXmin = new CANNON.Body({
+            shape: new CANNON.Box(new CANNON.Vec3(floorWidth, floorLength, 0.1)),
+            type: CANNON.Body.STATIC,
+            material: this.groundPhysMat,
+            position: new CANNON.Vec3(floorLength/2, 0, 0)
+        });
+
+        world.addBody(planeShapeXmin);
+
+        planeShapeXmin.quaternion.setFromEuler(0, Math.PI / 2, 0)
+       // planeShapeXmin.threeMesh = wallMesh1;
 
         // Plane +x
-        const planeShapeXmax = new CANNON.Plane()
-        const planeXmax = new CANNON.Body({ mass: 0, material: stone })
-        planeXmax.addShape(planeShapeXmax)
-        planeXmax.quaternion.setFromEuler(0, -Math.PI / 2, 0)
-        planeXmax.position.set(20, 0, 0)
-        world.addBody(planeXmax)
-        planeXmax.threeMesh = wallMesh1;
+        const planeShapeXmax = new CANNON.Body({
+            shape: new CANNON.Box(new CANNON.Vec3(floorWidth, floorLength, 0.1)),
+            type: CANNON.Body.STATIC,
+            material: this.groundPhysMat,
+            position: new CANNON.Vec3(-floorLength/2, 0, 0)
+        });
+        world.addBody(planeShapeXmax);
 
+        planeShapeXmax.quaternion.setFromEuler(0, Math.PI / 2, 0)
+      //  planeShapeXmax.threeMesh = wallMesh2;
 
         // Plane -z
-        const planeShapeZmin = new CANNON.Plane()
-        const planeZmin = new CANNON.Body({ mass: 0, material: stone })
-        planeZmin.addShape(planeShapeZmin)
-        planeZmin.quaternion.setFromEuler(0, 0, 0)
-        planeZmin.position.set(0, 0, -20)
-        world.addBody(planeZmin)
-        planeZmin.threeMesh = wallMesh3;
+        const planeShapeZmin = new CANNON.Body({
+            shape: new CANNON.Box(new CANNON.Vec3(floorWidth, floorLength, 0.1)),
+            type: CANNON.Body.STATIC,
+            material: this.groundPhysMat,
+            position: new CANNON.Vec3(0, 0, -floorWidth/2)
+        });
+        world.addBody(planeShapeZmin);
+
+        planeShapeZmin.quaternion.setFromEuler(0, Math.PI, 0)
+   //     planeShapeZmin.threeMesh = wallMesh3;
+
         // Plane +z
-        const planeShapeZmax = new CANNON.Plane()
-        const planeZmax = new CANNON.Body({ mass: 0, material: stone })
-        planeZmax.addShape(planeShapeZmax)
-        planeZmax.quaternion.setFromEuler(0, Math.PI, 0)
-        planeZmax.position.set(0, 0, 20)
-        world.addBody(planeZmax)
-        planeZmin.threeMesh = wallMesh4;
+
+
+        const planeShapeZmax = new CANNON.Body({
+            shape: new CANNON.Box(new CANNON.Vec3(floorWidth, floorLength, 0.1)),
+            type: CANNON.Body.STATIC,
+            material: this.groundPhysMat,
+            position: new CANNON.Vec3(0, 0, floorWidth/2)
+        });
+        world.addBody(planeShapeZmax);        
+
+        planeShapeZmax.quaternion.setFromEuler(0, Math.PI, 0)
+    //    planeShapeZmax.threeMesh = wallMesh4;
 
     }
 
@@ -293,7 +314,7 @@ const params = {
                             chainAPI: that.config.chainAPI});
             this.initSkybox();
             this.initLighting();
-            this.initWorld();
+
 
             this.loadScenery().then(()=>{
                 this.initInventory(options);
@@ -324,9 +345,8 @@ const params = {
                 document.getElementById('give-heart').style.display='inline-block';
                 document.getElementById('view-detail').style.display='inline-block';
                 if(this.config.showBall){
-                  //  this.addBalls();            
+                    this.initWorld();        
                 };
-
 
                   /*  document.querySelectorAll('.d3d-btn-top').forEach((el)=>{
                       el.style.display='inline-block';
@@ -761,8 +781,7 @@ const params = {
 
     showSelectedMeshData =(action) =>{
         let item = null;
-        console.log('showSelectedMeshData: ');
-        console.log(action);
+
         if(action.selection.object.userData.owner){
             item = action.selection.object.userData.owner;
         } else {
@@ -883,19 +902,15 @@ const params = {
     }
 
     targetFootball = (item) =>{
-        console.log('kick football');
-        console.log('ball pos:',this.actionTargetPos);
-        this.kickVector.subVectors( this.actionTargetPos, this.camera.position) ;
-        console.log('kickVector');
-        console.log(this.kickVector);
 
-        let shootVelocity = 10;
+        let shootVelocity = 200;
         let shootDirection = this.getShootDirection();
-        this.ball.velocity.set(
+        this.kickVector.set(
             shootDirection.x * shootVelocity,
             shootDirection.y * shootVelocity,
             shootDirection.z * shootVelocity
           )
+        this.ball.applyImpulse(this.kickVector);
     }
     getShootDirection =() => {
           const vector = new THREE.Vector3(0, 0, 1)
@@ -1121,13 +1136,13 @@ const params = {
     }
 
     claimNFT = (nftName) =>{
-        console.log('claim nft');
-        console.log(this.actionTargetItem);
-        if(this.config.claimNFT){
-            this.config.claimNFT();      
+        if(this.config.chainAPI.claimNFT){
+            this.config.chainAPI.claimNFT();      
+        } else if (this.config.claimNFT){
+            this.config.claimNFT();
         }
-
     }
+
     catchGhost = ()=>{
         if(!this.ghostCaught){
             this.ghostSounds.hit.play();
@@ -1925,7 +1940,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let ballMesh = footballItem.place(this.ballVector).then((mesh, pos)=>{
 
             const body = new CANNON.Body({
-                mass: 10,
+                mass: 8,
                 material: mat1,
             })
             body.position.copy(this.ballVector);
@@ -1938,7 +1953,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
         });
 
-         var mat1_ground = new CANNON.ContactMaterial(this.groundPhysMat, mat1, { friction: 0.0, restitution: 0.75 });;
+         var mat1_ground = new CANNON.ContactMaterial(this.groundPhysMat, mat1, { friction: 0.5, restitution: 0.75 });;
         this.world.addContactMaterial(mat1_ground);        
 
     }
