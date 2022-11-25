@@ -91,6 +91,16 @@ export default class SceneryLoader {
         box.getCenter( scene.position ).negate();
         scene.updateMatrixWorld( true );
         scene.position.setY(0);
+        this.sceneDims = box;
+    }
+
+    getSceneDims = () =>{
+        if(!this.sceneDims){
+            console.log('no sceneDims');
+            return false;
+        } else {
+            return this.sceneDims;
+        };
     }
 
     createCollider = (gltfScene) =>{
@@ -197,7 +207,7 @@ export default class SceneryLoader {
     addScenery = (gltf) =>{
         const root = gltf.scene;
         this.sceneryMesh = root;
-     //   this.scene.add(root);  
+        this.scene.add(root);  
         root.updateMatrixWorld();
         this.scene.updateMatrixWorld();
         this.collider = this.createCollider(root); 

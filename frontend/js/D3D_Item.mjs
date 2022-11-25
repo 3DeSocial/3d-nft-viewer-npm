@@ -792,10 +792,7 @@ console.log(' posVector.y: ', posVector.y,' lowestVertex.y ',lowestVertex.y);
     }
 
     getPosition = () =>{
-        let copiedPos = new THREE.Vector3();
-            copiedPos.copy(this.mesh.position);
-          //  console.log('item pos: ', copiedPos);
-            return copiedPos;
+        return this.mesh.position;
     }
 
     positionItem = (model, posVector) =>{

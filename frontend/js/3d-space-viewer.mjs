@@ -85,6 +85,7 @@ const params = {
         this.animations = [];
         this.audioListener = new THREE.AudioListener();
         this.ballVector = new THREE.Vector3();
+        this.kickVector = new THREE.Vector3();
 
     }
 
@@ -92,20 +93,113 @@ const params = {
         this.dt = 1.0/60.0;
         this.damping = 0.01;
         const world = new CANNON.World();
-        world.gravity.set(0, -1, 0);
-         //this.helper = new CannonHelper( this.scene, world);        
+              world.gravity.set(0,-10,0);
+              world.broadphase = new CANNON.NaiveBroadphase();
+
         this.world = world; 
-        console.log('cannon world:');
-        console.log(this.world);
-        this.addGroundPlane()
+        this.bodies = [];
+
+        this.addGroundPlane();
+       // this.addWalls();
+
     }
 
     addGroundPlane = () =>{
-        const groundShape = new CANNON.Plane()
-        const groundBody = new CANNON.Body({ mass: 0 })
-        groundBody.addShape(groundShape)
-        groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0)
-        this.world.addBody(groundBody)
+        const groundGeo = new THREE.PlaneGeometry(30, 30);
+        const groundMat = new THREE.MeshBasicMaterial({ 
+            color: 0xffffff,
+            side: THREE.DoubleSide,
+            wireframe: true 
+         });
+        const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+       // this.scene.add(groundMesh);
+
+        const groundPhysMat = new CANNON.Material();
+        this.groundPhysMat = groundPhysMat;
+        const groundBody = new CANNON.Body({
+            shape: new CANNON.Box(new CANNON.Vec3(15, 15, 0.1)),
+            type: CANNON.Body.STATIC,
+            material: groundPhysMat,
+            position: new CANNON.Vec3(0, -1.6927649250030519, 0)
+        });
+        this.world.addBody(groundBody);
+        groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+    //    groundBody.threeMesh = groundMesh; 
+      //  this.bodies.push(groundBody);
+    }
+
+    addWalls = () =>{
+        let world = this.world;
+        // Materials
+        const stone = new CANNON.Material('stone')
+        const stone_stone = new CANNON.ContactMaterial(stone, stone, {
+          friction: 0.3,
+          restitution: 0.2,
+        })
+        world.addContactMaterial(stone_stone)
+
+
+        const groundGeo = new THREE.PlaneGeometry(30, 30);
+        const groundMat1 = new THREE.MeshBasicMaterial({ 
+            color: 0xff0000,
+            side: THREE.DoubleSide
+         });
+            const groundMat2 = new THREE.MeshBasicMaterial({ 
+            color: 0x00ff00,
+            side: THREE.DoubleSide
+         });
+        const groundMat3 = new THREE.MeshBasicMaterial({ 
+            color: 0x0000ff,
+            side: THREE.DoubleSide
+         });
+        const groundMat4 = new THREE.MeshBasicMaterial({ 
+            color: 0xffffff,
+            side: THREE.DoubleSide
+         });            
+        const wallMesh1 = new THREE.Mesh(groundGeo, groundMat1);
+        const wallMesh2 = new THREE.Mesh(groundGeo, groundMat2);
+        const wallMesh3 = new THREE.Mesh(groundGeo, groundMat3);
+        const wallMesh4 = new THREE.Mesh(groundGeo, groundMat4);                
+        this.scene.add(wallMesh1);
+        this.scene.add(wallMesh2);
+        this.scene.add(wallMesh3);
+        this.scene.add(wallMesh4);
+
+        // Plane -x
+        const planeShapeXmin = new CANNON.Plane()
+        const planeXmin = new CANNON.Body({ mass: 0, material: stone })
+        planeXmin.addShape(planeShapeXmin)
+        planeXmin.quaternion.setFromEuler(0, Math.PI / 2, 0)
+        planeXmin.position.set(-20, 0, 0)
+        world.addBody(planeXmin);
+        planeXmin.threeMesh = wallMesh1;
+
+        // Plane +x
+        const planeShapeXmax = new CANNON.Plane()
+        const planeXmax = new CANNON.Body({ mass: 0, material: stone })
+        planeXmax.addShape(planeShapeXmax)
+        planeXmax.quaternion.setFromEuler(0, -Math.PI / 2, 0)
+        planeXmax.position.set(20, 0, 0)
+        world.addBody(planeXmax)
+        planeXmax.threeMesh = wallMesh1;
+
+
+        // Plane -z
+        const planeShapeZmin = new CANNON.Plane()
+        const planeZmin = new CANNON.Body({ mass: 0, material: stone })
+        planeZmin.addShape(planeShapeZmin)
+        planeZmin.quaternion.setFromEuler(0, 0, 0)
+        planeZmin.position.set(0, 0, -20)
+        world.addBody(planeZmin)
+        planeZmin.threeMesh = wallMesh3;
+        // Plane +z
+        const planeShapeZmax = new CANNON.Plane()
+        const planeZmax = new CANNON.Body({ mass: 0, material: stone })
+        planeZmax.addShape(planeShapeZmax)
+        planeZmax.quaternion.setFromEuler(0, Math.PI, 0)
+        planeZmax.position.set(0, 0, 20)
+        world.addBody(planeZmax)
+        planeZmin.threeMesh = wallMesh4;
 
     }
 
@@ -205,8 +299,10 @@ const params = {
                 this.initInventory(options);
                 if(this.config.footballMode===true){
                     this.initFootball();
-                }
+                };
+                console.log('getSceneDims...');
 
+                console.log(this.sceneryLoader.getSceneDims());
                // that.placeAssets();
                 if(that.config.firstPerson){
                     that.initPlayerFirstPerson();
@@ -227,6 +323,11 @@ const params = {
                 document.getElementById('give-diamond').style.display='inline-block';
                 document.getElementById('give-heart').style.display='inline-block';
                 document.getElementById('view-detail').style.display='inline-block';
+                if(this.config.showBall){
+                  //  this.addBalls();            
+                };
+
+
                   /*  document.querySelectorAll('.d3d-btn-top').forEach((el)=>{
                       el.style.display='inline-block';
                     });*/
@@ -547,9 +648,9 @@ const params = {
                     case 'KeyM': that.throwActiveItem(); break;
                     case 'NumpadAdd': that.setMasterVolume(1); break;
                     case 'NumpadSubtract': that.setMasterVolume(0); break;   
-                    case 'Numpad0': that.ball.position.copy(that.ballVector); break;        
-
-                    threeMesh                
+                    case 'Numpad0': 
+                        that.resetBall();
+                    break;        
                     case 'Digit0': that.inventory.setActive(0); break;
                     case 'Digit1': that.inventory.setActive(1); break;
                     case 'Digit2': that.inventory.setActive(2); break;
@@ -587,6 +688,10 @@ const params = {
 
     }
 
+    resetBall = () =>{
+        this.ball.velocity.set(0,0,0);
+        this.ball.position.copy(this.ballVector);        
+    }
     addEventListenerMouseClick = ()=>{
         let that = this;
         this.renderer.domElement.addEventListener( 'mousedown', this.checkMouse, false );
@@ -720,20 +825,21 @@ const params = {
         console.log('got Item:');
         console.log(item);
         if(item){
-            if(item.isGhost||item.isFootballPlayer){
+            if(item.isGhost||item.isFootballPlayer||item.isFootball){
                 this.actionTargetPos = item.getPosition();       
                 this.actionTargetItem = item;
                 if(item.isGhost){
                     this.targetGhost();
                 };
                 if(item.isFootballPlayer){
-                    this.targetFootballPlayer();
+                    this.targetFootballPlayer(item);
                 };
                 if(item.isFootball){
                     this.targetFootball();
                 };
             } else {
                 if(item.config){
+
                     if(!item.isSelected) {
                         this.hud.unSelectItem(); // unselect prev
                         this.config.chainAPI.getHeartStatus(item.config.nft.postHashHex).then((result)=>{
@@ -769,14 +875,34 @@ const params = {
 
     }
 
-    targetFootballPlayer = () =>{
-
+    targetFootballPlayer = (item) =>{
+        console.log('targeted player');
+        console.log(item);
+        this.actionTargetItem = item;
+        this.actionTargetMesh = item.mesh;        
     }
 
-    targetFootball = () =>{
+    targetFootball = (item) =>{
+        console.log('kick football');
+        console.log('ball pos:',this.actionTargetPos);
+        this.kickVector.subVectors( this.actionTargetPos, this.camera.position) ;
+        console.log('kickVector');
+        console.log(this.kickVector);
 
+        let shootVelocity = 10;
+        let shootDirection = this.getShootDirection();
+        this.ball.velocity.set(
+            shootDirection.x * shootVelocity,
+            shootDirection.y * shootVelocity,
+            shootDirection.z * shootVelocity
+          )
     }
-
+    getShootDirection =() => {
+          const vector = new THREE.Vector3(0, 0, 1)
+          vector.unproject(this.camera)
+          const ray = new THREE.Ray(this.ball.position, vector.sub(this.ball.position).normalize());
+          return ray.direction
+    }
     targetGhost = () =>{
         let that = this;
         clearTimeout(that.ghostTimer);
@@ -951,6 +1077,7 @@ const params = {
                     }
                 } else {
                     console.log('target probably ghost');
+                    console.log(that.actionTarget);
                     start = this.player.position.clone();
                     start.y--;
 
@@ -982,6 +1109,9 @@ const params = {
                             if(that.actionTargetItem.isGhost){
                                 that.catchGhost();
                             };
+                             if(that.actionTargetItem.isFootballPlayer){
+                                that.claimNFT('football');
+                            };
                         };
                         mesh.visible = false;
                     }
@@ -990,6 +1120,14 @@ const params = {
         }   
     }
 
+    claimNFT = (nftName) =>{
+        console.log('claim nft');
+        console.log(this.actionTargetItem);
+        if(this.config.claimNFT){
+            this.config.claimNFT();      
+        }
+
+    }
     catchGhost = ()=>{
         if(!this.ghostCaught){
             this.ghostSounds.hit.play();
@@ -1472,6 +1610,11 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         const delta = Math.min( this.clock.getDelta(), 0.1 );
         if(this.world){
             this.updatePhysicsWorld();
+            if(this.ball){
+                if(this.ball.position.y < -2){
+                    this.resetBall();
+                }
+            }
         };
 
             if ( params.firstPerson ) {
@@ -1765,46 +1908,51 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             mesh.position.copy(placePos);
         })
 
-        this.addBalls();
     }
 
     addBalls = () =>{
         let that = this;
         const size = 0.4;
-        this.bodies = [];
         let ballShape = new CANNON.Sphere(size);
         let x = this.getRandom(-10, 10);
         let y = 3;
         let z = this.getRandom(-0.3, 0.3);
         let footballItem = this.createBallMesh();
-        this.ballVector.set(3,1,0);
+        this.ballVector.set(6,6,0);
+
+         var mat1 = new CANNON.Material();
 
         let ballMesh = footballItem.place(this.ballVector).then((mesh, pos)=>{
 
             const body = new CANNON.Body({
-                mass: 1,
-                position: new CANNON.Vec3(x,y,z),
-                ballShape
+                mass: 10,
+                material: mat1,
             })
-
+            body.position.copy(this.ballVector);
+            body.addShape(ballShape);
+            body.linearDamping = 0.01;            
             body.threeMesh = mesh;
             that.ball=body;
             that.world.addBody(body)
             that.bodies.push(body);    
+
         });
 
-       
+         var mat1_ground = new CANNON.ContactMaterial(this.groundPhysMat, mat1, { friction: 0.0, restitution: 0.75 });;
+        this.world.addContactMaterial(mat1_ground);        
+
     }
 
     createBallMesh = ()=>{
     let itemConfig = {  scene: this.scene,
                             format: 'glb',
-                            height:0.4,
-                            width:0.4,
-                            depth:0.4,
+                            height:0.5,
+                            width:0.5,
+                            depth:0.5,
                             modelUrl:'https://desodata.azureedge.net/unzipped/9a29163ac2711c721713666fb8dd2afdbb51533d8ac25487408cc06e4757c983/gltf/normal/Ball.glb'};
 
         let football = this.initItemForModel(itemConfig);
+        football.isFootball = true;
         return football;
 
     }
@@ -2557,7 +2705,7 @@ initPlayerFirstPerson = () => {
 
     that.character.geometry.translate( 0, -1, 0 );
     that.character.capsuleInfo = {
-        radius: 0.5,
+        radius: 1,
         segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
     };    
 
