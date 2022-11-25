@@ -1756,9 +1756,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
         let playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(1,0,0), 1, -2);
 
-        let placePos = new THREE.Vector3(-7,(playerFloor.y),3);
+        let placePos = new THREE.Vector3(-6,(playerFloor.y),3);
         this.footballPlayer.place(placePos).then((mesh, pos)=>{
-            mesh.rotateY(Math.PI/4);
+            mesh.rotateY(Math.PI/2);
             that.sceneInventory.items3d.push(this.footballPlayer);
             that.sceneInventory.placedItems3D.push(this.footballPlayer);
             placePos.y = -1.6927649250030519;
