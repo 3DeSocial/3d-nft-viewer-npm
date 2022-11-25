@@ -1,7 +1,7 @@
 export const name = 'd3dspaceviewer';
 // Find the latest version by visiting https://cdn.skypack.dev/three.
 import * as THREE from 'three';
-import * as CANNON from 'cannon';
+import * as CANNON from 'cannon-es';
 
 import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -88,24 +88,24 @@ const params = {
 
     }
 
-    initWorld() {
+    initWorld = () =>{
         this.dt = 1.0/60.0;
         this.damping = 0.01;
         const world = new CANNON.World();
         world.gravity.set(0, -1, 0);
-        this.helper = new CannonHelper( this.scene, world);        
+         //this.helper = new CannonHelper( this.scene, world);        
         this.world = world; 
+        console.log('cannon world:');
+        console.log(this.world);
         this.addGroundPlane()
     }
 
     addGroundPlane = () =>{
-    const groundShape = new CANNON.Plane()
-    const groundBody = new CANNON.Body({ mass: 0 })
-    groundBody.addShape(groundShape)
-    groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
-    groundBody.addShape(groundShape);
-    this.world.add(groundBody);
-    this.helper.addVisual(groundBody);
+        const groundShape = new CANNON.Plane()
+        const groundBody = new CANNON.Body({ mass: 0 })
+        groundBody.addShape(groundShape)
+        groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0)
+        this.world.addBody(groundBody)
 
     }
 
@@ -199,7 +199,7 @@ const params = {
                             chainAPI: that.config.chainAPI});
             this.initSkybox();
             this.initLighting();
-         //   this.initWorld();
+            this.initWorld();
 
             this.loadScenery().then(()=>{
                 this.initInventory(options);
@@ -1765,7 +1765,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             mesh.position.copy(placePos);
         })
 
-       // this.addBalls() WIP
+        this.addBalls();
     }
 
     addBalls = () =>{
