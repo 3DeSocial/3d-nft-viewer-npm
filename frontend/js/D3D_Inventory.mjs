@@ -219,7 +219,16 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
 
                 let item = null;  
                 if(modelUrl){
-                    item = this.initItem({modelUrl: modelUrl, nftPostHashHex: itemData.postHashHex, pos:spot.pos, rot:spot.rot, nft:itemData, width: 3, height:3, depth:3, scene: that.scene, format: formats[0]});
+                    item = this.initItem({modelUrl: modelUrl,
+                                    nftPostHashHex: itemData.postHashHex, 
+                                                pos: spot.pos,
+                                                rot:spot.rot,
+                                                nft:itemData,
+                                                width: 3,
+                                                height:3,
+                                                depth:3,
+                                                scene: that.scene,
+                                                format: formats[0]});
                     console.log('item returned. have modelUrl: ',modelUrl, ' format: ',formats[0]);
                 } else {
 
@@ -288,7 +297,9 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
             format: opts.format
         };
 
-
+        if(this.config.physicsWorld){
+            itemParams.physicsWorld = this.config.physicsWorld;
+        };
 
         if(opts.nft){
             itemParams.nft = opts.nft;

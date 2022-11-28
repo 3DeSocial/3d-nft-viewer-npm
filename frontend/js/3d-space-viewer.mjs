@@ -7,7 +7,7 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import {CannonHelper, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { Physics, CannonHelper, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -86,10 +86,11 @@ const params = {
         this.audioListener = new THREE.AudioListener();
         this.ballVector = new THREE.Vector3();
         this.kickVector = new THREE.Vector3();
+        this.initPhysicsWorld();
 
     }
 
-    initWorld = () =>{
+    initPhysicsWorld = () =>{
         this.dt = 1.0/60.0;
         this.damping = 0.01;
         const world = new CANNON.World();
@@ -97,12 +98,13 @@ const params = {
               world.broadphase = new CANNON.NaiveBroadphase();
 
         this.world = world; 
-        this.bodies = [];
+
+        this.bodies = [];      
+        this.physics = new Physics({ world: world,
+                                    bodies: this.bodies});
 
         this.addGroundPlane();
         this.addWalls();
-        this.addBalls();
-
     }
 
     addGroundPlane = () =>{
@@ -317,10 +319,14 @@ const params = {
 
 
             this.loadScenery().then(()=>{
-                this.initInventory(options);
+
                 if(this.config.footballMode===true){
-                    this.initFootball();
+                    if(this.config.showBall){
+                        this.initPhysicsWorld();        
+                    };
+                    this.initFootball();                    
                 };
+                this.initInventory(options);                
                 console.log('getSceneDims...');
 
                 console.log(this.sceneryLoader.getSceneDims());
@@ -344,9 +350,7 @@ const params = {
                 document.getElementById('give-diamond').style.display='inline-block';
                 document.getElementById('give-heart').style.display='inline-block';
                 document.getElementById('view-detail').style.display='inline-block';
-                if(this.config.showBall){
-                    this.initWorld();        
-                };
+
 
                   /*  document.querySelectorAll('.d3d-btn-top').forEach((el)=>{
                       el.style.display='inline-block';
@@ -1900,9 +1904,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
               sound.setVolume( 0.5 );
               sound.play();
         });
-      
 
-        let itemConfig = {  scene: this.scene,
+        let itemConfig = {  physicsWorld: this.world,
+                            scene: this.scene,
                             format: 'fbx',
                             height:2.5,
                             width:2.5,
@@ -1914,7 +1918,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
         let playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(1,0,0), 1, -2);
 
-        let placePos = new THREE.Vector3(-6,(playerFloor.y),3);
+        let placePos = new THREE.Vector3(-6,-1.6927649250030519,3);
         this.footballPlayer.place(placePos).then((mesh, pos)=>{
             mesh.rotateY(Math.PI/2);
             that.sceneInventory.items3d.push(this.footballPlayer);
@@ -1922,6 +1926,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             placePos.y = -1.6927649250030519;
             mesh.position.copy(placePos);
         })
+
+        this.addBalls();
 
     }
 
@@ -1933,8 +1939,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let y = 3;
         let z = this.getRandom(-0.3, 0.3);
         let footballItem = this.createBallMesh();
-        this.ballVector.set(6,6,0);
-
+        this.ballVector.set(-6, 6,3 );
          var mat1 = new CANNON.Material();
 
         let ballMesh = footballItem.place(this.ballVector).then((mesh, pos)=>{
@@ -2252,12 +2257,15 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                 loadingScreen: this.loadingScreen
                                 }
 
+            if(this.world){
+                sceneInvConfig.physicsWorld = this.world;
+            };
+
             let haveVRM = this.haveVRM(items3dToRender);
             if(haveVRM){
-               
                 sceneInvConfig.animLoader = true;
+            };
 
-            }
             this.sceneInventory = new D3DInventory(sceneInvConfig);     
         }
         
@@ -2319,7 +2327,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             modelUrl: opts.modelUrl,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
-            format:extension
+            format:extension,
+            physicsWorld: (opts.physicsWorld)?opts.physicsWorld:null,
         }
 
         console.log('init item for model format: ',extension.toLowerCase());

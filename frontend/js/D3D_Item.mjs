@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import * as CANNON from 'cannon-es';
+import { Physics } from '3d-nft-viewer';
 
 import { VOXMesh } from "three/examples/jsm/loaders/VOXLoader.js";
 export default class Item {
@@ -54,7 +56,18 @@ export default class Item {
         } else {
             console.log('no modelUrl');
         }
+        if(this.config.physicsWorld){
+            this.initPhysics();
+        } else {
+            console.log('nophysicsWorld');
 
+        }
+
+    }
+
+    initPhysics = () =>{
+        console.log('initPhysics');
+        this.physics = new Physics({world:this.config.physicsWorld});
     }
 
     getFormatFromModelUrl = () =>{
@@ -228,6 +241,12 @@ export default class Item {
                 that.mesh.position.copy(pos);
                 that.scene.add(this.mesh);
                 that.fixYCoord(this.mesh, pos);
+                if(that.config.physicsWorld){
+                    console.log('item has physics world');
+                    that.addToPhysicsWorld();
+                } else {
+                    console.log('NO physics world, is isFootballPlayer? ',this.isFootballPlayer);
+                }
 
                 resolve(this.mesh, pos);
             } else{
@@ -242,6 +261,7 @@ export default class Item {
                         that.placeModel(pos)
                         .then((model)=>{
                             that.mesh = model;
+
                             console.log('item init at pos', pos);
                             if(that.hasAnimations(false)){
                                 console.log('hasAnimations');
@@ -253,6 +273,14 @@ export default class Item {
                                 console.log('root: ');
                                 console.log(that.root);
                             };
+
+                            if(that.config.physicsWorld){
+                                console.log('item has physics world, is isFootballPlayer? ',this.isFootballPlayer);
+                                that.addToPhysicsWorld();
+                            } else {
+                                console.log('NO physics world, is isFootballPlayer? ',this.isFootballPlayer);
+                            }
+
                             let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
                             document.body.dispatchEvent(loadedEvent);
                             document.body.dispatchEvent(this.meshPlacedEvent);
@@ -265,6 +293,17 @@ export default class Item {
             }
         });
 
+    }
+
+    addToPhysicsWorld = () =>{
+
+        let opts = {
+                    shape: 'box',
+                    mesh: this.mesh,
+                    bodyType: CANNON.Body.STATIC
+                };
+
+        this.physics.addToPhysicsWorld(opts);
     }
 
     retrievedModelUrlIsValid = (modelUrl) =>{
