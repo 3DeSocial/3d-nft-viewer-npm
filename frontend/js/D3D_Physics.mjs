@@ -16,27 +16,62 @@ export default class Physics {
     }
 
     addToPhysicsWorld = (opts) =>{
-        console.log('Physics addToPhysicsWorld');
         // Get NFT dimensions
         let itemDims = this.measureItem(opts.mesh)
-        console.log(itemDims);
+        let physBodyCap = this.createCapsule(opts, itemDims);
+            this.world.addBody(physBodyCap);   
+            return physBodyCap;
+    }
+
+    createCube = (opts, itemDims) =>{
         let shape = this.createShape(opts.shape, itemDims);
-        console.log('shape');        
-        console.log(shape);
+
 
         let mat = this.createMat(opts);
-        console.log(mat);
+
         let physBody = this.createBody(opts, shape, mat);
             physBody.position.copy(opts.mesh.position);
             physBody.threeMesh = opts.mesh;
-
-console.log('physBody');
-console.log(physBody);
-        this.world.addBody(physBody);
-
-    //    physBody.quaternion.setFromEuler(opts.rot.x, opts.rot.y, opts.rot.z);
-    
+        return physBody;
     }
+
+    createCapsule = (opts, itemDims) =>{
+        let sphereShape = this.createShape('sphere', itemDims.x/4);
+
+        let sphere = {shape: sphereShape,
+                    offset: new CANNON.Vec3(0, itemDims.y/2, 0)}
+
+        let sphereShape2 = this.createShape('sphere', itemDims.x);
+
+        let sphere2 = {shape: sphereShape2,
+                    offset: new CANNON.Vec3(0, itemDims.y/2, 0)}                    
+
+        let mat = this.createMat(opts);
+
+        let physBody = this.createBody(opts, [sphere2,sphere], mat);
+            physBody.position.copy(opts.mesh.position);
+
+         /* let sphereVisMesh1 = this.visualizeSphere(itemDims.x/4);
+           sphereVisMesh1.position.copy(opts.mesh.position);
+            sphereVisMesh1.position.y = sphereVisMesh1.position.y + itemDims.y - itemDims.y/4;
+
+            let sphereVisMesh2 = this.visualizeSphere(itemDims.x/4);
+            sphereVisMesh2.position.copy(opts.mesh.position);
+            sphereVisMesh2.position.y = sphereVisMesh2.position.y + itemDims.y/4;
+            console.log('vis at: ',opts.mesh.position);*/
+        return physBody;
+    }
+
+    visualizeSphere = (radius) =>{
+        
+        const geometry = new THREE.SphereGeometry( radius, 32, 16 );
+        const material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+        const sphere = new THREE.Mesh( geometry, material );
+        this.config.scene.add( sphere );        
+        return sphere;
+    }
+
+
 
     measureItem = (mesh) =>{
         let bounds =  new THREE.Box3().setFromObject(mesh);
@@ -44,7 +79,8 @@ console.log(physBody);
         let itemDims = {
             x: Math.abs(bounds.max.x - bounds.min.x),
             y: Math.abs(bounds.max.y - bounds.min.y),
-            z: Math.abs(bounds.max.z - bounds.min.z)
+            z: Math.abs(bounds.max.z - bounds.min.z),
+            bounds
         };  
 
         return itemDims;
@@ -57,18 +93,21 @@ console.log(physBody);
                 return new CANNON.Box(new CANNON.Vec3(itemDims.x, itemDims.y, itemDims.z));
             break;
             case 'sphere':
-                return new CANNON.Sphere(itemDims.radius);
-            break;            
+                return new CANNON.Sphere(itemDims.x);
+            break;
+            case 'cylinder':
+                return new CANNON.Cylinder(itemDims.x, itemDims.x, itemDims.y, 12);
+            break
         }
     }
 
     createMat = (opts) =>{
-        let friction = 0.3;
+        let friction = 0.1;
         if(opts.friction){
             friction = opts.friction;
         };
 
-        let restitution = 0.2;
+        let restitution = 1;
         if(opts.restitution){
             restitution = opts.restitution
         };
@@ -76,14 +115,18 @@ console.log(physBody);
         return new CANNON.Material({ friction: friction, restitution: restitution })
     }
 
-    createBody = (opts, shape, mat) =>{
+    createBody = (opts, shapes, mat) =>{
                 // Create Physics Body as Cube
         let physBody = new CANNON.Body({
-            shape: shape,
             type: opts.bodyType,
             material: opts.mat
         });
 
+        shapes.forEach((shapeData)=>{
+            let offset = (shapeData.offset)?shapeData.offset:null;
+            let quat =  (shapeData.quat)?shapeData.quat:null;;
+            physBody.addShape(shapeData.shape,offset,quat);
+        });
         return physBody
     }
 

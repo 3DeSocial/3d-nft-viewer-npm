@@ -87,14 +87,14 @@ const params = {
         this.ballVector = new THREE.Vector3();
         this.kickVector = new THREE.Vector3();
         this.initPhysicsWorld();
-
+        this.claimed = false;
     }
 
     initPhysicsWorld = () =>{
         this.dt = 1.0/60.0;
         this.damping = 0.01;
         const world = new CANNON.World();
-              world.gravity.set(0,-10,0);
+              world.gravity.set(0,-20,0);
               world.broadphase = new CANNON.NaiveBroadphase();
 
         this.world = world; 
@@ -1129,7 +1129,7 @@ const params = {
                                 that.catchGhost();
                             };
                              if(that.actionTargetItem.isFootballPlayer){
-                                that.claimNFT('football');
+
                             };
                         };
                         mesh.visible = false;
@@ -1895,15 +1895,18 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let that = this;
 
         this.footballSounds = [];
-        // create a global audio source
-        const sound = new THREE.Audio( that.audioListener );
-        const audioLoader = new THREE.AudioLoader();
-              audioLoader.load( '/audio/soccer-stadium-10-6709.mp3', function( buffer ) {
-              sound.setBuffer( buffer );
-              sound.setLoop( true );
-              sound.setVolume( 0.5 );
-              sound.play();
-        });
+        if(this.config.football.crowdSoundUrl){
+            // create a global audio source
+            const sound = new THREE.Audio( that.audioListener );
+            const audioLoader = new THREE.AudioLoader();
+            audioLoader.load( this.config.crowdSoundUrl, function( buffer ) {
+                sound.setBuffer( buffer );
+                sound.setLoop( true );
+                sound.setVolume( 0.5 );
+                sound.play();
+                that.footballSounds.push(sound);
+            });
+        }
 
         let itemConfig = {  physicsWorld: this.world,
                             scene: this.scene,
@@ -1918,13 +1921,34 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
         let playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(1,0,0), 1, -2);
 
-        let placePos = new THREE.Vector3(-6,-1.6927649250030519,3);
+        let placePos = new THREE.Vector3(-4,-1.6927649250030519,-12);
         this.footballPlayer.place(placePos).then((mesh, pos)=>{
-            mesh.rotateY(Math.PI/2);
+            if(this.config.football.goalSoundUrl){            
+                that.footballSounds.goal = new AudioClip({
+                    path: this.config.football.goalSoundUrl,
+                    mesh: mesh,
+                    listener: that.audioListener
+                });
+            };
+
+          //  mesh.rotateY(Math.PI/2);
             that.sceneInventory.items3d.push(this.footballPlayer);
             that.sceneInventory.placedItems3D.push(this.footballPlayer);
             placePos.y = -1.6927649250030519;
             mesh.position.copy(placePos);
+            that.bodies.push(this.footballPlayer.physicsBody);
+            this.footballPlayer.physicsBody.addEventListener("collide",function(e){
+                let contact = e.contact;
+                if(!that.claimed){
+                    console.log('HIT!!!');
+                    that.claimNFT();
+                    that.claimed = true;
+                    if(that.footballSounds.goal){
+                        that.footballSounds.goal.play();
+                    }
+                }
+            });
+
         })
 
         this.addBalls();
@@ -1939,13 +1963,13 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let y = 3;
         let z = this.getRandom(-0.3, 0.3);
         let footballItem = this.createBallMesh();
-        this.ballVector.set(-6, 6,3 );
+        this.ballVector.set(14, 8,-1 );
          var mat1 = new CANNON.Material();
 
         let ballMesh = footballItem.place(this.ballVector).then((mesh, pos)=>{
 
             const body = new CANNON.Body({
-                mass: 8,
+                mass: 10,
                 material: mat1,
             })
             body.position.copy(this.ballVector);
@@ -1958,7 +1982,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
         });
 
-         var mat1_ground = new CANNON.ContactMaterial(this.groundPhysMat, mat1, { friction: 0.5, restitution: 0.75 });;
+         var mat1_ground = new CANNON.ContactMaterial(this.groundPhysMat, mat1, { friction: 0.25, restitution: 0.75 });;
         this.world.addContactMaterial(mat1_ground);        
 
     }

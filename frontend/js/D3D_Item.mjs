@@ -67,7 +67,7 @@ export default class Item {
 
     initPhysics = () =>{
         console.log('initPhysics');
-        this.physics = new Physics({world:this.config.physicsWorld});
+        this.physics = new Physics({world:this.config.physicsWorld, scene:this.config.scene});
     }
 
     getFormatFromModelUrl = () =>{
@@ -303,7 +303,7 @@ export default class Item {
                     bodyType: CANNON.Body.STATIC
                 };
 
-        this.physics.addToPhysicsWorld(opts);
+        this.physicsBody = this.physics.addToPhysicsWorld(opts);
     }
 
     retrievedModelUrlIsValid = (modelUrl) =>{
