@@ -1899,7 +1899,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             // create a global audio source
             const sound = new THREE.Audio( that.audioListener );
             const audioLoader = new THREE.AudioLoader();
-            audioLoader.load( this.config.crowdSoundUrl, function( buffer ) {
+            audioLoader.load( this.config.football.crowdSoundUrl, function( buffer ) {
                 sound.setBuffer( buffer );
                 sound.setLoop( true );
                 sound.setVolume( 0.5 );
