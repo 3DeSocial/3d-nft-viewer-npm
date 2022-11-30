@@ -325,7 +325,7 @@ const params = {
         this.dt = 1.0/60.0;
         this.damping = 0.01;
         const world = new CANNON.World();
-              world.gravity.set(0,-30,0);
+              world.gravity.set(0,-15,0);
               world.broadphase = new CANNON.NaiveBroadphase();
 
         this.world = world; 
