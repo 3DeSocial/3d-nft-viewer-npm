@@ -25,4 +25,4 @@ import { LoadingScreen } from  './frontend/js/D3D_LoadingScreen.mjs';
 import { CannonHelper } from  './frontend/js/CannonHelper.mjs'; 
 import { Physics } from  './frontend/js/D3D_Physics.mjs'; 
 
- export {Physics, CannonHelper, AnimLoader, ItemVRM, AudioClip, LoadingScreen, MeshBVH, MeshBVHVisualizer, VRButton, NFTViewerOverlay, ChainAPI, HUDBrowser, HUDVR, D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRControls, Item, Item2d, XRControllerModelFactory, SceneryLoader, SkyBoxLoader, LayoutPlotter}
+ export { Physics, CannonHelper, AnimLoader, ItemVRM, AudioClip, LoadingScreen, MeshBVH, MeshBVHVisualizer, VRButton, NFTViewerOverlay, ChainAPI, HUDBrowser, HUDVR, D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRControls, Item, Item2d, XRControllerModelFactory, SceneryLoader, SkyBoxLoader, LayoutPlotter}

@@ -14,6 +14,238 @@ let playerIsOnGround = false;
 let fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = false;
 let nextPos = new THREE.Vector3();
 
+function CannonDebugRenderer(scene, world, options) {
+    options = options || {};
+
+    this.scene = scene;
+    this.world = world;
+
+    this._meshes = [];
+
+    this._material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+    this._sphereGeometry = new THREE.SphereGeometry(1);
+    this._boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+    this._planeGeometry = new THREE.PlaneGeometry( 10, 10, 10, 10 );
+    this._cylinderGeometry = new THREE.CylinderGeometry( 1, 1, 10, 10 );
+}
+
+CannonDebugRenderer.prototype = {
+
+    tmpVec0: new CANNON.Vec3(),
+    tmpVec1: new CANNON.Vec3(),
+    tmpVec2: new CANNON.Vec3(),
+    tmpQuat0: new CANNON.Vec3(),
+
+    update () {
+
+        const bodies = this.world.bodies;
+        const meshes = this._meshes;
+        const shapeWorldPosition = this.tmpVec0;
+        const shapeWorldQuaternion = this.tmpQuat0;
+
+        let meshIndex = 0;
+
+        for (let i = 0; i !== bodies.length; i += 1) {
+            const body = bodies[i];
+
+            for (let j = 0; j !== body.shapes.length; j += 1) {
+                const shape = body.shapes[j];
+
+                this._updateMesh(meshIndex, body, shape);
+
+                const mesh = meshes[meshIndex];
+
+                if (mesh) {
+
+                    // Get world position
+                    body.quaternion.vmult(body.shapeOffsets[j], shapeWorldPosition);
+                    body.position.vadd(shapeWorldPosition, shapeWorldPosition);
+
+                    // Get world quaternion
+                    body.quaternion.mult(body.shapeOrientations[j], shapeWorldQuaternion);
+
+                    // Copy to meshes
+                    mesh.position.copy(shapeWorldPosition);
+                    mesh.quaternion.copy(shapeWorldQuaternion);
+                }
+
+                meshIndex += 1;
+            }
+        }
+
+        for (let i = meshIndex; i < meshes.length; i += 1) {
+            const mesh = meshes[i];
+            if (mesh) {
+                this.scene.remove(mesh);
+            }
+        }
+
+        meshes.length = meshIndex;
+    },
+
+    _updateMesh (index, body, shape){
+        let mesh = this._meshes[index];
+        if (!this._typeMatch(mesh, shape)) {
+            if (mesh) {
+                this.scene.remove(mesh);
+            }
+            mesh = this._meshes[index] = this._createMesh(shape);
+        }
+        this._scaleMesh(mesh, shape);
+    },
+
+    _typeMatch (mesh, shape){
+        if (!mesh) {
+            return false;
+        }
+        const geo = mesh.geometry;
+        return (
+            (geo instanceof THREE.SphereGeometry && shape instanceof CANNON.Sphere) ||
+            (geo instanceof THREE.BoxGeometry && shape instanceof CANNON.Box) ||
+            (geo instanceof THREE.PlaneGeometry && shape instanceof CANNON.Plane) ||
+            (geo.id === shape.geometryId && shape instanceof CANNON.ConvexPolyhedron) ||
+            (geo.id === shape.geometryId && shape instanceof CANNON.Trimesh) ||
+            (geo.id === shape.geometryId && shape instanceof CANNON.Heightfield)
+        );
+    },
+
+    _createMesh (shape){
+        const material = this._material;
+        let geometry, geo, v0, v1, v2, mesh;
+
+        switch(shape.type){
+
+        case CANNON.Shape.types.SPHERE:
+            mesh = new THREE.Mesh(this._sphereGeometry, material);
+            break;
+
+        case CANNON.Shape.types.BOX:
+            mesh = new THREE.Mesh(this._boxGeometry, material);
+            break;
+
+        case CANNON.Shape.types.PLANE:
+            mesh = new THREE.Mesh(this._planeGeometry, material);
+            break;
+
+        case CANNON.Shape.types.CONVEXPOLYHEDRON:
+            // Create mesh
+            geo = new THREE.Geometry();
+
+            // Add vertices
+            for (let i = 0; i < shape.vertices.length; i += 1) {
+                const v = shape.vertices[i];
+                geo.vertices.push(new THREE.Vector3(v.x, v.y, v.z));
+            }
+
+            for (let i=0; i < shape.faces.length; i += 1) {
+                const face = shape.faces[i];
+
+                // add triangles
+                const a = face[0];
+                for (let j = 1; j < face.length - 1; j += 1) {
+                    let b = face[j];
+                    let c = face[j + 1];
+                    geo.faces.push(new THREE.Face3(a, b, c));
+                }
+            }
+            geo.computeBoundingSphere();
+            geo.computeFaceNormals();
+
+            mesh = new THREE.Mesh(geo, material);
+            shape.geometryId = geo.id;
+            break;
+
+        case CANNON.Shape.types.TRIMESH:
+            geometry = new THREE.Geometry();
+            v0 = this.tmpVec0;
+            v1 = this.tmpVec1;
+            v2 = this.tmpVec2;
+            for (let i = 0; i < shape.indices.length / 3; i += 1) {
+                shape.getTriangleVertices(i, v0, v1, v2);
+                geometry.vertices.push(
+                    new THREE.Vector3(v0.x, v0.y, v0.z),
+                    new THREE.Vector3(v1.x, v1.y, v1.z),
+                    new THREE.Vector3(v2.x, v2.y, v2.z)
+                );
+                let j = geometry.vertices.length - 3;
+                geometry.faces.push(new THREE.Face3(j, j+1, j+2));
+            }
+            geometry.computeBoundingSphere();
+            geometry.computeFaceNormals();
+            mesh = new THREE.Mesh(geometry, material);
+            shape.geometryId = geometry.id;
+            break;
+
+        case CANNON.Shape.types.HEIGHTFIELD:
+            geometry = new THREE.Geometry();
+
+            v0 = this.tmpVec0;
+            v1 = this.tmpVec1;
+            v2 = this.tmpVec2;
+            for (let xi = 0; xi < shape.data.length - 1; xi += 1) {
+                for (let yi = 0; yi < shape.data[xi].length - 1; yi += 1) {
+                    for (let k = 0; k < 2; k += 1) {
+                        shape.getConvexTrianglePillar(xi, yi, k===0);
+                        v0.copy(shape.pillarConvex.vertices[0]);
+                        v1.copy(shape.pillarConvex.vertices[1]);
+                        v2.copy(shape.pillarConvex.vertices[2]);
+                        v0.vadd(shape.pillarOffset, v0);
+                        v1.vadd(shape.pillarOffset, v1);
+                        v2.vadd(shape.pillarOffset, v2);
+                        geometry.vertices.push(
+                            new THREE.Vector3(v0.x, v0.y, v0.z),
+                            new THREE.Vector3(v1.x, v1.y, v1.z),
+                            new THREE.Vector3(v2.x, v2.y, v2.z)
+                        );
+                        let i = geometry.vertices.length - 3;
+                        geometry.faces.push(new THREE.Face3(i, i+1, i+2));
+                    }
+                }
+            }
+            geometry.computeBoundingSphere();
+            geometry.computeFaceNormals();
+            mesh = new THREE.Mesh(geometry, material);
+            shape.geometryId = geometry.id;
+            break;
+        }
+
+        if (mesh) {
+            this.scene.add(mesh);
+        }
+
+        return mesh;
+    },
+
+    _scaleMesh (mesh, shape) {
+        let radius;
+        switch (shape.type) {
+
+        case CANNON.Shape.types.SPHERE:
+            radius = shape.radius;
+            mesh.scale.set(radius, radius, radius);
+            break;
+
+        case CANNON.Shape.types.BOX:
+            mesh.scale.copy(shape.halfExtents);
+            mesh.scale.multiplyScalar(2);
+            break;
+
+        case CANNON.Shape.types.CONVEXPOLYHEDRON:
+            mesh.scale.set(1,1,1);
+            break;
+
+        case CANNON.Shape.types.TRIMESH:
+            mesh.scale.copy(shape.scale);
+            break;
+
+        case CANNON.Shape.types.HEIGHTFIELD:
+            mesh.scale.set(1,1,1);
+            break;
+
+        }
+    }
+};
+
 const params = {
     debug: false,
     firstPerson: true,
@@ -93,18 +325,19 @@ const params = {
         this.dt = 1.0/60.0;
         this.damping = 0.01;
         const world = new CANNON.World();
-              world.gravity.set(0,-20,0);
+              world.gravity.set(0,-30,0);
               world.broadphase = new CANNON.NaiveBroadphase();
 
         this.world = world; 
 
         this.bodies = [];      
         this.physics = new Physics({ world: world,
-                                    bodies: this.bodies});
-        this.physics.convertBVH(this.sceneryLoader.bvh);
-        console.log('addec bvh')
-        //this.addGroundPlane();
-        //this.addWalls();
+                                    bodies: this.bodies,
+                                    scene: this.scene});
+
+        this.addGroundPlane();
+        this.addWalls();
+      //  this.cannonDebugRenderer = new CannonDebugRenderer(this.scene, world)
     }
 
     addGroundPlane = () =>{
@@ -116,8 +349,6 @@ const params = {
             side: THREE.DoubleSide
          });
 
-    //    const groundMesh = new THREE.Mesh(groundGeo, groundMat);
-     //   this.scene.add(groundMesh);
 
         const groundPhysMat = new CANNON.Material();
         this.groundPhysMat = groundPhysMat;
@@ -129,7 +360,6 @@ const params = {
         });
         this.world.addBody(groundBody);
         groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
-  //      groundBody.threeMesh = groundMesh; 
         this.bodies.push(groundBody);
     }
 
@@ -223,6 +453,35 @@ const params = {
 
         planeShapeZmax.quaternion.setFromEuler(0, Math.PI, 0)
     //    planeShapeZmax.threeMesh = wallMesh4;
+
+
+       this.addCorner(12,8,12,14,2,12);
+       this.addCorner(12,8,12,-14,2,-11);
+       this.addCorner(12,8,12,-14,2,12);
+       this.addCorner(12,8,12,14,2,-11);
+    }
+
+    addCorner = (l,h,d,x,y,z) =>{
+
+        
+      /*  const cornerGeo = new THREE.BoxGeometry(l,h,d);
+        const cornerMat1 = new THREE.MeshBasicMaterial({ 
+            color: 0xff0000,
+            side: THREE.DoubleSide
+         });
+           
+        const cornerMesh1 = new THREE.Mesh(cornerGeo, cornerMat1);
+        this.scene.add(cornerMesh1);
+        cornerMesh1.position.set(x,y,z);
+*/
+        const corner1 = new CANNON.Body({
+            shape: new CANNON.Box(new CANNON.Vec3(l/2,h/2,d/2)),
+            type: CANNON.Body.STATIC,
+            material: cornerMat1,
+            position: new CANNON.Vec3(x,y,z)
+        });
+        this.world.addBody(corner1);       
+//        corner1.threeMesh = cornerMesh1;        
 
     }
 
@@ -675,7 +934,19 @@ const params = {
                     case 'NumpadSubtract': that.setMasterVolume(0); break;   
                     case 'Numpad0': 
                         that.resetBall();
-                    break;        
+                    break;
+                    case 'Numpad4': 
+                        that.moveMeshLeft();
+                    break;  
+                    case 'Numpad6': 
+                        that.moveMeshRight();
+                    break;    
+                    case 'Numpad8': 
+                        that.moveMeshForward();
+                    break;    
+                    case 'Numpad2': 
+                        that.moveMeshBack();
+                    break;    
                     case 'Digit0': that.inventory.setActive(0); break;
                     case 'Digit1': that.inventory.setActive(1); break;
                     case 'Digit2': that.inventory.setActive(2); break;
@@ -712,10 +983,36 @@ const params = {
             } );
 
     }
+    moveMeshLeft = () =>{
+        if(this.hud.selectedItem){
+            this.hud.selectedItem.translateX(0.1)
+        }
+    }
+
+    moveMeshRight = () =>{
+        if(this.hud.selectedItem){
+            this.hud.selectedItem.translateX(-0.1)          
+        }       
+    }
+
+    moveMeshForward = () =>{
+        if(this.hud.selectedItem){
+            this.hud.selectedItem.translateZ(-0.1)           
+        }
+    }
+
+    moveMeshBack = () =>{
+        if(this.hud.selectedItem){
+            this.hud.selectedItem.translateZ(0.1)         
+        }        
+    }
 
     resetBall = () =>{
-        this.ball.velocity.set(0,0,0);
-        this.ball.position.copy(this.ballVector);        
+        if(this.ball){
+            this.ball.velocity.set(0,0,0);
+            this.ball.angularVelocity.set(0,0,0);
+            this.ball.position.copy(this.ballVector);
+        }
     }
     addEventListenerMouseClick = ()=>{
         let that = this;
@@ -886,6 +1183,8 @@ const params = {
                 } else {
                     console.log('item has no config');
                     console.log(item);
+                            that.hud.setSelectedItem(item);
+
                 }
             };
             this.actionTargetPos = item.getPosition();
@@ -1611,6 +1910,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             this.camera.aspect = this.parentDivElWidth/this.parentDivElHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
+            console.log('resizeCanvas');
         };
 
         this.controls.update();
@@ -1623,6 +1923,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }
     
     render = () =>{
+
+       // this.cannonDebugRenderer.update()
          if (this.renderer.xr.isPresenting === true) {
             this.vrControls.checkControllers();
         }  
@@ -1958,13 +2260,13 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     addBalls = () =>{
         let that = this;
-        const size = 0.4;
-        let ballShape = new CANNON.Sphere(size);
+        const size = 0.5;
+        let ballShape = new CANNON.Sphere(size/2);
         let x = this.getRandom(-10, 10);
         let y = 3;
         let z = this.getRandom(-0.3, 0.3);
-        let footballItem = this.createBallMesh();
-        this.ballVector.set(14, 8,-1 );
+        let footballItem = this.createBallMesh(size);
+        this.ballVector.set(6, 4,0 );
          var mat1 = new CANNON.Material();
 
         let ballMesh = footballItem.place(this.ballVector).then((mesh, pos)=>{
@@ -1983,17 +2285,17 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
         });
 
-         var mat1_ground = new CANNON.ContactMaterial(this.groundPhysMat, mat1, { friction: 0.25, restitution: 0.75 });;
+         var mat1_ground = new CANNON.ContactMaterial(this.groundPhysMat, mat1, { friction: 0.3, restitution: 0.75 });;
         this.world.addContactMaterial(mat1_ground);        
 
     }
 
-    createBallMesh = ()=>{
+    createBallMesh = (size)=>{
     let itemConfig = {  scene: this.scene,
                             format: 'glb',
-                            height:0.5,
-                            width:0.5,
-                            depth:0.5,
+                            height:size,
+                            width:size,
+                            depth:size,
                             modelUrl:'https://desodata.azureedge.net/unzipped/9a29163ac2711c721713666fb8dd2afdbb51533d8ac25487408cc06e4757c983/gltf/normal/Ball.glb'};
 
         let football = this.initItemForModel(itemConfig);

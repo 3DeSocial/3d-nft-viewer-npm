@@ -141,7 +141,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
 
 
                     }).catch(err=>{
-                        console.log('no image, skip NFT');
+                       // console.log('no image, skip NFT');
                     })           
                
                

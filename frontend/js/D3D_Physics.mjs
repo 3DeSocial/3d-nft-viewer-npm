@@ -14,7 +14,39 @@ export default class Physics {
         };
 
         this.world = this.config.world;
+        this.scene = this.config.scene;
+    }
 
+    addColliderBox = (x, y, z, pos) =>{
+        let boxGeo =  new THREE.BoxGeometry( x, y, z);
+        const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+        const cube = new THREE.Mesh( boxGeo, material );
+        this.scene.add(cube);
+        let boxShape = this.createShape('box', {x:x,y:y,z:z});
+
+        let box = {shape: boxShape};
+  
+        let mat = this.createMat();
+        let physBody =  new CANNON.Body({
+            shape: new CANNON.Box(new CANNON.Vec3(x, y, z)),
+            type: CANNON.Body.STATIC,
+            material: mat,
+            position: new CANNON.Vec3(0, 0, 0)
+        });
+
+        this.world.addBody(physBody);
+        physBody.threeMesh = cube;
+
+//console.log('copied pos');
+
+//console.log('copied quaternion');
+
+        console.log('physBody');        
+        console.log(physBody);
+
+        console.log('cube');        
+        console.log(cube);
+        return physBody;
     }
 
     addToPhysicsWorld = (opts) =>{
@@ -25,7 +57,9 @@ export default class Physics {
             return physBodyCap;
     }
 
+/* converting the whole mesh not working due to limitations of physics engine.
     convertBVH = (object3D)=>{
+        console.log('convertBVH:', object3D);
         const result = threeToCannon(object3D, {type: ShapeType.MESH});
         // Result object includes a CANNON.Shape instance, and (optional)
         // an offset or quaternion for that shape.
@@ -33,12 +67,12 @@ export default class Physics {
 
         let mat = this.createMat();
 
-        let physBody = this.createBody({mat:mat}, shape);
+        let physBody = this.createBody({mat:mat}, [shape]);
             physBody.position.copy(opts.mesh.position);
         // Add the shape to a CANNON.Body.
-        this.world.addShape(shape, offset, quaternion);
+        this.world.addShape(shape, (offset)?offset:null, (quaternion)?quaternion:null);
     }
-
+*/
     createCube = (opts, itemDims) =>{
         let shape = this.createShape(opts.shape, itemDims);
 
@@ -118,14 +152,18 @@ export default class Physics {
     }
 
     createMat = (opts) =>{
-        let friction = 0.1;
-        if(opts.friction){
-            friction = opts.friction;
-        };
 
+        let friction = 0.1;
         let restitution = 1;
-        if(opts.restitution){
-            restitution = opts.restitution
+
+        if(opts){
+            if(opts.friction){
+                friction = opts.friction;
+            };
+
+            if(opts.restitution){
+                restitution = opts.restitution
+            };
         };
 
         return new CANNON.Material({ friction: friction, restitution: restitution })
@@ -140,7 +178,7 @@ export default class Physics {
 
         shapes.forEach((shapeData)=>{
             let offset = (shapeData.offset)?shapeData.offset:null;
-            let quat =  (shapeData.quaternion)?shapeData.quaternion:null;
+            let quaternion =  (shapeData.quaternion)?shapeData.quaternion:null;
             physBody.addShape(shapeData.shape,offset,quaternion);
         });
         return physBody
