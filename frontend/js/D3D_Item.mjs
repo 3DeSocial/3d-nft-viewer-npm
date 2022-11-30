@@ -54,12 +54,12 @@ export default class Item {
             console.log('check modelUrl');
             this.getFormatFromModelUrl();
         } else {
-            console.log('no modelUrl');
+           // console.log('no modelUrl');
         }
         if(this.config.physicsWorld){
             this.initPhysics();
         } else {
-            console.log('nophysicsWorld');
+           // console.log('nophysicsWorld');
 
         }
 

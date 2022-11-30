@@ -87,7 +87,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
 
                 console.log('initItems');
             itemList.forEach((itemData)=>{
-                console.log(itemData)
+            //    console.log(itemData)
                 let item ;
                 let itemConfig;
                 if(itemData.params){

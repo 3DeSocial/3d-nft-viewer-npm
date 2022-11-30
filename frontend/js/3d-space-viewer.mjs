@@ -477,7 +477,7 @@ const params = {
         const corner1 = new CANNON.Body({
             shape: new CANNON.Box(new CANNON.Vec3(l/2,h/2,d/2)),
             type: CANNON.Body.STATIC,
-            material: cornerMat1,
+            material: this.groundPhysMat,
             position: new CANNON.Vec3(x,y,z)
         });
         this.world.addBody(corner1);       
