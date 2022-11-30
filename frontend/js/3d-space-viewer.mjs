@@ -86,7 +86,6 @@ const params = {
         this.audioListener = new THREE.AudioListener();
         this.ballVector = new THREE.Vector3();
         this.kickVector = new THREE.Vector3();
-        this.initPhysicsWorld();
         this.claimed = false;
     }
 
@@ -102,9 +101,10 @@ const params = {
         this.bodies = [];      
         this.physics = new Physics({ world: world,
                                     bodies: this.bodies});
-
-        this.addGroundPlane();
-        this.addWalls();
+        this.physics.convertBVH(this.sceneryLoader.bvh);
+        console.log('addec bvh')
+        //this.addGroundPlane();
+        //this.addWalls();
     }
 
     addGroundPlane = () =>{
@@ -323,6 +323,7 @@ const params = {
                 if(this.config.footballMode===true){
                     if(this.config.showBall){
                         this.initPhysicsWorld();        
+
                     };
                     this.initFootball();                    
                 };

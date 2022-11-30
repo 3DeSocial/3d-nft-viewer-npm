@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
+import { threeToCannon, ShapeType } from 'three-to-cannon';
+
 export default class Physics {
 
     constructor(config){
@@ -23,13 +25,27 @@ export default class Physics {
             return physBodyCap;
     }
 
+    convertBVH = (object3D)=>{
+        const result = threeToCannon(object3D, {type: ShapeType.MESH});
+        // Result object includes a CANNON.Shape instance, and (optional)
+        // an offset or quaternion for that shape.
+        const {shape, offset, quaternion} = result;
+
+        let mat = this.createMat();
+
+        let physBody = this.createBody({mat:mat}, shape);
+            physBody.position.copy(opts.mesh.position);
+        // Add the shape to a CANNON.Body.
+        this.world.addShape(shape, offset, quaternion);
+    }
+
     createCube = (opts, itemDims) =>{
         let shape = this.createShape(opts.shape, itemDims);
 
 
-        let mat = this.createMat(opts);
+        opts.mat = this.createMat(opts);
 
-        let physBody = this.createBody(opts, shape, mat);
+        let physBody = this.createBody(opts, shape);
             physBody.position.copy(opts.mesh.position);
             physBody.threeMesh = opts.mesh;
         return physBody;
@@ -46,9 +62,9 @@ export default class Physics {
         let sphere2 = {shape: sphereShape2,
                     offset: new CANNON.Vec3(0, itemDims.y/2, 0)}                    
 
-        let mat = this.createMat(opts);
+        opts.mat = this.createMat(opts);
 
-        let physBody = this.createBody(opts, [sphere2,sphere], mat);
+        let physBody = this.createBody(opts, [sphere2,sphere]);
             physBody.position.copy(opts.mesh.position);
 
          /* let sphereVisMesh1 = this.visualizeSphere(itemDims.x/4);
@@ -115,7 +131,7 @@ export default class Physics {
         return new CANNON.Material({ friction: friction, restitution: restitution })
     }
 
-    createBody = (opts, shapes, mat) =>{
+    createBody = (opts, shapes) =>{
                 // Create Physics Body as Cube
         let physBody = new CANNON.Body({
             type: opts.bodyType,
@@ -124,8 +140,8 @@ export default class Physics {
 
         shapes.forEach((shapeData)=>{
             let offset = (shapeData.offset)?shapeData.offset:null;
-            let quat =  (shapeData.quat)?shapeData.quat:null;;
-            physBody.addShape(shapeData.shape,offset,quat);
+            let quat =  (shapeData.quaternion)?shapeData.quaternion:null;
+            physBody.addShape(shapeData.shape,offset,quaternion);
         });
         return physBody
     }
