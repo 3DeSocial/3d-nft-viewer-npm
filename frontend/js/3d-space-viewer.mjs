@@ -322,7 +322,7 @@ const params = {
     }
 
     initPhysicsWorld = () =>{
-        this.dt = 1.0/60.0;
+        this.dt = 1.0/90.0;
         this.damping = 0.01;
         const world = new CANNON.World();
               world.gravity.set(0,-15,0);
@@ -370,7 +370,7 @@ const params = {
         // Materials
         const stone = new CANNON.Material('stone')
         const stone_stone = new CANNON.ContactMaterial(stone, stone, {
-          friction: 0.3,
+          friction: 0.5,
           restitution: 0.2,
         })
         world.addContactMaterial(stone_stone)
@@ -459,12 +459,15 @@ const params = {
        this.addCorner(12,8,12,-14,2,-11);
        this.addCorner(12,8,12,-14,2,12);
        this.addCorner(12,8,12,14,2,-11);
+
+       this.addCorner(7.5,8,1,0,2,6);
+       this.addCorner(7.5,8,1,0,2,-6);       
     }
 
     addCorner = (l,h,d,x,y,z) =>{
 
         
-      /*  const cornerGeo = new THREE.BoxGeometry(l,h,d);
+ /*       const cornerGeo = new THREE.BoxGeometry(l,h,d);
         const cornerMat1 = new THREE.MeshBasicMaterial({ 
             color: 0xff0000,
             side: THREE.DoubleSide
@@ -481,7 +484,7 @@ const params = {
             position: new CANNON.Vec3(x,y,z)
         });
         this.world.addBody(corner1);       
-//        corner1.threeMesh = cornerMesh1;        
+  //      corner1.threeMesh = cornerMesh1;        
 
     }
 
@@ -1214,6 +1217,7 @@ const params = {
             shootDirection.y * shootVelocity,
             shootDirection.z * shootVelocity
           )
+        this.ball.angularDamping = 0.5;
         this.ball.applyImpulse(this.kickVector);
     }
     getShootDirection =() => {
@@ -1429,7 +1433,7 @@ const params = {
                                 that.catchGhost();
                             };
                              if(that.actionTargetItem.isFootballPlayer){
-
+                                that.claimNFT({actionType:'heart'})
                             };
                         };
                         mesh.visible = false;
@@ -1439,11 +1443,11 @@ const params = {
         }   
     }
 
-    claimNFT = (nftName) =>{
+    claimNFT = (opts) =>{
         if(this.config.chainAPI.claimNFT){
-            this.config.chainAPI.claimNFT();      
+            this.config.chainAPI.claimNFT(opts);      
         } else if (this.config.claimNFT){
-            this.config.claimNFT();
+            this.config.claimNFT(opts);
         }
     }
 
@@ -2207,7 +2211,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                 sound.setLoop( true );
                 sound.setVolume( 0.5 );
                 sound.play();
-                that.footballSounds.push(sound);
+                that.footballSounds.crowd = sound;
             });
         }
 
@@ -2230,7 +2234,12 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                 that.footballSounds.goal = new AudioClip({
                     path: this.config.football.goalSoundUrl,
                     mesh: mesh,
-                    listener: that.audioListener
+                    listener: that.audioListener,
+                    onEnded: () =>{
+                        that.scene.remove( that.spotLight );      
+                        that.scene.remove( that.spotLight2 );                          
+                        that.footballSounds.crowd.play();
+                    }
                 });
             };
 
@@ -2244,11 +2253,18 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                 let contact = e.contact;
                 if(!that.claimed){
                     console.log('HIT!!!');
-                    that.claimNFT();
-                    that.claimed = true;
+                    let spot = that.footballPlayer.mesh.position.clone()
+                    spot.y = 10;
+                    that.addSpotlight(spot, that.footballPlayer.mesh);                     
+
                     if(that.footballSounds.goal){
+                        that.footballSounds.crowd.stop();
+                        that.footballSounds.goal.stop();                        
                         that.footballSounds.goal.play();
-                    }
+                    };
+                    that.resetBall();
+                    that.claimNFT({actionType:'hit'});
+
                 }
             });
 
@@ -2261,7 +2277,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     addBalls = () =>{
         let that = this;
         const size = 0.5;
-        let ballShape = new CANNON.Sphere(size/2);
+        let ballShape = new CANNON.Sphere(size);
         let x = this.getRandom(-10, 10);
         let y = 3;
         let z = this.getRandom(-0.3, 0.3);
@@ -2285,7 +2301,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
         });
 
-         var mat1_ground = new CANNON.ContactMaterial(this.groundPhysMat, mat1, { friction: 0.3, restitution: 0.75 });;
+         var mat1_ground = new CANNON.ContactMaterial(this.groundPhysMat, mat1, { friction: 0.2, restitution: 0.75 });;
         this.world.addContactMaterial(mat1_ground);        
 
     }
@@ -2485,7 +2501,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         this.ghost.mesh.lookAt(this.newDir);
     }
 
-    addSpotlight = (pos) =>{
+    addSpotlight = (pos, targetMesh) =>{
     let spotLight = new THREE.SpotLight( 0xffffff, 10 );
         spotLight.position.copy(pos);
         spotLight.position.y = 10;
@@ -2493,7 +2509,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         spotLight.penumbra = 1;
         spotLight.decay = 2;
         spotLight.distance = 100;
-        spotLight.target = this.ghost.mesh;
+        spotLight.target = targetMesh;
 
       
         this.scene.add( spotLight );        
@@ -2508,7 +2524,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         spotLight2.penumbra = 1;
         spotLight2.decay = 2;
         spotLight2.distance = 100;
-        spotLight2.target = this.ghost.mesh;
+        spotLight2.target = targetMesh;
 
       
         this.scene.add( spotLight );      
