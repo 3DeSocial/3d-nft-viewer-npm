@@ -1466,34 +1466,33 @@ const params = {
 
             this.ghostHover.pause();  
             this.ghost.mesh.position.y=-1;
-            that.ghost.place(this.ghost.mesh.position).then((mesh,pos)=>{
-                mesh.lookAt(this.camera.position);     
-                setTimeout(()=>{                
-                    let ghostSpot = this.ghost.mesh.position.clone()
-                    ghostSpot.y = 10;
-                    that.addSpotlight(ghostSpot);
-                    that.lights.aLight.intensity = 0;                
-                    that.ghostup = anime({
-                            begin: ()=>{
-                                that.ghostSounds.caught.play();            
-                            },
-                            targets: that.ghost.mesh.position,
-                            y: 12.5,
-                            loop: false,
-                            duration: 25000,
-                            easing: 'linear',
-                            complete: ()=>{
-                                that.lights.switchOnDirectional();                                             
-                                that.ghost.mesh.visible = false;
-                                that.lights.aLight.color.setHex(0xffffff);
-                                that.lights.aLight.intensity = 1;    
-                                that.scene.remove(that.spotLight);
-                                that.scene.remove(that.spotLight2);       
-                            }
-                        });        
-                    },3000)                
-            })
-
+            that.ghost.moveTo(this.ghost.mesh.position);
+            this.ghost.mesh.lookAt(this.camera.position);     
+            setTimeout(()=>{                
+                let ghostSpot = this.ghost.mesh.position.clone()
+                ghostSpot.y = 10;
+                that.addSpotlight(ghostSpot, this.ghost.mesh);
+                that.lights.aLight.intensity = 0;                
+                that.ghostup = anime({
+                        begin: ()=>{
+                            that.ghostSounds.caught.play();            
+                        },
+                        targets: that.ghost.mesh.position,
+                        y: 12.5,
+                        loop: false,
+                        duration: 25000,
+                        easing: 'linear',
+                        complete: ()=>{
+                            that.lights.switchOnDirectional();                                             
+                            that.ghost.mesh.visible = false;
+                            that.lights.aLight.color.setHex(0xffffff);
+                            that.lights.aLight.intensity = 1;    
+                            that.scene.remove(that.spotLight);
+                            that.scene.remove(that.spotLight2);
+                        }
+                    });        
+                },3000)                
+            
        
 
         
