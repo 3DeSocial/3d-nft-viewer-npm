@@ -366,7 +366,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
             itemParams.animLoader = this.config.animLoader;
             item = new ItemVRM(itemParams);
         } else {
-            item = new Item(config);
+            item = new Item(itemParams);
         };
 
 
