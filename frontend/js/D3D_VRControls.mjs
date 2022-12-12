@@ -43,15 +43,15 @@ class VRControls {
                                             //    that.controlProxy.rot = 'rl';                                                
                                             },
                                             onSelectEndLeft: ()=>{
-                                             console.log('onSelectEnd paddle up')   
+                                           //  console.log('onSelectEnd paddle up')   
                                             },
                                             onSelectStartRight: ()=>{
-                                                console.log('onSelectStart paddle down')   
+                                              //  console.log('onSelectStart paddle down')   
 ;
                                             //    that.controlProxy.rot = 'rl';                                                
                                             },
                                             onSelectEndRight: ()=>{
-                                             console.log('onSelectEnd paddle up')   
+                                           //  console.log('onSelectEnd paddle up')   
                                             },
 
 		};
@@ -257,24 +257,24 @@ class VRControls {
         let forward = true;
         if(this.isOverMovementThreshold(data.axes[2])){
             if (data.axes[2] > 0) {
-                console.log(hand+ ' stick: right ',data.axes[2]);
+                //console.log(hand+ ' stick: right ',data.axes[2]);
                 switch(this.config.vrType){
                     case 'flying':
                         this.flyRight(data, value);
                     break;
                     default:
-                        console.log('move right');
+                     //   console.log('move right');
                         this.moveRight(data, value);
                     break;
                 }
             } else if (data.axes[2] < 0) {
-                console.log(hand+ ' stick: left',data.axes[2]);
+           //     console.log(hand+ ' stick: left',data.axes[2]);
                 switch(this.config.vrType){
                     case 'flying':
                         this.flyLeft(data, value);
                     break;
                     default:
-                        console.log('move left');
+                   //     console.log('move left');
                         this.moveLeft(data, value);
                     break;
                 }
@@ -287,7 +287,7 @@ class VRControls {
         if(this.isOverMovementThreshold(data.axes[3])){
              //   console.log(hand+ ' stick: back',data.axes[3]);
             if(data.axes[3] > 0){
-                console.log(hand+ ' stick: right ',data.axes[2],this.config.vrType);
+              //  console.log(hand+ ' stick: right ',data.axes[2],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
                         this.flyBackward(data, value);
@@ -297,7 +297,7 @@ class VRControls {
                     break;
                 }
             } else if (data.axes[3] < 0){
-                console.log(hand + ' stick: forward',data.axes[3],this.config.vrType);
+              //  console.log(hand + ' stick: forward',data.axes[3],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
                         this.flyForward(data, value);
@@ -333,7 +333,7 @@ class VRControls {
         if(this.isOverMovementThreshold(data.axes[3])){
              //   console.log(hand+ ' stick: back',data.axes[3]);
             if(data.axes[3] > 0){
-                console.log(hand+ ' stick: right ',data.axes[2],this.config.vrType);
+            //    console.log(hand+ ' stick: right ',data.axes[2],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
                         this.flyBackward(data, value);
@@ -444,7 +444,7 @@ class VRControls {
     }
 
     rotateLeft = (data,value) => {
-    console.log('VRControla rotateLeft')
+   // console.log('VRControla rotateLeft')
 
         this.config.rotateLeft(data,value);
     }

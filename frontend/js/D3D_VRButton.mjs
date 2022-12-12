@@ -86,7 +86,10 @@ export default class VRButton {
           // be requested separately.)
 
           const sessionInit = { optionalFeatures: [ 'local-floor', 'bounded-floor', 'hand-tracking', 'layers' ] };
-          navigator.xr.requestSession( 'immersive-vr', sessionInit ).then( onSessionStarted );
+          navigator.xr.requestSession( 'immersive-vr', sessionInit ).then( (onSessionStarted) ).catch((err)=>{
+            console.log('could not start immersive-vr session');
+            console.log(err);
+          })
         } else {
           currentSession.end();
 

@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
-import { threeToCannon, ShapeType } from 'three-to-cannon';
 
 export default class Physics {
 
