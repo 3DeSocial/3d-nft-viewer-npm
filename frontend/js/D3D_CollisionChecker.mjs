@@ -29,6 +29,8 @@ export default class CollisionChecker  {
         this.tempMat = new THREE.Matrix4();
         this.tempSegment = new THREE.Line3();
         this.origDollyPos = new THREE.Vector3(); 
+        this.gravity = 0.5;
+
     }
 
 
@@ -95,9 +97,12 @@ export default class CollisionChecker  {
 
         // adjust the player model
         oldPos.add( deltaVector );
-       if ( ! this.playerIsOnGround ) {
+   /*    if ( ! this.playerIsOnGround ) {
 
             deltaVector.normalize();
+          // this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * this.gravity;
+      //  console.log('not on playerIsOnGround. ',this.playerVelocity.y);
+
             this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
 
         } else {
@@ -105,7 +110,7 @@ export default class CollisionChecker  {
             this.playerVelocity.set( 0, 0, 0 );
 
 
-        }
+        }*/
 
 
     }

@@ -30,7 +30,7 @@ export default class PlayerVR {
         this.oldPos = new THREE.Vector3();
         this.newPos = new THREE.Vector3();        
         this.playerVelocity = new THREE.Vector3();
-        this.gravity = 0.5;
+        this.gravity = 5;
         this.gravityVector = new THREE.Vector3(0,-1,0);
         this.worldDir = new THREE.Vector3();
 
@@ -76,8 +76,8 @@ export default class PlayerVR {
     }
 
     buildDolly = () =>{
-
-        let startY = this.config.playerStartPos.y + 1.25;
+this.config.playerStartPos.y = 60;
+        let startY = this.config.playerStartPos.y;
         this.camera.position.set( 0, startY, 0 );
         this.camera.rotation.set(0,0,0);
         this.dolly = new THREE.Group();
@@ -125,7 +125,7 @@ console.log(this.config.playerStartPos);
 
 
         let gravityFactor = delta * this.gravity;
-
+        this.dolly.position.y = this.dolly.position.y-gravityFactor;
         this.newPos.copy(this.dolly.position); // coppy current for ajusting
 
     //    const quaternion = this.dolly.quaternion.clone();  
