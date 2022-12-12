@@ -91,6 +91,16 @@ export default class SceneryLoader {
         box.getCenter( scene.position ).negate();
         scene.updateMatrixWorld( true );
         scene.position.setY(0);
+        this.sceneDims = box;
+    }
+
+    getSceneDims = () =>{
+        if(!this.sceneDims){
+            console.log('no sceneDims');
+            return false;
+        } else {
+            return this.sceneDims;
+        };
     }
 
     createCollider = (gltfScene) =>{
@@ -186,7 +196,6 @@ export default class SceneryLoader {
             collider.material.opacity = 0.5;
             collider.material.transparent = true;
             if(this.config.visualize===true){
-                console.log('visualise: ',this.config.visualize);
                 this.visualizer = new MeshBVHVisualizer( collider, 10 );
             }
 
@@ -249,8 +258,8 @@ export default class SceneryLoader {
 
      //   hit.point.applyMatrixWorld( this.sceneryMesh.matrixWorld );
        if(hit){
-       //  let planePos = new THREE.Vector3(0,hit.point.y,0);
-         //   this.addPlaneAtPos(planePos);
+         let planePos = new THREE.Vector3(0,hit.point.y,0);
+             //this.addPlaneAtPos(planePos);
 
             return hit.point.y+0.001;
        } else {

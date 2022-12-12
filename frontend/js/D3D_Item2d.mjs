@@ -176,11 +176,11 @@ class Item2d extends Item {
             let imageUrl = nft.imageURLs[0];
             if(!imageUrl){
                 reject('No image for NFT ',this.config.nftPostHashHex);
-                console.log(nft);
+                //console.log(nft);
                 return false;
             };
             let proxyImageURL = that.config.imageProxyUrl +imageUrl;
-console.log('loading image: ',proxyImageURL);
+//console.log('loading image: ',proxyImageURL);
             let nftData = nft;
             var img = new Image();
 
@@ -199,8 +199,8 @@ console.log('loading image: ',proxyImageURL);
             };
 
             img.addEventListener('error', (img, error) =>{
-              console.log('could not load image',img.src);
-              console.log(error);
+            //  console.log('could not load image',img.src);
+           //   console.log(error);
               reject(img.src)
             });
             img.src = proxyImageURL;

@@ -1,16 +1,250 @@
 export const name = 'd3dspaceviewer';
 // Find the latest version by visiting https://cdn.skypack.dev/three.
 import * as THREE from 'three';
+import * as CANNON from 'cannon-es';
+
 import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import {PlayerVR, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import {PlayerVR,  Physics, CannonHelper, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
 let fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = false, rotlftPressed = false, rotRgtPressed = false;
 let nextPos = new THREE.Vector3();
+
+function CannonDebugRenderer(scene, world, options) {
+    options = options || {};
+
+    this.scene = scene;
+    this.world = world;
+
+    this._meshes = [];
+
+    this._material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+    this._sphereGeometry = new THREE.SphereGeometry(1);
+    this._boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+    this._planeGeometry = new THREE.PlaneGeometry( 10, 10, 10, 10 );
+    this._cylinderGeometry = new THREE.CylinderGeometry( 1, 1, 10, 10 );
+}
+
+CannonDebugRenderer.prototype = {
+
+    tmpVec0: new CANNON.Vec3(),
+    tmpVec1: new CANNON.Vec3(),
+    tmpVec2: new CANNON.Vec3(),
+    tmpQuat0: new CANNON.Vec3(),
+
+    update () {
+
+        const bodies = this.world.bodies;
+        const meshes = this._meshes;
+        const shapeWorldPosition = this.tmpVec0;
+        const shapeWorldQuaternion = this.tmpQuat0;
+
+        let meshIndex = 0;
+
+        for (let i = 0; i !== bodies.length; i += 1) {
+            const body = bodies[i];
+
+            for (let j = 0; j !== body.shapes.length; j += 1) {
+                const shape = body.shapes[j];
+
+                this._updateMesh(meshIndex, body, shape);
+
+                const mesh = meshes[meshIndex];
+
+                if (mesh) {
+
+                    // Get world position
+                    body.quaternion.vmult(body.shapeOffsets[j], shapeWorldPosition);
+                    body.position.vadd(shapeWorldPosition, shapeWorldPosition);
+
+                    // Get world quaternion
+                    body.quaternion.mult(body.shapeOrientations[j], shapeWorldQuaternion);
+
+                    // Copy to meshes
+                    mesh.position.copy(shapeWorldPosition);
+                    mesh.quaternion.copy(shapeWorldQuaternion);
+                }
+
+                meshIndex += 1;
+            }
+        }
+
+        for (let i = meshIndex; i < meshes.length; i += 1) {
+            const mesh = meshes[i];
+            if (mesh) {
+                this.scene.remove(mesh);
+            }
+        }
+
+        meshes.length = meshIndex;
+    },
+
+    _updateMesh (index, body, shape){
+        let mesh = this._meshes[index];
+        if (!this._typeMatch(mesh, shape)) {
+            if (mesh) {
+                this.scene.remove(mesh);
+            }
+            mesh = this._meshes[index] = this._createMesh(shape);
+        }
+        this._scaleMesh(mesh, shape);
+    },
+
+    _typeMatch (mesh, shape){
+        if (!mesh) {
+            return false;
+        }
+        const geo = mesh.geometry;
+        return (
+            (geo instanceof THREE.SphereGeometry && shape instanceof CANNON.Sphere) ||
+            (geo instanceof THREE.BoxGeometry && shape instanceof CANNON.Box) ||
+            (geo instanceof THREE.PlaneGeometry && shape instanceof CANNON.Plane) ||
+            (geo.id === shape.geometryId && shape instanceof CANNON.ConvexPolyhedron) ||
+            (geo.id === shape.geometryId && shape instanceof CANNON.Trimesh) ||
+            (geo.id === shape.geometryId && shape instanceof CANNON.Heightfield)
+        );
+    },
+
+    _createMesh (shape){
+        const material = this._material;
+        let geometry, geo, v0, v1, v2, mesh;
+
+        switch(shape.type){
+
+        case CANNON.Shape.types.SPHERE:
+            mesh = new THREE.Mesh(this._sphereGeometry, material);
+            break;
+
+        case CANNON.Shape.types.BOX:
+            mesh = new THREE.Mesh(this._boxGeometry, material);
+            break;
+
+        case CANNON.Shape.types.PLANE:
+            mesh = new THREE.Mesh(this._planeGeometry, material);
+            break;
+
+        case CANNON.Shape.types.CONVEXPOLYHEDRON:
+            // Create mesh
+            geo = new THREE.Geometry();
+
+            // Add vertices
+            for (let i = 0; i < shape.vertices.length; i += 1) {
+                const v = shape.vertices[i];
+                geo.vertices.push(new THREE.Vector3(v.x, v.y, v.z));
+            }
+
+            for (let i=0; i < shape.faces.length; i += 1) {
+                const face = shape.faces[i];
+
+                // add triangles
+                const a = face[0];
+                for (let j = 1; j < face.length - 1; j += 1) {
+                    let b = face[j];
+                    let c = face[j + 1];
+                    geo.faces.push(new THREE.Face3(a, b, c));
+                }
+            }
+            geo.computeBoundingSphere();
+            geo.computeFaceNormals();
+
+            mesh = new THREE.Mesh(geo, material);
+            shape.geometryId = geo.id;
+            break;
+
+        case CANNON.Shape.types.TRIMESH:
+            geometry = new THREE.Geometry();
+            v0 = this.tmpVec0;
+            v1 = this.tmpVec1;
+            v2 = this.tmpVec2;
+            for (let i = 0; i < shape.indices.length / 3; i += 1) {
+                shape.getTriangleVertices(i, v0, v1, v2);
+                geometry.vertices.push(
+                    new THREE.Vector3(v0.x, v0.y, v0.z),
+                    new THREE.Vector3(v1.x, v1.y, v1.z),
+                    new THREE.Vector3(v2.x, v2.y, v2.z)
+                );
+                let j = geometry.vertices.length - 3;
+                geometry.faces.push(new THREE.Face3(j, j+1, j+2));
+            }
+            geometry.computeBoundingSphere();
+            geometry.computeFaceNormals();
+            mesh = new THREE.Mesh(geometry, material);
+            shape.geometryId = geometry.id;
+            break;
+
+        case CANNON.Shape.types.HEIGHTFIELD:
+            geometry = new THREE.Geometry();
+
+            v0 = this.tmpVec0;
+            v1 = this.tmpVec1;
+            v2 = this.tmpVec2;
+            for (let xi = 0; xi < shape.data.length - 1; xi += 1) {
+                for (let yi = 0; yi < shape.data[xi].length - 1; yi += 1) {
+                    for (let k = 0; k < 2; k += 1) {
+                        shape.getConvexTrianglePillar(xi, yi, k===0);
+                        v0.copy(shape.pillarConvex.vertices[0]);
+                        v1.copy(shape.pillarConvex.vertices[1]);
+                        v2.copy(shape.pillarConvex.vertices[2]);
+                        v0.vadd(shape.pillarOffset, v0);
+                        v1.vadd(shape.pillarOffset, v1);
+                        v2.vadd(shape.pillarOffset, v2);
+                        geometry.vertices.push(
+                            new THREE.Vector3(v0.x, v0.y, v0.z),
+                            new THREE.Vector3(v1.x, v1.y, v1.z),
+                            new THREE.Vector3(v2.x, v2.y, v2.z)
+                        );
+                        let i = geometry.vertices.length - 3;
+                        geometry.faces.push(new THREE.Face3(i, i+1, i+2));
+                    }
+                }
+            }
+            geometry.computeBoundingSphere();
+            geometry.computeFaceNormals();
+            mesh = new THREE.Mesh(geometry, material);
+            shape.geometryId = geometry.id;
+            break;
+        }
+
+        if (mesh) {
+            this.scene.add(mesh);
+        }
+
+        return mesh;
+    },
+
+    _scaleMesh (mesh, shape) {
+        let radius;
+        switch (shape.type) {
+
+        case CANNON.Shape.types.SPHERE:
+            radius = shape.radius;
+            mesh.scale.set(radius, radius, radius);
+            break;
+
+        case CANNON.Shape.types.BOX:
+            mesh.scale.copy(shape.halfExtents);
+            mesh.scale.multiplyScalar(2);
+            break;
+
+        case CANNON.Shape.types.CONVEXPOLYHEDRON:
+            mesh.scale.set(1,1,1);
+            break;
+
+        case CANNON.Shape.types.TRIMESH:
+            mesh.scale.copy(shape.scale);
+            break;
+
+        case CANNON.Shape.types.HEIGHTFIELD:
+            mesh.scale.set(1,1,1);
+            break;
+
+        }
+    }
+};
 
 const params = {
     debug: false,
@@ -83,7 +317,180 @@ const params = {
         this.animations = [];
         this.audioListener = new THREE.AudioListener();
         this.controlProxy = {};
+        this.ballVector = new THREE.Vector3();
+        this.kickVector = new THREE.Vector3();
+        this.claimed = false;
+    }
 
+    initPhysicsWorld = () =>{
+        this.dt = 1.0/90.0;
+        this.damping = 0.01;
+        const world = new CANNON.World();
+              world.gravity.set(0,-15,0);
+              world.broadphase = new CANNON.NaiveBroadphase();
+
+        this.world = world; 
+
+        this.bodies = [];      
+        this.physics = new Physics({ world: world,
+                                    bodies: this.bodies,
+                                    scene: this.scene});
+
+        this.addGroundPlane();
+        this.addWalls();
+      //  this.cannonDebugRenderer = new CannonDebugRenderer(this.scene, world)
+    }
+
+    addGroundPlane = () =>{
+        let floorWidth = 35;
+        let floorLength = 35;
+        const groundGeo = new THREE.PlaneGeometry(floorWidth, floorLength);
+        const groundMat = new THREE.MeshBasicMaterial({ 
+            color: 0x666666,
+            side: THREE.DoubleSide
+         });
+
+
+        const groundPhysMat = new CANNON.Material();
+        this.groundPhysMat = groundPhysMat;
+        const groundBody = new CANNON.Body({
+            shape: new CANNON.Box(new CANNON.Vec3(floorWidth, floorLength, 0.1)),
+            type: CANNON.Body.STATIC,
+            material: this.groundPhysMat,
+            position: new CANNON.Vec3(0, -1.6927649250030519, 0)
+        });
+        this.world.addBody(groundBody);
+        groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+        this.bodies.push(groundBody);
+    }
+
+    addWalls = () =>{
+        let world = this.world;
+        let floorWidth = 34;
+        let floorLength = 40;        
+        // Materials
+        const stone = new CANNON.Material('stone')
+        const stone_stone = new CANNON.ContactMaterial(stone, stone, {
+          friction: 0.5,
+          restitution: 0.2,
+        })
+        world.addContactMaterial(stone_stone)
+
+
+   /*     const groundGeo = new THREE.PlaneGeometry(floorWidth, floorLength);
+        const groundMat1 = new THREE.MeshBasicMaterial({ 
+            color: 0xff0000,
+            side: THREE.DoubleSide
+         });
+            const groundMat2 = new THREE.MeshBasicMaterial({ 
+            color: 0x00ff00,
+            side: THREE.DoubleSide
+         });
+        const groundMat3 = new THREE.MeshBasicMaterial({ 
+            color: 0x0000ff,
+            side: THREE.DoubleSide
+         });
+        const groundMat4 = new THREE.MeshBasicMaterial({ 
+            color: 0xffffff,
+            side: THREE.DoubleSide
+         });            
+        const wallMesh1 = new THREE.Mesh(groundGeo, groundMat1);
+        const wallMesh2 = new THREE.Mesh(groundGeo, groundMat2);
+        const wallMesh3 = new THREE.Mesh(groundGeo, groundMat3);
+        const wallMesh4 = new THREE.Mesh(groundGeo, groundMat4);                
+        this.scene.add(wallMesh1);
+        this.scene.add(wallMesh2);
+        this.scene.add(wallMesh3);
+        this.scene.add(wallMesh4);
+*/
+        // Plane -x
+
+        const planeShapeXmin = new CANNON.Body({
+            shape: new CANNON.Box(new CANNON.Vec3(floorWidth, floorLength, 0.1)),
+            type: CANNON.Body.STATIC,
+            material: this.groundPhysMat,
+            position: new CANNON.Vec3(floorLength/2, 0, 0)
+        });
+
+        world.addBody(planeShapeXmin);
+
+        planeShapeXmin.quaternion.setFromEuler(0, Math.PI / 2, 0)
+       // planeShapeXmin.threeMesh = wallMesh1;
+
+        // Plane +x
+        const planeShapeXmax = new CANNON.Body({
+            shape: new CANNON.Box(new CANNON.Vec3(floorWidth, floorLength, 0.1)),
+            type: CANNON.Body.STATIC,
+            material: this.groundPhysMat,
+            position: new CANNON.Vec3(-floorLength/2, 0, 0)
+        });
+        world.addBody(planeShapeXmax);
+
+        planeShapeXmax.quaternion.setFromEuler(0, Math.PI / 2, 0)
+      //  planeShapeXmax.threeMesh = wallMesh2;
+
+        // Plane -z
+        const planeShapeZmin = new CANNON.Body({
+            shape: new CANNON.Box(new CANNON.Vec3(floorWidth, floorLength, 0.1)),
+            type: CANNON.Body.STATIC,
+            material: this.groundPhysMat,
+            position: new CANNON.Vec3(0, 0, -floorWidth/2)
+        });
+        world.addBody(planeShapeZmin);
+
+        planeShapeZmin.quaternion.setFromEuler(0, Math.PI, 0)
+   //     planeShapeZmin.threeMesh = wallMesh3;
+
+        // Plane +z
+
+
+        const planeShapeZmax = new CANNON.Body({
+            shape: new CANNON.Box(new CANNON.Vec3(floorWidth, floorLength, 0.1)),
+            type: CANNON.Body.STATIC,
+            material: this.groundPhysMat,
+            position: new CANNON.Vec3(0, 0, floorWidth/2)
+        });
+        world.addBody(planeShapeZmax);        
+
+        planeShapeZmax.quaternion.setFromEuler(0, Math.PI, 0)
+    //    planeShapeZmax.threeMesh = wallMesh4;
+
+
+       this.addCorner(12,8,12,14,2,12);
+       this.addCorner(12,8,12,-14,2,-11);
+       this.addCorner(12,8,12,-14,2,12);
+       this.addCorner(12,8,12,14,2,-11);
+
+       this.addCorner(7.5,8,1,0,2,6);
+       this.addCorner(7.5,8,1,0,2,-6);       
+    }
+
+    addCorner = (l,h,d,x,y,z) =>{
+
+        
+ /*       const cornerGeo = new THREE.BoxGeometry(l,h,d);
+        const cornerMat1 = new THREE.MeshBasicMaterial({ 
+            color: 0xff0000,
+            side: THREE.DoubleSide
+         });
+           
+        const cornerMesh1 = new THREE.Mesh(cornerGeo, cornerMat1);
+        this.scene.add(cornerMesh1);
+        cornerMesh1.position.set(x,y,z);
+*/
+        const corner1 = new CANNON.Body({
+            shape: new CANNON.Box(new CANNON.Vec3(l/2,h/2,d/2)),
+            type: CANNON.Body.STATIC,
+            material: this.groundPhysMat,
+            position: new CANNON.Vec3(x,y,z)
+        });
+        this.world.addBody(corner1);       
+  //      corner1.threeMesh = cornerMesh1;        
+
+    }
+
+    setMasterVolume = (num) =>{
+        this.audioListener.setMasterVolume(num);
     }
 
     loadUIAssets = () =>{
@@ -166,17 +573,27 @@ const params = {
 
             this.initScene();
             this.initCameraPlayer();     
-          //  this.loadUIAssets();
+            this.loadUIAssets();
             this.initRenderer(this.config.el);
             this.initHUD({scene:that.scene,
                             chainAPI: that.config.chainAPI});
             this.initSkybox();
             this.initLighting();
 
+
             this.loadScenery().then(()=>{
-                this.initInventory(options);
 
+                if(this.config.footballMode===true){
+                    if(this.config.showBall){
+                        this.initPhysicsWorld();        
 
+                    };
+                    this.initFootball();                    
+                };
+                this.initInventory(options);                
+                console.log('getSceneDims...');
+
+                console.log(this.sceneryLoader.getSceneDims());
                // that.placeAssets();
                 if(that.config.firstPerson){
                     that.initPlayerFirstPerson();
@@ -188,6 +605,7 @@ const params = {
                     that.initVR();
                 }   
                 this.renderer.render(this.scene,this.camera);
+
                 this.animate();
                 sceneryloadingComplete = true;
 
@@ -196,6 +614,7 @@ const params = {
                 document.getElementById('give-diamond').style.display='inline-block';
                 document.getElementById('give-heart').style.display='inline-block';
                 document.getElementById('view-detail').style.display='inline-block';
+
 
                   /*  document.querySelectorAll('.d3d-btn-top').forEach((el)=>{
                       el.style.display='inline-block';
@@ -538,7 +957,23 @@ const params = {
                         that.controlProxy.rot = 'rr';
                         break;
                     case 'KeyM': that.throwActiveItem(); break;
-
+                    case 'NumpadAdd': that.setMasterVolume(1); break;
+                    case 'NumpadSubtract': that.setMasterVolume(0); break;   
+                    case 'Numpad0': 
+                        that.resetBall();
+                    break;
+                    case 'Numpad4': 
+                        that.moveMeshLeft();
+                    break;  
+                    case 'Numpad6': 
+                        that.moveMeshRight();
+                    break;    
+                    case 'Numpad8': 
+                        that.moveMeshForward();
+                    break;    
+                    case 'Numpad2': 
+                        that.moveMeshBack();
+                    break;    
                     case 'Digit0': that.inventory.setActive(0); break;
                     case 'Digit1': that.inventory.setActive(1); break;
                     case 'Digit2': that.inventory.setActive(2); break;
@@ -575,7 +1010,37 @@ const params = {
             } );
 
     }
+    moveMeshLeft = () =>{
+        if(this.hud.selectedItem){
+            this.hud.selectedItem.translateX(0.1)
+        }
+    }
 
+    moveMeshRight = () =>{
+        if(this.hud.selectedItem){
+            this.hud.selectedItem.translateX(-0.1)          
+        }       
+    }
+
+    moveMeshForward = () =>{
+        if(this.hud.selectedItem){
+            this.hud.selectedItem.translateZ(-0.1)           
+        }
+    }
+
+    moveMeshBack = () =>{
+        if(this.hud.selectedItem){
+            this.hud.selectedItem.translateZ(0.1)         
+        }        
+    }
+
+    resetBall = () =>{
+        if(this.ball){
+            this.ball.velocity.set(0,0,0);
+            this.ball.angularVelocity.set(0,0,0);
+            this.ball.position.copy(this.ballVector);
+        }
+    }
     addEventListenerMouseClick = ()=>{
         let that = this;
         this.renderer.domElement.addEventListener( 'mousedown', this.checkMouse, false );
@@ -594,8 +1059,8 @@ const params = {
             if((action.isOnFloor)&&(!action.isOnWall)){
                 let targetPoint = action.selectedPoint.clone();
                 let distance = this.player.position.distanceTo(targetPoint);
-                console.log('distance: ',distance);
-                console.log(targetPoint.x, targetPoint.y, targetPoint.z);
+               // console.log('distance: ',distance);
+                //console.log(targetPoint.x, targetPoint.y, targetPoint.z);
                 this.moveTo = targetPoint;
                 this.moveTo.setY(this.player.position.y);
         //this.player.position.copy(this.moveTo);
@@ -668,7 +1133,7 @@ const params = {
             //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
 
         } else {
-            console.log('no owner: ', action.selection.object);
+           // console.log('no owner: ', action.selection.object);
             if(this.hud){
                 this.hud.clear();
             }
@@ -702,16 +1167,29 @@ const params = {
     }
 
     selectTargetNFT = (action) =>{
+                console.log('selectTargetNFT: ');
+        console.log(action);
         this.actionTargetMesh = null;
         let that = this;
         let item = this.getItemForAction(action)
+        console.log('got Item:');
+        console.log(item);
         if(item){
-            if(item.isGhost){
+            if(item.isGhost||item.isFootballPlayer||item.isFootball){
                 this.actionTargetPos = item.getPosition();       
                 this.actionTargetItem = item;
-                this.targetGhost();
+                if(item.isGhost){
+                    this.targetGhost();
+                };
+                if(item.isFootballPlayer){
+                    this.targetFootballPlayer(item);
+                };
+                if(item.isFootball){
+                    this.targetFootball();
+                };
             } else {
                 if(item.config){
+
                     if(!item.isSelected) {
                         this.hud.unSelectItem(); // unselect prev
                         this.config.chainAPI.getHeartStatus(item.config.nft.postHashHex).then((result)=>{
@@ -734,6 +1212,8 @@ const params = {
                 } else {
                     console.log('item has no config');
                     console.log(item);
+                            that.hud.setSelectedItem(item);
+
                 }
             };
             this.actionTargetPos = item.getPosition();
@@ -747,6 +1227,31 @@ const params = {
 
     }
 
+    targetFootballPlayer = (item) =>{
+        console.log('targeted player');
+        console.log(item);
+        this.actionTargetItem = item;
+        this.actionTargetMesh = item.mesh;        
+    }
+
+    targetFootball = (item) =>{
+
+        let shootVelocity = 200;
+        let shootDirection = this.getShootDirection();
+        this.kickVector.set(
+            shootDirection.x * shootVelocity,
+            shootDirection.y * shootVelocity,
+            shootDirection.z * shootVelocity
+          )
+        this.ball.angularDamping = 0.5;
+        this.ball.applyImpulse(this.kickVector);
+    }
+    getShootDirection =() => {
+          const vector = new THREE.Vector3(0, 0, 1)
+          vector.unproject(this.camera)
+          const ray = new THREE.Ray(this.ball.position, vector.sub(this.ball.position).normalize());
+          return ray.direction
+    }
     targetGhost = () =>{
         let that = this;
         clearTimeout(that.ghostTimer);
@@ -921,6 +1426,7 @@ const params = {
                     }
                 } else {
                     console.log('target probably ghost');
+                    console.log(that.actionTarget);
                     start = this.player.position.clone();
                     start.y--;
 
@@ -952,12 +1458,23 @@ const params = {
                             if(that.actionTargetItem.isGhost){
                                 that.catchGhost();
                             };
+                             if(that.actionTargetItem.isFootballPlayer){
+                                that.claimNFT({actionType:'heart'})
+                            };
                         };
                         mesh.visible = false;
                     }
                 });
             })
         }   
+    }
+
+    claimNFT = (opts) =>{
+        if(this.config.chainAPI.claimNFT){
+            this.config.chainAPI.claimNFT(opts);      
+        } else if (this.config.claimNFT){
+            this.config.claimNFT(opts);
+        }
     }
 
     catchGhost = ()=>{
@@ -975,34 +1492,33 @@ const params = {
 
             this.ghostHover.pause();  
             this.ghost.mesh.position.y=-1;
-            that.ghost.place(this.ghost.mesh.position).then((mesh,pos)=>{
-                mesh.lookAt(this.camera.position);     
-                setTimeout(()=>{                
-                    let ghostSpot = this.ghost.mesh.position.clone()
-                    ghostSpot.y = 10;
-                    that.addSpotlight(ghostSpot);
-                    that.lights.aLight.intensity = 0;                
-                    that.ghostup = anime({
-                            begin: ()=>{
-                                that.ghostSounds.caught.play();            
-                            },
-                            targets: that.ghost.mesh.position,
-                            y: 12.5,
-                            loop: false,
-                            duration: 25000,
-                            easing: 'linear',
-                            complete: ()=>{
-                                that.lights.switchOnDirectional();                                             
-                                that.ghost.mesh.visible = false;
-                                that.lights.aLight.color.setHex(0xffffff);
-                                that.lights.aLight.intensity = 1;    
-                                that.scene.remove(that.spotLight);
-                                that.scene.remove(that.spotLight2);       
-                            }
-                        });        
-                    },3000)                
-            })
-
+            that.ghost.moveTo(this.ghost.mesh.position);
+            this.ghost.mesh.lookAt(this.camera.position);     
+            setTimeout(()=>{                
+                let ghostSpot = this.ghost.mesh.position.clone()
+                ghostSpot.y = 10;
+                that.addSpotlight(ghostSpot, this.ghost.mesh);
+                that.lights.aLight.intensity = 0;                
+                that.ghostup = anime({
+                        begin: ()=>{
+                            that.ghostSounds.caught.play();            
+                        },
+                        targets: that.ghost.mesh.position,
+                        y: 12.5,
+                        loop: false,
+                        duration: 25000,
+                        easing: 'linear',
+                        complete: ()=>{
+                            that.lights.switchOnDirectional();                                             
+                            that.ghost.mesh.visible = false;
+                            that.lights.aLight.color.setHex(0xffffff);
+                            that.lights.aLight.intensity = 1;    
+                            that.scene.remove(that.spotLight);
+                            that.scene.remove(that.spotLight2);
+                        }
+                    });        
+                },3000)                
+            
        
 
         
@@ -1282,6 +1798,13 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    getRandom = (min, max) => {
+        min = min*10;
+        max = max*10;
+        let randomInt = this.getRandomInt(min, max);
+        return randomInt/10;
+    }
+
     loadSkyBox = (boxname) => {
         if(this.config.skyboxPath===''){
             return false;
@@ -1416,6 +1939,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             this.camera.aspect = this.parentDivElWidth/this.parentDivElHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
+            console.log('resizeCanvas');
         };
 
         this.controls.update();
@@ -1428,6 +1952,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     }
     
     render = () =>{
+
+       // this.cannonDebugRenderer.update()
          if (this.renderer.xr.isPresenting === true) {
             if(this.vrControls){
                 this.vrControls.checkControllers();
@@ -1435,7 +1961,14 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         }  
 
         const delta = Math.min( this.clock.getDelta(), 0.1 );
-
+        if(this.world){
+            this.updatePhysicsWorld();
+            if(this.ball){
+                if(this.ball.position.y < -2){
+                    this.resetBall();
+                }
+            }
+        };
 
             if ( params.firstPerson ) {
 
@@ -1488,6 +2021,16 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     updateAnimations = (delta)=>{
         this.sceneInventory.updateAnimations(delta);
+    }
+
+    updatePhysicsWorld =() =>{
+        this.world.step(this.dt); 
+        this.world.bodies.forEach( function(body){
+            if ( body.threeMesh !== undefined){
+                body.threeMesh.position.copy(body.position);
+                body.threeMesh.quaternion.copy(body.quaternion);
+            }
+        });
     }
 
     centerMeshInScene = (gltfScene) =>{
@@ -1682,6 +2225,127 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }
 
+    initFootball = () =>{
+        let that = this;
+
+        this.footballSounds = [];
+        if(this.config.football.crowdSoundUrl){
+            // create a global audio source
+            const sound = new THREE.Audio( that.audioListener );
+            const audioLoader = new THREE.AudioLoader();
+            audioLoader.load( this.config.football.crowdSoundUrl, function( buffer ) {
+                sound.setBuffer( buffer );
+                sound.setLoop( true );
+                sound.setVolume( 0.5 );
+                sound.play();
+                that.footballSounds.crowd = sound;
+            });
+        }
+
+        let itemConfig = {  physicsWorld: this.world,
+                            scene: this.scene,
+                            format: 'fbx',
+                            height:2.5,
+                            width:2.5,
+                            depth:2.5,
+                            modelUrl:'https://desodata.azureedge.net/unzipped/ad368335588bf94631cd5705e1d473fcbc1ff15fe2f6950ec5faa785866e97b3/fbx/normal/Soccer.fbx'};
+
+        this.footballPlayer = this.initItemForModel(itemConfig);
+        this.footballPlayer.isFootballPlayer = true;
+
+        let playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(1,0,0), 1, -2);
+
+        let placePos = new THREE.Vector3(-4,-1.6927649250030519,-12);
+        this.footballPlayer.place(placePos).then((mesh, pos)=>{
+            if(this.config.football.goalSoundUrl){            
+                that.footballSounds.goal = new AudioClip({
+                    path: this.config.football.goalSoundUrl,
+                    mesh: mesh,
+                    listener: that.audioListener,
+                    onEnded: () =>{
+                        that.scene.remove( that.spotLight );      
+                        that.scene.remove( that.spotLight2 );                          
+                        that.footballSounds.crowd.play();
+                    }
+                });
+            };
+
+          //  mesh.rotateY(Math.PI/2);
+            that.sceneInventory.items3d.push(this.footballPlayer);
+            that.sceneInventory.placedItems3D.push(this.footballPlayer);
+            placePos.y = -1.6927649250030519;
+            mesh.position.copy(placePos);
+            that.bodies.push(this.footballPlayer.physicsBody);
+            this.footballPlayer.physicsBody.addEventListener("collide",function(e){
+                let contact = e.contact;
+                if(!that.claimed){
+                    console.log('HIT!!!');
+                    let spot = that.footballPlayer.mesh.position.clone()
+                    spot.y = 10;
+                    that.addSpotlight(spot, that.footballPlayer.mesh);                     
+
+                    if(that.footballSounds.goal){
+                        that.footballSounds.crowd.stop();
+                        that.footballSounds.goal.stop();                        
+                        that.footballSounds.goal.play();
+                    };
+                    that.resetBall();
+                    that.claimNFT({actionType:'hit'});
+
+                }
+            });
+
+        })
+
+        this.addBalls();
+
+    }
+
+    addBalls = () =>{
+        let that = this;
+        const size = 0.5;
+        let ballShape = new CANNON.Sphere(size);
+        let x = this.getRandom(-10, 10);
+        let y = 3;
+        let z = this.getRandom(-0.3, 0.3);
+        let footballItem = this.createBallMesh(size);
+        this.ballVector.set(6, 4,0 );
+         var mat1 = new CANNON.Material();
+
+        let ballMesh = footballItem.place(this.ballVector).then((mesh, pos)=>{
+
+            const body = new CANNON.Body({
+                mass: 10,
+                material: mat1,
+            })
+            body.position.copy(this.ballVector);
+            body.addShape(ballShape);
+            body.linearDamping = 0.01;            
+            body.threeMesh = mesh;
+            that.ball=body;
+            that.world.addBody(body)
+            that.bodies.push(body);    
+
+        });
+
+         var mat1_ground = new CANNON.ContactMaterial(this.groundPhysMat, mat1, { friction: 0.2, restitution: 0.75 });;
+        this.world.addContactMaterial(mat1_ground);        
+
+    }
+
+    createBallMesh = (size)=>{
+    let itemConfig = {  scene: this.scene,
+                            format: 'glb',
+                            height:size,
+                            width:size,
+                            depth:size,
+                            modelUrl:'https://desodata.azureedge.net/unzipped/9a29163ac2711c721713666fb8dd2afdbb51533d8ac25487408cc06e4757c983/gltf/normal/Ball.glb'};
+
+        let football = this.initItemForModel(itemConfig);
+        football.isFootball = true;
+        return football;
+
+    }
     initGhost = () =>{
         if(this.renderer.xr.isPresenting){
             return false;
@@ -1864,7 +2528,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         this.ghost.mesh.lookAt(this.newDir);
     }
 
-    addSpotlight = (pos) =>{
+    addSpotlight = (pos, targetMesh) =>{
     let spotLight = new THREE.SpotLight( 0xffffff, 10 );
         spotLight.position.copy(pos);
         spotLight.position.y = 10;
@@ -1872,7 +2536,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         spotLight.penumbra = 1;
         spotLight.decay = 2;
         spotLight.distance = 100;
-        spotLight.target = this.ghost.mesh;
+        spotLight.target = targetMesh;
 
       
         this.scene.add( spotLight );        
@@ -1887,7 +2551,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         spotLight2.penumbra = 1;
         spotLight2.decay = 2;
         spotLight2.distance = 100;
-        spotLight2.target = this.ghost.mesh;
+        spotLight2.target = targetMesh;
 
       
         this.scene.add( spotLight );      
@@ -1963,12 +2627,15 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                 loadingScreen: this.loadingScreen
                                 }
 
+            if(this.world){
+                sceneInvConfig.physicsWorld = this.world;
+            };
+
             let haveVRM = this.haveVRM(items3dToRender);
             if(haveVRM){
-               
                 sceneInvConfig.animLoader = true;
+            };
 
-            }
             this.sceneInventory = new D3DInventory(sceneInvConfig);     
         }
         
@@ -2030,7 +2697,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             modelUrl: opts.modelUrl,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
-            format:extension
+            format:extension,
+            physicsWorld: (opts.physicsWorld)?opts.physicsWorld:null,
         }
 
         console.log('init item for model format: ',extension.toLowerCase());
@@ -2463,7 +3131,7 @@ initPlayerFirstPerson = () => {
 
     that.character.geometry.translate( 0, -1, 0 );
     that.character.capsuleInfo = {
-        radius: 0.5,
+        radius: 1,
         segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
     };    
 

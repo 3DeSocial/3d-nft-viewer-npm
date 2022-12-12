@@ -144,13 +144,13 @@ export default class ItemVRM {
                
 
                         // Load animation
-                    console.log('currentAnim needs some action: ', this.currentAnimationUrl);
+                  //  console.log('currentAnim needs some action: ', this.currentAnimationUrl);
 
                 this.loadMixamoAnimation( this.currentAnimationUrl, this.currentVrm ).then( ( clip ) => {
 
                         // Apply the loaded animation to mixer and play
                         that.currentAnim.action = that.startAnimClip(clip);
-                        console.log('set anim running, ', this.currentAnim.url)
+                    //    console.log('set anim running, ', this.currentAnim.url)
                 } );
 
 
@@ -502,7 +502,6 @@ export default class ItemVRM {
                 return;
             } else {
                 let url = this.config.nftsRoute;
-                console.log('fetchModelUrl: ',this.config.nftsRoute);
                 if(url.trim()===''){
                     reject('No nftsRoute or modelUrl exists for this item');
                     return;
@@ -541,7 +540,6 @@ export default class ItemVRM {
             if(this.animLoader) {
                 that.currentAnim = that.animLoader.fetchRandAnim();
                 that.currentAnimationUrl = that.currentAnim.url;
-                console.log('fetchModel with anim: ',that.currentAnimationUrl);
             }
           
             loader.load(
@@ -564,18 +562,16 @@ export default class ItemVRM {
                     // put the model to the scene
                     that.currentVrm = vrm;
                     that.scene.add( vrm.scene );
+                    vrm.scene.userData.owner = this; //set reference to 
 
                     if(!this.mixer && (this.animLoader)){
                         this.mixer = new THREE.AnimationMixer( this.currentVrm.scene );
                         this.mixer.addEventListener('finished',(e)=>{
-                            console.log('finished a clip');
                             that.setAnimRunning(false);
                             that.currentAnim = that.animLoader.fetchRandAnim();
                              if(this.currentAnim.action){
                                 // no need to Load animation
-                                console.log('currentAnim has action: ', this.currentAnim.url);
                                 let action =  this.startAnimAction(this.currentAnim.action);
-                                    console.log('set animRunning for ', this.currentAnim.url)
                             } else {
                                 that.loadMixamo( that.currentAnim );
                             }
@@ -632,12 +628,10 @@ scaleToFitScene = (obj3D, posVector) =>{
 
         //console.log('posVector:',posVector);
         let boxMesh = this.createContainerBox(posVector);
-        console.log(boxMesh);
         let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
 
         let meshBounds = null    
-        console.log('obj3D');
-        console.log(obj3D);
+
             meshBounds = new THREE.Box3().setFromObject( obj3D );
 
         // Calculate side lengths of scene (cube) bounding box
@@ -670,7 +664,6 @@ scaleToFitScene = (obj3D, posVector) =>{
         };
         
         let newMeshBounds = new THREE.Box3().setFromObject( obj3D );
-        //console.log('newMeshBounds',newMeshBounds);
         let newLengthMeshBounds = {
             x: Math.abs(newMeshBounds.max.x - newMeshBounds.min.x),
             y: Math.abs(newMeshBounds.max.y - newMeshBounds.min.y),
@@ -689,9 +682,7 @@ scaleToFitScene = (obj3D, posVector) =>{
         cbox.userData.owner = this; //set reference to Item
         that.scene.add(obj3D);    
         obj3D.position.copy(posVector);
-        console.log('set position after render in scale');
-       console.log('scaleToFitScene wants to add');
-       console.log(obj3D);
+
         cbox.updateMatrixWorld();    
     }
 
@@ -860,7 +851,6 @@ scaleToFitScene = (obj3D, posVector) =>{
     }
 
     fixYCoord = (obj3D, posVector) =>{
-        console.log('fixYCoord ' );
         var helper = new THREE.BoxHelper(obj3D, 0x00ff00);
             helper.update();
 
@@ -871,10 +861,8 @@ scaleToFitScene = (obj3D, posVector) =>{
             return false;
         };
         lowestVertex.applyMatrix4(helper.matrixWorld);
-console.log(' posVector.y: ', posVector.y,' lowestVertex.y ',lowestVertex.y);
         if(posVector.y !== lowestVertex.y){
             let yOffset = lowestVertex.y-posVector.y;
-            console.log('yOffset: ',yOffset);
             obj3D.position.setY(obj3D.position.y - yOffset);
         };
     }
@@ -1018,7 +1006,7 @@ console.log(' posVector.y: ', posVector.y,' lowestVertex.y ',lowestVertex.y);
 
     getPosition = () =>{
         let copiedPos = new THREE.Vector3();
-            copiedPos.copy(this.mesh.position);
+            copiedPos.copy(this.mesh.scene.position);
           //  console.log('item pos: ', copiedPos);
             return copiedPos;
     }

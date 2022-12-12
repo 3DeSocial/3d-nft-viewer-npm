@@ -29,8 +29,11 @@ export default class HUDBrowser  {
         //show helper
         this.selectedItem.isSelected = true;
         if(!this.selectedItem.helper){
-            this.selectedItem.helper =
-           this.selectedItem.helper = new THREE.BoxHelper( item.mesh, 0x00FF00 );
+            if(item.isVRM){
+                this.selectedItem.helper = new THREE.BoxHelper( item.mesh.scene, 0x00FF00 );
+            } else {
+                this.selectedItem.helper = new THREE.BoxHelper( item.mesh, 0x00FF00 );
+            }
         };
         this.config.scene.add(this.selectedItem.helper); 
         if(this.selectedItem.config.nft){
