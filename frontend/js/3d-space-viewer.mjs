@@ -7,7 +7,7 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { Physics, CannonHelper, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { AudioClipRemote, Physics, CannonHelper, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -319,6 +319,8 @@ const params = {
         this.ballVector = new THREE.Vector3();
         this.kickVector = new THREE.Vector3();
         this.claimed = false;
+        this.currentAudio = null;
+        this.audioTracks = [];
     }
 
     initPhysicsWorld = () =>{
@@ -1141,6 +1143,7 @@ const params = {
     }
 
     selectTargetNFT = (action) =>{
+        let tracks = [];
                 console.log('selectTargetNFT: ');
         console.log(action);
         this.actionTargetMesh = null;
@@ -1163,6 +1166,31 @@ const params = {
                 };
             } else {
                 if(item.config){
+                    if(item.config.nft.isAudio){
+              
+                        this.config.chainAPI.fetchPostDetail({postHashHex:item.config.nft.postHashHex}).then((res)=>{
+                            res.json().then((json)=>{
+                                console.log('audio nft detail');
+                                console.log(json);
+                                if(json.audioData){
+                                    console.log('found audioData');
+                                    tracks = this.parseAudioData(json.audioData);
+                                    let firstTrack = this.getTrackFullUrl(item.config.nft.postHashHex, tracks[0]);
+                                    console.log('firstTrack: ', firstTrack);
+                                    if(that.currentAudioHash === item.config.nft.postHashHex){
+                                        that.currentAudio.pause();
+                                        that.currentAudioHash = null;
+                                    } else {
+                                        that.playAudioNFTTrack(item.config.nft.postHashHex, firstTrack);
+                                    }
+                                }
+                            })
+                           
+                        }).catch((err)=>{
+                            console.log('errpr getting audio data');
+                        });
+
+                    }
 
                     if(!item.isSelected) {
                         this.hud.unSelectItem(); // unselect prev
@@ -1198,6 +1226,86 @@ const params = {
             this.hideStatusBar(['heart','diamond-count','confirm']);
         }
 
+
+    }
+
+    parseAudioData = (audioData)=>{
+        let tracks = [];
+        let info = {};
+        console.log('audio detected!');
+        let audioExtraData = audioData;
+           if(audioExtraData){
+            audioData = JSON.parse(audioExtraData)
+            console.log('audioData',audioData)
+            if(audioData && audioData.TrackCount > 0){
+                tracks = JSON.parse(audioData.Tracks)
+                //if (previewMode){
+                    tracks = tracks.map(x=> { x.trackFile = x.trackFile.replaceAll(' ','%2520');return x });
+                //}
+            
+                console.log('tracks player',tracks);
+
+
+                console.log('title', audioData.Title)
+
+                info.title = audioData.Title
+                info.author = audioData.Author
+                info.category = audioData.MusicCategory
+                info.subcategory = audioData.MusicSubCategory
+                console.log('info',info);
+            }
+        }
+        return tracks;
+    }
+
+    getTrackFullUrl = (postHashHex, track) =>{
+        let url  = 'https://desodata.azureedge.net/unzipped/'+postHashHex+'/'+track.trackFile;
+        return url;
+    }
+
+    playAudioNFTTrack = async (postHashHex, fullUrl) =>{
+        let that = this;
+        console.log('playAudioNFTTrack');
+        if(this.currentAudio){
+            this.currentAudio.pause();
+            this.currentAudio.src = fullUrl
+            this.currentAudio.type = 'audio/wav';
+        } else {
+            this.currentAudio = new Audio();  
+            //https://desodata.azureedge.net/unzipped/1588d17557a44cdbdfaf2d8cbb62df4c1336eae46f3e043309d4edecbec6d3a5/Paradigm%2520Shift%2520Master.wav'
+            // https://desodata.azureedge.net/unzipped/1588d17557a44cdbdfaf2d8cbb62df4c1336eae46f3e043309d4edecbec6d3a5/Paradigm%20Shift%20Master.wav
+            console.log('set src to: ',fullUrl);
+            this.currentAudio.src = fullUrl
+            this.currentAudio.type = 'audio/wav'
+        }
+
+
+        try {
+            await this.currentAudio.play();
+            console.log('Playing using set src...',this.currentAudio.src);
+            this.isPlayingAudio = true;
+            this.currentAudioHash = postHashHex;
+        } catch (err) {
+            console.log('Failed to play...' + err);
+            this.isPlayingAudio = false;            
+        }
+        
+
+
+ /*       console.log('create trackClip');
+            let trackClip = new AudioClipRemote({
+                        path: fullUrl,
+                        mesh: this.sceneryMesh,
+                        listener: this.audioListener,
+                        onEnded: () =>{
+                            that.playingTrack = null;
+                        }
+                    });
+            console.log('about to play: ', fullUrl);
+            trackClip.play();
+            console.log('playing');
+            this.audioTracks[postHashHex] = trackClip;
+            this.playingTrack = this.audioTracks[postHashHex];*/
 
     }
 

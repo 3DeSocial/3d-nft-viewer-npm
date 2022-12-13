@@ -3,6 +3,7 @@ import { D3DSpaceViewer} from './frontend/js/3d-space-viewer.mjs';
 import { SceneryLoader} from './frontend/js/D3D_SceneryLoader.mjs';
 import { D3DAssetCreator } from './frontend/js/D3D_AssetCreator.mjs';
 import { AudioClip } from './frontend/js/D3D_AudioClip.mjs';
+import { AudioClipRemote } from './frontend/js/D3D_AudioClipRemote.mjs';
 import { VRButton } from './frontend/js/D3D_VRButton.mjs';
 import { SkyBoxLoader } from './frontend/js/SkyBoxLoader.mjs';
 import { VRControls } from './frontend/js/D3D_VRControls.mjs';
@@ -25,4 +26,4 @@ import { LoadingScreen } from  './frontend/js/D3D_LoadingScreen.mjs';
 import { CannonHelper } from  './frontend/js/CannonHelper.mjs'; 
 import { Physics } from  './frontend/js/D3D_Physics.mjs'; 
 
- export { Physics, CannonHelper, AnimLoader, ItemVRM, AudioClip, LoadingScreen, MeshBVH, MeshBVHVisualizer, VRButton, NFTViewerOverlay, ChainAPI, HUDBrowser, HUDVR, D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRControls, Item, Item2d, XRControllerModelFactory, SceneryLoader, SkyBoxLoader, LayoutPlotter}
+ export { Physics, CannonHelper, AnimLoader, ItemVRM, AudioClip, AudioClipRemote, LoadingScreen, MeshBVH, MeshBVHVisualizer, VRButton, NFTViewerOverlay, ChainAPI, HUDBrowser, HUDVR, D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRControls, Item, Item2d, XRControllerModelFactory, SceneryLoader, SkyBoxLoader, LayoutPlotter}
