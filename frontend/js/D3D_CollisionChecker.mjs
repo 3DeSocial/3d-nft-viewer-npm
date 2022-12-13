@@ -22,6 +22,7 @@ export default class CollisionChecker  {
         this.playerCollider = this.config.playerCollider;
 
         this.dollyProxy = this.config.dollyProxy;
+        this.playerIsOnGround = false;
         this.playerVelocity = new THREE.Vector3();
         this.tempVector = new THREE.Vector3();
         this.tempVector2 = new THREE.Vector3();
@@ -29,12 +30,15 @@ export default class CollisionChecker  {
         this.tempMat = new THREE.Matrix4();
         this.tempSegment = new THREE.Line3();
         this.origDollyPos = new THREE.Vector3(); 
-        this.gravity = 0.5;
+        this.gravity = - 30;
 
     }
 
 
-    checkCollisions = (oldPos, delta) =>{
+    checkCollisions = (delta) =>{
+        this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * this.gravity;
+        this.dollyProxy.position.addScaledVector( this.playerVelocity, delta );      
+        this.dollyProxy.updateMatrixWorld();
 
         // adjust player position based on collisions
         const capsuleInfo = this.playerCollider.capsuleInfo;
@@ -91,12 +95,12 @@ export default class CollisionChecker  {
 
         // if the player was primarily adjusted vertically we assume it's on something we should consider ground
         this.playerIsOnGround = deltaVector.y > Math.abs( delta * this.playerVelocity.y * 0.25 );
-
+        console.log('this.playerIsOnGround: ', this.playerIsOnGround);
         const offset = Math.max( 0.0, deltaVector.length() - 1e-5 );
         deltaVector.normalize().multiplyScalar( offset );
 
         // adjust the player model
-        oldPos.add( deltaVector );
+        this.dollyProxy.position.add( deltaVector );
    /*    if ( ! this.playerIsOnGround ) {
 
             deltaVector.normalize();

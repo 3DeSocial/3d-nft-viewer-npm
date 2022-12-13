@@ -76,7 +76,7 @@ export default class PlayerVR {
     }
 
     buildDolly = () =>{
-this.config.playerStartPos.y = 60;
+//this.config.playerStartPos.y = 60;
         let startY = this.config.playerStartPos.y;
         this.camera.position.set( 0, startY, 0 );
         this.camera.rotation.set(0,0,0);
@@ -124,10 +124,10 @@ console.log(this.config.playerStartPos);
         this.dolly.getWorldDirection(this.worldDir);
 
 
-        let gravityFactor = delta * this.gravity;
+     /*   let gravityFactor = delta * this.gravity;
         this.dolly.position.y = this.dolly.position.y-gravityFactor;
         this.newPos.copy(this.dolly.position); // coppy current for ajusting
-
+*/
     //    const quaternion = this.dolly.quaternion.clone();  
 
 
@@ -177,13 +177,13 @@ console.log(this.config.playerStartPos);
             }
         }
 
-        this.collisionChecker.checkCollisions(this.newPos, delta);
+        this.collisionChecker.checkCollisions(delta);
                  //   console.log('Final');
-                    this.dolly.getWorldDirection(this.worldDir);                    
+        this.dolly.getWorldDirection(this.worldDir);                    
                //     console.log(this.worldDir);
 
                 
-        this.setPos(this.newPos);
+      //  this.setPos(this.newPos);
     }
 
     setPos = (pos)=>{
