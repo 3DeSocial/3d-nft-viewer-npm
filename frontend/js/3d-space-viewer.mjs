@@ -7,7 +7,7 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { AudioClipRemote, Physics, CannonHelper, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { PlayerVR, AudioClipRemote, Physics, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -2959,19 +2959,24 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
                                             },
                                             onSelectStartLeft: ()=>{
-                                                console.log('onSelectStart paddle down');
-                                            //    that.controlProxy.rot = 'rl';                                                
+                                                that.controlProxy.data = data;
+                                                that.controlProxy.value = value;
+                                                that.controlProxy.dir = 'b';                                          
                                             },
                                             onSelectEndLeft: ()=>{
-                                             console.log('onSelectEnd paddle up')   
+                                                that.controlProxy.data = null;
+                                                that.controlProxy.value = null;
+                                                that.controlProxy.dir =null;  
                                             },
                                             onSelectStartRight: ()=>{
-                                                console.log('onSelectStart paddle down')   
-;
-                                            //    that.controlProxy.rot = 'rl';                                                
+                                                that.controlProxy.data = data;
+                                                that.controlProxy.value = value;
+                                                that.controlProxy.dir = 'f';                                                                                        
                                             },
                                             onSelectEndRight: ()=>{
-                                             console.log('onSelectEnd paddle up')   
+                                                that.controlProxy.data = null;
+                                                that.controlProxy.value = null;
+                                                that.controlProxy.dir =null;    
                                             },
                                             stopMoving: ()=>{
                                                 that.controlProxy.data = null;
@@ -3528,7 +3533,11 @@ initPlayerThirdPerson = () => {
 
         // if the this.player was primarily adjusted vertically we assume it's on something we should consider ground
         this.playerIsOnGround = deltaVector.y > Math.abs( delta * this.playerVelocity.y * 0.25 );
-
+if(this.playerIsOnGround){
+            this.character.mesh.material.color.set(0xff0000);
+        } else {
+            this.character.mesh.material.color.set(0xffffff);
+        }
         const offset = Math.max( 0.0, deltaVector.length() - 1e-5 );
         deltaVector.normalize().multiplyScalar( offset );
 

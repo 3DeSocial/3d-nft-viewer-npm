@@ -95,18 +95,20 @@ export default class CollisionChecker  {
 
         // if the player was primarily adjusted vertically we assume it's on something we should consider ground
         this.playerIsOnGround = deltaVector.y > Math.abs( delta * this.playerVelocity.y * 0.25 );
-        console.log('this.playerIsOnGround: ', this.playerIsOnGround);
+        //console.log('this.playerIsOnGround: ', this.playerIsOnGround);
+        if(this.playerIsOnGround){
+            this.playerCollider.material.color.set(0xff0000);
+        } else {
+            this.playerCollider.material.color.set(0x00ff00);
+        }
         const offset = Math.max( 0.0, deltaVector.length() - 1e-5 );
         deltaVector.normalize().multiplyScalar( offset );
 
         // adjust the player model
         this.dollyProxy.position.add( deltaVector );
-   /*    if ( ! this.playerIsOnGround ) {
+       if ( ! this.playerIsOnGround ) {
 
             deltaVector.normalize();
-          // this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * this.gravity;
-      //  console.log('not on playerIsOnGround. ',this.playerVelocity.y);
-
             this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
 
         } else {
@@ -114,7 +116,7 @@ export default class CollisionChecker  {
             this.playerVelocity.set( 0, 0, 0 );
 
 
-        }*/
+        }
 
 
     }
