@@ -147,7 +147,6 @@ export default class PlayerVR {
                 this.dolly.position.addScaledVector( this.rightVector, -speedFactor );
             break;
         default: 
-            console.log(this.proxy);
             break;
         }           
 

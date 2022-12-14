@@ -2958,14 +2958,8 @@ console.log('staer vr session');
                                                 that.controlProxy.rot = 'rr';
                                             },
                                             triggerLeft:(data, value)=>{
-                                                console.log('left trigger');
-
-                                                this.playerVR.camera.y +=0.1;
-
                                             },
                                             triggerRight:(data, value)=>{
-                                                console.log('right trigger');
-                                                this.playerVR.camera.y -=0.1;
                                             },
                                             paddleLeft:(data, value)=>{
 

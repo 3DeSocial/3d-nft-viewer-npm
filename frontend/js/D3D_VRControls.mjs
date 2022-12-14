@@ -253,7 +253,6 @@ class VRControls {
 
     handleLeftThumbstick = (hand, data, value) =>{
 
-        let forward = true;
         if(this.isOverMovementThreshold(data.axes[2])){
             if (data.axes[2] > 0) {
                 //console.log(hand+ ' stick: right ',data.axes[2]);
@@ -279,10 +278,9 @@ class VRControls {
                 }
             };
         } else {
-            forward = false;
+            this.config.stopMoving();
         }
 
-        let left = true;
         if(this.isOverMovementThreshold(data.axes[3])){
              //   console.log(hand+ ' stick: back',data.axes[3]);
             if(data.axes[3] > 0){
@@ -307,13 +305,10 @@ class VRControls {
                 }             
             };
         } else {
-            left = false;
-        }
-
-        if((left === false)&&(forward===false)){
             this.config.stopMoving();
         }
 
+      
     }
 
     handleRightThumbstick = (hand, data, value) =>{
