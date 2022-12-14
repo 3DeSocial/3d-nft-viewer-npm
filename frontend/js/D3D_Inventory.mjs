@@ -56,8 +56,9 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         
         this.items = [];
         let that = this;
-
         console.log('load, loading ',this.config.items2d.length, ' from items2d');
+        console.log(this.config.items2d);
+
         this.initItems2d(this.config.items2d).then((nfts2d)=>{
             if(nfts2d){
                 that.items2d = nfts2d;     
@@ -114,7 +115,12 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                     itemConfig.layout = itemData.layout;               
                 };
                 if(itemData.nft){
-                    itemConfig.nft = itemData.nft;               
+                    itemConfig.nft = itemData.nft;        
+                    if(itemData.nft.isAudio){
+                        itemConfig.isAudio = itemData.nft.isAudio;               
+                        console.log('audio found: ');
+                        console.log(itemData);
+                    };
                 };
                 itemConfig.imageProxyUrl = that.config.imageProxyUrl;
                     itemConfig.isImage = true;
