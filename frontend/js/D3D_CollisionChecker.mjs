@@ -30,7 +30,7 @@ export default class CollisionChecker  {
         this.tempMat = new THREE.Matrix4();
         this.tempSegment = new THREE.Line3();
         this.origDollyPos = new THREE.Vector3(); 
-        this.gravity = - 30;
+        this.gravity = - 10;
 
     }
 

@@ -32,6 +32,18 @@ class VRControls {
             stopMoving:()=>{
 
             },
+            triggerLeft:(data, value)=>{
+
+            },
+            triggerRight:(data, value)=>{
+
+            },
+            paddleLeft:(data, value)=>{
+
+            },         
+            paddleRight:(data, value)=>{
+
+            },
             onSelectStart: () =>{
 
             },
@@ -39,7 +51,6 @@ class VRControls {
 
             },
              onSelectStartLeft: ()=>{
-                                                console.log('onSelectStart paddle down');
                                             //    that.controlProxy.rot = 'rl';                                                
                                             },
                                             onSelectEndLeft: ()=>{
@@ -156,45 +167,19 @@ class VRControls {
                                 //handlers for buttons
                                 if (value !== old.buttons[i] || Math.abs(value) > 0.8) {
                                     //check if it is 'all the way pushed'
-                                    if (value === 1) {
-                                        //console.log("Button" + i + "Down");
+                                    if (value === 1) { // button is down
                                         if (data.handedness == 'left') {
-                                            if (i == 1) {
-
-                                                this.handleLeftControllerButtons(value, i);
-                                             //   self.player.rotateY(-THREE.MathUtils.degToRad(1));
-                                            }
-                                            if (i == 3) {
-                                               // self.dolly.position.copy(this.config.playerStartPos);
-                                            }
+                                            this.handleLeftControllerButtons(data, value, i);
                                         } else {
-                                            //console.log("Right Paddle Down");
-                                            if (i == 1) {
-                                                this.handleRightControllerButtons(value, i);
-                                            }
+                                            this.handleRightControllerButtons(data, value, i);
                                         }
-                                    } else {
-                                        // console.log("Button" + i + "Up");
-
-                                        if (i == 1) {
-                                            //use the paddle buttons to rotate
-                                            if (data.handedness == 'left') {
-                                                console.log("Left Paddle Down");
-                                                this.handleLeftControllerButtons(value, i);
-
-                                             //   self.player.rotateY(
-                                              //      -THREE.MathUtils.degToRad(Math.abs(value))
-                                               // );
-                                            } else {
-
-                                                this.handleRightControllerButtons(value, i);
-
-
-                                           //     self.player.rotateY(
-                                             //      THREE.MathUtils.degToRad(Math.abs(value))
-                                               // );
-                                            }
+                                    } else { // button is up
+                                        if (data.handedness == 'left') {
+                                            this.handleLeftControllerButtons(data, value, i);
+                                        } else {
+                                            this.handleRightControllerButtons(data, value, i);
                                         }
+                                        
                                     }
                                 }
                             });
@@ -239,8 +224,15 @@ class VRControls {
 
     }
 
-    handleLeftControllerButtons = (data, value) =>{
-        this.moveForward(data, value);
+    handleLeftControllerButtons = (data, value, i) =>{
+        switch(i){
+            case 0:
+                this.triggerLeft(data,value,i);
+            break;
+            case 1:
+                this.paddleLeft(data,value,i);
+            break;
+        }
     }
 
     handleRightController = (data, value) =>{
@@ -248,8 +240,15 @@ class VRControls {
 
     }
 
-    handleRightControllerButtons = (data, value) =>{
-        this.moveForward(data, value);
+    handleRightControllerButtons = (data, value, i) =>{
+        switch(i){
+            case 0:
+                this.triggerRight(data,value,i);
+            break;
+            case 1:
+                this.paddleRight(data,value,i);
+            break;
+        }
     }
 
     handleLeftThumbstick = (hand, data, value) =>{
@@ -453,6 +452,22 @@ class VRControls {
     console.log('VRControla rotateRight')
         this.config.rotateRight(data,value);
     console.log('rotated right');
+    }
+
+    triggerLeft = (data, value) => {
+        this.config.triggerLeft(data, value);   
+    }
+
+    paddleLeft = (data, value) => {
+        this.config.paddleLeft(data, value);   
+    }
+
+    triggerRight = (data, value) => {
+        this.config.triggerRight(data, value);   
+    }
+
+    paddleRight = (data, value) => {
+        this.config.paddleRight(data, value);   
     }
 
 	/*dollyMove = () =>{

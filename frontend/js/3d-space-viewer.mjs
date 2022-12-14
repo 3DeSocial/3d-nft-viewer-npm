@@ -769,7 +769,8 @@ const params = {
         this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
         this.camera.updateProjectionMatrix(); 
         this.camera.add( this.audioListener );
-       
+        this.camera.rotation.set(0,0,0);
+
        // this.camera.lookAt(this.config.lookAtStartPos);
     }
 
@@ -777,7 +778,7 @@ const params = {
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/600, 0.01, 100 );
         this.camera.add( this.audioListener );
-        
+        this.camera.rotation.set(0,0,0);
         //Only gotcha. Set a non zero vector3 as the camera position.
 //        this.camera.rotation.setX(0);
 
@@ -2859,7 +2860,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let vrBtnOptions = { btnCtr : 'div.view-vr-btn',
                              viewer: this,
                              onStartSession: ()=>{
-
+console.log('staer vr session');
                                 let vrType = 'walking';
 
                                 that.initVRSession(vrType);                                
@@ -2924,11 +2925,14 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                 that.controlProxy.dir = 'd';
                                             },
                                             moveLeft:(data, value)=>{
+                                                console.log('moveLeft triggered');
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'l';  
                                             },                                            
                                             moveRight:(data, value)=>{
+                                                console.log('moveright triggered');
+
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'r';
@@ -2947,36 +2951,27 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.rot = 'rl';
-                                                console.log('rotate left spaceViewer');
-
                                             },
                                             rotateRight: (data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.rot = 'rr';
+                                            },
+                                            triggerLeft:(data, value)=>{
+                                                console.log('left trigger');
 
-                                                console.log('rotate right spaceViewer');
+                                                this.playerVR.camera.y +=0.1;
 
                                             },
-                                            onSelectStartLeft: ()=>{
-                                                that.controlProxy.data = data;
-                                                that.controlProxy.value = value;
-                                                that.controlProxy.dir = 'b';                                          
+                                            triggerRight:(data, value)=>{
+                                                console.log('right trigger');
+                                                this.playerVR.camera.y -=0.1;
                                             },
-                                            onSelectEndLeft: ()=>{
-                                                that.controlProxy.data = null;
-                                                that.controlProxy.value = null;
-                                                that.controlProxy.dir =null;  
-                                            },
-                                            onSelectStartRight: ()=>{
-                                                that.controlProxy.data = data;
-                                                that.controlProxy.value = value;
-                                                that.controlProxy.dir = 'f';                                                                                        
-                                            },
-                                            onSelectEndRight: ()=>{
-                                                that.controlProxy.data = null;
-                                                that.controlProxy.value = null;
-                                                that.controlProxy.dir =null;    
+                                            paddleLeft:(data, value)=>{
+
+                                            },  
+                                            paddleRight:(data, value)=>{
+
                                             },
                                             stopMoving: ()=>{
                                                 that.controlProxy.data = null;
@@ -2997,12 +2992,15 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                         sceneCollider: this.sceneryLoader.collider});
 
         this.scene.add(this.playerVR.dolly);
-
-
-
+        this.removePlayer();
 
     }
 
+    removePlayer = () =>{
+        this.player.remove(...this.player.children);
+        this.scene.remove(this.player);
+
+    }
     addScenery = () =>{
         let that = this;
         if(this.sceneryMesh){
@@ -3237,6 +3235,7 @@ initPlayerFirstPerson = () => {
 
     that.player = new THREE.Group();
     that.player.position.copy(playerStartPos);
+    that.player.rotation.set(0,0,0);
     that.character = new THREE.Mesh(
         new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
         new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
@@ -3247,6 +3246,7 @@ initPlayerFirstPerson = () => {
         radius: 1,
         segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
     };    
+    that.character.rotation.set(0,0,0);
 
     that.player.add(that.character);
     that.character.updateMatrixWorld();

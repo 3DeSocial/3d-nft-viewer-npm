@@ -29,9 +29,11 @@ export default class PlayerVR {
         this.proxy = this.config.controlProxy;
         this.oldPos = new THREE.Vector3();
         this.newPos = new THREE.Vector3();        
-        this.playerVelocity = new THREE.Vector3();
-        this.gravity = 5;
+        this.playerVelocity = new THREE.Vector3(0,0,0);
         this.gravityVector = new THREE.Vector3(0,-1,0);
+        this.upVector = new THREE.Vector3(0,1,0);   
+        this.tempVector = new THREE.Vector3(0,0,0);
+        this.rightVector = new THREE.Vector3(0,0,0);
         this.worldDir = new THREE.Vector3();
 
         this.collisionChecker = new CollisionChecker({  sceneCollider: this.config.sceneCollider,
@@ -77,14 +79,16 @@ export default class PlayerVR {
 
     buildDolly = () =>{
 //this.config.playerStartPos.y = 60;
-        let startY = this.config.playerStartPos.y;
-        this.camera.position.set( 0, startY, 0 );
-        this.camera.rotation.set(0,0,0);
-        this.dolly = new THREE.Group();
+        let startY = this.config.playerStartPos.y-0.5;
+        this.camera.position.set( 0, 0, 0 );
+        this.camera.rotation.set(0,Math.PI,0);
 
-console.log('buildDolly this.config.playerStartPos');
-console.log(this.config.playerStartPos);
+        this.dolly = new THREE.Group();
+//console.log('buildDolly this.config.playerStartPos');
+//console.log(this.config.playerStartPos);
         this.dolly.position.copy(this.config.playerStartPos);
+        this.dolly.rotation.set(0,Math.PI,0);
+
         this.dolly.add( this.camera );
 
         this.dolly.add(this.config.controllers[0]);
@@ -92,7 +96,6 @@ console.log(this.config.playerStartPos);
         this.dolly.add(this.config.controllers[1]);
         this.dolly.add(this.config.grips[1]);
 
-        console.log('addded controllers and grips to group');
         this.dummyCam = new THREE.Object3D();
         this.camera.add( this.dummyCam );
         this.playerCollider = this.buildPlayerCollider();
@@ -104,13 +107,13 @@ console.log(this.config.playerStartPos);
 
     buildPlayerCollider = () =>{
         let pColl = new THREE.Mesh(
-            new RoundedBoxGeometry( 1.0, 2.0, 1.0, 10, 0.5 ),
-            new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.5})
+            new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
+            new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
         );
 
-        pColl.geometry.translate( 0, - 0.5, 0 );
+        pColl.geometry.translate( 0, -1, 0 );
         pColl.capsuleInfo = {
-            radius: 0.5,
+            radius: 1,
             segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
         };
         return pColl;
@@ -118,40 +121,36 @@ console.log(this.config.playerStartPos);
 
     moveDolly = (delta) =>{
         if(!this.dolly){
-            console.log('no dolly');
             return false;
         };
         this.dolly.getWorldDirection(this.worldDir);
-
-
-     /*   let gravityFactor = delta * this.gravity;
-        this.dolly.position.y = this.dolly.position.y-gravityFactor;
-        this.newPos.copy(this.dolly.position); // coppy current for ajusting
-*/
-    //    const quaternion = this.dolly.quaternion.clone();  
-
-
-       // this.dolly.quaternion.copy( this.dummyCam.getWorldQuaternion(this.q) );        
+        this.rightVector.crossVectors( this.worldDir, this.upVector ).normalize();
         
         let speedFactor = delta*this.speed;
 
-
         switch(this.proxy.dir){
             case 'f':
-                this.dolly.position.addScaledVector( this.worldDir, speedFactor );
-            break;
-            case 'b':
                 this.dolly.position.addScaledVector( this.worldDir, -speedFactor );
             break;
+            case 'b':
+                this.dolly.position.addScaledVector( this.worldDir, speedFactor );
+            break;
             case 'l':
-                this.dolly.translateX(speedFactor);
+                console.log('move dolly left');
+                console.log(this.rightVector, speedFactor);
+                this.dolly.position.addScaledVector( this.rightVector, speedFactor );
             break;
             case 'r':
-                this.dolly.translateX(-speedFactor);
+                console.log('move dolly right');
+
+                console.log(this.rightVector, speedFactor);                
+                this.dolly.position.addScaledVector( this.rightVector, -speedFactor );
+            break;
+        default: 
+            console.log(this.proxy);
             break;
         }           
 
-   //     this.dolly.quaternion.copy( quaternion );
 
         if(this.proxy.rot){
            if(!this.proxy.isRotating){
@@ -159,31 +158,18 @@ console.log(this.config.playerStartPos);
                 switch(this.proxy.rot){
                     case 'rr':
                         this.proxy.isRotating = true;
-
                         this.dolly.rotateY(-Math.PI/4)
-                        this.proxy.rot = null;
-                        this.dolly.getWorldDirection(this.worldDir);                    
-                        this.proxy.rot = null;
-
                     break;
                     case 'rl':
                         this.proxy.isRotating = true;                      
                         this.dolly.rotateY(Math.PI/4)
-                        this.dolly.getWorldDirection(this.worldDir);                    
-                        this.proxy.rot = null;
-
                     break;  
                 };
+                this.proxy.rot = null;                
             }
         }
 
         this.collisionChecker.checkCollisions(delta);
-                 //   console.log('Final');
-        this.dolly.getWorldDirection(this.worldDir);                    
-               //     console.log(this.worldDir);
-
-                
-      //  this.setPos(this.newPos);
     }
 
     setPos = (pos)=>{
