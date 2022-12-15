@@ -87,7 +87,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
 
         let noNfts = itemList.length;
         let noNftsToPlace = Math.min(noPositions,noNfts);
-console.log('noNftsToPlace: ',noNftsToPlace);
+
         return new Promise((resolve, reject) => {
 
             itemList.forEach((itemData)=>{
@@ -99,15 +99,27 @@ console.log('noNftsToPlace: ',noNftsToPlace);
                 } else {
                     itemConfig = itemData;
                 };
+
                 if(!itemConfig.width){
                     itemConfig.width = itemData.width;
-                }
+                    if(!itemData.width){
+                        itemConfig.width = that.config.width;
+                    }
+                };
+
                 if(!itemConfig.depth){
                     itemConfig.depth = itemData.depth;
-                }
+                    if(!itemData.width){
+                        itemConfig.width = that.config.width;
+                    }
+                };
+
                 if(!itemConfig.height){
                     itemConfig.height = itemData.height;
-                }
+                    if(!itemData.width){
+                        itemConfig.width = that.config.width;
+                    }
+                };
 
                 itemConfig.three = THREE;
                 itemConfig.scene = this.scene;
@@ -128,26 +140,19 @@ console.log('noNftsToPlace: ',noNftsToPlace);
                 itemConfig.imageProxyUrl = that.config.imageProxyUrl;
                     itemConfig.isImage = true;
                     item = this.initItem2d(itemConfig);
-                    console.log('initItem2d: ',itemConfig);
                     item.initMesh(itemConfig).then((nftImgData)=>{
-                        console.log('mesh ok, getting next spot');
                         let spot = that.config.layoutPlotter.getNextFreePos();
                       
                         let halfHeight = nftImgData.height/2;
                         console.log('halfHeight: ',halfHeight,nftImgData);
                         spot.pos.y = spot.pos.y+nftImgData.height;
-                        console.log('plot at spot: ',spot);
                         item.place(spot.pos).then((mesh,pos)=>{
                             let lookAtTarget = that.center.clone();
                                 lookAtTarget.y = mesh.position.y;
                                 item.mesh.lookAt(lookAtTarget);
-                           /* if(spot.rot){
-                                mesh.rotateY(spot.rot.y);
-                            };*/
 
                             items.push(item);
-                            console.log('placed and pushed');
-                            console.log(mesh);
+
                             that.items2d.push(item);                            
                             if(items.length===itemList.length){
                                 console.log('all items placed');
@@ -282,7 +287,6 @@ console.log('noNftsToPlace: ',noNftsToPlace);
                     this.placedItems3D.push(item);
                     that.items3d.push(item); 
                     if(items.length===itemList.length){
-                        console.log('all 3d items placed');
                         resolve(items);
                     }
                 });

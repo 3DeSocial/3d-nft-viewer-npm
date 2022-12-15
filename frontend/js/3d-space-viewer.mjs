@@ -306,7 +306,6 @@ const params = {
         this.moveTo = false;
         this.vrType = this.config.vrType;
         this.camPos = new THREE.Vector3();
-        this.raycaster = new THREE.Raycaster();
         this.objectsInMotion = []; // use for things being thrown etc
         this.initLoader(this.config.owner);
         this.dirCalc = new THREE.Vector3(1, 1, 1);
@@ -606,8 +605,12 @@ const params = {
                 if ( 'xr' in navigator ) {
                     that.initVR();
                 }   
-                this.renderer.render(this.scene,this.camera);
 
+
+                this.initBranding();
+
+                this.renderer.render(this.scene,this.camera);
+                this.initSnowFall();
                 this.animate();
                 sceneryloadingComplete = true;
 
@@ -634,7 +637,7 @@ const params = {
 
                     }
 
-                    this.initSnowFall();
+
 
 
 
@@ -777,7 +780,8 @@ const params = {
         this.camera.add( this.audioListener );
         this.camera.rotation.set(0,0,0);
 
-       // this.camera.lookAt(this.config.lookAtStartPos);
+        this.raycaster = new THREE.Raycaster({camera:this.camera});
+
     }
 
     initCamera = () =>{
@@ -1789,8 +1793,11 @@ const params = {
         this.mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
 
         //2. set the picking ray from the camera position and this.mouse coordinates
-        this.raycaster.setFromCamera( this.mouse, this.camera );    
-
+        if(!(this.mouse)||!(this.camera)){
+            return false;
+        };
+        try{
+         this.raycaster.setFromCamera( this.mouse, this.camera );    
         //3. compute intersections (note the 2nd parameter)
         var intersects = this.raycaster.intersectObjects( this.scene.children, true );
         let floorLevel;
@@ -1805,6 +1812,15 @@ const params = {
             selectedPoint: (intersects[0])?intersects[0].point:null,
             selection: (intersects[0])?intersects[0]:null,
         }
+
+        } catch (error) {
+          console.log(error);
+          return false;
+
+        }
+
+
+       
     }
 
     isOnFloor = (selectedPoint, meshToCheck) =>{
@@ -1845,7 +1861,6 @@ isOnWall = (selectedPoint, meshToCheck) =>{
             dest.setZ(this.player.position.z); //raycast downwards from selected point.
         let dir = new THREE.Vector3();
         dir.subVectors( dest, origin ).normalize();
-        this.raycaster = new THREE.Raycaster();
         this.raycaster.set(origin,dir);
         var intersects = this.raycaster.intersectObjects( this.scene.children, true );
         let hit;
@@ -2344,55 +2359,21 @@ isOnWall = (selectedPoint, meshToCheck) =>{
     initBranding =()=>{
             let that = this;
 
-        this.footballSounds = [];
-        if(this.config.football.crowdSoundUrl){
-            // create a global audio source
-            const sound = new THREE.Audio( that.audioListener );
-            const audioLoader = new THREE.AudioLoader();
-            audioLoader.load( this.config.football.crowdSoundUrl, function( buffer ) {
-                sound.setBuffer( buffer );
-                sound.setLoop( true );
-                sound.setVolume( 0.5 );
-                sound.play();
-                that.footballSounds.crowd = sound;
-            });
-        }
+        
+        let itemConfig = { scene: this.scene,
+                            format: 'glb',
+                            height:20,
+                            width:60,
+                            depth:20,
+                            modelUrl:'/models/NFTZoptimised.glb'};
 
-        let itemConfig = {  physicsWorld: this.world,
-                            scene: this.scene,
-                            format: 'fbx',
-                            height:2.5,
-                            width:2.5,
-                            depth:2.5,
-                            modelUrl:'https://desodata.azureedge.net/unzipped/ad368335588bf94631cd5705e1d473fcbc1ff15fe2f6950ec5faa785866e97b3/fbx/normal/Soccer.fbx'};
+        this.nftzLogo = this.initItemForModel(itemConfig);
+        this.nftzLogo.isProp = true;
 
-        this.footballPlayer = this.initItemForModel(itemConfig);
-        this.footballPlayer.isFootballPlayer = true;
 
-        let playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(1,0,0), 1, -2);
-
-        let placePos = new THREE.Vector3(-4,-1.6927649250030519,-12);
-        this.footballPlayer.place(placePos).then((mesh, pos)=>{
-            if(this.config.football.goalSoundUrl){            
-                that.footballSounds.goal = new AudioClip({
-                    path: this.config.football.goalSoundUrl,
-                    mesh: mesh,
-                    listener: that.audioListener,
-                    onEnded: () =>{
-                        that.scene.remove( that.spotLight );      
-                        that.scene.remove( that.spotLight2 );                          
-                        that.footballSounds.crowd.play();
-                    }
-                });
-            };
-
-          //  mesh.rotateY(Math.PI/2);
-            that.sceneInventory.items3d.push(this.footballPlayer);
-            that.sceneInventory.placedItems3D.push(this.footballPlayer);
-            placePos.y = -1.6927649250030519;
-            mesh.position.copy(placePos);
-           
-  
+        let placePos = new THREE.Vector3(-25,30,-25);
+        this.nftzLogo.place(placePos).then((model,pos)=>{
+            model.rotateX(Math.PI/4);
         })
 
 
@@ -2792,9 +2773,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                 scene: this.scene,
                                 loader: this.loader,
                                 loaders: this.loaders,
-                                width: 3,
-                                depth: 3,
-                                height: 3,
+                                width: 6,
+                                depth: 0.1,
+                                height: 6,
                                 modelsRoute: this.config.modelsRoute,
                                 nftsRoute: this.config.nftsRoute,
                                 layoutPlotter: this.layoutPlotter,

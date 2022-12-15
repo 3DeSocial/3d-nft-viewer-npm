@@ -5,26 +5,28 @@ var TO_RADIANS = Math.PI / 180;
         function randomRange(min, max) {
             return ((Math.random() * (max - min)) + min);
         }
-        let Particle3D = function(material) {
-            //THREE.Sprite.call(this, material);
+        class Particle3D {
+              constructor(config) {
 
-            //this.material = material instanceof Array ? material : [ material ];
-            // define properties
-            this.velocity = new THREE.Vector3(0, -8, 0);
-            this.velocity.rotateX(randomRange(-45, 45));
-            this.velocity.rotateY(randomRange(0, 360));
-            this.gravity = new THREE.Vector3(0, 0, 0);
-            this.drag = 1;
-            // methods...
+                    this.sprite = new THREE.Sprite(config.material);
+
+                    //this.material = material instanceof Array ? material : [ material ];
+                    // define properties
+                    this.velocity = new THREE.Vector3(0, -0.1, 0);
+                    this.velocity.rotateX(randomRange(-0.1, 0.1));
+                    this.velocity.rotateY(randomRange(0, 0.1));
+                    this.gravity = new THREE.Vector3(0, 0, 0);
+                    this.drag = 1;
+                    // methods...            
+
+              }
         };
-
-        Particle3D.prototype = new THREE.Sprite();
-        Particle3D.prototype.constructor = Particle3D;
+ 
 
         Particle3D.prototype.updatePhysics = function() {
             this.velocity.multiplyScalar(this.drag);
             this.velocity.add(this.gravity);
-            this.position.add(this.velocity);
+            this.sprite.position.add(this.velocity);
         }
 
         THREE.Vector3.prototype.rotateY = function(angle) {
@@ -89,15 +91,15 @@ export default class SnowFall  {
 
         var material = new THREE.SpriteMaterial( { map: new THREE.TextureLoader().load('/images/snowflake.png') } );
 
-        for (var i = 0; i < 500; i++) {
+        for (var i = 0; i < 800; i++) {
 
-            particle = new Particle3D( material);
-            particle.position.x = Math.random() * 200 - 100;
-            particle.position.y = Math.random() * 200 - 100;
-            particle.position.z = Math.random() * 200 - 100;
-            particle.scale.x = 22;
-            particle.scale.y = 22;
-            this.config.scene.add( particle );
+            particle = new Particle3D({material:material});
+            particle.sprite.position.x = Math.random() * 60 - 30;
+            particle.sprite.position.y = Math.random() * 60;
+            particle.sprite.position.z = Math.random() * 60 - 30;
+            particle.sprite.scale.x = 0.25;
+            particle.sprite.scale.y = 0.25;
+            this.config.scene.add( particle.sprite );
 
             this.particles.push(particle);
         }
@@ -115,14 +117,14 @@ export default class SnowFall  {
             var particle = particles[i];
             particle.updatePhysics();
 
-            let x = particle.position.x;
-            let y = particle.position.y;
-            let z = particle.position.z;
-                if(y<-1000) y+=2000;
-                if(x>1000) x-=2000;
-                else if(x<-1000) x+=2000;
-                if(z>1000) z-=2000;
-                else if(z<-1000) z+=2000;
+            let x = particle.sprite.position.x;
+            let y = particle.sprite.position.y;
+            let z = particle.sprite.position.z;
+                if(y<0){particle.sprite.position.y = 60};
+                if(x>60) {particle.sprite.positionx-=120}
+                else if(x<-60) {particle.sprite.positionx+=120};
+                if(z>60) {particle.sprite.positionz-=120}
+                else if(z<-60) {particle.sprite.positionz+=120};
             
         }
 /*
