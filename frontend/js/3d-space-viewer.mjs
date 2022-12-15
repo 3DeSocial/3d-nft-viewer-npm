@@ -634,7 +634,7 @@ const params = {
 
                     }
 
-                //    this.initSnowFall();
+                    this.initSnowFall();
 
 
 

@@ -264,15 +264,19 @@ export default class LayoutPlotter  {
         let circles = (this.sceneryLoader.circles)?this.sceneryLoader.circles:[];
             circles.forEach((circle,idx)=>{
                 circle.center = {x:0,y:0,z:0};
-                circle.spots = this.calcCircleSpots(circle); // get list of spots
-                console.log('CIRCLE SPOTS',circle.spots);
+                if(idx % 2){
+                    circle.spots = this.calcCircleSpots(circle); // get list of spots
+                    console.log('not offset spots: ',circle.spots);
+                 } else {
+                    circle.spots = this.calcCircleSpotsOffset(circle); // get list of spots
+                    console.log('circle offset spots: ',circle.spots);
+                };
                 let noPos = circle.spots.length;
                 circle.spots.forEach((spot, idx)=>{
                     spot.idx = idx;
                     that.posQ.push(spot); 
                 })
             }); 
-            console.log('CIRCLE POS Q');
 
         this.posQ3D = [];
 
@@ -307,13 +311,55 @@ export default class LayoutPlotter  {
     calcCircleSpots = (circle) =>{
         //        {id:7, pos:{x: 7.6974523925781275, y: -0.5, z: 11.73381267645709}, dims:{width:1.5, height: 3}, rot:{x:0,y:1.57079632679,z:0}},
 
-        let noItems = circle.maxItems;
+        let noItems = circle.maxItems*2; // use double positions then spit into 2 for offet
         let center = circle.center;
         let radius = circle.radius;
         let spots = [];
         let positions = [];
 
         for (var i = noItems - 1; i >= 0; i--) {
+            if(i % 2){
+                console.log('calcCircleSpots:', i);
+                let spot = {idx:i};
+                let angle = ((2*Math.PI) / noItems) * i;
+                let xCoord = Math.sin(angle) * radius;
+                let zCoord = Math.cos(angle) * radius;
+                let plotPoint = new THREE.Vector3(xCoord,0,zCoord);
+                // find floor or surface at this coord in the scenery
+              //  let ceil = this.config.sceneryLoader.findFloorAt(plotPoint, 10, 0);
+                let floor = this.config.sceneryLoader.findFloorAt(plotPoint, 8, -1);
+                // set Y for new position
+                //plotPoint.setY(floor);
+                    let pos = {x:xCoord,y:floor,z:zCoord};
+                        spot.pos = pos;
+                        spot.dims = {width:10, height: 10, depth: 10};
+                        let rotY = Math.atan2( ( center.x - center.x ), ( center.z - center.z ) );
+                        spot.rot = {x:0,y:rotY,z:0};
+                        spot.target = center;
+                    spots.push(spot);
+            } else {
+                console.log(' calcCircleSpots i%2 is false');
+            }
+
+
+        }
+
+        return spots;
+    }
+
+    calcCircleSpotsOffset = (circle) =>{
+        //        {id:7, pos:{x: 7.6974523925781275, y: -0.5, z: 11.73381267645709}, dims:{width:1.5, height: 3}, rot:{x:0,y:1.57079632679,z:0}},
+
+        let noItems = circle.maxItems*2; // use double positions then spit into 2 for offet
+        let center = circle.center;
+        let radius = circle.radius;
+        let spots = [];
+        let positions = [];
+
+        for (var i = noItems - 1; i >= 0; i--) {
+            if(!(i % 2)){
+                                console.log('calcCircleSpotsOffset:', i);
+
             let spot = {idx:i};
             let angle = ((2*Math.PI) / noItems) * i;
             let xCoord = Math.sin(angle) * radius;
@@ -331,13 +377,14 @@ export default class LayoutPlotter  {
                     spot.rot = {x:0,y:rotY,z:0};
                     spot.target = center;
                 spots.push(spot);
-            
+            } else {
+                console.log(' calcCircleSpotsOffset i%2 is true');
+            }
 
         }
 
-        this.circlePositions = positions;
         return spots;
-    }
+    }    
 
 
     plotCircle = (items, center, radius) =>{

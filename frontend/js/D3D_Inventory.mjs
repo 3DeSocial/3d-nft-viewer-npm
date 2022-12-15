@@ -180,9 +180,9 @@ console.log('noNftsToPlace: ',noNftsToPlace);
         let items = [];
         return new Promise((resolve, reject) => {
 
-                console.log('initItems');
+              //  console.log('initItems');
             itemList.forEach((itemData)=>{
-                console.log(itemData)
+              //  console.log(itemData)
                 let itemConfig;
                 if(itemData.params){
                     itemConfig = itemData.params;
@@ -245,12 +245,12 @@ console.log('noNftsToPlace: ',noNftsToPlace);
                                                 depth:3,
                                                 scene: that.scene,
                                                 format: formats[0]});
-                    console.log('item returned. have modelUrl: ',modelUrl, ' format: ',formats[0]);
+                  //  console.log('item returned. have modelUrl: ',modelUrl, ' format: ',formats[0]);
                 } else {
 
 
                     let versions = extraDataParser.getAvailableVersions(0,'gltf');
-                    console.log('versions:', versions);
+                 //   console.log('versions:', versions);
                     if( versions[0]){
                        let path3D = versions[0];
                     }
@@ -260,14 +260,14 @@ console.log('noNftsToPlace: ',noNftsToPlace);
                         format: 'gltf'
                       };
                     item = this.initItem({nftRequestParams: nftRequestParams, nftPostHashHex: itemData.postHashHex, pos:spot.pos, rot:spot.rot, nft:itemData, width: 3, height:3, depth:3, scene: that.scene, format: formats[0]});
-                    console.log('item API request requried for modelUrl: ',modelUrl, ' format: ',formats[0]);
+                   // console.log('item API request requried for modelUrl: ',modelUrl, ' format: ',formats[0]);
 
                 }      
 
-                console.log('placing item of format ',formats[0]);
-                console.log(item);
+             //   console.log('placing item of format ',formats[0]);
+               // console.log(item);
                 item.place(spot.pos).then((mesh,pos)=>{
-                    console.log('placed at ',spot.pos,mesh);
+                 //   console.log('placed at ',spot.pos,mesh);
                     if(spot.rot){                    
                         if(item.isVRM){
                             mesh.scene.rotateY(spot.rot.y);
