@@ -7,7 +7,7 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { PlayerVR, AudioClipRemote, Physics, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { SnowFall, PlayerVR, AudioClipRemote, Physics, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -634,6 +634,8 @@ const params = {
 
                     }
 
+                //    this.initSnowFall();
+
 
 
             });
@@ -643,6 +645,10 @@ const params = {
         });
     }
 
+    initSnowFall = () =>{
+        this.snowFall = new SnowFall({scene:this.scene});
+        console.log('started snow');
+    }
     initLoader = (ownerData) =>{
         this.loadingScreen = new LoadingScreen(ownerData);
         this.loadingScreen.render('.loader-ctr');
@@ -2334,6 +2340,64 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }
 
+
+    initBranding =()=>{
+            let that = this;
+
+        this.footballSounds = [];
+        if(this.config.football.crowdSoundUrl){
+            // create a global audio source
+            const sound = new THREE.Audio( that.audioListener );
+            const audioLoader = new THREE.AudioLoader();
+            audioLoader.load( this.config.football.crowdSoundUrl, function( buffer ) {
+                sound.setBuffer( buffer );
+                sound.setLoop( true );
+                sound.setVolume( 0.5 );
+                sound.play();
+                that.footballSounds.crowd = sound;
+            });
+        }
+
+        let itemConfig = {  physicsWorld: this.world,
+                            scene: this.scene,
+                            format: 'fbx',
+                            height:2.5,
+                            width:2.5,
+                            depth:2.5,
+                            modelUrl:'https://desodata.azureedge.net/unzipped/ad368335588bf94631cd5705e1d473fcbc1ff15fe2f6950ec5faa785866e97b3/fbx/normal/Soccer.fbx'};
+
+        this.footballPlayer = this.initItemForModel(itemConfig);
+        this.footballPlayer.isFootballPlayer = true;
+
+        let playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(1,0,0), 1, -2);
+
+        let placePos = new THREE.Vector3(-4,-1.6927649250030519,-12);
+        this.footballPlayer.place(placePos).then((mesh, pos)=>{
+            if(this.config.football.goalSoundUrl){            
+                that.footballSounds.goal = new AudioClip({
+                    path: this.config.football.goalSoundUrl,
+                    mesh: mesh,
+                    listener: that.audioListener,
+                    onEnded: () =>{
+                        that.scene.remove( that.spotLight );      
+                        that.scene.remove( that.spotLight2 );                          
+                        that.footballSounds.crowd.play();
+                    }
+                });
+            };
+
+          //  mesh.rotateY(Math.PI/2);
+            that.sceneInventory.items3d.push(this.footballPlayer);
+            that.sceneInventory.placedItems3D.push(this.footballPlayer);
+            placePos.y = -1.6927649250030519;
+            mesh.position.copy(placePos);
+           
+  
+        })
+
+
+    }
+
     initFootball = () =>{
         let that = this;
 
@@ -2698,11 +2762,12 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                  sceneryLoader: this.sceneryLoader});  
             
             let maxItems =this.layoutPlotter.getMaxItemCount();
+            console.log('sceneAssts: ', options.sceneAssets);
             let items2d = options.sceneAssets.filter(nft => ((!nft.is3D)&&(nft.imageURLs[0])));     
 
             let maxItems3D =this.layoutPlotter.getMaxItemCount3D();
-
             let items3d = options.sceneAssets.filter(nft => nft.is3D);
+
             let spookyNFTs = options.sceneAssets.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'||nft.postHashHex=='8e0bbd53cd4932294649c109957167e385367836f0ec39cc4cc3d04691fffca7'));
             this.ghosts = spookyNFTs.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'));
 
@@ -2745,7 +2810,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                 sceneInvConfig.animLoader = true;
             };
 
-            this.sceneInventory = new D3DInventory(sceneInvConfig);     
+            this.sceneInventory = new D3DInventory(sceneInvConfig);
+
         }
         
     }

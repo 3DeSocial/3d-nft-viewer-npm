@@ -27,6 +27,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         this.chainAPI = new ChainAPI(this.config.chainAPI);
         this.activeItemIdx = 0;
         this.placedItems3D = [];
+        this.center = new THREE.Vector3(0,0,0);
         if((this.config.items3d.length>0)||(this.config.items2d.length>0)){
             this.load();
         }
@@ -66,7 +67,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
 
         })
 
-        console.log('load, loading ',this.config.items3d.length, ' from items3d');
+   /*    console.log('load, loading ',this.config.items3d.length, ' from items3d');
         this.initItems3d(this.config.items3d).then((nfts3d)=>{
             if(nfts3d){
                 that.items3d = nfts3d;     
@@ -74,19 +75,21 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
             };
 
         })
-        
+     */   
     }
 
     initItems2d = (itemList)=>{
         let that = this;
         let items = [];
         let noPositions = this.config.layoutPlotter.initPosQ();
+        let center = this.center;
+        console.log('initItems: ',itemList,noPositions);
+
         let noNfts = itemList.length;
         let noNftsToPlace = Math.min(noPositions,noNfts);
-
+console.log('noNftsToPlace: ',noNftsToPlace);
         return new Promise((resolve, reject) => {
 
-                console.log('initItems');
             itemList.forEach((itemData)=>{
             //    console.log(itemData)
                 let item ;
@@ -125,19 +128,26 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                 itemConfig.imageProxyUrl = that.config.imageProxyUrl;
                     itemConfig.isImage = true;
                     item = this.initItem2d(itemConfig);
-
+                    console.log('initItem2d: ',itemConfig);
                     item.initMesh(itemConfig).then((nftImgData)=>{
+                        console.log('mesh ok, getting next spot');
                         let spot = that.config.layoutPlotter.getNextFreePos();
                       
                         let halfHeight = nftImgData.height/2;
-                        spot.pos.y = spot.pos.y+halfHeight;
-
+                        console.log('halfHeight: ',halfHeight,nftImgData);
+                        spot.pos.y = spot.pos.y+nftImgData.height;
+                        console.log('plot at spot: ',spot);
                         item.place(spot.pos).then((mesh,pos)=>{
-                            if(spot.rot){
+                            let lookAtTarget = that.center.clone();
+                                lookAtTarget.y = mesh.position.y;
+                                item.mesh.lookAt(lookAtTarget);
+                           /* if(spot.rot){
                                 mesh.rotateY(spot.rot.y);
-                            };
+                            };*/
 
                             items.push(item);
+                            console.log('placed and pushed');
+                            console.log(mesh);
                             that.items2d.push(item);                            
                             if(items.length===itemList.length){
                                 console.log('all items placed');
