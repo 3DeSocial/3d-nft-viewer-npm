@@ -304,6 +304,7 @@ const params = {
         environment = null;
         this.collider = null;
         this.moveTo = false;
+        this.mouseCoords = new THREE.Vector2();
         this.vrType = this.config.vrType;
         this.camPos = new THREE.Vector3();
         this.objectsInMotion = []; // use for things being thrown etc
@@ -337,12 +338,12 @@ const params = {
                                     bodies: this.bodies,
                                     scene: this.scene});
 
-        this.addGroundPlane();
+
         this.addWalls();
       //  this.cannonDebugRenderer = new CannonDebugRenderer(this.scene, world)
     }
 
-    addGroundPlane = () =>{
+    addGroundPlane = (y) =>{
         let floorWidth = 35;
         let floorLength = 35;
         const groundGeo = new THREE.PlaneGeometry(floorWidth, floorLength);
@@ -358,7 +359,7 @@ const params = {
             shape: new CANNON.Box(new CANNON.Vec3(floorWidth, floorLength, 0.1)),
             type: CANNON.Body.STATIC,
             material: this.groundPhysMat,
-            position: new CANNON.Vec3(0, -1.6927649250030519, 0)
+            position: new CANNON.Vec3(0,y, 0)
         });
         this.world.addBody(groundBody);
         groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
@@ -366,7 +367,26 @@ const params = {
     }
 
     addWalls = () =>{
-        let world = this.world;
+        switch(this.config.sceneryOptions.name){
+            case 'amphitheater':
+                this.setUpWallsAmphitheater();
+            break;
+            case 'art1':
+                this.setUpWallsArt1();
+            break;
+        };
+     
+    }
+
+    setUpWallsAmphitheater =  () =>{
+        this.addGroundPlane(0);
+    }
+
+    setUpWallsArt1 = () =>{
+
+        this.addGroundPlane(-1.6927649250030519);
+
+           let world = this.world;
         let floorWidth = 34;
         let floorLength = 40;        
         // Materials
@@ -377,33 +397,6 @@ const params = {
         })
         world.addContactMaterial(stone_stone)
 
-
-   /*     const groundGeo = new THREE.PlaneGeometry(floorWidth, floorLength);
-        const groundMat1 = new THREE.MeshBasicMaterial({ 
-            color: 0xff0000,
-            side: THREE.DoubleSide
-         });
-            const groundMat2 = new THREE.MeshBasicMaterial({ 
-            color: 0x00ff00,
-            side: THREE.DoubleSide
-         });
-        const groundMat3 = new THREE.MeshBasicMaterial({ 
-            color: 0x0000ff,
-            side: THREE.DoubleSide
-         });
-        const groundMat4 = new THREE.MeshBasicMaterial({ 
-            color: 0xffffff,
-            side: THREE.DoubleSide
-         });            
-        const wallMesh1 = new THREE.Mesh(groundGeo, groundMat1);
-        const wallMesh2 = new THREE.Mesh(groundGeo, groundMat2);
-        const wallMesh3 = new THREE.Mesh(groundGeo, groundMat3);
-        const wallMesh4 = new THREE.Mesh(groundGeo, groundMat4);                
-        this.scene.add(wallMesh1);
-        this.scene.add(wallMesh2);
-        this.scene.add(wallMesh3);
-        this.scene.add(wallMesh4);
-*/
         // Plane -x
 
         const planeShapeXmin = new CANNON.Body({
@@ -465,7 +458,6 @@ const params = {
        this.addCorner(7.5,8,1,0,2,6);
        this.addCorner(7.5,8,1,0,2,-6);       
     }
-
     addCorner = (l,h,d,x,y,z) =>{
 
         
@@ -583,10 +575,10 @@ const params = {
 
 
             this.loadScenery().then(()=>{
+                this.initPhysicsWorld();        
 
                 if(this.config.footballMode===true){
                     if(this.config.showBall){
-                        this.initPhysicsWorld();        
 
                     };
                     this.initFootball();                    
@@ -781,6 +773,7 @@ const params = {
         this.camera.rotation.set(0,0,0);
 
         this.raycaster = new THREE.Raycaster({camera:this.camera});
+        this.pRaycaster = new THREE.Raycaster();
 
     }
 
@@ -976,17 +969,20 @@ const params = {
                         that.resetBall();
                     break;
                     case 'Numpad4': 
-                        that.moveMeshLeft();
+                        //that.moveMeshLeft();
                     break;  
                     case 'Numpad6': 
-                        that.moveMeshRight();
+                        //that.moveMeshRight();
                     break;    
                     case 'Numpad8': 
-                        that.moveMeshForward();
+                        //that.moveMeshForward();
                     break;    
                     case 'Numpad2': 
-                        that.moveMeshBack();
+                        //that.moveMeshBack();
                     break;    
+                    case 'Enter':
+                        that.throwSnowBall();
+                    break;
                     case 'Digit0': that.inventory.setActive(0); break;
                     case 'Digit1': that.inventory.setActive(1); break;
                     case 'Digit2': that.inventory.setActive(2); break;
@@ -1056,14 +1052,14 @@ const params = {
     }
     addEventListenerMouseClick = ()=>{
         let that = this;
-        this.renderer.domElement.addEventListener( 'mousedown', this.checkMouse, false );
+       // this.renderer.domElement.addEventListener( 'mousedown', this.checkMouse, false );
         this.renderer.domElement.addEventListener( 'dblclick', this.checkMouseDbl, false );
 
     }
 
     checkMouse = (e) =>{
         let that = this;
-        let action = this.raycast(e);
+      //  let action = this.raycast(e);
         if(!action.selectedPoint){
             return false;
         };
@@ -1687,15 +1683,19 @@ const params = {
     }
 
     checkMouseDbl = (e) =>{
-        
+
         let action = this.raycast(e);
-       // this.updateOverlayPos(action.selectedPoint);
+     //   this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
             case 1:
-             this.showSelectedMeshData(action);
+            if(action){
+                this.showSelectedMeshData(action);
+            }
             break;
             default:
-                this.showSelectedMeshData(action);
+                this.mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
+                this.mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+                this.throwSnowBall();
             break;
         }
     }
@@ -1763,6 +1763,7 @@ const params = {
     }
 
     raycast = ( e ) => {
+        return false;
         var isRightMB;
         let isOnFloor = false;
         let isOnWall = false;
@@ -2469,7 +2470,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let ballMesh = footballItem.place(this.ballVector).then((mesh, pos)=>{
 
             const body = new CANNON.Body({
-                mass: 10,
+                mass: 8,
                 material: mat1,
             })
             body.position.copy(this.ballVector);
@@ -2487,6 +2488,40 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }
 
+    throwSnowBall = () =>{
+        console.log('throw');
+        let that = this;
+       
+        let startVector = this.getProjectileStartVector()
+        const ballMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFFFF } );
+    // Creates a ball and throws it
+        const ballMass = 5;
+        const ballRadius = 0.25;
+         var mat1 = new CANNON.Material();        
+        const ball = new THREE.Mesh( new THREE.SphereGeometry( ballRadius, 14, 10 ), ballMaterial );
+    this.scene.add(ball);
+        ball.castShadow = true;
+        ball.receiveShadow = true;
+        const ballShape = new CANNON.Sphere( ballRadius );
+
+        const body = new CANNON.Body({
+            mass: ballMass,
+            material: mat1,
+        })
+        body.position.copy(startVector);
+        body.addShape(ballShape);
+        body.linearDamping = 0.01;            
+        body.threeMesh = ball;
+        that.world.addBody(body)
+        that.bodies.push(body); 
+
+        // calc impulse direction
+        startVector.copy( this.pRaycaster.ray.direction );
+        startVector.multiplyScalar( 40 );
+
+        body.applyImpulse(startVector);
+    }
+
     createBallMesh = (size)=>{
     let itemConfig = {  scene: this.scene,
                             format: 'glb',
@@ -2500,6 +2535,34 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         return football;
 
     }
+
+    getProjectileStartVector = () =>{
+        if (this.renderer.xr.isPresenting === true) {
+            return this.getVRStartVector();
+
+        } else {
+            return this.getScreenStartVector();
+        }
+
+
+    }
+
+    getScreenStartVector = () =>{
+        let pos = new THREE.Vector3();
+        this.pRaycaster.setFromCamera( this.mouse, this.camera );
+        pos.copy( this.pRaycaster.ray.direction );
+        pos.add( this.pRaycaster.ray.origin );
+        return pos;
+    }
+
+    getVRStartVector = () =>{
+        let pos = new THREE.Vector3();
+        // get controller line
+        //get direction vector based on origin and dest
+        // return as vector3
+        return pos;
+    }
+
     initGhost = () =>{
         if(this.renderer.xr.isPresenting){
             return false;
