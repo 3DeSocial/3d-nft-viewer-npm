@@ -322,13 +322,15 @@ const params = {
         this.claimed = false;
         this.currentAudio = null;
         this.audioTracks = [];
+        this.workingMatrix = new THREE.Matrix4();
+
     }
 
     initPhysicsWorld = () =>{
         this.dt = 1.0/90.0;
         this.damping = 0.01;
         const world = new CANNON.World();
-              world.gravity.set(0,-15,0);
+              world.gravity.set(0,-20,0);
               world.broadphase = new CANNON.NaiveBroadphase();
 
         this.world = world; 
@@ -674,7 +676,6 @@ const params = {
                 receiveShadow : false},
                 ...that.config.sceneryOptions
             };
-
             that.sceneryLoader = new SceneryLoader(sceneryOptions);
             that.sceneryLoader.loadScenery()
             .then((gltf)=>{
@@ -981,7 +982,7 @@ const params = {
                         //that.moveMeshBack();
                     break;    
                     case 'Enter':
-                        that.throwSnowBall();
+                        that.throwSnowBall(e, null);
                     break;
                     case 'Digit0': that.inventory.setActive(0); break;
                     case 'Digit1': that.inventory.setActive(1); break;
@@ -1695,7 +1696,7 @@ const params = {
             default:
                 this.mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
                 this.mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
-                this.throwSnowBall();
+                this.throwSnowBall(e, null);
             break;
         }
     }
@@ -2488,15 +2489,15 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }
 
-    throwSnowBall = () =>{
+    throwSnowBall = (e,controller) =>{
         console.log('throw');
         let that = this;
        
-        let startVector = this.getProjectileStartVector()
+        let startVector = this.getProjectileStartVector(e, controller);
         const ballMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFFFF } );
     // Creates a ball and throws it
-        const ballMass = 5;
-        const ballRadius = 0.25;
+        const ballMass = 2;
+        const ballRadius = 0.2;
          var mat1 = new CANNON.Material();        
         const ball = new THREE.Mesh( new THREE.SphereGeometry( ballRadius, 14, 10 ), ballMaterial );
     this.scene.add(ball);
@@ -2517,7 +2518,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
         // calc impulse direction
         startVector.copy( this.pRaycaster.ray.direction );
-        startVector.multiplyScalar( 40 );
+        startVector.multiplyScalar( 50 );
 
         body.applyImpulse(startVector);
     }
@@ -2536,9 +2537,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }
 
-    getProjectileStartVector = () =>{
+    getProjectileStartVector = (e,controller) =>{
         if (this.renderer.xr.isPresenting === true) {
-            return this.getVRStartVector();
+            return this.getVRStartVector(controller);
 
         } else {
             return this.getScreenStartVector();
@@ -2555,10 +2556,18 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         return pos;
     }
 
-    getVRStartVector = () =>{
+    getVRStartVector = (controller) =>{
         let pos = new THREE.Vector3();
         // get controller line
+        const line = controller.getObjectByName( 'ray' );
+        this.workingMatrix.identity().extractRotation( controller.matrixWorld );
+        this.pRaycaster.ray.origin.setFromMatrixPosition( controller.matrixWorld );
+        this.pRaycaster.ray.direction.set( 0, 0, - 1 ).applyMatrix4( this.workingMatrix );
+
         //get direction vector based on origin and dest
+        pos.copy( this.pRaycaster.ray.direction );
+        pos.add( this.pRaycaster.ray.origin );
+
         // return as vector3
         return pos;
     }
@@ -3085,7 +3094,19 @@ console.log('staer vr session');
                                             cancelRotate: ()=>{
                                                 that.controlProxy.isRotating = false;
                                                 that.controlProxy.rot = null;
-                                            }
+                                            },
+                                            onSelectStartLeft: (e,controller)=>{
+                                               console.log(controller.line);
+                                            },
+                                            onSelectEndLeft: (e,controller)=>{
+                                            },
+                                            onSelectStartRight: (e,controller)=>{
+                                               console.log(controller.line);
+                                               this.throwSnowBall(e,controller)
+
+                                            },
+                                            onSelectEndRight: (e,controller)=>{
+                                            }                                            
                                         });
 
         this.playerVR = new PlayerVR({  controllers: this.vrControls.controllers,

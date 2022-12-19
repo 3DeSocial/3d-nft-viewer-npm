@@ -50,20 +50,16 @@ class VRControls {
             onSelectEnd: () => {
 
             },
-             onSelectStartLeft: ()=>{
-                                            //    that.controlProxy.rot = 'rl';                                                
-                                            },
-                                            onSelectEndLeft: ()=>{
-                                           //  console.log('onSelectEnd paddle up')   
-                                            },
-                                            onSelectStartRight: ()=>{
-                                              //  console.log('onSelectStart paddle down')   
-;
-                                            //    that.controlProxy.rot = 'rl';                                                
-                                            },
-                                            onSelectEndRight: ()=>{
-                                           //  console.log('onSelectEnd paddle up')   
-                                            },
+             onSelectStartLeft: (e)=>{
+
+            },
+            onSelectEndLeft: (e)=>{
+
+            },
+            onSelectStartRight: (e)=>{
+            },
+            onSelectEndRight: (e)=>{
+            }
 
 		};
 
@@ -90,21 +86,29 @@ class VRControls {
     }
 
     buildControllers = () =>{
-
+        let that = this;
         this.controllers = [];
         this.grips = [];
         // controllers
         let controller1 = this.renderer.xr.getController(0);
         controller1.name = 'left';
-        controller1.addEventListener("selectstart", this.config.onSelectStartLeft);
-        controller1.addEventListener("selectend", this.config.onSelectEndLeft);
+        controller1.addEventListener("selectstart", (e)=>{
+            that.config.onSelectStartLeft(e,controller1);
+        });
+        controller1.addEventListener("selectend", ("selectstart", (e)=>{
+            that.config.onSelectEndLeft(e,controller1);
+        }));
       //  this.scene.add(controller1);
         this.controllers.push(controller1);
 
         let controller2 = this.renderer.xr.getController(1);
         controller2.name = 'right';
-        controller2.addEventListener("selectstart", this.config.onSelectStartRight);
-        controller2.addEventListener("selectend", this.config.onSelectEndRight);
+        controller2.addEventListener("selectstart", (e)=>{
+            that.config.onSelectStartRight(e,controller2);
+        });
+        controller2.addEventListener("selectend", (e)=>{
+            that.config.onSelectEndRight(e,controller2);
+        });
        // this.scene.add(controller2);
         this.controllers.push(controller2);
 
@@ -129,9 +133,12 @@ class VRControls {
         var line = new THREE.Line(geometry);
         line.name = 'line';
         line.scale.z = 5;
-
-        controller1.add(line.clone());
-        controller2.add(line.clone());
+        let line1 = line.clone();
+        let line2 = line.clone();
+        controller1.add(line1);
+        controller2.add(line2);
+        controller1.line = line1;
+        controller2.line = line2;
     }
 
     checkControllers = () =>{
