@@ -600,11 +600,13 @@ const params = {
                     that.initVR();
                 }   
 
-
-                this.initBranding();
+                if(this.config.isCurated){
+                    this.initBranding();
+                    this.initSnowFall();
+                };
 
                 this.renderer.render(this.scene,this.camera);
-                this.initSnowFall();
+
                 this.animate();
                 sceneryloadingComplete = true;
 
@@ -1053,17 +1055,18 @@ const params = {
     }
     addEventListenerMouseClick = ()=>{
         let that = this;
-       // this.renderer.domElement.addEventListener( 'mousedown', this.checkMouse, false );
+        this.renderer.domElement.addEventListener( 'mousedown', this.checkMouse, false );
         this.renderer.domElement.addEventListener( 'dblclick', this.checkMouseDbl, false );
 
     }
 
     checkMouse = (e) =>{
         let that = this;
-      //  let action = this.raycast(e);
+        let action = this.raycast(e);
         if(!action.selectedPoint){
             return false;
         };
+        console.log('action.btnIndex: ',action.btnIndex);
         switch(parseInt(action.btnIndex)){
             case 1:
             if((action.isOnFloor)&&(!action.isOnWall)){
@@ -1686,6 +1689,8 @@ const params = {
     checkMouseDbl = (e) =>{
 
         let action = this.raycast(e);
+        console.log('action.btnIndex: ',action.btnIndex);
+        
      //   this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
             case 1:

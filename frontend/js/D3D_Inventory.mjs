@@ -145,8 +145,8 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                       
                         let halfHeight = nftImgData.height/2;
                       //  console.log('halfHeight: ',halfHeight,nftImgData);
-                        spot.pos.y = spot.pos.y+nftImgData.height;
-                        item.place(spot.pos).then((mesh,pos)=>{
+                            spot.pos.y = spot.pos.y+halfHeight;
+                         item.place(spot.pos).then((mesh,pos)=>{
                             let lookAtTarget = that.center.clone();
                                 lookAtTarget.y = mesh.position.y;
                                 item.mesh.lookAt(lookAtTarget);
