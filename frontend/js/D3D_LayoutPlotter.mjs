@@ -5,7 +5,8 @@ export default class LayoutPlotter  {
     constructor(config) {
         let defaults = {
                  items: [],
-                 floorY: 0,
+                 floorY: -1,
+                 ceilY: 8,
                  inventory: null,
                  sceneryLoader: null
                 };
@@ -257,22 +258,25 @@ export default class LayoutPlotter  {
 
         let circles = (this.sceneryLoader.circles)?this.sceneryLoader.circles:[];
             circles.forEach((circle,idx)=>{
-                console.log('initPosQ circle.yOffset',circle.yOffset);
-                circle.center = {x:0,y:0,z:0};
-                if(idx % 2){
-                    circle.spots = this.calcCircleSpots(circle); // get list of spots
-                 } else {
-                    circle.spots = this.calcCircleSpotsOffset(circle); // get list of spots
-                };
-                let noPos = circle.spots.length;
-                circle.spots.forEach((spot, idx)=>{
-                    spot.rot = null; // look at center for circel layout
-                    if(circle.yOffset){
-                        spot.y = spot.y + circle.yOffset;
-                    }
-                    spot.idx = idx;
-                    that.posQ.push(spot); 
-                })
+                if(!circle.name){
+                    console.log('initPosQ circle.yOffset',circle.yOffset);
+                    circle.center = {x:0,y:0,z:0};
+                    if(idx % 2){
+                        circle.spots = this.calcCircleSpots(circle); // get list of spots
+                     } else {
+                        circle.spots = this.calcCircleSpotsOffset(circle); // get list of spots
+                    };
+                    let noPos = circle.spots.length;
+                    circle.spots.forEach((spot, idx)=>{
+                        spot.rot = null; // look at center for circel layout
+                        if(circle.yOffset){
+                            spot.y = spot.y + circle.yOffset;
+                        }
+                        spot.idx = idx;
+                        that.posQ.push(spot); 
+                    })                    
+                }
+               
             }); 
 
         this.posQ3D = [];
@@ -316,7 +320,6 @@ export default class LayoutPlotter  {
 
         for (var i = noItems - 1; i >= 0; i--) {
             if(i % 2){
-                console.log('calcCircleSpots:', i);
                 let spot = {idx:i};
                 let angle = ((2*Math.PI) / noItems) * i;
                 let xCoord = Math.sin(angle) * radius;
@@ -324,17 +327,17 @@ export default class LayoutPlotter  {
                 let plotPoint = new THREE.Vector3(xCoord,0,zCoord);
                 // find floor or surface at this coord in the scenery
               //  let ceil = this.config.sceneryLoader.findFloorAt(plotPoint, 10, 0);
-                let floor = this.config.sceneryLoader.findFloorAt(plotPoint, 8, -1);
+                let floor = this.config.sceneryLoader.findFloorAt(plotPoint, this.config.ceilY, this.config.floorY);
                 // set Y for new position
-                //plotPoint.setY(floor);
+                if (circle.yOffset) {
+                    floor = floor+circle.yOffset;
+                };
                     let pos = {x:xCoord,y:floor,z:zCoord};
                         spot.pos = pos;
                         spot.dims = {width:10, height: 10, depth: 10};
 
                         spot.target = center;
                     spots.push(spot);
-            } else {
-                console.log(' calcCircleSpots i%2 is false');
             }
 
 
@@ -354,8 +357,6 @@ export default class LayoutPlotter  {
 
         for (var i = noItems - 1; i >= 0; i--) {
             if(!(i % 2)){
-                                console.log('calcCircleSpotsOffset:', i);
-
             let spot = {idx:i};
             let angle = ((2*Math.PI) / noItems) * i;
             let xCoord = Math.sin(angle) * radius;
@@ -363,7 +364,7 @@ export default class LayoutPlotter  {
             let plotPoint = new THREE.Vector3(xCoord,0,zCoord);
             // find floor or surface at this coord in the scenery
           //  let ceil = this.config.sceneryLoader.findFloorAt(plotPoint, 10, 0);
-            let floor = this.config.sceneryLoader.findFloorAt(plotPoint, 8, -1);
+            let floor = this.config.sceneryLoader.findFloorAt(plotPoint, this.config.ceilY, this.config.floorY);
             // set Y for new position
             //plotPoint.setY(floor);
                 if(circle.yOffset){
@@ -376,8 +377,6 @@ export default class LayoutPlotter  {
                     spot.dims = {width:10, height: 10, depth: 10};
                     spot.target = center;
                 spots.push(spot);
-            } else {
-                console.log(' calcCircleSpotsOffset i%2 is true');
             }
 
         }

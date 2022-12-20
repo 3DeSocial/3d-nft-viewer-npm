@@ -242,10 +242,7 @@ export default class Item {
                 that.scene.add(this.mesh);
                 that.fixYCoord(this.mesh, pos);
                 if(that.config.physicsWorld){
-                    console.log('item has physics world');
                     that.addToPhysicsWorld();
-                } else {
-                    console.log('NO physics world, is isFootballPlayer? ',this.isFootballPlayer);
                 }
 
                 resolve(this.mesh, pos);

@@ -603,6 +603,7 @@ const params = {
                 if(this.config.isCurated){
                     this.initBranding();
                     this.initSnowFall();
+                    this.initSnowMen();
                 };
 
                 this.renderer.render(this.scene,this.camera);
@@ -647,6 +648,15 @@ const params = {
     initSnowFall = () =>{
         this.snowFall = new SnowFall({scene:this.scene});
         console.log('started snow');
+    }
+
+    initSnowMen = () =>{
+        let that = this;
+        let snowMenLayout = this.sceneryLoader.circles.filter(circle => (circle.name==='snowmen'));
+            snowMenLayout[0].spots = this.layoutPlotter.calcCircleSpots(snowMenLayout[0]);
+        snowMenLayout[0].spots.forEach((spot)=>{
+            that.addSnowMan(spot.pos);
+        })
     }
     initLoader = (ownerData) =>{
         this.loadingScreen = new LoadingScreen(ownerData);
@@ -1066,7 +1076,7 @@ const params = {
         if(!action.selectedPoint){
             return false;
         };
-        console.log('action.btnIndex: ',action.btnIndex);
+       // console.log('action.btnIndex: ',action.btnIndex);
         switch(parseInt(action.btnIndex)){
             case 1:
             if((action.isOnFloor)&&(!action.isOnWall)){
@@ -1181,13 +1191,12 @@ const params = {
 
     selectTargetNFT = (action) =>{
         let tracks = [];
-                console.log('selectTargetNFT: ');
-        console.log(action);
+
         this.actionTargetMesh = null;
         let that = this;
+
         let item = this.getItemForAction(action)
-        console.log('got Item:');
-        console.log(item);
+
         if(item){
             if(item.isGhost||item.isFootballPlayer||item.isFootball){
                 this.actionTargetPos = item.getPosition();       
@@ -1689,7 +1698,7 @@ const params = {
     checkMouseDbl = (e) =>{
 
         let action = this.raycast(e);
-        console.log('action.btnIndex: ',action.btnIndex);
+       // console.log('action.btnIndex: ',action.btnIndex);
         
      //   this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
@@ -1846,7 +1855,6 @@ const params = {
             dest.setY(-1000); //raycast downwards from selected point.
         let dir = new THREE.Vector3();
         dir.subVectors( dest, origin ).normalize();
-        console.log(origin,dir);        
         raycaster.set(origin,dir);
         var intersects = raycaster.intersectObjects( this.scene.children, true );
         let hit;
@@ -1875,7 +1883,6 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         let dest = selectedPoint.clone();
             dest.setZ(this.player.position.z); //raycast downwards from selected point.
         let dir = new THREE.Vector3();
-        console.log(origin,dir);        
         dir.subVectors( dest, origin ).normalize();
         raycaster.set(origin,dir);
         var intersects = raycaster.intersectObjects( this.scene.children, true );
@@ -1898,9 +1905,6 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         let item = this.inventory.getItemByHash(nftPostHashHex);
         if(item){
             item.place(pos);
-          //  console.log('item placed');     
-        } else {
-            console.log('item not in inventory: ',nftPostHashHex);
         }
 
     }
@@ -1909,9 +1913,6 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         let item = this.inventory.getActiveItem();
         if(item){
             item.place(pos);
-            console.log('item placed');     
-        } else {
-            console.log('no active item');
         }
 
     } 
@@ -2532,9 +2533,57 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
 
         // calc impulse direction
         startVector.copy( this.pRaycaster.ray.direction );
-        startVector.multiplyScalar( 50 );
+        startVector.multiplyScalar( 80 );
 
         body.applyImpulse(startVector);
+    }
+
+    addSnowMan = (pos) =>{
+
+        let that = this;
+
+        let ballPos = new THREE.Vector3(pos.x,pos.y,pos.z);
+        const ballMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFFFF } );
+    // Creates a ball and throws it
+        const ballMass = 1;
+        const ballRadius = 2;
+         var mat1 = new CANNON.Material();        
+        const ball = new THREE.Mesh( new THREE.SphereGeometry( ballRadius, 14, 10 ), ballMaterial );
+                this.scene.add(ball);
+        ball.castShadow = true;
+        ball.receiveShadow = true;
+        const ballShape = new CANNON.Sphere( ballRadius );
+
+        const body = new CANNON.Body({
+            mass: ballMass,
+            material: mat1,
+            type: CANNON.Body.STATIC
+        })
+        body.position.copy(ballPos);
+        body.addShape(ballShape);
+        body.linearDamping = 0.01;            
+        body.threeMesh = ball;
+        that.world.addBody(body)
+        that.bodies.push(body);         
+
+        const headRadius = ballRadius/1.5; 
+        const headMesh = new THREE.Mesh( new THREE.SphereGeometry( headRadius, 14, 10 ), ballMaterial );
+                this.scene.add(headMesh);
+        headMesh.castShadow = true;
+        headMesh.receiveShadow = true;
+        const ballShape2 = new CANNON.Sphere( headRadius );
+
+        const head = new CANNON.Body({
+            mass: ballMass,
+            material: mat1
+        })
+        ballPos.y = ballPos.y+headRadius*1.5;
+        head.position.copy(ballPos);
+        head.addShape(ballShape2);
+        head.linearDamping = 0.01;            
+        head.threeMesh = headMesh;
+        that.world.addBody(head)
+        that.bodies.push(head);                 
     }
 
     createBallMesh = (size)=>{
@@ -2823,17 +2872,27 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                                         });*/
         this.sceneInventory = null;
         if(options.sceneAssets){
-            this.layoutPlotter = new LayoutPlotter({
-                                                 camera: this.camera,
-                                                 scene: this.scene,
-                                                 sceneryLoader: this.sceneryLoader});  
+
+            let plotterOpts ={
+             camera: this.camera,
+             scene: this.scene,
+             sceneryLoader: this.sceneryLoader}
+
+            if(this.config.isCurated){
+                plotterOpts.ceilY = 60;
+                plotterOpts.floorY = -1;
+
+            };
+
+            this.layoutPlotter = new LayoutPlotter(plotterOpts);  
             
             let maxItems =this.layoutPlotter.getMaxItemCount();
-            console.log('sceneAssts: ', options.sceneAssets);
             let items2d = options.sceneAssets.filter(nft => ((!nft.is3D)&&(nft.imageURLs[0])));     
+            console.log('items2d: ', items2d);
 
             let maxItems3D =this.layoutPlotter.getMaxItemCount3D();
             let items3d = options.sceneAssets.filter(nft => nft.is3D);
+            console.log('items3d: ', items3d);
 
             let spookyNFTs = options.sceneAssets.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'||nft.postHashHex=='8e0bbd53cd4932294649c109957167e385367836f0ec39cc4cc3d04691fffca7'));
             this.ghosts = spookyNFTs.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'));
@@ -3165,19 +3224,13 @@ console.log('staer vr session');
         if(this.sceneryMesh){
             this.scene.remove(this.sceneryMesh);
             this.unRestrictCamera();
-        }else {
-            console.log('no scenerymesh to remove');
         }
     }    
 
     removeFloor = () =>{
         if(this.sceneryMesh){
-                    console.log('removeScenery: OK');
-
             this.scene.remove(this.sceneryMesh);
             this.unRestrictCamera();
-        } else {
-            console.log('no scenerymesh to remove');
         }
     }
 
