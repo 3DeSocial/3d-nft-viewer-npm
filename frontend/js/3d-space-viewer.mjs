@@ -1694,9 +1694,14 @@ const params = {
      //   this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
             case 1:
-            if(action){
-                this.showSelectedMeshData(action);
-            }
+                if(this.config.isCurated){
+                    let x = ( e.clientX / window.innerWidth ) * 2 - 1;
+                    let y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+                    this.mouse.set(x,y);
+                    this.throwSnowBall(e, null);                    
+                } else {
+                    this.showSelectedMeshData(action);
+                }
             break;
             default:
                 let x = ( e.clientX / window.innerWidth ) * 2 - 1;

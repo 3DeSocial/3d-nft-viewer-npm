@@ -50,7 +50,6 @@ export default class LayoutPlotter  {
             console.log('plotting 2D')
             //create outer circle layut for 2D
             if(this.sceneryLoader.hasCircleLayout()){
-                console.log('HAS circle layout');
                 this.plotCircles();
             };
 
@@ -58,7 +57,6 @@ export default class LayoutPlotter  {
         }
 
         if(this.sceneryLoader.hasListLayout()){
-            console.log('list layout detected');
             this.plotList2d();
         } else {
             console.log('no list layout');
@@ -108,8 +106,6 @@ export default class LayoutPlotter  {
                 } else {
                     that.plotCircleOffsetHalf(items,center,circle.radius);
                 };
-                console.log('plotted circle: ',idx);
-
             });
 
 
@@ -240,9 +236,7 @@ export default class LayoutPlotter  {
         if(!this.posQ){
             this.initPosQ();
         };
-        console.log('getNextFreePos3d, places: ',this.posQ3D.length);
         let spot = this.posQ3D.shift();
-        console.log('next spot',spot);
         return spot;
       
     }
@@ -263,22 +257,18 @@ export default class LayoutPlotter  {
 
         let circles = (this.sceneryLoader.circles)?this.sceneryLoader.circles:[];
             circles.forEach((circle,idx)=>{
+                console.log('initPosQ circle.yOffset',circle.yOffset);
                 circle.center = {x:0,y:0,z:0};
                 if(idx % 2){
                     circle.spots = this.calcCircleSpots(circle); // get list of spots
-                    console.log('not offset spots: ',circle.spots);
                  } else {
                     circle.spots = this.calcCircleSpotsOffset(circle); // get list of spots
-                    console.log('circle offset spots: ',circle.spots);
                 };
                 let noPos = circle.spots.length;
                 circle.spots.forEach((spot, idx)=>{
+                    spot.rot = null; // look at center for circel layout
                     if(circle.yOffset){
                         spot.y = spot.y + circle.yOffset;
-                    } else {
-                        let lookAtTarget = that.center.clone();
-                            lookAtTarget.y = mesh.position.y;
-                            item.mesh.lookAt(lookAtTarget);
                     }
                     spot.idx = idx;
                     that.posQ.push(spot); 
@@ -340,8 +330,7 @@ export default class LayoutPlotter  {
                     let pos = {x:xCoord,y:floor,z:zCoord};
                         spot.pos = pos;
                         spot.dims = {width:10, height: 10, depth: 10};
-                        let rotY = Math.atan2( ( center.x - center.x ), ( center.z - center.z ) );
-                        spot.rot = {x:0,y:rotY,z:0};
+
                         spot.target = center;
                     spots.push(spot);
             } else {
@@ -377,11 +366,14 @@ export default class LayoutPlotter  {
             let floor = this.config.sceneryLoader.findFloorAt(plotPoint, 8, -1);
             // set Y for new position
             //plotPoint.setY(floor);
+                if(circle.yOffset){
+                    floor = floor+circle.yOffset;
+                };
+                
                 let pos = {x:xCoord,y:floor,z:zCoord};
+
                     spot.pos = pos;
                     spot.dims = {width:10, height: 10, depth: 10};
-                    let rotY = Math.atan2( ( center.x - center.x ), ( center.z - center.z ) );
-                    spot.rot = {x:0,y:rotY,z:0};
                     spot.target = center;
                 spots.push(spot);
             } else {
