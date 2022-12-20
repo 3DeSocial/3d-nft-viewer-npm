@@ -7,7 +7,7 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { PlayerVR, AudioClipRemote, Physics, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { SnowFall, PlayerVR, AudioClipRemote, Physics, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -304,9 +304,9 @@ const params = {
         environment = null;
         this.collider = null;
         this.moveTo = false;
+        this.mouseCoords = new THREE.Vector2();
         this.vrType = this.config.vrType;
         this.camPos = new THREE.Vector3();
-        this.raycaster = new THREE.Raycaster();
         this.objectsInMotion = []; // use for things being thrown etc
         this.initLoader(this.config.owner);
         this.dirCalc = new THREE.Vector3(1, 1, 1);
@@ -322,13 +322,15 @@ const params = {
         this.claimed = false;
         this.currentAudio = null;
         this.audioTracks = [];
+        this.workingMatrix = new THREE.Matrix4();
+
     }
 
     initPhysicsWorld = () =>{
         this.dt = 1.0/90.0;
         this.damping = 0.01;
         const world = new CANNON.World();
-              world.gravity.set(0,-15,0);
+              world.gravity.set(0,-20,0);
               world.broadphase = new CANNON.NaiveBroadphase();
 
         this.world = world; 
@@ -338,12 +340,12 @@ const params = {
                                     bodies: this.bodies,
                                     scene: this.scene});
 
-        this.addGroundPlane();
+
         this.addWalls();
       //  this.cannonDebugRenderer = new CannonDebugRenderer(this.scene, world)
     }
 
-    addGroundPlane = () =>{
+    addGroundPlane = (y) =>{
         let floorWidth = 35;
         let floorLength = 35;
         const groundGeo = new THREE.PlaneGeometry(floorWidth, floorLength);
@@ -359,7 +361,7 @@ const params = {
             shape: new CANNON.Box(new CANNON.Vec3(floorWidth, floorLength, 0.1)),
             type: CANNON.Body.STATIC,
             material: this.groundPhysMat,
-            position: new CANNON.Vec3(0, -1.6927649250030519, 0)
+            position: new CANNON.Vec3(0,y, 0)
         });
         this.world.addBody(groundBody);
         groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
@@ -367,7 +369,26 @@ const params = {
     }
 
     addWalls = () =>{
-        let world = this.world;
+        switch(this.config.sceneryOptions.name){
+            case 'amphitheater':
+                this.setUpWallsAmphitheater();
+            break;
+            case 'art1':
+                this.setUpWallsArt1();
+            break;
+        };
+     
+    }
+
+    setUpWallsAmphitheater =  () =>{
+        this.addGroundPlane(0);
+    }
+
+    setUpWallsArt1 = () =>{
+
+        this.addGroundPlane(-1.6927649250030519);
+
+           let world = this.world;
         let floorWidth = 34;
         let floorLength = 40;        
         // Materials
@@ -378,33 +399,6 @@ const params = {
         })
         world.addContactMaterial(stone_stone)
 
-
-   /*     const groundGeo = new THREE.PlaneGeometry(floorWidth, floorLength);
-        const groundMat1 = new THREE.MeshBasicMaterial({ 
-            color: 0xff0000,
-            side: THREE.DoubleSide
-         });
-            const groundMat2 = new THREE.MeshBasicMaterial({ 
-            color: 0x00ff00,
-            side: THREE.DoubleSide
-         });
-        const groundMat3 = new THREE.MeshBasicMaterial({ 
-            color: 0x0000ff,
-            side: THREE.DoubleSide
-         });
-        const groundMat4 = new THREE.MeshBasicMaterial({ 
-            color: 0xffffff,
-            side: THREE.DoubleSide
-         });            
-        const wallMesh1 = new THREE.Mesh(groundGeo, groundMat1);
-        const wallMesh2 = new THREE.Mesh(groundGeo, groundMat2);
-        const wallMesh3 = new THREE.Mesh(groundGeo, groundMat3);
-        const wallMesh4 = new THREE.Mesh(groundGeo, groundMat4);                
-        this.scene.add(wallMesh1);
-        this.scene.add(wallMesh2);
-        this.scene.add(wallMesh3);
-        this.scene.add(wallMesh4);
-*/
         // Plane -x
 
         const planeShapeXmin = new CANNON.Body({
@@ -466,7 +460,6 @@ const params = {
        this.addCorner(7.5,8,1,0,2,6);
        this.addCorner(7.5,8,1,0,2,-6);       
     }
-
     addCorner = (l,h,d,x,y,z) =>{
 
         
@@ -570,7 +563,7 @@ const params = {
         let nftLoadingComplete = false;
         return new Promise((resolve, reject) => {
             let that = this;
-            this.mouse = { x : 0, y : 0 };
+            this.mouse = new THREE.Vector2(0,0,0);
             this.getContainer(this.config.el);
 
             this.initScene();
@@ -584,10 +577,10 @@ const params = {
 
 
             this.loadScenery().then(()=>{
+                this.initPhysicsWorld();        
 
                 if(this.config.footballMode===true){
                     if(this.config.showBall){
-                        this.initPhysicsWorld();        
 
                     };
                     this.initFootball();                    
@@ -606,6 +599,12 @@ const params = {
                 if ( 'xr' in navigator ) {
                     that.initVR();
                 }   
+
+                if(this.config.isCurated){
+                    this.initBranding();
+                    this.initSnowFall();
+                };
+
                 this.renderer.render(this.scene,this.camera);
 
                 this.animate();
@@ -636,6 +635,8 @@ const params = {
 
 
 
+
+
             });
 
   
@@ -643,6 +644,10 @@ const params = {
         });
     }
 
+    initSnowFall = () =>{
+        this.snowFall = new SnowFall({scene:this.scene});
+        console.log('started snow');
+    }
     initLoader = (ownerData) =>{
         this.loadingScreen = new LoadingScreen(ownerData);
         this.loadingScreen.render('.loader-ctr');
@@ -673,7 +678,6 @@ const params = {
                 receiveShadow : false},
                 ...that.config.sceneryOptions
             };
-
             that.sceneryLoader = new SceneryLoader(sceneryOptions);
             that.sceneryLoader.loadScenery()
             .then((gltf)=>{
@@ -771,7 +775,9 @@ const params = {
         this.camera.add( this.audioListener );
         this.camera.rotation.set(0,0,0);
 
-       // this.camera.lookAt(this.config.lookAtStartPos);
+        this.raycaster = new THREE.Raycaster({camera:this.camera});
+        this.pRaycaster = new THREE.Raycaster();
+
     }
 
     initCamera = () =>{
@@ -966,17 +972,20 @@ const params = {
                         that.resetBall();
                     break;
                     case 'Numpad4': 
-                        that.moveMeshLeft();
+                        //that.moveMeshLeft();
                     break;  
                     case 'Numpad6': 
-                        that.moveMeshRight();
+                        //that.moveMeshRight();
                     break;    
                     case 'Numpad8': 
-                        that.moveMeshForward();
+                        //that.moveMeshForward();
                     break;    
                     case 'Numpad2': 
-                        that.moveMeshBack();
+                        //that.moveMeshBack();
                     break;    
+                    case 'Enter':
+                        that.throwSnowBall(e, null);
+                    break;
                     case 'Digit0': that.inventory.setActive(0); break;
                     case 'Digit1': that.inventory.setActive(1); break;
                     case 'Digit2': that.inventory.setActive(2); break;
@@ -1057,6 +1066,7 @@ const params = {
         if(!action.selectedPoint){
             return false;
         };
+        console.log('action.btnIndex: ',action.btnIndex);
         switch(parseInt(action.btnIndex)){
             case 1:
             if((action.isOnFloor)&&(!action.isOnWall)){
@@ -1677,15 +1687,27 @@ const params = {
     }
 
     checkMouseDbl = (e) =>{
-        
+
         let action = this.raycast(e);
-       // this.updateOverlayPos(action.selectedPoint);
+        console.log('action.btnIndex: ',action.btnIndex);
+        
+     //   this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
             case 1:
-             this.showSelectedMeshData(action);
+                if(this.config.isCurated){
+                    let x = ( e.clientX / window.innerWidth ) * 2 - 1;
+                    let y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+                    this.mouse.set(x,y);
+                    this.throwSnowBall(e, null);                    
+                } else {
+                    this.showSelectedMeshData(action);
+                }
             break;
             default:
-                this.showSelectedMeshData(action);
+                let x = ( e.clientX / window.innerWidth ) * 2 - 1;
+                let y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+                this.mouse.set(x,y);
+                this.throwSnowBall(e, null);
             break;
         }
     }
@@ -1779,18 +1801,23 @@ const params = {
     // Step 1: Detect light helper
         //1. sets the this.mouse position with a coordinate system where the center
         //   of the screen is the origin
-        this.mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
-        this.mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+        let x = ( e.clientX / window.innerWidth ) * 2 - 1;
+        let y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+        this.mouse.set(x,y);
 
         //2. set the picking ray from the camera position and this.mouse coordinates
-        this.raycaster.setFromCamera( this.mouse, this.camera );    
-
+        if(!(this.mouse)||!(this.camera)){
+            return false;
+        };
+        try{
+            let raycaster = new THREE.Raycaster();            
+                raycaster.setFromCamera( this.mouse, this.camera );    
         //3. compute intersections (note the 2nd parameter)
-        var intersects = this.raycaster.intersectObjects( this.scene.children, true );
+        var intersects = raycaster.intersectObjects( this.scene.children, true );
         let floorLevel;
         if(intersects[0]){
-            isOnFloor = this.isOnFloor(intersects[0].point);
-            isOnWall = this.isOnWall(intersects[0].point);
+            isOnFloor = this.isOnFloor(raycaster, intersects[0].point);
+            isOnWall = this.isOnWall(raycaster, intersects[0].point);
         };
         return {
             isOnFloor: isOnFloor,
@@ -1799,9 +1826,18 @@ const params = {
             selectedPoint: (intersects[0])?intersects[0].point:null,
             selection: (intersects[0])?intersects[0]:null,
         }
+
+        } catch (error) {
+          console.log(error);
+          return false;
+
+        }
+
+
+       
     }
 
-    isOnFloor = (selectedPoint, meshToCheck) =>{
+    isOnFloor = (raycaster, selectedPoint, meshToCheck) =>{
 
         let origin = selectedPoint.clone();
             origin.setY(origin.y+2);
@@ -1810,8 +1846,9 @@ const params = {
             dest.setY(-1000); //raycast downwards from selected point.
         let dir = new THREE.Vector3();
         dir.subVectors( dest, origin ).normalize();
-        this.raycaster.set(origin,dir);
-        var intersects = this.raycaster.intersectObjects( this.scene.children, true );
+        console.log(origin,dir);        
+        raycaster.set(origin,dir);
+        var intersects = raycaster.intersectObjects( this.scene.children, true );
         let hit;
         if(intersects[0]){   
             hit = intersects[0];
@@ -1832,16 +1869,16 @@ const params = {
 
     }
 
-isOnWall = (selectedPoint, meshToCheck) =>{
+isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         let origin = selectedPoint.clone();
          //   origin.setZ(origin.z-1);
         let dest = selectedPoint.clone();
             dest.setZ(this.player.position.z); //raycast downwards from selected point.
         let dir = new THREE.Vector3();
+        console.log(origin,dir);        
         dir.subVectors( dest, origin ).normalize();
-        this.raycaster = new THREE.Raycaster();
-        this.raycaster.set(origin,dir);
-        var intersects = this.raycaster.intersectObjects( this.scene.children, true );
+        raycaster.set(origin,dir);
+        var intersects = raycaster.intersectObjects( this.scene.children, true );
         let hit;
         if(intersects[0]){   
             hit = intersects[0];
@@ -2334,6 +2371,30 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }
 
+
+    initBranding =()=>{
+            let that = this;
+
+        
+        let itemConfig = { scene: this.scene,
+                            format: 'glb',
+                            height:20,
+                            width:60,
+                            depth:20,
+                            modelUrl:'/models/NFTZoptimised.glb'};
+
+        this.nftzLogo = this.initItemForModel(itemConfig);
+        this.nftzLogo.isProp = true;
+
+
+        let placePos = new THREE.Vector3(-25,30,-25);
+        this.nftzLogo.place(placePos).then((model,pos)=>{
+            model.rotateX(Math.PI/4);
+        })
+
+
+    }
+
     initFootball = () =>{
         let that = this;
 
@@ -2424,7 +2485,7 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         let ballMesh = footballItem.place(this.ballVector).then((mesh, pos)=>{
 
             const body = new CANNON.Body({
-                mass: 10,
+                mass: 8,
                 material: mat1,
             })
             body.position.copy(this.ballVector);
@@ -2442,6 +2503,40 @@ isOnWall = (selectedPoint, meshToCheck) =>{
 
     }
 
+    throwSnowBall = (e,controller) =>{
+        console.log('throw');
+        let that = this;
+       
+        let startVector = this.getProjectileStartVector(e, controller);
+        const ballMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFFFF } );
+    // Creates a ball and throws it
+        const ballMass = 2;
+        const ballRadius = 0.2;
+         var mat1 = new CANNON.Material();        
+        const ball = new THREE.Mesh( new THREE.SphereGeometry( ballRadius, 14, 10 ), ballMaterial );
+    this.scene.add(ball);
+        ball.castShadow = true;
+        ball.receiveShadow = true;
+        const ballShape = new CANNON.Sphere( ballRadius );
+
+        const body = new CANNON.Body({
+            mass: ballMass,
+            material: mat1,
+        })
+        body.position.copy(startVector);
+        body.addShape(ballShape);
+        body.linearDamping = 0.01;            
+        body.threeMesh = ball;
+        that.world.addBody(body)
+        that.bodies.push(body); 
+
+        // calc impulse direction
+        startVector.copy( this.pRaycaster.ray.direction );
+        startVector.multiplyScalar( 50 );
+
+        body.applyImpulse(startVector);
+    }
+
     createBallMesh = (size)=>{
     let itemConfig = {  scene: this.scene,
                             format: 'glb',
@@ -2455,6 +2550,42 @@ isOnWall = (selectedPoint, meshToCheck) =>{
         return football;
 
     }
+
+    getProjectileStartVector = (e,controller) =>{
+        if (this.renderer.xr.isPresenting === true) {
+            return this.getVRStartVector(controller);
+
+        } else {
+            return this.getScreenStartVector();
+        }
+
+
+    }
+
+    getScreenStartVector = () =>{
+        let pos = new THREE.Vector3();
+        this.pRaycaster.setFromCamera( this.mouse, this.camera );
+        pos.copy( this.pRaycaster.ray.direction );
+        pos.add( this.pRaycaster.ray.origin );
+        return pos;
+    }
+
+    getVRStartVector = (controller) =>{
+        let pos = new THREE.Vector3();
+        // get controller line
+        const line = controller.getObjectByName( 'ray' );
+        this.workingMatrix.identity().extractRotation( controller.matrixWorld );
+        this.pRaycaster.ray.origin.setFromMatrixPosition( controller.matrixWorld );
+        this.pRaycaster.ray.direction.set( 0, 0, - 1 ).applyMatrix4( this.workingMatrix );
+
+        //get direction vector based on origin and dest
+        pos.copy( this.pRaycaster.ray.direction );
+        pos.add( this.pRaycaster.ray.origin );
+
+        // return as vector3
+        return pos;
+    }
+
     initGhost = () =>{
         if(this.renderer.xr.isPresenting){
             return false;
@@ -2698,11 +2829,12 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                                  sceneryLoader: this.sceneryLoader});  
             
             let maxItems =this.layoutPlotter.getMaxItemCount();
+            console.log('sceneAssts: ', options.sceneAssets);
             let items2d = options.sceneAssets.filter(nft => ((!nft.is3D)&&(nft.imageURLs[0])));     
 
             let maxItems3D =this.layoutPlotter.getMaxItemCount3D();
-
             let items3d = options.sceneAssets.filter(nft => nft.is3D);
+
             let spookyNFTs = options.sceneAssets.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'||nft.postHashHex=='8e0bbd53cd4932294649c109957167e385367836f0ec39cc4cc3d04691fffca7'));
             this.ghosts = spookyNFTs.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'));
 
@@ -2727,9 +2859,9 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                                 scene: this.scene,
                                 loader: this.loader,
                                 loaders: this.loaders,
-                                width: 3,
-                                depth: 3,
-                                height: 3,
+                                width: 6,
+                                depth: 0.1,
+                                height: 6,
                                 modelsRoute: this.config.modelsRoute,
                                 nftsRoute: this.config.nftsRoute,
                                 layoutPlotter: this.layoutPlotter,
@@ -2745,7 +2877,8 @@ isOnWall = (selectedPoint, meshToCheck) =>{
                 sceneInvConfig.animLoader = true;
             };
 
-            this.sceneInventory = new D3DInventory(sceneInvConfig);     
+            this.sceneInventory = new D3DInventory(sceneInvConfig);
+
         }
         
     }
@@ -2975,7 +3108,19 @@ console.log('staer vr session');
                                             cancelRotate: ()=>{
                                                 that.controlProxy.isRotating = false;
                                                 that.controlProxy.rot = null;
-                                            }
+                                            },
+                                            onSelectStartLeft: (e,controller)=>{
+                                               console.log(controller.line);
+                                            },
+                                            onSelectEndLeft: (e,controller)=>{
+                                            },
+                                            onSelectStartRight: (e,controller)=>{
+                                               console.log(controller.line);
+                                               this.throwSnowBall(e,controller)
+
+                                            },
+                                            onSelectEndRight: (e,controller)=>{
+                                            }                                            
                                         });
 
         this.playerVR = new PlayerVR({  controllers: this.vrControls.controllers,
