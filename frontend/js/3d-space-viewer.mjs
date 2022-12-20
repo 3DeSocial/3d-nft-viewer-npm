@@ -563,7 +563,7 @@ const params = {
         let nftLoadingComplete = false;
         return new Promise((resolve, reject) => {
             let that = this;
-            this.mouse = { x : 0, y : 0 };
+            this.mouse = new THREE.Vector2(0,0,0);
             this.getContainer(this.config.el);
 
             this.initScene();
@@ -1699,8 +1699,9 @@ const params = {
             }
             break;
             default:
-                this.mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
-                this.mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+                let x = ( e.clientX / window.innerWidth ) * 2 - 1;
+                let y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+                this.mouse.set(x,y);
                 this.throwSnowBall(e, null);
             break;
         }
@@ -1769,7 +1770,6 @@ const params = {
     }
 
     raycast = ( e ) => {
-        return false;
         var isRightMB;
         let isOnFloor = false;
         let isOnWall = false;
@@ -1796,21 +1796,23 @@ const params = {
     // Step 1: Detect light helper
         //1. sets the this.mouse position with a coordinate system where the center
         //   of the screen is the origin
-        this.mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
-        this.mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+        let x = ( e.clientX / window.innerWidth ) * 2 - 1;
+        let y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+        this.mouse.set(x,y);
 
         //2. set the picking ray from the camera position and this.mouse coordinates
         if(!(this.mouse)||!(this.camera)){
             return false;
         };
         try{
-         this.raycaster.setFromCamera( this.mouse, this.camera );    
+            let raycaster = new THREE.Raycaster();            
+                raycaster.setFromCamera( this.mouse, this.camera );    
         //3. compute intersections (note the 2nd parameter)
-        var intersects = this.raycaster.intersectObjects( this.scene.children, true );
+        var intersects = raycaster.intersectObjects( this.scene.children, true );
         let floorLevel;
         if(intersects[0]){
-            isOnFloor = this.isOnFloor(intersects[0].point);
-            isOnWall = this.isOnWall(intersects[0].point);
+            isOnFloor = this.isOnFloor(raycaster, intersects[0].point);
+            isOnWall = this.isOnWall(raycaster, intersects[0].point);
         };
         return {
             isOnFloor: isOnFloor,
@@ -1830,7 +1832,7 @@ const params = {
        
     }
 
-    isOnFloor = (selectedPoint, meshToCheck) =>{
+    isOnFloor = (raycaster, selectedPoint, meshToCheck) =>{
 
         let origin = selectedPoint.clone();
             origin.setY(origin.y+2);
@@ -1839,8 +1841,9 @@ const params = {
             dest.setY(-1000); //raycast downwards from selected point.
         let dir = new THREE.Vector3();
         dir.subVectors( dest, origin ).normalize();
-        this.raycaster.set(origin,dir);
-        var intersects = this.raycaster.intersectObjects( this.scene.children, true );
+        console.log(origin,dir);        
+        raycaster.set(origin,dir);
+        var intersects = raycaster.intersectObjects( this.scene.children, true );
         let hit;
         if(intersects[0]){   
             hit = intersects[0];
@@ -1861,15 +1864,16 @@ const params = {
 
     }
 
-isOnWall = (selectedPoint, meshToCheck) =>{
+isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         let origin = selectedPoint.clone();
          //   origin.setZ(origin.z-1);
         let dest = selectedPoint.clone();
             dest.setZ(this.player.position.z); //raycast downwards from selected point.
         let dir = new THREE.Vector3();
+        console.log(origin,dir);        
         dir.subVectors( dest, origin ).normalize();
-        this.raycaster.set(origin,dir);
-        var intersects = this.raycaster.intersectObjects( this.scene.children, true );
+        raycaster.set(origin,dir);
+        var intersects = raycaster.intersectObjects( this.scene.children, true );
         let hit;
         if(intersects[0]){   
             hit = intersects[0];
