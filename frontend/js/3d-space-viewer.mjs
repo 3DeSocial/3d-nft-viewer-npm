@@ -694,21 +694,21 @@ const params = {
         let that = this;
         let snowMenLayout = this.sceneryLoader.circles.filter(circle => (circle.name==='snowmen'));
             this.targetSpots = this.layoutPlotter.calcCircleSpots(snowMenLayout[0]);
-
+            this.snowMen = [];
             this.spawnSnowMan();
-            that.spawnSnowMan();
-            that.spawnSnowMan();
-       /*snowMenLayout[0].spots.forEach((spot)=>{
-            that.addSnowMan(spot.pos);
-        })*/
-
 
     }
 
     spawnSnowMan = () =>{
-        let targetSpotNo = this.getRandomInt(0,this.targetSpots.length-1);
+        if(this.snowMen.length<this.targetSpots.length){
+            let targetSpotNo = this.getRandomInt(0,this.targetSpots.length-1);
 
-        this.addSnowMan(this.targetSpots[targetSpotNo].pos);
+            while(this.targetSpots[targetSpotNo].inUse){
+                targetSpotNo = this.getRandomInt(0,this.targetSpots.length-1);
+            };
+            this.addSnowMan(this.targetSpots[targetSpotNo]);
+            this.targetSpots[targetSpotNo].inUse = true;
+        }
     }
     initLoader = (ownerData) =>{
         this.loadingScreen = new LoadingScreen(ownerData);
@@ -2586,7 +2586,8 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         body.applyImpulse(startVector);
     }
 
-    addSnowMan = (pos) =>{
+    addSnowMan = (targetSpot) =>{
+        let pos = targetSpot.pos
         let that = this;
         this.addPlatform(pos);
 
@@ -2621,7 +2622,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
 
         that.world.addBody(body)
         that.bodies.push(body);         
-
+        that.snowMen.push(body);
         const headRadius = ballRadius/1.5; 
         const headMesh = new THREE.Mesh( new THREE.SphereGeometry( headRadius, 14, 10 ), ballMaterial);
         this.scene.add(headMesh);
@@ -2640,11 +2641,14 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         head.threeMesh = headMesh;
         that.world.addBody(head)
         that.bodies.push(head);
+        that.snowMen.push(head);
+
         head.addEventListener("collide", function(e){
             if(e.body.threeMesh){
                 if(e.body.threeMesh.name){
                     if(e.body.threeMesh.name === 'snowball'){
                         that.spawnSnowMan();
+                        targetSpot.inUse = false;
                         that.config.chainAPI.claimNFT({actionType:'snowman'})
                     }                   
                 }
@@ -2657,7 +2661,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             if(e.body.threeMesh){
                 if(e.body.threeMesh.name){
                     if(e.body.threeMesh.name === 'snowball'){
-                        that.spawnSnowMan();
+                        targetSpot.inUse = false;                        
                         that.config.chainAPI.claimNFT({actionType:'snowman'})
                     }                   
                 }
@@ -2985,7 +2989,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
 
             items3d = items3d.concat(spookyNFTs)
             let items3dToRender = items3d.slice(0,maxItems3D);   
-
+            console.log('items3dToRender: ',items3dToRender);
             if(items2d.length===0){
                 items2d = items3d.slice(maxItems3D);
                 //display 2d images of 3d items if there are no more 2d images
@@ -3138,7 +3142,6 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         let vrBtnOptions = { btnCtr : 'div.view-vr-btn',
                              viewer: this,
                              onStartSession: ()=>{
-console.log('staer vr session');
                                 let vrType = 'walking';
 
                                 that.initVRSession(vrType);                                
@@ -3521,7 +3524,7 @@ initPlayerFirstPerson = () => {
 
     that.character.geometry.translate( 0, -1, 0 );
     that.character.capsuleInfo = {
-        radius: 2,
+        radius: (this.config.capsuleRadius)?this.config.capsuleRadius:1,
         segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
     };    
     that.character.rotation.set(0,0,0);

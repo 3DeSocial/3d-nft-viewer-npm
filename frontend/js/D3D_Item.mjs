@@ -74,10 +74,6 @@ export default class Item {
         let parts = this.config.modelUrl.split('.');
         let format = parts[parts.length-1];
 
-        console.log('model url: ',this.config.modelUr);
-
-        console.log('format detected: ',format);
-        console.log('format supplied: ',this.config.format);
         if(format!=this.config.format){
             this.config.format = format;
         }
@@ -90,7 +86,6 @@ export default class Item {
             return false;
         };
         if(!nft.profileEntryResponse){
-            console.log('no nft.profileEntryResponse');
             return {};
         };        
         let data = {
@@ -136,11 +131,9 @@ export default class Item {
         this.armature = null;
         this.modelChildren = [];
         let scene;
-        console.log('this.root: ');
-        console.log(this.root);
+
 
         if(this.root.armature){
-            console.log('armature found in root');
             this.armature = this.root.armature;
             return true;
         };
@@ -157,13 +150,10 @@ export default class Item {
         }
    
         scene.children.forEach((el)=>{
-            console.log(el.name);
             if(el.name === 'Armature'){
-                console.log('found armature.');
                 that.armature = el;
             } else {
                 that.modelChildren.push(el);
-                console.log('add child: ',el.name)
             }
         });
 

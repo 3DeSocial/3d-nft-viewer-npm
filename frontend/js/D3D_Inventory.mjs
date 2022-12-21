@@ -57,8 +57,6 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         
         this.items = [];
         let that = this;
-        console.log('load, loading ',this.config.items2d.length, ' from items2d');
-        console.log(this.config.items2d);
 
         this.initItems2d(this.config.items2d).then((nfts2d)=>{
             if(nfts2d){
@@ -67,15 +65,12 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
 
         })
 
-   /*    console.log('load, loading ',this.config.items3d.length, ' from items3d');
         this.initItems3d(this.config.items3d).then((nfts3d)=>{
             if(nfts3d){
                 that.items3d = nfts3d;     
-                console.log('3d items placed: ',nfts3d);
             };
 
         })
-     */   
     }
 
     initItems2d = (itemList)=>{
@@ -83,7 +78,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         let items = [];
         let noPositions = this.config.layoutPlotter.initPosQ();
         let center = this.center;
-        console.log('initItems: ',itemList,noPositions);
+        //console.log('initItems: ',itemList,noPositions);
 
         let noNfts = itemList.length;
         let noNftsToPlace = Math.min(noPositions,noNfts);
@@ -121,7 +116,6 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                     }
                 };
 
-                itemConfig.three = THREE;
                 itemConfig.scene = this.scene;
                 itemConfig.loader = this.loader;
                 itemConfig.modelsRoute = this.config.modelsRoute;
@@ -133,8 +127,8 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                     itemConfig.nft = itemData.nft;        
                     if(itemData.nft.isAudio){
                         itemConfig.isAudio = itemData.nft.isAudio;               
-                        console.log('audio found: ');
-                        console.log(itemData);
+                       // console.log('audio found: ');
+                       // console.log(itemData);
                     };
                 };
                 itemConfig.imageProxyUrl = that.config.imageProxyUrl;
@@ -152,17 +146,12 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                          item.place(spot.pos).then((mesh,pos)=>{
                              if(spot.rot){
                                 mesh.rotateY(spot.rot.y);
-                            } else {
-                                let lookAtTarget = that.center.clone();
-                                    lookAtTarget.y = mesh.position.y;
-                                    item.mesh.lookAt(lookAtTarget);
                             }
-                    
+                            
                             items.push(item);
 
                             that.items2d.push(item);                            
                             if(items.length===itemList.length){
-                                console.log('all items placed');
                                 resolve(items);
                             }
                         });
@@ -211,7 +200,6 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                     itemConfig.height = itemData.height;
                 }
 
-                itemConfig.three = THREE;
                 itemConfig.scene = this.scene;
                 itemConfig.loader = this.loader;
                 itemConfig.modelsRoute = this.config.modelsRoute;
