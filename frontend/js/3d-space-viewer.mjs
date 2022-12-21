@@ -696,6 +696,8 @@ const params = {
             this.targetSpots = this.layoutPlotter.calcCircleSpots(snowMenLayout[0]);
 
             this.spawnSnowMan();
+            that.spawnSnowMan();
+            that.spawnSnowMan();
        /*snowMenLayout[0].spots.forEach((spot)=>{
             that.addSnowMan(spot.pos);
         })*/
@@ -2650,7 +2652,19 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             }
 
         });
+        
+        body.addEventListener("collide", function(e){
+            if(e.body.threeMesh){
+                if(e.body.threeMesh.name){
+                    if(e.body.threeMesh.name === 'snowball'){
+                        that.spawnSnowMan();
+                        that.config.chainAPI.claimNFT({actionType:'snowman'})
+                    }                   
+                }
 
+            }
+
+        });
 
         var ball_ground_cm = new CANNON.ContactMaterial(this.snowballMat, this.snowManHeadMat,  { friction: 1, restitution: 0.01 });
 
@@ -3516,10 +3530,6 @@ initPlayerFirstPerson = () => {
     that.character.updateMatrixWorld();
     that.scene.add( that.player );
     that.player.updateMatrixWorld();
-    if(this.config.sceneryOptions.name==='amphitheater'){
-        that.player.lookAt(new THREE.Vector3(0,0,0));
-        console.log('looking')
-    }
 
 }
 
@@ -3702,7 +3712,7 @@ initPlayerThirdPerson = () => {
     this.camera.position.add( this.controls.target );
   
     // if the player has fallen too far below the level reset their position to the start
-    if ( this.player.position.y < - 25 ) {
+    if ( this.player.position.y < 0 ) {
 
         this.reset();
 
@@ -3844,7 +3854,7 @@ if(this.playerIsOnGround){
         //this.camera.position.add( this.player.position );
 
         // if the this.player has fallen too far below the level reset their position to the start
-        if ( this.player.position.y < - 25 ) {
+        if ( this.player.position.y < - 2 ) {
 
             this.reset();
 
