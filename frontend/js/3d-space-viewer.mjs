@@ -275,7 +275,13 @@ const params = {
                     },
                     vrType: 'walking',
                     useOwnHandlers: true,
-                    lookAtStartPos: {x:0,y:2,z:0}
+                    lookAtStartPos: {x:0,y:2,z:0},
+                    dLights: [  {name:'above',intensity:1},
+                                {name:'below',intensity:0.5},
+                                {name:'left',intensity:0},
+                                {name:'right',intensity:0},
+                                {name:'front',intensity:0},
+                                {name:'back',intensity:0}]
                 };
         
         this.config = {
@@ -346,8 +352,8 @@ const params = {
     }
 
     addGroundPlane = (y) =>{
-        let floorWidth = 35;
-        let floorLength = 35;
+        let floorWidth = 80;
+        let floorLength = 80;
         const groundGeo = new THREE.PlaneGeometry(floorWidth, floorLength);
         const groundMat = new THREE.MeshBasicMaterial({ 
             color: 0x666666,
@@ -362,6 +368,29 @@ const params = {
             type: CANNON.Body.STATIC,
             material: this.groundPhysMat,
             position: new CANNON.Vec3(0,y, 0)
+        });
+        this.world.addBody(groundBody);
+        groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+        this.bodies.push(groundBody);
+    }
+
+    addPlatform = (pos) =>{
+        let floorWidth = 1;
+        let floorLength = 1;
+        const groundGeo = new THREE.PlaneGeometry(floorWidth, floorLength);
+        const groundMat = new THREE.MeshBasicMaterial({ 
+            color: 0x666666,
+            side: THREE.DoubleSide
+         });
+
+
+        const groundPhysMat = new CANNON.Material();
+        this.groundPhysMat = groundPhysMat;
+        const groundBody = new CANNON.Body({
+            shape: new CANNON.Box(new CANNON.Vec3(floorWidth, floorLength, 0.1)),
+            type: CANNON.Body.STATIC,
+            material: this.groundPhysMat,
+            position: new CANNON.Vec3(pos.x,(pos.y-2), pos.z)
         });
         this.world.addBody(groundBody);
         groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
@@ -559,15 +588,15 @@ const params = {
     }
 
     initSpace = (options) =>{
+        let that = this;
         let sceneryloadingComplete = false
         let nftLoadingComplete = false;
+
         return new Promise((resolve, reject) => {
-            let that = this;
             this.mouse = new THREE.Vector2(0,0,0);
             this.getContainer(this.config.el);
 
             this.initScene();
-            this.initCameraPlayer();     
             this.loadUIAssets();
             this.initRenderer(this.config.el);
             this.initHUD({scene:that.scene,
@@ -577,6 +606,16 @@ const params = {
 
 
             this.loadScenery().then(()=>{
+        
+
+            let throwSound = new AudioClip({
+                                path: '/audio/throw.mp3',
+                                mesh: that.sceneryLoader.sceneryMesh,
+                                listener: that.audioListener
+                            });         
+
+                that.sounds = {};      
+                that.sounds.throwSound = throwSound;
                 this.initPhysicsWorld();        
 
                 if(this.config.footballMode===true){
@@ -589,7 +628,8 @@ const params = {
                 console.log('getSceneDims...');
 
                 console.log(this.sceneryLoader.getSceneDims());
-               // that.placeAssets();
+                this.initCameraPlayer();     
+
                 if(that.config.firstPerson){
                     that.initPlayerFirstPerson();
                 } else {
@@ -608,10 +648,9 @@ const params = {
 
                 this.renderer.render(this.scene,this.camera);
 
-                this.animate();
-                sceneryloadingComplete = true;
 
-                this.loadingScreen.hide();
+
+
                 document.getElementById('view-full').style.display='inline-block';
                 document.getElementById('give-diamond').style.display='inline-block';
                 document.getElementById('give-heart').style.display='inline-block';
@@ -621,22 +660,24 @@ const params = {
                   /*  document.querySelectorAll('.d3d-btn-top').forEach((el)=>{
                       el.style.display='inline-block';
                     });*/
-                    this.resizeCanvas();
-                    if(this.config.devGhost){
-                        that.initGhost();
-                    } else {
-                        if((this.config.showGhost)&&(this.ghosts.length === 0)){
-                            let timeDelay = 2000*(Math.floor(Math.random() * 10) + 1);
-                            setTimeout(()=>{
-                                that.initGhost();
-                            },timeDelay)
-                        };
 
-                    }
+                if(this.config.devGhost){
+                    that.initGhost();
+                } else {
+                    if((this.config.showGhost)&&(this.ghosts.length === 0)){
+                        let timeDelay = 2000*(Math.floor(Math.random() * 10) + 1);
+                        setTimeout(()=>{
+                            that.initGhost();
+                        },timeDelay)
+                    };
 
-
-
-
+                }
+                that.animate();
+                sceneryloadingComplete = true;
+                that.resizeCanvas();
+                that.loadingScreen.hide();
+                that.addListeners();
+                this.audioListener.setMasterVolume(1);
 
             });
 
@@ -647,16 +688,25 @@ const params = {
 
     initSnowFall = () =>{
         this.snowFall = new SnowFall({scene:this.scene});
-        console.log('started snow');
     }
 
     initSnowMen = () =>{
         let that = this;
         let snowMenLayout = this.sceneryLoader.circles.filter(circle => (circle.name==='snowmen'));
-            snowMenLayout[0].spots = this.layoutPlotter.calcCircleSpots(snowMenLayout[0]);
-        snowMenLayout[0].spots.forEach((spot)=>{
+            this.targetSpots = this.layoutPlotter.calcCircleSpots(snowMenLayout[0]);
+
+            this.spawnSnowMan();
+       /*snowMenLayout[0].spots.forEach((spot)=>{
             that.addSnowMan(spot.pos);
-        })
+        })*/
+
+
+    }
+
+    spawnSnowMan = () =>{
+        let targetSpotNo = this.getRandomInt(0,this.targetSpots.length-1);
+
+        this.addSnowMan(this.targetSpots[targetSpotNo].pos);
     }
     initLoader = (ownerData) =>{
         this.loadingScreen = new LoadingScreen(ownerData);
@@ -784,6 +834,7 @@ const params = {
         this.camera.updateProjectionMatrix(); 
         this.camera.add( this.audioListener );
         this.camera.rotation.set(0,0,0);
+        this.camera.position.copy(this.sceneryLoader.playerStartPos);
 
         this.raycaster = new THREE.Raycaster({camera:this.camera});
         this.pRaycaster = new THREE.Raycaster();
@@ -882,12 +933,9 @@ const params = {
     }
 
     initLighting = () =>{
-        let dLights = [{name:'above',intensity:0.75},
-        {name:'below',intensity:0},
-        {name:'left',intensity:0},
-        {name:'right',intensity:0},
-        {name:'front',intensity:0.5},
-        {name:'back',intensity:0.1}];
+        let dLights = this.config.dLights;
+
+
 
         this.lights = new Lighting({scene:this.scene,
                                         createListeners: false,
@@ -1096,7 +1144,7 @@ const params = {
                     y: this.moveTo.y,
                     z: this.moveTo.z,
                     loop: false,
-                    duration: 250,
+                    duration: distance*200,
                     easing: 'linear',
                     complete: function(anim) {
                      /*   // adjust the camera
@@ -1211,18 +1259,14 @@ const params = {
                     this.targetFootball();
                 };
             } else {
-                if(item.config){
+                if(item.config.nft){
                     if(item.config.nft.isAudio){
               
                         this.config.chainAPI.fetchPostDetail({postHashHex:item.config.nft.postHashHex}).then((res)=>{
                             res.json().then((json)=>{
-                                console.log('audio nft detail');
-                                console.log(json);
                                 if(json.audioData){
-                                    console.log('found audioData');
                                     tracks = this.parseAudioData(json.audioData);
                                     let firstTrack = this.getTrackFullUrl(item.config.nft.postHashHex, tracks[0]);
-                                    console.log('firstTrack: ', firstTrack);
                                     if(that.currentAudioHash === item.config.nft.postHashHex){
                                         that.currentAudio.pause();
                                         that.currentAudioHash = null;
@@ -1260,7 +1304,7 @@ const params = {
                 } else {
                     console.log('item has no config');
                     console.log(item);
-                            that.hud.setSelectedItem(item);
+                            //that.hud.setSelectedItem(item);
 
                 }
             };
@@ -1704,6 +1748,11 @@ const params = {
         switch(parseInt(action.btnIndex)){
             case 1:
                 if(this.config.isCurated){
+                    if(this.sounds.throwSound){
+                       this.sounds.throwSound.play();
+                    } else {
+                        console.log('no throwSound');
+                    }
                     let x = ( e.clientX / window.innerWidth ) * 2 - 1;
                     let y = - ( e.clientY / window.innerHeight ) * 2 + 1;
                     this.mouse.set(x,y);
@@ -2476,9 +2525,6 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         let that = this;
         const size = 0.5;
         let ballShape = new CANNON.Sphere(size);
-        let x = this.getRandom(-10, 10);
-        let y = 3;
-        let z = this.getRandom(-0.3, 0.3);
         let footballItem = this.createBallMesh(size);
         this.ballVector.set(6, 4,0 );
          var mat1 = new CANNON.Material();
@@ -2505,24 +2551,24 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
     }
 
     throwSnowBall = (e,controller) =>{
-        console.log('throw');
-        let that = this;
-       
+
+        let that = this;       
         let startVector = this.getProjectileStartVector(e, controller);
         const ballMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFFFF } );
     // Creates a ball and throws it
         const ballMass = 2;
         const ballRadius = 0.2;
-         var mat1 = new CANNON.Material();        
         const ball = new THREE.Mesh( new THREE.SphereGeometry( ballRadius, 14, 10 ), ballMaterial );
     this.scene.add(ball);
-        ball.castShadow = true;
+    ball.castShadow = true;
         ball.receiveShadow = true;
+
         const ballShape = new CANNON.Sphere( ballRadius );
 
         const body = new CANNON.Body({
             mass: ballMass,
-            material: mat1,
+            material: this.snowballMat,
+            name: 'snowball'
         })
         body.position.copy(startVector);
         body.addShape(ballShape);
@@ -2534,56 +2580,82 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         // calc impulse direction
         startVector.copy( this.pRaycaster.ray.direction );
         startVector.multiplyScalar( 80 );
-
         body.applyImpulse(startVector);
     }
 
     addSnowMan = (pos) =>{
-
         let that = this;
+        this.addPlatform(pos);
 
         let ballPos = new THREE.Vector3(pos.x,pos.y,pos.z);
         const ballMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFFFF } );
     // Creates a ball and throws it
         const ballMass = 1;
         const ballRadius = 2;
-         var mat1 = new CANNON.Material();        
+    
         const ball = new THREE.Mesh( new THREE.SphereGeometry( ballRadius, 14, 10 ), ballMaterial );
-                this.scene.add(ball);
+        this.scene.add(ball);
         ball.castShadow = true;
         ball.receiveShadow = true;
         const ballShape = new CANNON.Sphere( ballRadius );
+        var groundMaterial = new CANNON.Material("groundMaterial");
+        // Adjust constraint equation parameters for ground/ground contact
+        var ground_ground_cm = new CANNON.ContactMaterial(groundMaterial, groundMaterial,  { friction: 1, restitution: 0.01 });
 
-        const body = new CANNON.Body({
+        this.world.addContactMaterial(ground_ground_cm);
+       
+        this.snowballMat = new CANNON.Material('snowballMat');        
+        this.snowManHeadMat = new CANNON.Material('snowManHead');        
+
+          const body = new CANNON.Body({
             mass: ballMass,
-            material: mat1,
-            type: CANNON.Body.STATIC
+            material: groundMaterial
         })
         body.position.copy(ballPos);
         body.addShape(ballShape);
         body.linearDamping = 0.01;            
         body.threeMesh = ball;
+
         that.world.addBody(body)
         that.bodies.push(body);         
 
         const headRadius = ballRadius/1.5; 
-        const headMesh = new THREE.Mesh( new THREE.SphereGeometry( headRadius, 14, 10 ), ballMaterial );
-                this.scene.add(headMesh);
+        const headMesh = new THREE.Mesh( new THREE.SphereGeometry( headRadius, 14, 10 ), ballMaterial);
+        this.scene.add(headMesh);
         headMesh.castShadow = true;
         headMesh.receiveShadow = true;
         const ballShape2 = new CANNON.Sphere( headRadius );
 
         const head = new CANNON.Body({
             mass: ballMass,
-            material: mat1
+            material: this.snowManHeadMat
         })
-        ballPos.y = ballPos.y+headRadius*1.5;
+        ballPos.y = ballPos.y+(ballRadius+headRadius);
         head.position.copy(ballPos);
         head.addShape(ballShape2);
         head.linearDamping = 0.01;            
         head.threeMesh = headMesh;
         that.world.addBody(head)
-        that.bodies.push(head);                 
+        that.bodies.push(head);
+        head.addEventListener("collide", function(e){
+            if(e.body.name){
+                    if(e.body.name === 'snowball'){
+                     console.log("snowball head collision!")
+                        console.log(e.body.name);
+                        that.spawnSnowMan()
+                    } 
+            }else {
+                    console.log('no name detected in collision');
+                    console.log(e);
+            }
+
+        });
+
+
+        var ball_ground_cm = new CANNON.ContactMaterial(this.snowballMat, this.snowManHeadMat,  { friction: 1, restitution: 0.01 });
+
+        this.world.addContactMaterial(ball_ground_cm);
+
     }
 
     createBallMesh = (size)=>{
@@ -3435,7 +3507,7 @@ initPlayerFirstPerson = () => {
 
     that.character.geometry.translate( 0, -1, 0 );
     that.character.capsuleInfo = {
-        radius: 1,
+        radius: 1.5,
         segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
     };    
     that.character.rotation.set(0,0,0);
@@ -3444,7 +3516,11 @@ initPlayerFirstPerson = () => {
     that.character.updateMatrixWorld();
     that.scene.add( that.player );
     that.player.updateMatrixWorld();
-    that.addListeners();
+    if(this.config.sceneryOptions.name==='amphitheater'){
+        that.player.lookAt(new THREE.Vector3(0,0,0));
+        console.log('looking')
+    }
+
 }
 
 initPlayerThirdPerson = () => {
@@ -3455,8 +3531,8 @@ initPlayerThirdPerson = () => {
     this.mesh = item.model;
     let newPos = null;
     let playerFloor = 0;
-    if(this.config.playerStartPos){
-        let playerStartPos = new THREE.Vector3(this.config.playerStartPos.x,this.config.playerStartPos.y,this.config.playerStartPos.z);        
+    if(this.sceneryLoader.playerStartPos){
+        let playerStartPos = new THREE.Vector3(this.sceneryLoader.playerStartPos.x,this.sceneryLoader.playerStartPos.y,this.sceneryLoader.playerStartPos.z);        
         newPos = new THREE.Vector3(0,playerFloor,0);
 
     } else {
@@ -3584,6 +3660,7 @@ initPlayerThirdPerson = () => {
         }
 
     } );
+
 
     // get the adjusted position of the capsule this.collider in world space after checking
     // triangle collisions and moving it. capsuleInfo.segment.start is assumed to be
@@ -3780,7 +3857,7 @@ if(this.playerIsOnGround){
 
     reset = ()=> {
         this.playerVelocity.set( 0, 0, 0 );
-        this.player.position.set(this.config.playerStartPos);
+        this.player.position.set(this.sceneryLoader.playerStartPos);
        // this.camera.position.set( this.player.position );
       //  this.controls.target.copy( this.player.position );
         //this.camera.position.add( this.player.position );

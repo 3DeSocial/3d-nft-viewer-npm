@@ -259,11 +259,8 @@ export default class Item {
                         .then((model)=>{
                             that.mesh = model;
 
-                            console.log('item init at pos', pos);
                             if(that.hasAnimations(false)){
-                                console.log('hasAnimations');
                                 that.startAnimation(0,THREE.LoopRepeat);
-                                console.log('animation started');
                             } else {
                                 console.log('no animations',this.config.postHashHex);
                                 console.log(model);
@@ -272,12 +269,8 @@ export default class Item {
                             };
 
                             if(that.config.physicsWorld){
-                                console.log('item has physics world, is isFootballPlayer? ',this.isFootballPlayer);
                                 that.addToPhysicsWorld();
-                            } else {
-                                console.log('NO physics world, is isFootballPlayer? ',this.isFootballPlayer);
                             }
-
                             let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
                             document.body.dispatchEvent(loadedEvent);
                             document.body.dispatchEvent(this.meshPlacedEvent);

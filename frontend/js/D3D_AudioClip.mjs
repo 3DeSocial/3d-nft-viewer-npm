@@ -28,6 +28,8 @@ export default class AudioClip {
         audioLoader.load( this.path, function( buffer ) {
             that.sound.setBuffer( buffer );
             that.sound.setRefDistance( 20 );
+            that.sound.setVolume( 1 );
+
             if(that.mesh){
                that.attatchTo(that.mesh);
             }
