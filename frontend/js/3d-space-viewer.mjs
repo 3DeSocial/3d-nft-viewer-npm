@@ -1113,7 +1113,7 @@ const params = {
     }
     addEventListenerMouseClick = ()=>{
         let that = this;
-        this.renderer.domElement.addEventListener( 'mousedown', this.checkMouse, false );
+        this.renderer.domElement.addEventListener( 'mouseup', this.checkMouse, false );
         this.renderer.domElement.addEventListener( 'dblclick', this.checkMouseDbl, false );
 
     }
@@ -2559,6 +2559,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         const ballMass = 2;
         const ballRadius = 0.2;
         const ball = new THREE.Mesh( new THREE.SphereGeometry( ballRadius, 14, 10 ), ballMaterial );
+        ball.name ='snowball';
     this.scene.add(ball);
     ball.castShadow = true;
         ball.receiveShadow = true;
@@ -2638,15 +2639,14 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         that.world.addBody(head)
         that.bodies.push(head);
         head.addEventListener("collide", function(e){
-            if(e.body.name){
-                    if(e.body.name === 'snowball'){
-                     console.log("snowball head collision!")
-                        console.log(e.body.name);
-                        that.spawnSnowMan()
-                    } 
-            }else {
-                    console.log('no name detected in collision');
-                    console.log(e);
+            if(e.body.threeMesh){
+                if(e.body.threeMesh.name){
+                    if(e.body.threeMesh.name === 'snowball'){
+                        that.spawnSnowMan();
+                        that.config.chainAPI.claimNFT({actionType:'snowman'})
+                    }                   
+                }
+
             }
 
         });
@@ -3507,7 +3507,7 @@ initPlayerFirstPerson = () => {
 
     that.character.geometry.translate( 0, -1, 0 );
     that.character.capsuleInfo = {
-        radius: 1.5,
+        radius: 2,
         segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
     };    
     that.character.rotation.set(0,0,0);
