@@ -45,7 +45,17 @@ class Item2d extends Item {
         this.initItemEvents();
         this.isItem = true;
         let that = this;
-       
+        if(this.config.spot){
+            if(this.config.spot.height){
+                this.height = this.config.spot.height
+            }
+            if(this.config.spot.width){
+                this.width = this.config.spot.width
+            }
+            if(this.config.spot.depth){
+                this.depth = this.config.spot.depth
+            }
+        };
         this.nftDisplayData = this.parseNFTDisplayData();
 
     }
@@ -184,17 +194,18 @@ class Item2d extends Item {
             let nftData = nft;
             var img = new Image();
 console.log('target image dims: ', this.width,this.height);
+let targetWidth = this.width; let targetHeight = this.height;
                 img.onload = function(){
                   var height = this.height;
                   var width = this.width;
-                  let dims = that.calculateAspectRatioFit(width, height, 4,2.25);
+                  let dims = that.calculateAspectRatioFit(width, height, targetWidth,targetHeight);
                   const textureLoader = new THREE.TextureLoader()
                   const texture = textureLoader.load(this.src);
                   const geometry = new THREE.BoxGeometry( dims.width, dims.height, 0.10 );
                   const materials = that.createMats(texture);
                   const nftMesh = new THREE.Mesh( geometry, materials );
                   that.mesh = nftMesh;
-                  let nftImgData = {is3D:nft.is3D, nft:nftData, mesh: nftMesh, imageUrl: imageUrl, width:dims.width, height:dims.height};
+                  let nftImgData = {is3D:nft.is3D, nft:nftData, mesh: nftMesh, imageUrl: imageUrl, width:dims.width, height:dims.height, spot:that.config.spot};
                   resolve(nftImgData);
             };
 

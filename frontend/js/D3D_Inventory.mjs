@@ -104,15 +104,15 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
 
                 if(!itemConfig.depth){
                     itemConfig.depth = itemData.depth;
-                    if(!itemData.width){
-                        itemConfig.width = that.config.width;
+                    if(!itemData.depth){
+                        itemConfig.depth = that.config.depth;
                     }
                 };
 
                 if(!itemConfig.height){
                     itemConfig.height = itemData.height;
-                    if(!itemData.width){
-                        itemConfig.width = that.config.width;
+                    if(!itemData.height){
+                        itemConfig.height = that.config.height;
                     }
                 };
 
@@ -132,40 +132,41 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                     };
                 };
                 itemConfig.imageProxyUrl = that.config.imageProxyUrl;
-                    itemConfig.isImage = true;
-                    item = this.initItem2d(itemConfig);
-                    item.initMesh(itemConfig).then((nftImgData)=>{
-                        let spot = that.config.layoutPlotter.getNextFreePos();
-                      
-                        let halfHeight = nftImgData.height/2;
-                      //  console.log('halfHeight: ',halfHeight,nftImgData);
-                            spot.pos.y = spot.pos.y+halfHeight;
+                itemConfig.isImage = true;
+                itemConfig.spot = that.config.layoutPlotter.getNextFreePos();
 
-                         item.place(spot.pos).then((mesh,pos)=>{
-                             if(spot.rot){
-                                mesh.rotateY(spot.rot.y);
-                            } else {
-                                if(spot.layoutType){
-                                    if(spot.layoutType==='circle'){
-                                       let target = that.center.clone();
-                                        target.y=mesh.position.y;
-                                        mesh.lookAt(target);
-                                    }
+                item = this.initItem2d(itemConfig);
+                item.initMesh(itemConfig).then((nftImgData)=>{
+                  let spot = nftImgData.spot;
+                    let halfHeight = nftImgData.height/2;
+                  //  console.log('halfHeight: ',halfHeight,nftImgData);
+                        spot.pos.y = spot.pos.y+halfHeight;
+
+                     item.place(spot.pos).then((mesh,pos)=>{
+                         if(spot.rot){
+                            mesh.rotateY(spot.rot.y);
+                        } else {
+                            if(spot.layoutType){
+                                if(spot.layoutType==='circle'){
+                                   let target = that.center.clone();
+                                    target.y=mesh.position.y;
+                                    mesh.lookAt(target);
                                 }
                             }
-                            
-                            items.push(item);
+                        }
+                        
+                        items.push(item);
 
-                            that.items2d.push(item);                            
-                            if(items.length===itemList.length){
-                                resolve(items);
-                            }
-                        });
+                        that.items2d.push(item);                            
+                        if(items.length===itemList.length){
+                            resolve(items);
+                        }
+                    });
 
 
-                    }).catch(err=>{
-                       // console.log('no image, skip NFT');
-                    })           
+                }).catch(err=>{
+                   // console.log('no image, skip NFT');
+                })           
                
                
 
