@@ -481,9 +481,6 @@ scaleToFitScene = (obj3D, posVector) =>{
         cbox.userData.owner = this; //set reference to Item
         that.scene.add(obj3D);    
         obj3D.position.copy(posVector);
-        console.log('set position after render in scale');
-       console.log('scaleToFitScene wants to add');
-       console.log(obj3D);
         cbox.updateMatrixWorld();    
     }
 
@@ -652,21 +649,17 @@ scaleToFitScene = (obj3D, posVector) =>{
     }
 
     fixYCoord = (obj3D, posVector) =>{
-        console.log('fixYCoord ' );
         var helper = new THREE.BoxHelper(obj3D, 0x00ff00);
             helper.update();
 
         let lowestVertex = this.getBoxHelperVertices(helper);
         if(!lowestVertex){
-            console.log('no lowestVertex in');
-            console.log(obj3D);
+
             return false;
         };
         lowestVertex.applyMatrix4(helper.matrixWorld);
-console.log(' posVector.y: ', posVector.y,' lowestVertex.y ',lowestVertex.y);
         if(posVector.y !== lowestVertex.y){
             let yOffset = lowestVertex.y-posVector.y;
-            console.log('yOffset: ',yOffset);
             obj3D.position.setY(obj3D.position.y - yOffset);
         };
     }
@@ -702,15 +695,12 @@ console.log(' posVector.y: ', posVector.y,' lowestVertex.y ',lowestVertex.y);
                 this.action.play();
                 this.animRunning = true;
                 this.mixer.addEventListener('finished',(e)=>{
-                    console.log('animation not running now');                    
+                    //console.log('animation not running now');                    
                     that.setAnimRunning(false);
                 }, false);
             } else {
-                console.log('animation', animIndex, 'doesnt exist');
+                //console.log('animation', animIndex, 'doesnt exist');
             }
-        } else {
-            console.log('no animations: ');
-            console.log(this.mesh);
         }
     }
 

@@ -281,19 +281,17 @@ export default class LayoutPlotter  {
                             spot.pos.y = spot.pos.y + circle.yOffset;
                         }
 
-                    spot.dims = that.defaultDims;that.defaultDims
-                    console.log('posQ defalt:',that.defaultDims)
-                    if(circle.width){
-                        spot.dims.width = circle.width;
-                    };
-                    if(circle.height){
-                        spot.dims.height = circle.height;
-                    };
-                    if(circle.depth){
-                        spot.dims.depth = circle.depth;
-                    }; 
+                        spot.dims = that.defaultDims;that.defaultDims
+                        if(circle.width){
+                            spot.dims.width = circle.width;
+                        };
+                        if(circle.height){
+                            spot.dims.height = circle.height;
+                        };
+                        if(circle.depth){
+                            spot.dims.depth = circle.depth;
+                        }; 
                         spot.idx = idx;
-                    console.log('posQ spot dims:',spot.dims)
 
                         that.posQ.push(spot); 
                     })                    

@@ -329,6 +329,7 @@ const params = {
         this.currentAudio = null;
         this.audioTracks = [];
         this.workingMatrix = new THREE.Matrix4();
+        this.d = new Date();
 
     }
 
@@ -1118,9 +1119,29 @@ const params = {
     addEventListenerMouseClick = ()=>{
         let that = this;
         this.renderer.domElement.addEventListener( 'mouseup', this.checkMouse, false );
+        this.renderer.domElement.addEventListener( 'mousedown', this.checkMouseDown, false );        
         this.renderer.domElement.addEventListener( 'dblclick', this.checkMouseDbl, false );
 
     }
+
+checkMouseDown = (e) =>{
+        let that = this;
+        let action = this.raycast(e);
+        if(!action.selectedPoint){
+            return false;
+        };
+       // console.log('action.btnIndex: ',action.btnIndex);
+        switch(parseInt(action.btnIndex)){
+            case 1:
+                if(!this.holding){
+                    const d = new Date();
+                    this.startTime = d.getTime();
+                    this.holding = true;
+                }
+            break;
+        }
+    }
+
 
     checkMouse = (e) =>{
         let that = this;
@@ -1131,47 +1152,11 @@ const params = {
        // console.log('action.btnIndex: ',action.btnIndex);
         switch(parseInt(action.btnIndex)){
             case 1:
-            if((action.isOnFloor)&&(!action.isOnWall)){
-                let targetPoint = action.selectedPoint.clone();
-                let distance = this.player.position.distanceTo(targetPoint);
-               // console.log('distance: ',distance);
-                //console.log(targetPoint.x, targetPoint.y, targetPoint.z);
-                this.moveTo = targetPoint;
-                this.moveTo.setY(this.player.position.y);
-        //this.player.position.copy(this.moveTo);
-         anime({
-                    begin: function(anim) {
-
-                    },
-                    targets: this.player.position,
-                    x: this.moveTo.x,
-                    y: this.moveTo.y,
-                    z: this.moveTo.z,
-                    loop: false,
-                    duration: distance*100,
-                    easing: 'linear',
-                    complete: function(anim) {
-                     /*   // adjust the camera
-                        that.camera.position.sub( that.controls.target );
-                        let playerx = that.player.position.x;
-                        let playery = that.player.position.y;
-                        let playerz = that.player.position.z;
-                        that.controls.target.set(playerx,(playery),playerz);
-                        that.camera.position.add( that.controls.target );
-                      
-                        // if the player has fallen too far below the level reset their position to the start
-                        if ( that.player.position.y < - 25 ) {
-
-                            that.reset();
-
-                        }*/
-                    }                   
-                });
-
-                
-            } else {
+                fwdPressed = false;
+                this.holding = false;
+                this.startTime = false;
                 this.selectTargetNFT(action);
-            }
+            
     
             break;            
             case 2:
@@ -1181,6 +1166,13 @@ const params = {
                 this.showSelectedMeshData(action)
             break;
         }
+    }
+
+    myInterval = ()=> {
+        let that = this;
+      var setIntervalId = setInterval(function() {
+        if (!that.holding) clearInterval(setIntervalId);
+      }, 1000); //set your wait time between consoles in milliseconds here
     }
 
     showSelectedMeshData =(action) =>{
@@ -2158,7 +2150,16 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             if(this.vrControls){
                 this.vrControls.checkControllers();
             }
-        }  
+        } else {
+            if(this.holding&&(!fwdPressed)){
+                let d = new Date();
+                let timeNow = d.getTime();
+                let timeDiff = timeNow - this.startTime;
+                if(timeDiff>5000){
+                    fwdPressed = true;
+                }
+            }
+        }
 
         const delta = Math.min( this.clock.getDelta(), 0.1 );
         if(this.world){

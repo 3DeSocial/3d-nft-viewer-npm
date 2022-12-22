@@ -49,7 +49,6 @@ class Item2d extends Item {
         this.isItem = true;
         let that = this;
         if(this.config.spot){
-            console.log('config.spot:',this.config.spot.dims);
             if(this.config.spot.dims.height){
                 this.height = this.config.spot.dims.height
             }
@@ -59,9 +58,6 @@ class Item2d extends Item {
             if(this.config.spot.dims.depth){
                 this.depth = this.config.spot.dims.depth
             }
-            console.log('ITEM 2D config.spot: ',this.config.spot.dims.width,this.config.spot.dims.height,this.config.spot.dims.depth);
-            console.log('ITEM 2D config.spot: ',this.width,this.height,this.depth);
-
         };           
         this.nftDisplayData = this.parseNFTDisplayData();
 
@@ -194,23 +190,19 @@ class Item2d extends Item {
             let imageUrl = nft.imageURLs[0];
             if(!imageUrl){
                 reject('No image for NFT ',this.config.nftPostHashHex);
-                //console.log(nft);
                 return false;
             };
             let proxyImageURL = that.config.imageProxyUrl +imageUrl;
-//console.log('loading image: ',proxyImageURL);
             let nftData = nft;
             var img = new Image();
-let targetWidth = that.width; let targetHeight = that.height;
-console.log('target image dims: ', targetWidth,targetHeight);
+            let targetWidth = that.width;
+            let targetHeight = that.height;
 
                 img.onload = function(){
                   var height = this.height;
                   var width = this.width;
                   let dims = that.calculateAspectRatioFit(width, height, targetWidth,targetHeight);
-                  console.log('targetWidth: ',targetWidth,', actual: ',dims.width);
-                  console.log('targetHeight: ',targetHeight,', actual: ',dims.height);
-
+              
                   const textureLoader = new THREE.TextureLoader()
                   const texture = textureLoader.load(this.src);
                   const geometry = new THREE.BoxGeometry( dims.width, dims.height, 0.10 );

@@ -487,21 +487,16 @@ scaleToFitScene = (obj3D, posVector) =>{
     }
 
     fixYCoord = (obj3D, posVector) =>{
-        console.log('fixYCoord ' );
         var helper = new THREE.BoxHelper(obj3D, 0x00ff00);
             helper.update();
 
         let lowestVertex = this.getBoxHelperVertices(helper);
         if(!lowestVertex){
-            console.log('no lowestVertex in');
-            console.log(obj3D);
             return false;
         };
         lowestVertex.applyMatrix4(helper.matrixWorld);
-console.log(' posVector.y: ', posVector.y,' lowestVertex.y ',lowestVertex.y);
         if(posVector.y !== lowestVertex.y){
             let yOffset = lowestVertex.y-posVector.y;
-            console.log('yOffset: ',yOffset);
             obj3D.position.setY(obj3D.position.y - yOffset);
         };
     }
