@@ -252,10 +252,10 @@ export default class Item {
                             if(that.hasAnimations(false)){
                                 that.startAnimation(0,THREE.LoopRepeat);
                             } else {
-                                console.log('no animations',this.config.postHashHex);
+                            /*    console.log('no animations',this.config.postHashHex);
                                 console.log(model);
                                 console.log('root: ');
-                                console.log(that.root);
+                                console.log(that.root);*/
                             };
 
                             if(that.config.physicsWorld){

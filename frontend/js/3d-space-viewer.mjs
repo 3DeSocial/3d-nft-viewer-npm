@@ -330,6 +330,7 @@ const params = {
         this.audioTracks = [];
         this.workingMatrix = new THREE.Matrix4();
         this.d = new Date();
+        this.nftClaimed = false;
 
     }
 
@@ -677,7 +678,7 @@ const params = {
                 }
                 that.animate();
                 sceneryloadingComplete = true;
-                that.resizeCanvas();
+                //that.resizeCanvas();
                 that.loadingScreen.hide();
                 that.addListeners();
                 this.audioListener.setMasterVolume(1);
@@ -2652,7 +2653,10 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                     if(e.body.threeMesh.name === 'snowball'){
                         that.spawnSnowMan();
                         targetSpot.inUse = false;
-                        that.config.chainAPI.claimNFT({actionType:'snowman'})
+                        if(!that.nftClaimed){
+                            that.config.chainAPI.claimNFT({actionType:'snowball'})
+                            that.nftClaimed = true;
+                        }
                     }                   
                 }
 
@@ -2666,7 +2670,10 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                     if(e.body.threeMesh.name === 'snowball'){
                         that.spawnSnowMan();                        
                         targetSpot.inUse = false;                        
-                        that.config.chainAPI.claimNFT({actionType:'snowman'})
+                        if(!that.nftClaimed){
+                            that.config.chainAPI.claimNFT({actionType:'snowball'})
+                            that.nftClaimed = true;
+                        }                                     
                     }                   
                 }
 
