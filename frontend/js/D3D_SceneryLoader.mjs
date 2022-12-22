@@ -29,6 +29,9 @@ export default class SceneryLoader {
         this.height = this.config.height;
         this.width = this.config.width;
         this.depth = this.config.depth;
+        this.circles3d = [];
+        this.lists3d = [];
+        this.centerPiece = [];
         if(this.config.playerStartPos){
             this.playerStartPos = this.config.playerStartPos;
         } else {
@@ -63,6 +66,7 @@ export default class SceneryLoader {
         this.rows = this.config.floorPlan.filter(plan => plan.type == 'rows');
         this.lists =  this.config.floorPlan.filter(plan => plan.type == 'list');
         this.lists3d =  this.config.floorPlan.filter(plan => plan.type == 'list3d');     
+        this.circles3d =  this.config.floorPlan.filter(plan => plan.type == 'circle3d');     
 
     }
 	loadScenery = () =>{

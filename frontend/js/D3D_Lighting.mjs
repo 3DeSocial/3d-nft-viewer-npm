@@ -78,7 +78,7 @@ export default class Lighting {
 
     initLights = () =>{
         //Add lights
-        this.aLight = new THREE.AmbientLight(0xffffff, 0.25);
+        this.aLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(this.aLight);
 
         this.dLighting = [];
@@ -141,7 +141,7 @@ export default class Lighting {
     initLightsForConfig = () =>{
         //Add lights
         if(this.confg.lights.aLight){
-            this.aLight = new THREE.AmbientLight(0xffffff, 0.25);
+            this.aLight = new THREE.AmbientLight(0xffffff, 0.5);
             this.scene.add(this.aLight);
         }        
     }

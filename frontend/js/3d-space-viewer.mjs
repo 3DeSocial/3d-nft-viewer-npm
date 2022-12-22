@@ -681,8 +681,8 @@ const params = {
                 //that.resizeCanvas();
                 that.loadingScreen.hide();
                 that.addListeners();
-                this.audioListener.setMasterVolume(1);
-
+                that.audioListener.setMasterVolume(1);
+                this.camera.setRotationFromEuler(new THREE.Euler( 0,0,0, 'XYZ' ));
             });
 
   
@@ -839,7 +839,7 @@ const params = {
         this.camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 100 );
         this.camera.updateProjectionMatrix(); 
         this.camera.add( this.audioListener );
-        //this.camera.rotation.set(0,0,0);
+        this.camera.rotation.set(0,0,0);
         this.camera.position.copy(this.sceneryLoader.playerStartPos);
 
         this.raycaster = new THREE.Raycaster({camera:this.camera});
@@ -2992,6 +2992,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             console.log('items2d: ', items2d);
 
             let maxItems3D =this.layoutPlotter.getMaxItemCount3D();
+            console.log('maxItems3D: ',maxItems3D);
             let items3d = options.sceneAssets.filter(nft => nft.is3D);
             console.log('items3d: ', items3d);
 
@@ -3044,7 +3045,6 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
     }
 
     haveVRM = (items3dToRender) =>{
-        console.log(items3dToRender);
         //items3dToRender.filter(item=>(item.nft.))
         return true; //test
     }
