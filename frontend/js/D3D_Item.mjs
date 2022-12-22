@@ -400,8 +400,6 @@ export default class Item {
                     };
                   
                     this.scaleToFitScene(obj3D, posVector);
-                   
-                    console.log('DO fix Y coord');
                     this.fixYCoord(obj3D, posVector); 
                     resolve(obj3D);
 

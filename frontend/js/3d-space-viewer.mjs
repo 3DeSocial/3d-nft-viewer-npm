@@ -642,8 +642,10 @@ const params = {
 
                 if(this.config.isCurated){
                     this.initBranding();
-                    this.initSnowFall();
-                    this.initSnowMen();
+                    if(this.config.isWinter){
+                        this.initSnowFall();
+                        this.initSnowMen();
+                    }
                 };
 
                 this.renderer.render(this.scene,this.camera);
@@ -1146,7 +1148,7 @@ const params = {
                     y: this.moveTo.y,
                     z: this.moveTo.z,
                     loop: false,
-                    duration: distance*200,
+                    duration: distance*100,
                     easing: 'linear',
                     complete: function(anim) {
                      /*   // adjust the camera

@@ -265,7 +265,7 @@ export default class LayoutPlotter  {
         let circles = (this.sceneryLoader.circles)?this.sceneryLoader.circles:[];
             circles.forEach((circle,idx)=>{
                 if(!circle.name){
-                    console.log('initPosQ circle.yOffset',circle.yOffset);
+                    //console.log('initPosQ circle.yOffset',circle.yOffset);
                     circle.center = {x:0,y:0,z:0};
                     if(idx % 2){
                         circle.spots = this.calcCircleSpots(circle); // get list of spots

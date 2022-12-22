@@ -48,7 +48,21 @@ class Item2d extends Item {
         this.initItemEvents();
         this.isItem = true;
         let that = this;
+        if(this.config.spot){
+            console.log('config.spot:',this.config.spot.dims);
+            if(this.config.spot.dims.height){
+                this.height = this.config.spot.dims.height
+            }
+            if(this.config.spot.dims.width){
+                this.width = this.config.spot.dims.width
+            }
+            if(this.config.spot.dims.depth){
+                this.depth = this.config.spot.dims.depth
+            }
+            console.log('ITEM 2D config.spot: ',this.config.spot.dims.width,this.config.spot.dims.height,this.config.spot.dims.depth);
+            console.log('ITEM 2D config.spot: ',this.width,this.height,this.depth);
 
+        };           
         this.nftDisplayData = this.parseNFTDisplayData();
 
     }
@@ -174,19 +188,7 @@ class Item2d extends Item {
 
     initMesh = async(nft) =>{
         let that = this;
-        if(nft.spot){
-            console.log('ITEM 2D USING CONFIG SPOT DIMS');
-            console.log(nft.spot);
-            if(nft.spot.height){
-                this.height = nft.spot.height
-            }
-            if(nft.spot.width){
-                this.width = nft.spot.width
-            }
-            if(nft.spot.depth){
-                this.depth = nft.spot.depth
-            }
-        };        
+     
         return new Promise(( resolve, reject ) => {
 
             let imageUrl = nft.imageURLs[0];
@@ -199,13 +201,16 @@ class Item2d extends Item {
 //console.log('loading image: ',proxyImageURL);
             let nftData = nft;
             var img = new Image();
-console.log('target image dims: ', this.width,this.height);
-let targetWidth = this.width; let targetHeight = this.height;
+let targetWidth = that.width; let targetHeight = that.height;
+console.log('target image dims: ', targetWidth,targetHeight);
 
                 img.onload = function(){
                   var height = this.height;
                   var width = this.width;
                   let dims = that.calculateAspectRatioFit(width, height, targetWidth,targetHeight);
+                  console.log('targetWidth: ',targetWidth,', actual: ',dims.width);
+                  console.log('targetHeight: ',targetHeight,', actual: ',dims.height);
+
                   const textureLoader = new THREE.TextureLoader()
                   const texture = textureLoader.load(this.src);
                   const geometry = new THREE.BoxGeometry( dims.width, dims.height, 0.10 );
