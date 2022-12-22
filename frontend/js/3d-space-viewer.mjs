@@ -1122,7 +1122,19 @@ const params = {
         this.renderer.domElement.addEventListener( 'mouseup', this.checkMouse, false );
         this.renderer.domElement.addEventListener( 'mousedown', this.checkMouseDown, false );        
         this.renderer.domElement.addEventListener( 'dblclick', this.checkMouseDbl, false );
+        this.renderer.domElement.addEventListener("touchstart", ()=>{
+        if(!this.holding){
+            const d = new Date();
+            that.startTime = d.getTime();
+            that.holding = true;
+        }}, false);
 
+        this.renderer.domElement.addEventListener("touchend", ()=>{
+            console.log('touchend');
+            fwdPressed = false;
+            that.holding = false;
+            that.startTime = false;
+        }, false);
     }
 
 checkMouseDown = (e) =>{
@@ -1134,11 +1146,7 @@ checkMouseDown = (e) =>{
        // console.log('action.btnIndex: ',action.btnIndex);
         switch(parseInt(action.btnIndex)){
             case 1:
-                if(!this.holding){
-                    const d = new Date();
-                    this.startTime = d.getTime();
-                    this.holding = true;
-                }
+
             break;
         }
     }
