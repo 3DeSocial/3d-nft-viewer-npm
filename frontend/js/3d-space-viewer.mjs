@@ -2439,7 +2439,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         this.nftzLogo.isProp = true;
 
 
-        let placePos = new THREE.Vector3(-25,30,-25);
+        let placePos = new THREE.Vector3(-25,30,-20);
         this.nftzLogo.place(placePos).then((model,pos)=>{
             model.rotateX(Math.PI/4);
         })
@@ -3009,9 +3009,9 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                                 scene: this.scene,
                                 loader: this.loader,
                                 loaders: this.loaders,
-                                width: 6,
+                                width: 3, // IMPORTANT! Default size for images unless specified in circle layout
                                 depth: 0.1,
-                                height: 6,
+                                height: 2,
                                 modelsRoute: this.config.modelsRoute,
                                 nftsRoute: this.config.nftsRoute,
                                 layoutPlotter: this.layoutPlotter,
@@ -3093,11 +3093,9 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             physicsWorld: (opts.physicsWorld)?opts.physicsWorld:null,
         }
 
-        console.log('init item for model format: ',extension.toLowerCase());
         if(extension.trim().toLowerCase()==='vrm'){
             config.animations = this.config.animations;
             item = new ItemVRM(config);
-            console.log('return vrm item');
         } else {
             item = new Item(config);
         };

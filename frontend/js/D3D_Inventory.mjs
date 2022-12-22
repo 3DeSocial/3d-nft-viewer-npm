@@ -76,7 +76,9 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
     initItems2d = (itemList)=>{
         let that = this;
         let items = [];
-        let noPositions = this.config.layoutPlotter.initPosQ();
+        let noPositions = this.config.layoutPlotter.initPosQ({defaltDims:{width:this.config.width,
+                                                            height:this.config.height,
+                                                            depth:this.config.depth}});
         let center = this.center;
         //console.log('initItems: ',itemList,noPositions);
 
@@ -179,7 +181,9 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         let that = this;
 
         if(!this.config.layoutPlotter.posQ){
-            this.config.layoutPlotter.initPosQ();
+            this.config.layoutPlotter.initPosQ({defaltDims:{width:this.config.width,
+                                                            height:this.config.height,
+                                                            depth:this.config.depth}});
         };
 
         let noPositions = this.config.layoutPlotter.getMaxItemCount3D();

@@ -11,6 +11,9 @@ class Item2d extends Item {
             nftsRoute: 'nfts',
             castShadow: true,
             isImage: true,
+            width: 1,
+            height:1,
+            depth:0.1,
             // override the actions array to set click handlers
             actions: {'click': function(e){ 
                 console.log('clicked');
@@ -45,17 +48,7 @@ class Item2d extends Item {
         this.initItemEvents();
         this.isItem = true;
         let that = this;
-        if(this.config.spot){
-            if(this.config.spot.height){
-                this.height = this.config.spot.height
-            }
-            if(this.config.spot.width){
-                this.width = this.config.spot.width
-            }
-            if(this.config.spot.depth){
-                this.depth = this.config.spot.depth
-            }
-        };
+
         this.nftDisplayData = this.parseNFTDisplayData();
 
     }
@@ -181,6 +174,19 @@ class Item2d extends Item {
 
     initMesh = async(nft) =>{
         let that = this;
+        if(nft.spot){
+            console.log('ITEM 2D USING CONFIG SPOT DIMS');
+            console.log(nft.spot);
+            if(nft.spot.height){
+                this.height = nft.spot.height
+            }
+            if(nft.spot.width){
+                this.width = nft.spot.width
+            }
+            if(nft.spot.depth){
+                this.depth = nft.spot.depth
+            }
+        };        
         return new Promise(( resolve, reject ) => {
 
             let imageUrl = nft.imageURLs[0];
@@ -195,6 +201,7 @@ class Item2d extends Item {
             var img = new Image();
 console.log('target image dims: ', this.width,this.height);
 let targetWidth = this.width; let targetHeight = this.height;
+
                 img.onload = function(){
                   var height = this.height;
                   var width = this.width;

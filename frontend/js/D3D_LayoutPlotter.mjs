@@ -242,10 +242,16 @@ export default class LayoutPlotter  {
       
     }
 
-    initPosQ = () =>{
+    initPosQ = (opts) =>{
         let that = this;
         this.maxItems = 0;
         this.posQ = [];
+        this.defaultDims ={width: 1, height: 1, depth:1};
+        if(opts){
+            if(opts.defaultDims){
+                this.defaultDims = opts.defaultDims;
+            }
+        }
         this.sceneryLoader.loadFloorPlan(); 
         let lists = (this.sceneryLoader.lists)?this.sceneryLoader.lists:[];
         lists.forEach((list,idx)=>{
@@ -266,6 +272,7 @@ export default class LayoutPlotter  {
                      } else {
                         circle.spots = this.calcCircleSpotsOffset(circle); // get list of spots
                     };
+
                     let noPos = circle.spots.length;
                     circle.spots.forEach((spot, idx)=>{
                         spot.rot = null; // look at center for circel layout
@@ -273,7 +280,21 @@ export default class LayoutPlotter  {
                         if(circle.yOffset){
                             spot.pos.y = spot.pos.y + circle.yOffset;
                         }
+
+                    spot.dims = that.defaultDims;that.defaultDims
+                    console.log('posQ defalt:',that.defaultDims)
+                    if(circle.width){
+                        spot.dims.width = circle.width;
+                    };
+                    if(circle.height){
+                        spot.dims.height = circle.height;
+                    };
+                    if(circle.depth){
+                        spot.dims.depth = circle.depth;
+                    }; 
                         spot.idx = idx;
+                    console.log('posQ spot dims:',spot.dims)
+
                         that.posQ.push(spot); 
                     })                    
                 }
@@ -335,7 +356,6 @@ export default class LayoutPlotter  {
                 };
                     let pos = {x:xCoord,y:floor,z:zCoord};
                         spot.pos = pos;
-                        spot.dims = {width:10, height: 10, depth: 10};
 
                         spot.target = center;
                     spots.push(spot);
