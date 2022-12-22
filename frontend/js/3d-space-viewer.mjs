@@ -832,10 +832,10 @@ const params = {
     }
     initCameraPlayer = () =>{
         // camera setup
-        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
+        this.camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 100 );
         this.camera.updateProjectionMatrix(); 
         this.camera.add( this.audioListener );
-        this.camera.rotation.set(0,0,0);
+        //this.camera.rotation.set(0,0,0);
         this.camera.position.copy(this.sceneryLoader.playerStartPos);
 
         this.raycaster = new THREE.Raycaster({camera:this.camera});
@@ -847,7 +847,7 @@ const params = {
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/600, 0.01, 100 );
         this.camera.add( this.audioListener );
-        this.camera.rotation.set(0,0,0);
+        //this.camera.rotation.set(0,0,0);
         //Only gotcha. Set a non zero vector3 as the camera position.
 //        this.camera.rotation.setX(0);
 
@@ -2661,6 +2661,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             if(e.body.threeMesh){
                 if(e.body.threeMesh.name){
                     if(e.body.threeMesh.name === 'snowball'){
+                        that.spawnSnowMan();                        
                         targetSpot.inUse = false;                        
                         that.config.chainAPI.claimNFT({actionType:'snowman'})
                     }                   
@@ -2990,10 +2991,10 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             items3d = items3d.concat(spookyNFTs)
             let items3dToRender = items3d.slice(0,maxItems3D);   
             console.log('items3dToRender: ',items3dToRender);
-            if(items2d.length===0){
+          /*  if(items2d.length===0){
                 items2d = items3d.slice(maxItems3D);
                 //display 2d images of 3d items if there are no more 2d images
-            };
+            };*/
 
 
             this.loadingScreen.startLoading({items:items2d,

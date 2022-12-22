@@ -183,7 +183,7 @@ class Item2d extends Item {
 //console.log('loading image: ',proxyImageURL);
             let nftData = nft;
             var img = new Image();
-
+console.log('target image dims: ', this.width,this.height);
                 img.onload = function(){
                   var height = this.height;
                   var width = this.width;

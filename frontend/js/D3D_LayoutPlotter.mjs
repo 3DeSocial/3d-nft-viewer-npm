@@ -269,8 +269,9 @@ export default class LayoutPlotter  {
                     let noPos = circle.spots.length;
                     circle.spots.forEach((spot, idx)=>{
                         spot.rot = null; // look at center for circel layout
+                        spot.layoutType = 'circle';
                         if(circle.yOffset){
-                            spot.y = spot.y + circle.yOffset;
+                            spot.pos.y = spot.pos.y + circle.yOffset;
                         }
                         spot.idx = idx;
                         that.posQ.push(spot); 

@@ -141,11 +141,17 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                       //  console.log('halfHeight: ',halfHeight,nftImgData);
                             spot.pos.y = spot.pos.y+halfHeight;
 
- 
-
                          item.place(spot.pos).then((mesh,pos)=>{
                              if(spot.rot){
                                 mesh.rotateY(spot.rot.y);
+                            } else {
+                                if(spot.layoutType){
+                                    if(spot.layoutType==='circle'){
+                                       let target = that.center.clone();
+                                        target.y=mesh.position.y;
+                                        mesh.lookAt(target);
+                                    }
+                                }
                             }
                             
                             items.push(item);
