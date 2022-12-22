@@ -2155,7 +2155,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                 let d = new Date();
                 let timeNow = d.getTime();
                 let timeDiff = timeNow - this.startTime;
-                if(timeDiff>5000){
+                if(timeDiff>2000){
                     fwdPressed = true;
                 }
             }
