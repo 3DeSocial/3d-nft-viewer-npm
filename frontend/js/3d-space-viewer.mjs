@@ -1307,8 +1307,7 @@ checkMouseDown = (e) =>{
                         })
                     };
                 } else {
-                    console.log('item has no config');
-                    console.log(item);
+
                             //that.hud.setSelectedItem(item);
 
                 }

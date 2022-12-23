@@ -15,7 +15,7 @@ export default class HUDBrowser  {
             ...config
         };
      
-     
+        this.inspectSize = new THREE.Vector3();
         this.selectedItem = null;
         this.thumEl = document.querySelector('img#sp-img');
         console.log(this.thumEl);
@@ -42,6 +42,12 @@ export default class HUDBrowser  {
             preview.style.display = 'inline-block';
             this.nftDisplayData = this.selectedItem.parseNFTDisplayData();               
         } 
+        /*
+        console.log('boxhelper size ',this.inspectSize);
+var box3 = new THREE.Box3();
+        box3.setFromObject( this.selectedItem.helper ); // or from mesh, same answer
+        box3.getSize(this.inspectSize); // pass in size so a new Vector3 is not allocated
+        console.log('boxhelper size ',this.inspectSize);*/
      
     }
     
@@ -73,9 +79,7 @@ export default class HUDBrowser  {
         this.config.scene.add(cbox);        
 
         if(mesh.rotation.y===0){
-            console.log('no rotation needed');
         } else {
-            console.log('rotating by ',mesh.rotation.y);
             cbox.rotateY(mesh.rotation.y);            
         };
         return cbox;
