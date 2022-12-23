@@ -682,7 +682,7 @@ const params = {
                 that.loadingScreen.hide();
                 that.addListeners();
                 that.audioListener.setMasterVolume(1);
-                this.camera.setRotationFromEuler(new THREE.Euler( 0,0,0, 'XYZ' ));
+                this.camera.setRotationFromEuler(new THREE.Euler( 0,Math.PI,0, 'XYZ' ));
             });
 
   
@@ -696,8 +696,9 @@ const params = {
 
     initSnowMen = () =>{
         let that = this;
-        let snowMenLayout = this.sceneryLoader.circles.filter(circle => (circle.name==='snowmen'));
-            this.targetSpots = this.layoutPlotter.calcCircleSpots(snowMenLayout[0]);
+        let snowMenLayout = this.sceneryLoader.snowmen;
+        console.log('snowMenLayoutL: ',snowMenLayout)
+            this.targetSpots = this.layoutPlotter.calcCircleSpots(snowMenLayout);
             this.snowMen = [];
             this.spawnSnowMan();
 
@@ -1119,7 +1120,7 @@ const params = {
     }
     addEventListenerMouseClick = ()=>{
         let that = this;
-        this.renderer.domElement.addEventListener( 'mouseup', this.checkMouse, false );
+        this.renderer.domElement.addEventListener( 'mouseup', this.checkMouseUp, false );
         this.renderer.domElement.addEventListener( 'mousedown', this.checkMouseDown, false );        
         this.renderer.domElement.addEventListener( 'dblclick', this.checkMouseDbl, false );
         this.renderer.domElement.addEventListener("touchstart", ()=>{
@@ -1130,7 +1131,6 @@ const params = {
         }}, false);
 
         this.renderer.domElement.addEventListener("touchend", ()=>{
-            console.log('touchend');
             fwdPressed = false;
             that.holding = false;
             that.startTime = false;
@@ -1140,7 +1140,7 @@ const params = {
 checkMouseDown = (e) =>{
         let that = this;
         let action = this.raycast(e);
-        if(!action.selectedPoint){
+        if(!action.selectedPoint){          
             return false;
         };
        // console.log('action.btnIndex: ',action.btnIndex);
@@ -1152,7 +1152,7 @@ checkMouseDown = (e) =>{
     }
 
 
-    checkMouse = (e) =>{
+    checkMouseUp = (e) =>{
         let that = this;
         let action = this.raycast(e);
         if(!action.selectedPoint){
@@ -1316,9 +1316,22 @@ checkMouseDown = (e) =>{
             this.actionTargetPos = item.getPosition();
             this.enableActionBtns();
         } else {
+            if(this.config.isCurated){
+                let e= action.e;
+                if(this.sounds.throwSound){
+                   this.sounds.throwSound.play();
+                } else {
+                    console.log('no throwSound');
+                }
+                let x = ( e.clientX / window.innerWidth ) * 2 - 1;
+                let y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+                this.mouse.set(x,y);
+                this.throwSnowBall(action.e, null);                    
+            }              
             this.hud.unSelectItem();
             this.disableActionBtns();
             this.hideStatusBar(['heart','diamond-count','confirm']);
+
         }
 
 
@@ -1883,6 +1896,7 @@ checkMouseDown = (e) =>{
             isOnWall = this.isOnWall(raycaster, intersects[0].point);
         };
         return {
+            e:e,
             isOnFloor: isOnFloor,
             isOnWall: isOnWall,
             btnIndex: btnIndex,
@@ -2164,7 +2178,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                 let d = new Date();
                 let timeNow = d.getTime();
                 let timeDiff = timeNow - this.startTime;
-                if(timeDiff>2000){
+                if(timeDiff>1500){
                     fwdPressed = true;
                 }
             }
@@ -3522,7 +3536,6 @@ initPlayerFirstPerson = () => {
     let newPos = null;
     let playerFloor = 0;
     let playerStartPos;
-    that.player = new THREE.Group();
 
     if(this.sceneryLoader.playerStartPos){
         playerStartPos = new THREE.Vector3(this.sceneryLoader.playerStartPos.x,this.sceneryLoader.playerStartPos.y,this.sceneryLoader.playerStartPos.z);

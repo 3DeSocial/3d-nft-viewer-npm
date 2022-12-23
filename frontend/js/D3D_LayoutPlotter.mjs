@@ -246,6 +246,7 @@ export default class LayoutPlotter  {
         let that = this;
         this.maxItems = 0;
         this.posQ = [];
+        this.posQ3D = [];
         this.defaultDims ={width: 1, height: 1, depth:1};
         if(opts){
             if(opts.defaultDims){
@@ -263,8 +264,58 @@ export default class LayoutPlotter  {
         }); 
 
         let circles = (this.sceneryLoader.circles)?this.sceneryLoader.circles:[];
+        console.log('circles 2d: ',circles);
+
             circles.forEach((circle,idx)=>{
-                if(!circle.name){
+                  if(circle.name!='snowmen'){
+                    //console.log('initPosQ circle.yOffset',circle.yOffset);
+                    circle.center = {x:0,y:0,z:0};
+                    if(idx % 2){
+                        circle.spots = this.calcCircleSpots(circle); // get list of spots
+                     } else {
+                        circle.spots = this.calcCircleSpotsOffset(circle); // get list of spots
+                    };
+
+                    let noPos = circle.spots.length;
+                    circle.spots.forEach((spot, idx)=>{
+
+                        spot.rot = null; // look at center for circel layout
+                        spot.layoutType = 'circle';
+                        if(circle.yOffset){
+                            spot.pos.y = spot.pos.y + circle.yOffset;
+                        }
+
+                        spot.dims = that.defaultDims;
+                        if(circle.width){
+                            console.log('circl3 2d widthL '+circle.width)
+
+                            spot.dims.width = circle.width;
+                        } else {
+                            console.log('circl3 2d has no width')
+                        }
+                        if(circle.height){
+                            spot.dims.height = circle.height;
+                        };
+                        if(circle.depth){
+                            spot.dims.depth = circle.depth;
+                        }; 
+                        spot.idx = idx;
+
+                        that.posQ.push(spot); 
+                    
+                    })                    
+                } else {
+                    console.log('skip snowmen')
+                }
+               
+            }); 
+        let circles3d = (this.sceneryLoader.circles3d)?this.sceneryLoader.circles3d:[];
+
+                    console.log('circles 3D: ',circles3d);
+
+            circles3d.forEach((circle,idx)=>{
+                console.log('circles3d: ', circle)
+                if(circle.name!='snowmen'){
                     //console.log('initPosQ circle.yOffset',circle.yOffset);
                     circle.center = {x:0,y:0,z:0};
                     if(idx % 2){
@@ -281,10 +332,14 @@ export default class LayoutPlotter  {
                             spot.pos.y = spot.pos.y + circle.yOffset;
                         }
 
-                        spot.dims = that.defaultDims;that.defaultDims
+                        spot.dims = that.defaultDims;
                         if(circle.width){
+                            console.log('circl3 3d widthL '+circle.width)
+
                             spot.dims.width = circle.width;
-                        };
+                        } else {
+                            console.log('circl3 3d has no width')
+                        }
                         if(circle.height){
                             spot.dims.height = circle.height;
                         };
@@ -293,23 +348,23 @@ export default class LayoutPlotter  {
                         }; 
                         spot.idx = idx;
 
-                        that.posQ.push(spot); 
+                        that.posQ3D.push(spot); 
                     })                    
+                } else {
+                    console.log('skip snowmen')
                 }
                
-            }); 
+               
+            });
+        let lists3d = (this.sceneryLoader.lists3d)?this.sceneryLoader.lists3d:[];
 
-        this.posQ3D = [];
-
-        let lists3d = this.sceneryLoader.lists3d;
-
-        lists3d.forEach((list,idx)=>{
+       lists3d.forEach((list,idx)=>{
             let noPos = list.spots.length;
             list.spots.forEach((spot, idx)=>{
                 spot.idx = idx;
                 that.posQ3D.push(spot); 
             })
-        }); 
+        });
 
         this.maxItems =this.posQ.length+this.posQ3D.length;
         return this.maxItems;
@@ -331,7 +386,9 @@ export default class LayoutPlotter  {
 
     calcCircleSpots = (circle) =>{
         //        {id:7, pos:{x: 7.6974523925781275, y: -0.5, z: 11.73381267645709}, dims:{width:1.5, height: 3}, rot:{x:0,y:1.57079632679,z:0}},
+        console.log('calcCircleSpots');
 
+        console.log(circle);
         let noItems = circle.maxItems*2; // use double positions then spit into 2 for offet
         let center = circle.center;
         let radius = circle.radius;
@@ -354,6 +411,7 @@ export default class LayoutPlotter  {
                 };
                     let pos = {x:xCoord,y:floor,z:zCoord};
                         spot.pos = pos;
+                        spot.dims = {width:circle.width, height: circle.height, depth: circle.depth};
 
                         spot.target = center;
                     spots.push(spot);
@@ -393,7 +451,7 @@ export default class LayoutPlotter  {
                 let pos = {x:xCoord,y:floor,z:zCoord};
 
                     spot.pos = pos;
-                    spot.dims = {width:10, height: 10, depth: 10};
+                    spot.dims = {width:circle.width, height: circle.height, depth: circle.depth};
                     spot.target = center;
                 spots.push(spot);
             }

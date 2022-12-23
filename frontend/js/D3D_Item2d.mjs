@@ -195,9 +195,16 @@ class Item2d extends Item {
             let proxyImageURL = that.config.imageProxyUrl +imageUrl;
             let nftData = nft;
             var img = new Image();
-            let targetWidth = that.width;
-            let targetHeight = that.height;
+               let targetWidth = this.width;
 
+            if(nft.spot.dims.width){
+                targetWidth = nft.spot.dims.width;
+            }
+            let targetHeight = this.height;
+            if(nft.spot.dims.height){
+               targetHeight = nft.spot.dims.height;
+            }
+           // console.log('targetWidth: ', targetWidth,'targetHeight: ',targetHeight)
                 img.onload = function(){
                   var height = this.height;
                   var width = this.width;
