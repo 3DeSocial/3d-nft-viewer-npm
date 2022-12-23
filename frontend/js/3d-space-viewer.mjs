@@ -698,7 +698,7 @@ const params = {
         let that = this;
         let snowMenLayout = this.sceneryLoader.snowmen;
         console.log('snowMenLayoutL: ',snowMenLayout)
-            this.targetSpots = this.layoutPlotter.calcCircleSpots(snowMenLayout);
+            this.targetSpots = this.layoutPlotter.calcCircleSpots(snowMenLayout[0]);
             this.snowMen = [];
             this.spawnSnowMan();
 
