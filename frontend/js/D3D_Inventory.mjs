@@ -278,7 +278,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
              //   console.log('placing item of format ',formats[0]);
                // console.log(item);
                 item.place(spot.pos).then((mesh,pos)=>{
-                 //   console.log('placed at ',spot.pos,mesh);
+                   console.log('3D item placed at ',spot.pos,mesh);
                     if(spot.rot){                    
                         if(item.isVRM){
                             mesh.scene.rotateY(spot.rot.y);

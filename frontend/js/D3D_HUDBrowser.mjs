@@ -52,7 +52,6 @@ var box3 = new THREE.Box3();
     }
     
     showSelectedThumbnail = () =>{
-        console.log(this.selectedItem.config);
         if(this.selectedItem.config.nft.imageURLs[0]){
              this.thumEl.src = this.selectedItem.config.nft.imageURLs[0]; 
         };

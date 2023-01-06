@@ -381,9 +381,30 @@ export default class Item {
 
                 if(root.scene){
                     loadedItem = root.scene;
+                    console.log('using root scene');
+                                        console.log(root);
+
                 } else {
+                    console.log('using root');
+                    console.log(root);
                     loadedItem = root;
-                };     
+                };
+                let armature = null;
+
+                loadedItem.traverse( ( child ) => {
+                    if (child.name==='Armature'){
+                                            console.log('Armature  child found');
+
+                        armature = child;
+                    }
+                })
+                if(loadedItem.Armature){
+                    console.log('Armature found');
+                    that.mesh = loadedItem.Armature.children[0];
+                }else {
+                     console.log('No Armature');
+                    that.mesh = loadedItem;
+                }  
             /*               
                 if(that.hasArmature()){
                     console.log('armature detected');
