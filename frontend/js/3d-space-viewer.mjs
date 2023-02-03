@@ -353,6 +353,30 @@ const params = {
       //  this.cannonDebugRenderer = new CannonDebugRenderer(this.scene, world)
     }
 
+    initTestAnimation = () =>{
+        let that = this;
+        let itemConfig = { animLoader: true,
+                            scene: this.scene,
+                            height:2.5,
+                            width:2.5,
+                            depth:2.5,
+                            modelUrl: this.config.avatarPath};
+
+        this.testAvatar = this.initItemForModel(itemConfig);
+        console.log('initTestAnimation');
+        console.log(itemConfig);
+        that.avatars.push(this.testAvatar);
+
+        let playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(0,2,0), 2, -2);
+
+        let placePos = new THREE.Vector3(0,playerFloor,0);
+        this.testAvatar.place(placePos, this.scene).then((mesh, pos)=>{
+          //  that.testAvatar.currentAnim.action.play();
+            console.log('initTestAnimation play started and mesh added');
+
+        })
+    }
+
     addGroundPlane = (y) =>{
         let floorWidth = 80;
         let floorLength = 80;
@@ -653,9 +677,8 @@ const params = {
                     this.initFootball();                    
                 };
                 this.initInventory(options);                
-                console.log('getSceneDims...');
+                this.initTestAnimation();
 
-                console.log(this.sceneryLoader.getSceneDims());
                 this.initCameraPlayer();     
 
                 if(that.config.firstPerson){
@@ -1379,7 +1402,7 @@ checkMouseDown = (e) =>{
                 let x = ( e.clientX / window.innerWidth ) * 2 - 1;
                 let y = - ( e.clientY / window.innerHeight ) * 2 + 1;
                 this.mouse.set(x,y);
-                this.throwSnowBall(action.e, null);                    
+               // this.throwSnowBall(action.e, null);                    
             }              
             this.hud.unSelectItem();
             this.disableActionBtns();
@@ -1827,7 +1850,7 @@ checkMouseDown = (e) =>{
                     let x = ( e.clientX / window.innerWidth ) * 2 - 1;
                     let y = - ( e.clientY / window.innerHeight ) * 2 + 1;
                     this.mouse.set(x,y);
-                    this.throwSnowBall(e, null);                    
+                 //   this.throwSnowBall(e, null);                    
                 } else {
                     this.showSelectedMeshData(action);
                 }
@@ -1836,7 +1859,7 @@ checkMouseDown = (e) =>{
                 let x = ( e.clientX / window.innerWidth ) * 2 - 1;
                 let y = - ( e.clientY / window.innerHeight ) * 2 + 1;
                 this.mouse.set(x,y);
-                this.throwSnowBall(e, null);
+                //this.throwSnowBall(e, null);
             break;
         }
     }

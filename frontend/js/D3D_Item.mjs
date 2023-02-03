@@ -393,8 +393,8 @@ export default class Item {
         let that = this;
 
         return new Promise((resolve,reject)=>{
-           // console.log('fetchModel: ',modelUrl);
-           // console.log('that.loader: ',that.loader);            
+         console.log('fetchModel: ',modelUrl);
+           console.log('that.loader: ',that.loader);            
 
 
             that.loader.load(modelUrl, (root)=> {
