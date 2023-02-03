@@ -32,13 +32,13 @@ export default class AnimLoader {
     
       
         this.modelUrl = this.config.modelUrl;
-        this.mixer = null;
        
         this.mesh = this.config.mesh
         this.animRunning = false;
         this.animations = null;
         this.isItem = false;
         this.isImage = false;
+        this.animationActions = [];        
         if(this.config.modelUrl){
             console.log('check modelUrl');
             this.getFormatFromModelUrl();
@@ -53,26 +53,143 @@ export default class AnimLoader {
         let url =this.createAnimRequest();
         console.log('requestString: ',url);
 
-
+/*
         fetch(url,{ method: "get"})
                 .then(response => response.text())
                 .then((data)=>{
                     this.animPosts = data;
                 });
+*/
 
-
-        this.animUrls =  [  {hex:'1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2',url:'https://desodata.azureedge.net/unzipped/1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2/fbx/normal/Arm_Stretching.fbx'},
-                           // {hex:'95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2',url:'https://desodata.azureedge.net/unzipped/95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2/fbx/normal/Happy_Idle.fbx'},
-                            {hex:'8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85',url:'https://desodata.azureedge.net/unzipped/8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85/fbx/normal/Warrior_Idle.fbx'},
-                            {hex:'287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4',url:'https://desodata.azureedge.net/unzipped/287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4/fbx/normal/Victory.fbx'}];
+        this.animUrls =  [  {name:'walk',hex:'0c91b85ef07adc0feeb0a8cb7215e3c678a39ede0f842fb6fac6f9009dc30653',url:'https://desodata.azureedge.net/unzipped/0c91b85ef07adc0feeb0a8cb7215e3c678a39ede0f842fb6fac6f9009dc30653/fbx/normal/StandardWalk.fbx'},
+                            {name:'stretch',hex:'1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2',url:'https://desodata.azureedge.net/unzipped/1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2/fbx/normal/Arm_Stretching.fbx'},
+                            {name:'idle_happy',hex:'95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2',url:'https://desodata.azureedge.net/unzipped/95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2/fbx/normal/Happy_Idle.fbx'},
+                            {name:'idle_warrior',hex:'8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85',url:'https://desodata.azureedge.net/unzipped/8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85/fbx/normal/Warrior_Idle.fbx'},
+                            {name:'victory',hex:'287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4',url:'https://desodata.azureedge.net/unzipped/287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4/fbx/normal/Victory.fbx'}];
 
         this.lastPlayed = 0;
+        
     }
 
+    loadAnim = async (animUrl, mixer) =>{
+        let that = this;
+        return new Promise((resolve,reject)=>{
+                let animationAction = null;
+                let fbxLoader = new FBXLoader();
+                let animName = this.getNameFromPath(animUrl);
+              //add an animation from another file
+                fbxLoader.load(
+                    animUrl,
+                    (object) => {
+
+                        let animToUse = null;
+                        object.animations.forEach((anim)=>{
+                            if(parseFloat(anim.duration)>0){
+                                animToUse = anim;
+                            }
+                        });
+                        if(animToUse){
+
+                            animationAction = mixer.clipAction(animToUse);
+                            that.animationActions[animName]= animationAction;
+                            console.log('loaded: ',animName);                            
+                            resolve(animationAction);                            
+                        };
+
+                });
+        });
+    }
+
+getDefaultAnim = (mesh, mixer) =>{
+    let defaultAnimToUse = null;
+    mesh.animations.forEach((anim)=>{
+        if(parseFloat(anim.duration)>0){
+            defaultAnimToUse = anim;
+        }
+    });
+    if(defaultAnimToUse){
+        const animationAction = mixer.clipAction(defaultAnimToUse)
+        this.animationActions['idle']= animationAction;
+        animationAction.play();
+        this.currentAnimName = 'idle';
+    };
+
+}
+
+    switchAnim =(animName)=>{
+        if(animName===this.currentAnimName){
+            return false;
+        };
+        if(!this.animationActions[animName]){
+            console.log('no anim called: ',animName);
+            console.log(this.animationActions);
+            return false;
+        };
+        if(this.currentAnimName){
+        console.log('fade')            
+            this.crossFade(this.animationActions[this.currentAnimName],  this.animationActions[animName], 0.2);
+        } else {
+        console.log('play')            
+            this.animationActions[animName].play();           
+        }
+
+        this.currentAnimName = animName;
+        return true;
+    }
+
+    crossFade = (from, to, duration) =>{
+
+    to.reset();  
+    to.setEffectiveTimeScale( 1 )
+    to.setEffectiveWeight( 1 )      
+    to.clampWhenFinished = true;
+    to.crossFadeFrom(from, duration, true);
+    to.play();
+
+    }
+
+    getNameFromPath = (path) =>{
+        let parts = path.split('/');
+        let name = parts[parts.length-1];
+        name = name.replace('.fbx','');
+        return name;
+    }
     createAnimRequest = () =>{
         return 'https://nftzapi.azurewebsites.net/api/post/getposts?hexesStr='+this.config.animHashes.join(',');
     }
 
+    createClips = async (mesh) =>{
+        let that = this;
+        let animClips = [];
+        let loadedCtr = 0;
+        let mixer = new THREE.AnimationMixer(mesh);     
+        this.mixer = mixer;   
+        this.fbxLoader = new FBXLoader();
+        return new Promise((resolve,reject)=>{
+            that.animUrls.forEach((animMeta)=>{
+
+                that.fbxLoader.load(animMeta.url, (anim) => {
+                    //creates animation action
+                    let animToProcess = null;
+                    anim.animations.forEach((animation)=>{
+                        if(animation.duration>0){
+                            animToProcess = animation;
+                        }
+                    })
+
+                    let action = mixer.clipAction(animToProcess);
+                        animClips[animMeta.name] = animMeta;
+                        animClips[animMeta.name].action = action;                        
+                        loadedCtr++;
+                      
+                        if(loadedCtr===that.animUrls.length){
+
+                            resolve(animClips);
+                        }
+                });
+            })
+        })
+    }
     playNextAnim = (animationUrl) =>{
         let animIndex = this.config.animations.indexOf(animationUrl);
         animIndex++;
@@ -184,6 +301,12 @@ export default class AnimLoader {
 
     }
 
+    fetchUrlByName = (name) => {
+        let anims = this.animUrls.filter(anim => (anim.name===name));
+        return (anims[0])?anims[0]:false;
+
+    }    
+
     fetchRandAnimUrl = () =>{
         let animIdx = this.getRandomInt(0,this.animUrls.length-1);
         return this.animUrls[animIdx].url;
@@ -293,7 +416,7 @@ scaleToFitScene = (obj3D, posVector) =>{
         // Use smallest ratio to scale the model
         if(obj3D.scale.set){
             obj3D.scale.set(minRatio, minRatio, minRatio);
-            obj3D.updateWorldMatrix();
+            obj3D.updateMatrixWorld();
         };
         
         let newMeshBounds = new THREE.Box3().setFromObject( obj3D );
@@ -311,7 +434,7 @@ scaleToFitScene = (obj3D, posVector) =>{
         //let yOffset = newLengthMeshBounds.y/2;
         //cbox.position.setY(cbox.position.y+yOffset);
         //cbox.add(obj3D);
-        //obj3D.updateWorldMatrix();
+        //obj3D.updateMatrixWorld();
 
         cbox.userData.owner = this; //set reference to Item
         that.scene.add(obj3D);    
