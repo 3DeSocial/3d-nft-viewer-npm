@@ -488,9 +488,8 @@ onErrorCallback = (e)=> {
 
 swapMeshForProfilePic = () =>{
     let that = this;
-
+    console.log('swapMeshForProfilePic: ',this.config.owner.ownerPublicKey);
     let faceMesh = this.findChildByName(this.mesh, 'ProfilePicHere');
-console.log('this.config.owner in Item:');
 console.log(this.config.owner);
     if(faceMesh){
         this.faceMesh = faceMesh;
