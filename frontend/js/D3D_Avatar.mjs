@@ -1,12 +1,14 @@
 import * as THREE from 'three';
-
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
-
-export default class AnimLoader {
+import { Physics } from '3d-nft-viewer';
+import { Item } from '3d-nft-viewer';
+import {AnimLoader} from '3d-nft-viewer';
+import { VOXMesh } from "three/examples/jsm/loaders/VOXLoader.js";
+export default class Avatar extends Item {
 
     constructor(config){
+
+
         let defaults = {
-            format: 'fbx',
             modelUrl: '',
             modelsRoute: 'models',
             nftsRoute: 'nfts',
@@ -21,184 +23,158 @@ export default class AnimLoader {
                 console.log(this);
             }}
         };
-    
+        super();
+
         this.config = {
             ...defaults,
             ...config
         };
+
+   
+
         this.isVRM = false;
 
         this.loader = this.config.loader;
-    
-      
+        if(!this.loader && this.config.is3D){
+            console.log('cannot init item without loader is 3d? ',this.config.is3D,' hex: ',this.config.postHashHex);
+        };
+        this.scene = this.config.scene;
+        this.height = this.config.height;
+        this.width = this.config.width;
+        this.depth = this.config.depth;
         this.modelUrl = this.config.modelUrl;
-       
+        this.mixer = null;
+        this.action = null;
         this.mesh = this.config.mesh
         this.animRunning = false;
         this.animations = null;
-        this.isItem = false;
-        this.isImage = false;
-        this.animationActions = [];        
+        this.actions = this.config.actions;
+        this.initItemEvents();
+        this.isItem = true;
+        this.isImage = this.config.isImage;
+        this.velocity = new THREE.Vector3();
+        this.direction = new THREE.Vector3();
+        this.rotVelocity = new THREE.Vector3();
+        this.nftDisplayData = this.parseNFTDisplayData();
         if(this.config.modelUrl){
             console.log('check modelUrl');
             this.getFormatFromModelUrl();
         } else {
-            console.log('no modelUrl');
+           // console.log('no modelUrl');
         }
-        this.preloadAnims();
-    }
-
-    preloadAnims = () =>{
-        let that = this;
-        let url =this.createAnimRequest();
-        console.log('requestString: ',url);
-
-/*
-        fetch(url,{ method: "get"})
-                .then(response => response.text())
-                .then((data)=>{
-                    this.animPosts = data;
-                });
-*/
-
-        this.animUrls =  [  {name:'walk',hex:'0c91b85ef07adc0feeb0a8cb7215e3c678a39ede0f842fb6fac6f9009dc30653',url:'https://desodata.azureedge.net/unzipped/0c91b85ef07adc0feeb0a8cb7215e3c678a39ede0f842fb6fac6f9009dc30653/fbx/normal/StandardWalk.fbx'},
-                            {name:'stretch',hex:'1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2',url:'https://desodata.azureedge.net/unzipped/1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2/fbx/normal/Arm_Stretching.fbx'},
-                            {name:'idle_happy',hex:'95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2',url:'https://desodata.azureedge.net/unzipped/95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2/fbx/normal/Happy_Idle.fbx'},
-                            {name:'idle_warrior',hex:'8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85',url:'https://desodata.azureedge.net/unzipped/8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85/fbx/normal/Warrior_Idle.fbx'},
-                            {name:'victory',hex:'287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4',url:'https://desodata.azureedge.net/unzipped/287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4/fbx/normal/Victory.fbx'}];
-
-        this.lastPlayed = 0;
-        
-    }
-
-    loadAnim = async (animUrl, mixer) =>{
-        let that = this;
-        return new Promise((resolve,reject)=>{
-                let animationAction = null;
-                let fbxLoader = new FBXLoader();
-                let animName = this.getNameFromPath(animUrl);
-              //add an animation from another file
-                fbxLoader.load(
-                    animUrl,
-                    (object) => {
-
-                        let animToUse = null;
-                        object.animations.forEach((anim)=>{
-                            if(parseFloat(anim.duration)>0){
-                                animToUse = anim;
-                            }
-                        });
-                        if(animToUse){
-
-                            animationAction = mixer.clipAction(animToUse);
-                            that.animationActions[animName]= animationAction;
-                            console.log('loaded: ',animName);                            
-                            resolve(animationAction);                            
-                        };
-
-                });
-        });
-    }
-
-getDefaultAnim = (mesh, mixer) =>{
-    let defaultAnimToUse = null;
-    mesh.animations.forEach((anim)=>{
-        if(parseFloat(anim.duration)>0){
-            defaultAnimToUse = anim;
-        }
-    });
-    if(defaultAnimToUse){
-        const animationAction = mixer.clipAction(defaultAnimToUse)
-        this.animationActions['idle']= animationAction;
-        animationAction.play();
-        this.currentAnimName = 'idle';
-    };
-
-}
-
-    switchAnim =(animName)=>{
-        if(animName===this.currentAnimName){
-            return false;
-        };
-        if(!this.animationActions[animName]){
-            console.log('no anim called: ',animName);
-            console.log(this.animationActions);
-            return false;
-        };
-        if(this.currentAnimName){
-        console.log('fade')            
-            this.crossFade(this.animationActions[this.currentAnimName],  this.animationActions[animName], 0.2);
+        if(this.config.physicsWorld){
+            this.initPhysics();
         } else {
-        console.log('play')            
-            this.animationActions[animName].play();           
+           // console.log('nophysicsWorld');
+
+        }
+        this.anims = [];
+        if(this.config.animLoader){
+            console.log('config has animLoader');
+            this.animLoader = this.initAnimLoader({animHashes:[ '287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4',
+                                                                    '8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85',
+                                                                    '95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2',
+                                                                    '1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2']});
+            console.log('we have this.animLoader');
+        } else {
+            console.log('config has NO animLoader');
+
+        }
+    }
+
+    initPhysics = () =>{
+        console.log('initPhysics');
+        this.physics = new Physics({world:this.config.physicsWorld, scene:this.config.scene});
+    }
+
+    getFormatFromModelUrl = () =>{
+        let parts = this.config.modelUrl.split('.');
+        let format = parts[parts.length-1];
+
+        if(format!=this.config.format){
+            this.config.format = format;
         }
 
-        this.currentAnimName = animName;
-        return true;
     }
 
-    crossFade = (from, to, duration) =>{
+    parseNFTDisplayData = () =>{
+        let nft = this.config.nft;
+        if(!this.config.nft){
+            return false;
+        };
+        if(!nft.profileEntryResponse){
+            return {};
+        };        
+        let data = {
+            creator: nft.profileEntryResponse.username,
+            description: nft.body,
+            maxPrice: (nft.maxPrice>0)?this.convertNanosToDeso(nft.maxPrice,4):0,
+            minPrice: (nft.minPrice>0)?this.convertNanosToDeso(nft.minPrice,4):0,
+            isBuyNow: nft.isBuyNow,
+            likeCount: nft.likeCount,
+            created:this.formatDate(nft.timeStamp / 1000000),
+            diamondCount:nft.diamondCount,
+            buyNowPrice: this.convertNanosToDeso(nft.buyNowPrice,4),
+            copies: nft.numNFTCopies,
+            copiesForSale: nft.numNFTCopiesForSale,            
+            commentCount: nft.commentCount,
+            nftzUrl: 'https://nftz.me/nft/'+nft.postHashHex,
+            postHashHex: +nft.postHashHex,
+            lastBidPrice: (nft.lastBidPrice>0)?this.convertNanosToDeso(nft.lastBidPrice,4):0,
+        }
 
-    to.reset();  
-    to.setEffectiveTimeScale( 1 )
-    to.setEffectiveWeight( 1 )      
-    to.clampWhenFinished = true;
-    to.crossFadeFrom(from, duration, true);
-    to.play();
-
+        return data;
     }
 
-    getNameFromPath = (path) =>{
-        let parts = path.split('/');
-        let name = parts[parts.length-1];
-        name = name.replace('.fbx','');
-        return name;
-    }
-    createAnimRequest = () =>{
-        return 'https://nftzapi.azurewebsites.net/api/post/getposts?hexesStr='+this.config.animHashes.join(',');
+
+    convertNanosToDeso = (nanos, d) =>{
+        return (nanos / 1e9).toFixed(d)        
     }
 
-    createClips = async (mesh) =>{
+    formatDate =(date)=> {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(date).toLocaleTimeString('en', options);
+    }    
+
+    resetVelocity = ()=>{
+        this.velocity.setX(0);
+        this.velocity.setY(0);
+        this.velocity.setZ(0);
+        this.direction.set(0,0,0)
+    }
+
+    hasArmature = () =>{
         let that = this;
-        let animClips = [];
-        let loadedCtr = 0;
-        let mixer = new THREE.AnimationMixer(mesh);     
-        this.mixer = mixer;   
-        this.fbxLoader = new FBXLoader();
-        return new Promise((resolve,reject)=>{
-            that.animUrls.forEach((animMeta)=>{
+        this.armature = null;
+        this.modelChildren = [];
+        let scene;
 
-                that.fbxLoader.load(animMeta.url, (anim) => {
-                    //creates animation action
-                    let animToProcess = null;
-                    anim.animations.forEach((animation)=>{
-                        if(animation.duration>0){
-                            animToProcess = animation;
-                        }
-                    })
 
-                    let action = mixer.clipAction(animToProcess);
-                        animClips[animMeta.name] = animMeta;
-                        animClips[animMeta.name].action = action;                        
-                        loadedCtr++;
-                      
-                        if(loadedCtr===that.animUrls.length){
+        if(this.root.armature){
+            this.armature = this.root.armature;
+            return true;
+        };
 
-                            resolve(animClips);
-                        }
-                });
-            })
-        })
-    }
-    playNextAnim = (animationUrl) =>{
-        let animIndex = this.config.animations.indexOf(animationUrl);
-        animIndex++;
-
-        if(!this.config.animations[animIndex]){
-            animIndex = 0;
+        if(this.root.scene){
+            scene = this.root.scene;
+        } else {
+            scene = this.root;
         }
 
-        this.loadMixamo(this.config.animations[animIndex]);
+        if(!scene.children){
+            console.log('scene has no children');
+            return false;
+        }
+   
+        scene.children.forEach((el)=>{
+            if(el.name === 'Armature'){
+                that.armature = el;
+            } else {
+                that.modelChildren.push(el);
+            }
+        });
+
+        return (!this.armature === null);
     }
 
     hasAnimations = (obj) =>{
@@ -245,7 +221,94 @@ getDefaultAnim = (mesh, mixer) =>{
             return false;
         }
     }
-  
+    initItemEvents = () =>{
+        this.meshPlacedEvent = new CustomEvent('placed', {detail: {mesh: this.mesh}});
+    }
+
+    placeModel = (pos) =>{
+        let that = this;
+        return new Promise((resolve,reject)=>{
+            this.fetchModel(this.modelUrl, pos)
+            .then((model)=>{
+                resolve(model);
+            }).catch((err=>{
+                console.log( err);
+            }))
+        })
+    
+    }
+
+    place = (pos, destScene) =>{
+        let that = this;
+        
+        if(typeof(pos)==='undefined'){
+            throw('Cant place at undefined position');
+        };
+
+        if(destScene){
+            this.scene = destScene;
+        };
+
+        return new Promise((resolve,reject)=>{
+            if(that.mesh){
+                that.mesh.position.copy(pos);
+                that.scene.add(this.mesh);
+                //that.fixYCoord(this.mesh, pos);
+                if(that.config.physicsWorld){
+                    that.addToPhysicsWorld();
+                }
+
+                resolve(this.mesh, pos);
+            } else{
+                this.fetchModelUrl()
+                .then((modelUrl)=>{
+                    if(!that.retrievedModelUrlIsValid(modelUrl)){
+                        reject('Invalid ModelUrl in ExtraData: '+modelUrl);
+                        return;
+                    } else {
+                        //console.log('validated modelUrl: ',modelUrl);
+                        that.modelUrl = modelUrl;
+                        that.placeModel(pos)
+                        .then((model)=>{
+                            that.mesh = model;
+
+                             /*if(that.hasAnimations(false)){
+                                that.startAnimation(0,THREE.LoopRepeat);
+                            } else {
+                               console.log('no animations',this.config.postHashHex);
+                                console.log(model);
+                                console.log('root: ');
+                                console.log(that.root);
+                            };*/
+
+                            if(that.config.physicsWorld){
+                                that.addToPhysicsWorld();
+                            }
+                            let loadedEvent = new CustomEvent('loaded', {detail: {mesh: this.mesh, position:pos}});
+                            document.body.dispatchEvent(loadedEvent);
+                            document.body.dispatchEvent(this.meshPlacedEvent);
+                            resolve(model, pos);
+                        })
+                    };
+                }).catch(err =>{
+                    console.log(err);
+                })
+            }
+        });
+
+    }
+
+    addToPhysicsWorld = () =>{
+
+        let opts = {
+                    shape: 'box',
+                    mesh: this.mesh,
+                    bodyType: CANNON.Body.STATIC
+                };
+
+        this.physicsBody = this.physics.addToPhysicsWorld(opts);
+    }
+
     retrievedModelUrlIsValid = (modelUrl) =>{
         if(typeof(modelUrl)==='undefined'){
             return false;        
@@ -262,7 +325,39 @@ getDefaultAnim = (mesh, mixer) =>{
         return true;
     }
 
-  /*  fetchAnimUrl = async() =>{
+    remove = () =>{
+        this.scene.remove(this.mesh.children[0]);
+    }
+    moveTo = (pos)=>{
+       // console.log('current: ',this.mesh.position);
+       // console.log('moveto: ',pos);
+        this.mesh.position.copy(pos);
+    }
+
+    centerMeshInScene = (gltfScene) =>{
+        let firstMesh = null;
+
+        if(gltfScene.children.length === 1){
+            firstMesh = gltfScene.children[0];
+            firstMesh.geometry.center();
+            return firstMesh;            
+        } else {
+            gltfScene.traverse( c => {
+
+                if ( c.isMesh ) {
+
+                    firstMesh = c;
+                    firstMesh.geometry.center();
+                    return firstMesh;  
+                }
+
+            } );
+        }
+
+
+    }
+    
+    fetchModelUrl = async() =>{
         let that = this;
 
         return new Promise((resolve,reject)=>{
@@ -272,7 +367,7 @@ getDefaultAnim = (mesh, mixer) =>{
                 return;
             } else {
                 let url = this.config.nftsRoute;
-                console.log('fetchAnimUrl: ',this.config.nftsRoute);
+                console.log('fetchModelUrl: ',this.config.nftsRoute);
                 if(url.trim()===''){
                     reject('No nftsRoute or modelUrl exists for this item');
                     return;
@@ -294,32 +389,12 @@ getDefaultAnim = (mesh, mixer) =>{
             }
         })
         
-    }*/
-
-    fetchAnimUrl = (hex) => {
-        return (this.animUrls[hex])?this.animUrls[hex]:false;
-
     }
 
-    fetchUrlByName = (name) => {
-        let anims = this.animUrls.filter(anim => (anim.name===name));
-        return (anims[0])?anims[0]:false;
-
-    }    
-
-    fetchRandAnimUrl = () =>{
-        let animIdx = this.getRandomInt(0,this.animUrls.length-1);
-        return this.animUrls[animIdx].url;
-    }
-
-
-    fetchRandAnim = () =>{
-        let animIdx = this.getRandomInt(0,this.animUrls.length-1);
-        return this.animUrls[animIdx];
-    }
-
-    getRandomInt = (min, max) => {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
+    initAnimLoader = (config) =>{
+        console.log('initAnimLoader');
+        let animLoader = new AnimLoader(config);
+        return animLoader;
     }
 
     fetchModel = async(modelUrl, posVector) =>{
@@ -329,24 +404,59 @@ getDefaultAnim = (mesh, mixer) =>{
         return new Promise((resolve,reject)=>{
            // console.log('fetchModel: ',modelUrl);
            // console.log('that.loader: ',that.loader);            
+
+
             that.loader.load(modelUrl, (root)=> {
                 that.root = root;
                 let loadedItem = null;
 
                 if(root.scene){
                     loadedItem = root.scene;
+                    console.log('use scene');
                 } else {
                     loadedItem = root;
+                    console.log('use root');
+
                 };     
+
             /*               
                 if(that.hasArmature()){
                     console.log('armature detected');
                     console.log(this.armature);
                 } else {
-}
-}
 */
                     that.mesh = loadedItem;
+                    this.swapMeshForProfilePic();
+                    if(that.animLoader){
+                        that.mixer = new THREE.AnimationMixer(root);
+                        that.animLoader.getDefaultAnim(root,that.mixer);
+                        let walkUrl = that.config.avatarPath+'walk.fbx';
+                        let runUrl = that.config.avatarPath+'run.fbx';
+                        let jumpUrl = that.config.avatarPath+'jump.fbx';
+                        let danceUrl = that.config.avatarPath+'dance.fbx';
+                        let danceUrl2 = that.config.avatarPath+'dance2.fbx';                        
+                        let danceUrl3 = that.config.avatarPath+'dance3.fbx';                        
+
+
+                        console.log('walkUrl: ',walkUrl);
+                        console.log('runUrl: ',runUrl);
+                        console.log('jumpUrl: ',jumpUrl);
+                        console.log('danceUrl: ',danceUrl);
+
+                        let promise1 = that.animLoader.loadAnim(walkUrl, that.mixer);
+                        let promise2 = that.animLoader.loadAnim(runUrl, that.mixer);
+                        let promise3 = that.animLoader.loadAnim(jumpUrl, that.mixer);
+                        let promise4 = that.animLoader.loadAnim(danceUrl, that.mixer);
+                        let promise5 = that.animLoader.loadAnim(danceUrl2, that.mixer);
+                        let promise6 = that.animLoader.loadAnim(danceUrl3, that.mixer);
+                        let promises = [promise1,promise2,promise3,promise4,promise5,promise6];
+                        Promise.allSettled(promises).
+                          then((results) => results.forEach((result) => console.log(result.status)));                        
+                         console.log('all animations loaded');
+
+                    } else {
+                        console.log('no that.animLoader on load model');
+                    };
                     that.mesh.userData.owner = this;
                     that.mesh.owner = this;                
                     let obj3D = this.convertToObj3D(loadedItem);
@@ -356,9 +466,7 @@ getDefaultAnim = (mesh, mixer) =>{
                     };
                   
                     this.scaleToFitScene(obj3D, posVector);
-                   
-                    console.log('DO fix Y coord');
-                    this.fixYCoord(obj3D, posVector); 
+                   // this.fixYCoord(obj3D, posVector); 
                     resolve(obj3D);
 
               //  }
@@ -376,6 +484,54 @@ onProgressCallback = ()=> {}
 onErrorCallback = (e)=> {
     console.log('loading error');
     console.log(e);
+}
+
+swapMeshForProfilePic = () =>{
+    let that = this;
+
+    let faceMesh = this.findChildByName(this.mesh, 'ProfilePicHere');
+console.log('this.config.owner in Item:');
+console.log(this.config.owner);
+    if(faceMesh){
+        this.faceMesh = faceMesh;
+        let remoteProfilePic = 'https://node.deso.org/api/v0/get-single-profile-picture/'+this.config.owner.ownerPublicKey;
+        this.loadRemoteTexture(remoteProfilePic).then((texture)=>{
+            var material = new THREE.MeshBasicMaterial({ map: texture });    
+            this.faceMesh.material =material;
+        })
+
+    }
+
+}
+
+
+loadRemoteTexture = (imageUrl) =>{
+    let that = this;
+    let proxyImageURL = 'https://nftzapi.azurewebsites.net/api/query/getimage?url=' +imageUrl;    
+console.log('load profile pic from: ',proxyImageURL);
+    return new Promise((resolve,reject)=>{
+        var img = new Image();
+            img.onload = function(){
+              const textureLoader = new THREE.TextureLoader()
+              const texture = textureLoader.load(this.src);
+              resolve(texture);
+        };
+
+        img.addEventListener('error', (img, error) =>{
+          console.log('could not load image',img.src);
+       //   console.log(error);
+          reject(img.src)
+        });
+        img.src = proxyImageURL;
+
+    });
+}
+findChildByName =(mesh, name) =>{
+    for (var i = 0; i < mesh.children.length; i++) {
+        if (mesh.children[i].name === name) {
+            return mesh.children[i];
+        }
+    }
 }
 
 scaleToFitScene = (obj3D, posVector) =>{
@@ -416,7 +572,7 @@ scaleToFitScene = (obj3D, posVector) =>{
         // Use smallest ratio to scale the model
         if(obj3D.scale.set){
             obj3D.scale.set(minRatio, minRatio, minRatio);
-            obj3D.updateMatrixWorld();
+            obj3D.updateWorldMatrix();
         };
         
         let newMeshBounds = new THREE.Box3().setFromObject( obj3D );
@@ -434,14 +590,11 @@ scaleToFitScene = (obj3D, posVector) =>{
         //let yOffset = newLengthMeshBounds.y/2;
         //cbox.position.setY(cbox.position.y+yOffset);
         //cbox.add(obj3D);
-        //obj3D.updateMatrixWorld();
+        //obj3D.updateWorldMatrix();
 
         cbox.userData.owner = this; //set reference to Item
         that.scene.add(obj3D);    
         obj3D.position.copy(posVector);
-        console.log('set position after render in scale');
-       console.log('scaleToFitScene wants to add');
-       console.log(obj3D);
         cbox.updateMatrixWorld();    
     }
 
@@ -615,6 +768,7 @@ scaleToFitScene = (obj3D, posVector) =>{
 
         let lowestVertex = this.getBoxHelperVertices(helper);
         if(!lowestVertex){
+
             return false;
         };
         lowestVertex.applyMatrix4(helper.matrixWorld);
@@ -623,6 +777,32 @@ scaleToFitScene = (obj3D, posVector) =>{
             obj3D.position.setY(obj3D.position.y - yOffset);
         };
     }
+
+    startAnimClipByName = (name) =>{
+        if(!this.anims[name]){
+            return false;
+        };
+        if(this.anims[name].action){
+            this.anims[name].action.play();
+            console.log('play anim actin:', name);    
+            console.log(this.anims[name].action);
+            return true;
+        } else {
+            console.log('no anim ACTION for:', name);
+
+            return false;
+        }
+    }
+
+    stopAnimClipByName = (name) =>{
+
+        if(this.anims[name].action){
+            this.anims[name].action.stop();
+            return true;
+        } else {
+            return false;
+        }
+    }    
 
     startAnimation = (animIndex, loopType) =>{
 
@@ -639,7 +819,7 @@ scaleToFitScene = (obj3D, posVector) =>{
     }
 
     startCurrentAnimation = (loopType) => {
-        if(!loopType){
+    /*    if(!loopType){
             loopType = THREE.LoopRepeat
         };
         let that = this;
@@ -655,16 +835,13 @@ scaleToFitScene = (obj3D, posVector) =>{
                 this.action.play();
                 this.animRunning = true;
                 this.mixer.addEventListener('finished',(e)=>{
-                    console.log('animation not running now');                    
+                    //console.log('animation not running now');                    
                     that.setAnimRunning(false);
                 }, false);
             } else {
-                console.log('animation', animIndex, 'doesnt exist');
+                //console.log('animation', animIndex, 'doesnt exist');
             }
-        } else {
-            console.log('no animations: ');
-            console.log(this.mesh);
-        }
+        }*/
     }
 
     stopAnimation = () =>{
@@ -704,8 +881,9 @@ scaleToFitScene = (obj3D, posVector) =>{
         return false;
     }
 
-    getImportedObjectSize = (obj) =>{
-        let box = new THREE.Box3().setFromObject(obj);
+    getImportedObjectSize = () =>{
+        console.log('get size of this mesh');
+        let box = new THREE.Box3().setFromObject(this.mesh);
         let center = new THREE.Vector3();
         let size = new THREE.Vector3();
         let max = box.max;
@@ -762,10 +940,7 @@ scaleToFitScene = (obj3D, posVector) =>{
     }
 
     getPosition = () =>{
-        let copiedPos = new THREE.Vector3();
-            copiedPos.copy(this.mesh.position);
-          //  console.log('item pos: ', copiedPos);
-            return copiedPos;
+        return this.mesh.position;
     }
 
     positionItem = (model, posVector) =>{
@@ -776,6 +951,12 @@ scaleToFitScene = (obj3D, posVector) =>{
 
     }
 
+    updateAnimation = (delta) =>{
+        if(this.mixer.update){
+           this.mixer.update(delta);
+        }
+    }    
+
 }
 
-export {AnimLoader}
+export {Avatar}

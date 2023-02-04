@@ -7,11 +7,11 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { SnowFall, PlayerVR, AudioClipRemote, Physics, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { Avatar, SnowFall, PlayerVR, AudioClipRemote, Physics, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
-let fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = false, rotlftPressed = false, rotRgtPressed = false;
+let spacePressed = false, KeyBPressed = false, fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = false, rotlftPressed = false, rotRgtPressed = false;
 let nextPos = new THREE.Vector3();
 
 function CannonDebugRenderer(scene, world, options) {
@@ -248,7 +248,7 @@ CannonDebugRenderer.prototype = {
 
 const params = {
     debug: false,
-    firstPerson: true,
+    firstPerson: false,
     visualizeDepth: 10,
     gravity: - 30,
     playerSpeed: 8,
@@ -288,6 +288,7 @@ const params = {
             ...defaults,
             ...config
         };
+        this.avatars = [];
         this.containerInitialized = false;
         this.el = this.config.el;
         this.playerVelocity = new THREE.Vector3();
@@ -626,7 +627,7 @@ const params = {
                     };
                     this.initFootball();                    
                 };
-                this.initInventory(options);                
+                //this.initInventory(options);                
                 console.log('getSceneDims...');
 
                 console.log(this.sceneryLoader.getSceneDims());
@@ -649,7 +650,7 @@ const params = {
                         this.initSnowMen();
                     }
                 };
-
+                
                 this.renderer.render(this.scene,this.camera);
 
 
@@ -676,13 +677,15 @@ const params = {
                     };
 
                 }
-                that.animate();
+
                 sceneryloadingComplete = true;
                 //that.resizeCanvas();
                 that.loadingScreen.hide();
-                that.addListeners();
+              //  that.addListeners();
                 that.audioListener.setMasterVolume(1);
+                //if(this.firstPerson){
                 this.camera.setRotationFromEuler(new THREE.Euler( 0,Math.PI,0, 'XYZ' ));
+               // }
             });
 
   
@@ -839,7 +842,7 @@ const params = {
         // camera setup
         this.camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 100 );
         this.camera.updateProjectionMatrix(); 
-        this.camera.add( this.audioListener );
+       // this.camera.add( this.audioListener );
         this.camera.rotation.set(0,0,0);
         this.camera.position.copy(this.sceneryLoader.playerStartPos);
 
@@ -866,7 +869,7 @@ const params = {
     let playery = this.player.position.y;
     let playerz = this.player.position.z;
     //this.camPos.set(playerx,(playery),playerz);
-    this.controls.target.set(playerx,(playery-1),(playerz+0.001));
+    this.controls.target.set(playerx,(playery),(playerz+0.001));
         /*let cameraStartPos = new THREE.Vector3(this.config.cameraStartPos.x, this.config.cameraStartPos.y, this.config.cameraStartPos.z);
         this.camera.position.copy(cameraStartPos);
         this.camera.updateProjectionMatrix();        */
@@ -1060,10 +1063,39 @@ const params = {
                     case 'Digit6': that.inventory.setActive(6); break;
                     case 'Digit7': that.inventory.setActive(7); break;
                     case 'Digit8': that.inventory.setActive(8); break;
-                    case 'Space':
+                   case 'Space':
+                    e.preventDefault();
                         if ( that.playerIsOnGround ) {
+                            if(that.player.avatar){
+                                that.player.avatar.animLoader.switchAnim('jump');
+                                that.player.state = 'jump';
+                                spacePressed = true;                                
 
-                            that.playerVelocity.y = 10.0;
+                                that.playerVelocity.y = 6.0;
+
+
+                            };
+
+
+                        }
+
+                        break;
+                    case 'KeyB':
+                        if ( that.playerIsOnGround ) {
+                            if(that.player.avatar){
+                                let newState = 'dance'
+                                if(that.player.state == 'dance'){
+                                    newState = 'dance2';
+                                } else if(that.player.state == 'dance2'){
+                                    newState = 'dance3';
+                                } else if(that.player.state == 'dance3'){
+                                    newState = 'dance';
+                                };
+                                that.player.avatar.animLoader.switchAnim(newState);
+                                that.player.state = newState;
+                                KeyBPressed = true;
+                            };
+
 
                         }
 
@@ -2167,6 +2199,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
     
     render = () =>{
 
+ 
        // this.cannonDebugRenderer.update()
          if (this.renderer.xr.isPresenting === true) {
             if(this.vrControls){
@@ -2236,7 +2269,8 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             // raycast in direction of camera and move it if it's further than the closest point
 
         //this.controls.update();
-    //    this.updateAnimations(delta);
+        //this.updateAnimations(delta);
+        this.updateAvatarAnimations(delta);
         this.renderer.render(this.scene, this.camera);
         //this.hud.render();
 
@@ -2244,6 +2278,15 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
 
     updateAnimations = (delta)=>{
         this.sceneInventory.updateAnimations(delta);
+    }
+
+    updateAvatarAnimations = (delta) =>{
+        //update all visible items running animations in sceneInventory
+        this.avatars.forEach((item)=>{
+            if((item.mixer !== null)){
+                item.updateAnimation(delta);
+            }
+        })
     }
 
     updatePhysicsWorld =() =>{
@@ -3567,98 +3610,249 @@ initPlayerFirstPerson = () => {
 
 initPlayerThirdPerson = () => {
 
-    let that = this;
+     let that = this;
     let playerLoader = new GLTFLoader();
-    let item = that.initItemForModel({modelUrl:'./characters/AstridCentered.glb'});
-    this.mesh = item.model;
     let newPos = null;
     let playerFloor = 0;
+    let playerStartPos;
+
     if(this.sceneryLoader.playerStartPos){
-        let playerStartPos = new THREE.Vector3(this.sceneryLoader.playerStartPos.x,this.sceneryLoader.playerStartPos.y,this.sceneryLoader.playerStartPos.z);        
-        newPos = new THREE.Vector3(0,playerFloor,0);
+        playerStartPos = new THREE.Vector3(this.sceneryLoader.playerStartPos.x,this.sceneryLoader.playerStartPos.y,this.sceneryLoader.playerStartPos.z);
+    }
+        playerFloor = this.sceneryLoader.findFloorAt(playerStartPos, 8, 0);
+        playerStartPos.y = playerFloor;
 
-    } else {
-        playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(0,0,0), 2, -1);
-        newPos = new THREE.Vector3(0,playerFloor,0);
 
-    };
-    
     that.player = new THREE.Group();
+    that.player.position.copy(playerStartPos);
+    that.player.rotation.set(0,0,0);
     that.character = new THREE.Mesh(
-        new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
+        new RoundedBoxGeometry(  1.0, 2.0, 1.0, 10, 0.5),
         new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
     );
-
-    that.character.geometry.translate( 0, -1, 0 );
+  //  that.character.position.set(0,-1,0);
+    //offest the height of the character collider so it is on the floor
+    that.character.geometry.translate( 0, -2, 0 );
     that.character.capsuleInfo = {
-        radius: 0.5,
+        radius: (this.config.capsuleRadius)?this.config.capsuleRadius:0.5,
         segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
     };    
-    item.place(newPos).then((model,pos)=>{
+    that.character.rotation.set(0,0,0);
+    that.player.add(that.character);
+ 
+    let avatar = null;
+    if(this.config.avatarPath){
+
+        let avatarFile = this.config.avatars[this.config.avatar];
+        let path = this.config.avatarPath+this.config.avatar+'/'+avatarFile;
+        console.log('full avatar path: ',path)
+        console.log(this.config.owner);
+        let itemConfig = { avatar: avatar,
+                            owner: this.config.owner,
+                            avatarPath:this.config.avatarPath+this.config.avatar+'/',
+                            animLoader: true,
+                            scene: this.scene,
+                            format: 'fbx',
+                            height:2,
+                            width:2,
+                            depth:2,
+                            modelUrl: path};
+                            console.log('avatar config modelurl: ',path);
+                            console.log(itemConfig);
+        avatar = that.initAvatar(itemConfig);
+        let avatarY = -3;
+        console.log('avatarY offset: ', avatarY);
+        avatar.place(new THREE.Vector3(0,avatarY,0), this.player).then((model,pos)=>{
+              //     let avatarHeight = avatar.getImportedObjectSize();
+                 //   avatar.mesh.position.y  = -0.5-(avatarHeight/2); // minus half height minus capsule radius puts it in capsule
+            avatar.mesh.updateMatrixWorld();
+            that.scene.add( that.player );
+      //     that.player.position.y=playerFloor;
+
+            that.player.updateMatrixWorld();
+            that.player.model = avatar.mesh;
+            that.player.avatar = avatar;
+            that.avatars.push(avatar);
+            let playerHeight2 = that.getImportedObjectSize(that.player);
+            console.log('avatar height playerHeight2: ',playerHeight2);
+            let Yoffset = playerHeight2;
+            console.log(this.player.position.y)
+            console.log('playerFloor: ' +playerFloor);
+          //    that.player.position.y = playerFloor; // player center is half player height so posision this distance from floor
+            that.player.updateMatrixWorld();
+
+console.log('player position.y is on floor ',that.player.position.y);
+
+
+ console.log('playerStartPos with floor',playerStartPos);
+
+
+      /*  var helper = new THREE.BoxHelper(that.player, 0x00ff00);
+                helper.update();
+                this.scene.add(helper);*/
+              //  console.log('avatarHeight: ',avatarHeight);
+            that.createLabel(this.config.owner.ownerName, that.player, {x:0,y:-0.75,z:0});
+            console.log('created label')
+            this.addListeners();
+            that.animate();
+            });        
+        this.camera.lookAt(this.player);
+    }
+    
    
-         console.log('placed model: ');
-        // character
-       
-       // this.character.copy(pos);
-        model.position.setY(-1.4);
-        that.player.add(model);
-        model.updateMatrixWorld();
-        that.player.add(that.character);
-        that.character.updateMatrixWorld();
-        that.scene.add( that.player );
-        that.player.updateMatrixWorld();
-        that.addListeners();   
-    });
+}
+    addPlaneAtPos = (posVector) =>{
+        var geo = new THREE.PlaneBufferGeometry(100, 100);
+        var mat = new THREE.MeshPhongMaterial({ color: 0x99FFFF, side: THREE.DoubleSide });
+        var plane = new THREE.Mesh(geo, mat);
+        plane.rotateX( - Math.PI / 2);
+        plane.position.copy(posVector);
+        this.scene.add(plane);
+
+    }
+
+   createLabel = (text, group, pos) =>{
+        // Create a canvas element to render the text label
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext('2d');
+
+        // Set the font and text for the label
+        ctx.font = '40px Helvetica bold';
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'center';
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2, canvas.width);
+
+        // Create a texture from the canvas
+        var texture = new THREE.Texture(canvas);
+        texture.needsUpdate = true;
+
+        // Create a sprite material using the texture
+        var material = new THREE.SpriteMaterial({ map: texture });
+
+        // Create a sprite and position it above the 3D object
+        var label = new THREE.Sprite(material);
+        label.position.set(pos.x, pos.y, pos.z);
+
+        // Add the sprite to the scene
+        group.add(label);
+
+        // Make the sprite always face the camera
+        label.lookAt(this.camera.position);        
+    }    
+
+initAvatar = (opts)=>{
+    let item = null;
+
+    let urlParts = opts.modelUrl.split('.');
+    let extension = urlParts[urlParts.length-1];
+    let config = {
+        three: THREE,
+        loader: this.loaders.getLoaderForFormat(extension),
+        scene: this.scene,
+        animLoader: (opts.animLoader)?opts.animLoader:false,
+        height: (opts.height)?opts.height:this.config.scaleModelToHeight,
+        width: (opts.width)?opts.width:this.config.scaleModelToWidth,
+        depth: (opts.depth)?opts.depth:this.config.scaleModelToDepth,
+        modelUrl: opts.modelUrl,
+        modelsRoute: this.config.modelsRoute,
+        nftsRoute: this.config.nftsRoute,
+        format:extension,
+        physicsWorld: (opts.physicsWorld)?opts.physicsWorld:null,
+        avatar: (opts.avatar)?opts.avatar:null,
+        avatarPath: (opts.avatarPath)?opts.avatarPath:null,
+        owner: (opts.owner)?opts.owner:null            
+    }
+
+    if(extension.trim().toLowerCase()==='vrm'){
+        console.log('avatar is VRM');
+        config.animations = this.config.animations;
+        config.animLoader = true;
+        item = new ItemVRM(config);
+    } else {
+        console.log('avatar is NOT VRM');
+
+        item = new Avatar(config);
+    };
+
+    return item;
+
 }
 
- updatePlayer = ( delta )=> {
+updatePlayer = ( delta )=> {
     this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
     this.player.position.addScaledVector( this.playerVelocity, delta );
 
     // move the player
     const angle = this.controls.getAzimuthalAngle();
     if ( fwdPressed ) {
-
         this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
-        //let angleToCamera = Math.atan2( ( this.player.position.x - this.playerVelocity.x ), ( this.player.position.z - this.playerVelocity.z ) );
-       // this.player.rotation.y = angleToCamera;  
-       nextPos.copy( this.player.position);
-       nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
-        //this.player.lookAt(nextPos);
-        this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
     }
 
     if ( bkdPressed ) {
-
         this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
-       nextPos.copy( this.player.position);
-       nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
-        //this.player.lookAt(nextPos);      
-        this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
-
     }
 
     if ( lftPressed ) {
-
         this.tempVector.set( - 1, 0, 0 ).applyAxisAngle(  this.upVector, angle );
-       nextPos.copy( this.player.position);
-       nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
-        //this.player.lookAt(nextPos);
-        this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
-
     }
 
     if ( rgtPressed ) {
-
         this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
-       nextPos.copy( this.player.position);
-       nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
-        //this.player.lookAt(nextPos);
-        this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
-
     }
- 
-    this.player.updateMatrixWorld();
+    
+    if(fwdPressed||bkdPressed||lftPressed||rgtPressed){
+        this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
+        this.updatePlayerDirection(delta);         
+        if(this.player.avatar){  
+            if(!spacePressed){
+                  if(this.player.state!='walk'){
+                    if((this.player.state==='jump')){
+                        if(this.playerIsOnGround){
+                             if(this.player.avatar.animLoader.switchAnim('walk')){
+                                this.player.state = 'walk';
+                                console.log('state set: ',this.player.state);
+                            }
+                        }
+                    } else {
+                        if(this.player.avatar.animLoader.switchAnim('walk')){
+                            this.player.state = 'walk';
+                            console.log('state set: ',this.player.state);
+                        }
+                    }
+                   
+                }                 
+            }
+       
+        }
+
+    } else {
+        if(this.player.avatar){  
+            switch (this.player.state){
+                case 'walk':
+                case 'run':
+                    if(this.player.avatar.animLoader.switchAnim('idle')){
+                        this.player.state = 'idle';
+                        console.log('state set: ',this.player.state);
+                    };                   
+                    break;
+                case 'jump':
+                if(this.playerIsOnGround){
+                    if(this.player.avatar.animLoader.switchAnim('idle')){
+                        this.player.state = 'idle';
+                        console.log('state set: ',this.player.state);
+                    };
+                };
+                break;
+                case 'dance':
+                case 'dance2':
+                case 'dance3':
+                break;
+            }  
+               
+        }
+    }
+    this.player.updateMatrixWorld();        
+
 
     // adjust player position based on collisions
     const capsuleInfo = this.character.capsuleInfo;
@@ -3740,7 +3934,7 @@ initPlayerThirdPerson = () => {
     let playery = this.player.position.y;
     let playerz = this.player.position.z;
     //this.camPos.set(playerx,(playery),playerz);
-    this.controls.target.set(playerx,(playery),playerz);
+    this.controls.target.set(playerx,(playery-1),playerz);
     this.camera.position.add( this.controls.target );
   
     // if the player has fallen too far below the level reset their position to the start
@@ -3750,6 +3944,12 @@ initPlayerThirdPerson = () => {
 
     }
 
+}
+
+updatePlayerDirection = (delta) =>{
+    nextPos.copy( this.player.position);
+    nextPos.addScaledVector( this.tempVector, params.playerSpeed * delta );      
+    this.player.lookAt(nextPos);         
 }
 
     updatePlayerVR = (delta) =>{
