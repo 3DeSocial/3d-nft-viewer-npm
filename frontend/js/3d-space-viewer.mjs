@@ -627,10 +627,8 @@ const params = {
                     };
                     this.initFootball();                    
                 };
-                //this.initInventory(options);                
-                console.log('getSceneDims...');
+                this.initInventory(options);                
 
-                console.log(this.sceneryLoader.getSceneDims());
                 this.initCameraPlayer();     
 
                 if(that.config.firstPerson){
@@ -681,11 +679,11 @@ const params = {
                 sceneryloadingComplete = true;
                 //that.resizeCanvas();
                 that.loadingScreen.hide();
-              //  that.addListeners();
                 that.audioListener.setMasterVolume(1);
-                //if(this.firstPerson){
-                this.camera.setRotationFromEuler(new THREE.Euler( 0,Math.PI,0, 'XYZ' ));
-               // }
+                if(this.firstPerson){
+                    this.camera.setRotationFromEuler(new THREE.Euler( 0,Math.PI,0, 'XYZ' ));
+                    that.addListeners();
+                } 
             });
 
   
@@ -2233,11 +2231,12 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             this.controls.maxDistance = 1e-4;
 
             } else {
-/*
+
                 this.controls.maxPolarAngle = Math.PI / 2;
+                this.controls.minPolarAngle = Math.PI / 16;
                 this.controls.minDistance = 1;
-                this.controls.maxDistance = 20;
-*/
+                this.controls.maxDistance = 10;
+
             }
 
               if ( this.collider ) {
@@ -3619,9 +3618,8 @@ initPlayerThirdPerson = () => {
     if(this.sceneryLoader.playerStartPos){
         playerStartPos = new THREE.Vector3(this.sceneryLoader.playerStartPos.x,this.sceneryLoader.playerStartPos.y,this.sceneryLoader.playerStartPos.z);
     }
-        playerFloor = this.sceneryLoader.findFloorAt(playerStartPos, 8, 0);
-        playerStartPos.y = playerFloor;
-
+    playerFloor = this.sceneryLoader.findFloorAt(playerStartPos, 8, 0);
+    playerStartPos.y = playerFloor;
 
     that.player = new THREE.Group();
     that.player.position.copy(playerStartPos);
@@ -3630,7 +3628,6 @@ initPlayerThirdPerson = () => {
         new RoundedBoxGeometry(  1.0, 2.0, 1.0, 10, 0.5),
         new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
     );
-  //  that.character.position.set(0,-1,0);
     //offest the height of the character collider so it is on the floor
     that.character.geometry.translate( 0, -2, 0 );
     that.character.capsuleInfo = {
@@ -3645,8 +3642,7 @@ initPlayerThirdPerson = () => {
 
         let avatarFile = this.config.avatars[this.config.avatar];
         let path = this.config.avatarPath+this.config.avatar+'/'+avatarFile;
-        console.log('full avatar path: ',path)
-        console.log(this.config.owner);
+
         let itemConfig = { avatar: avatar,
                             owner: this.config.owner,
                             avatarPath:this.config.avatarPath+this.config.avatar+'/',
@@ -3661,41 +3657,19 @@ initPlayerThirdPerson = () => {
                             console.log(itemConfig);
         avatar = that.initAvatar(itemConfig);
         let avatarY = -3;
-        console.log('avatarY offset: ', avatarY);
         avatar.place(new THREE.Vector3(0,avatarY,0), this.player).then((model,pos)=>{
-              //     let avatarHeight = avatar.getImportedObjectSize();
-                 //   avatar.mesh.position.y  = -0.5-(avatarHeight/2); // minus half height minus capsule radius puts it in capsule
             avatar.mesh.updateMatrixWorld();
             that.scene.add( that.player );
-      //     that.player.position.y=playerFloor;
 
             that.player.updateMatrixWorld();
             that.player.model = avatar.mesh;
             that.player.avatar = avatar;
             that.avatars.push(avatar);
-            let playerHeight2 = that.getImportedObjectSize(that.player);
-            console.log('avatar height playerHeight2: ',playerHeight2);
-            let Yoffset = playerHeight2;
-            console.log(this.player.position.y)
-            console.log('playerFloor: ' +playerFloor);
-          //    that.player.position.y = playerFloor; // player center is half player height so posision this distance from floor
             that.player.updateMatrixWorld();
-
-console.log('player position.y is on floor ',that.player.position.y);
-
-
- console.log('playerStartPos with floor',playerStartPos);
-
-
-      /*  var helper = new THREE.BoxHelper(that.player, 0x00ff00);
-                helper.update();
-                this.scene.add(helper);*/
-              //  console.log('avatarHeight: ',avatarHeight);
             that.createLabel(this.config.owner.ownerName, that.player, {x:0,y:-0.75,z:0});
-            console.log('created label')
             this.addListeners();
             that.animate();
-            });        
+        });        
         this.camera.lookAt(this.player);
     }
     
@@ -3718,9 +3692,9 @@ console.log('player position.y is on floor ',that.player.position.y);
 
         // Set the font and text for the label
         ctx.font = '40px Helvetica bold';
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = 'green';
         ctx.textAlign = 'center';
-        ctx.fillText(text, canvas.width / 2, canvas.height / 2, canvas.width);
+        ctx.fillText(text, canvas.width*0.75, canvas.height / 2, canvas.width);
 
         // Create a texture from the canvas
         var texture = new THREE.Texture(canvas);
@@ -3934,7 +3908,7 @@ updatePlayer = ( delta )=> {
     let playery = this.player.position.y;
     let playerz = this.player.position.z;
     //this.camPos.set(playerx,(playery),playerz);
-    this.controls.target.set(playerx,(playery-1),playerz);
+    this.controls.target.set(playerx,(playery-1.5),playerz);
     this.camera.position.add( this.controls.target );
   
     // if the player has fallen too far below the level reset their position to the start
