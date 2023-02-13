@@ -631,11 +631,12 @@ const params = {
 
                 this.initCameraPlayer();     
 
-                if(that.config.firstPerson){
-                    that.initPlayerFirstPerson();
-                } else {
+                if(that.avatarEnabled()){
                     that.initPlayerThirdPerson();
+                } else {
+                    that.initPlayerFirstPerson();
                 }
+
                 this.initControls();
                 if ( 'xr' in navigator ) {
                     that.initVR();
@@ -812,6 +813,23 @@ const params = {
         if(obj.children.length===0){
             cb()
         }
+    }
+
+    avatarEnabled = () =>{
+        if(that.config.firstPerson){
+            console.log('first person selected')''
+            return false;
+        };
+        if(!this.config.avatarPath){
+            console.log('no avatarPath')
+            return false;
+        };
+        if(!this.config.avatar){
+            console.log('no avatar selected');
+            return false;
+        }
+        return true;
+
     }
 
     initContainer(parentDivEl){
