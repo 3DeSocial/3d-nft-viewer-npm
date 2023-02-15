@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
-import { Physics } from '3d-nft-viewer';
-
+import { AnimLoader, Physics } from '3d-nft-viewer';
 import { VOXMesh } from "three/examples/jsm/loaders/VOXLoader.js";
 export default class Item {
 
@@ -62,7 +61,18 @@ export default class Item {
            // console.log('nophysicsWorld');
 
         }
+        this.anims = [];
+        if(this.config.animLoader){
+            console.log('config has animLoader');
+            this.animLoader = this.initAnimLoader({animHashes:[ '287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4',
+                                                                    '8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85',
+                                                                    '95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2',
+                                                                    '1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2']});
+            console.log('we have this.animLoader');
+        } else {
+            console.log('config has NO animLoader');
 
+        }
     }
 
     initPhysics = () =>{
@@ -221,11 +231,17 @@ export default class Item {
     
     }
 
-    place = (pos) =>{
+    place = (pos, destScene) =>{
         let that = this;
+        
         if(typeof(pos)==='undefined'){
             throw('Cant place at undefined position');
         };
+
+        if(destScene){
+            this.scene = destScene;
+        };
+
         return new Promise((resolve,reject)=>{
             if(that.mesh){
                 that.mesh.position.copy(pos);
@@ -249,14 +265,14 @@ export default class Item {
                         .then((model)=>{
                             that.mesh = model;
 
-                            if(that.hasAnimations(false)){
+                             /*if(that.hasAnimations(false)){
                                 that.startAnimation(0,THREE.LoopRepeat);
                             } else {
-                            /*    console.log('no animations',this.config.postHashHex);
+                               console.log('no animations',this.config.postHashHex);
                                 console.log(model);
                                 console.log('root: ');
-                                console.log(that.root);*/
-                            };
+                                console.log(that.root);
+                            };*/
 
                             if(that.config.physicsWorld){
                                 that.addToPhysicsWorld();
@@ -368,6 +384,12 @@ export default class Item {
         
     }
 
+    initAnimLoader = (config) =>{
+        console.log('initAnimLoader');
+        let animLoader = new AnimLoader(config);
+        return animLoader;
+    }
+
     fetchModel = async(modelUrl, posVector) =>{
         
         let that = this;
@@ -375,15 +397,21 @@ export default class Item {
         return new Promise((resolve,reject)=>{
            // console.log('fetchModel: ',modelUrl);
            // console.log('that.loader: ',that.loader);            
+
+
             that.loader.load(modelUrl, (root)=> {
                 that.root = root;
                 let loadedItem = null;
 
                 if(root.scene){
                     loadedItem = root.scene;
+                    console.log('use scene');
                 } else {
                     loadedItem = root;
+                    console.log('use root');
+
                 };     
+
             /*               
                 if(that.hasArmature()){
                     console.log('armature detected');
@@ -391,6 +419,46 @@ export default class Item {
                 } else {
 */
                     that.mesh = loadedItem;
+                    this.swapMeshForProfilePic();
+                    if(that.animLoader){
+                        that.mixer = new THREE.AnimationMixer(root);
+                        if(root.animations.length>0){
+                            console.log('model has some animations on root');
+                            that.animLoader.getDefaultAnim(root,that.mixer);
+
+                        } else if(root.model.animations.length>0){
+                            console.log('model has some animations on root.model');
+                            that.animLoader.getDefaultAnim(root.model,that.mixer);
+
+                        }
+                        if(that.config.avatarPath){
+                            // load fbx animations if there are any
+                            let walkUrl = that.config.avatarPath+'walk.fbx';
+                            let runUrl = that.config.avatarPath+'run.fbx';
+                            let jumpUrl = that.config.avatarPath+'jump.fbx';
+                            let danceUrl = that.config.avatarPath+'dance.fbx';
+                            let danceUrl2 = that.config.avatarPath+'dance2.fbx';                        
+                            let danceUrl3 = that.config.avatarPath+'dance3.fbx';                        
+
+
+                            console.log('walkUrl: ',walkUrl);
+                            console.log('runUrl: ',runUrl);
+                            console.log('jumpUrl: ',jumpUrl);
+                            console.log('danceUrl: ',danceUrl);
+
+                            let promise1 = that.animLoader.loadAnim(walkUrl, that.mixer);
+                            let promise2 = that.animLoader.loadAnim(runUrl, that.mixer);
+                            let promise3 = that.animLoader.loadAnim(jumpUrl, that.mixer);
+                            let promise4 = that.animLoader.loadAnim(danceUrl, that.mixer);
+                            let promise5 = that.animLoader.loadAnim(danceUrl2, that.mixer);
+                            let promise6 = that.animLoader.loadAnim(danceUrl3, that.mixer);
+                            let promises = [promise1,promise2,promise3,promise4,promise5,promise6];
+                            Promise.allSettled(promises).
+                              then((results) => results.forEach((result) => console.log(result.status)));                        
+                             console.log('all animations loaded');
+
+                        }
+                    }
                     that.mesh.userData.owner = this;
                     that.mesh.owner = this;                
                     let obj3D = this.convertToObj3D(loadedItem);
@@ -418,6 +486,55 @@ onProgressCallback = ()=> {}
 onErrorCallback = (e)=> {
     console.log('loading error');
     console.log(e);
+}
+
+swapMeshForProfilePic = () =>{
+    let that = this;
+
+    let faceMesh = this.findChildByName(this.mesh, 'ProfilePicHere');
+    if(faceMesh){
+
+        this.faceMesh = faceMesh;
+        let remoteProfilePic = 'https://node.deso.org/api/v0/get-single-profile-picture/'+this.config.owner.ownerPublicKey;
+        this.loadRemoteTexture(remoteProfilePic).then((texture)=>{
+            var material = new THREE.MeshBasicMaterial({ map: texture });    
+            this.faceMesh.material =material;
+        })
+
+    } else {
+        console.log('do not use faceMesh - none in model');
+    }
+
+}
+
+
+loadRemoteTexture = (imageUrl) =>{
+    let that = this;
+    let proxyImageURL = 'https://nftzapi.azurewebsites.net/api/query/getimage?url=' +imageUrl;    
+console.log('load profile pic from: ',proxyImageURL);
+    return new Promise((resolve,reject)=>{
+        var img = new Image();
+            img.onload = function(){
+              const textureLoader = new THREE.TextureLoader()
+              const texture = textureLoader.load(this.src);
+              resolve(texture);
+        };
+
+        img.addEventListener('error', (img, error) =>{
+          console.log('could not load image',img.src);
+       //   console.log(error);
+          reject(img.src)
+        });
+        img.src = proxyImageURL;
+
+    });
+}
+findChildByName =(mesh, name) =>{
+    for (var i = 0; i < mesh.children.length; i++) {
+        if (mesh.children[i].name === name) {
+            return mesh.children[i];
+        }
+    }
 }
 
 scaleToFitScene = (obj3D, posVector) =>{
@@ -664,6 +781,32 @@ scaleToFitScene = (obj3D, posVector) =>{
         };
     }
 
+    startAnimClipByName = (name) =>{
+        if(!this.anims[name]){
+            return false;
+        };
+        if(this.anims[name].action){
+            this.anims[name].action.play();
+            console.log('play anim actin:', name);    
+            console.log(this.anims[name].action);
+            return true;
+        } else {
+            console.log('no anim ACTION for:', name);
+
+            return false;
+        }
+    }
+
+    stopAnimClipByName = (name) =>{
+
+        if(this.anims[name].action){
+            this.anims[name].action.stop();
+            return true;
+        } else {
+            return false;
+        }
+    }    
+
     startAnimation = (animIndex, loopType) =>{
 
         /* accepts 
@@ -679,7 +822,7 @@ scaleToFitScene = (obj3D, posVector) =>{
     }
 
     startCurrentAnimation = (loopType) => {
-        if(!loopType){
+    /*    if(!loopType){
             loopType = THREE.LoopRepeat
         };
         let that = this;
@@ -701,7 +844,7 @@ scaleToFitScene = (obj3D, posVector) =>{
             } else {
                 //console.log('animation', animIndex, 'doesnt exist');
             }
-        }
+        }*/
     }
 
     stopAnimation = () =>{
@@ -741,8 +884,9 @@ scaleToFitScene = (obj3D, posVector) =>{
         return false;
     }
 
-    getImportedObjectSize = (obj) =>{
-        let box = new THREE.Box3().setFromObject(obj);
+    getImportedObjectSize = () =>{
+        console.log('get size of this mesh');
+        let box = new THREE.Box3().setFromObject(this.mesh);
         let center = new THREE.Vector3();
         let size = new THREE.Vector3();
         let max = box.max;
@@ -809,6 +953,12 @@ scaleToFitScene = (obj3D, posVector) =>{
     rotateItem = () =>{
 
     }
+
+    updateAnimation = (delta) =>{
+        if(this.mixer.update){
+           this.mixer.update(delta);
+        }
+    }    
 
 }
 

@@ -102,11 +102,13 @@ export default class AnimLoader {
 
 getDefaultAnim = (mesh, mixer) =>{
     let defaultAnimToUse = null;
+      console.log('getDefaultAnim animations to check:',mesh.animations.length);
     mesh.animations.forEach((anim)=>{
         if(parseFloat(anim.duration)>0){
             defaultAnimToUse = anim;
         }
     });
+    console.log('getDefaultAnim using: ',defaultAnimToUse);
     if(defaultAnimToUse){
         const animationAction = mixer.clipAction(defaultAnimToUse)
         this.animationActions['idle']= animationAction;
@@ -121,15 +123,11 @@ getDefaultAnim = (mesh, mixer) =>{
             return false;
         };
         if(!this.animationActions[animName]){
-            console.log('no anim called: ',animName);
-            console.log(this.animationActions);
             return false;
         };
         if(this.currentAnimName){
-        console.log('fade')            
             this.crossFade(this.animationActions[this.currentAnimName],  this.animationActions[animName], 0.2);
         } else {
-        console.log('play')            
             this.animationActions[animName].play();           
         }
 
@@ -138,14 +136,12 @@ getDefaultAnim = (mesh, mixer) =>{
     }
 
     crossFade = (from, to, duration) =>{
-
-    to.reset();  
-    to.setEffectiveTimeScale( 1 )
-    to.setEffectiveWeight( 1 )      
-    to.clampWhenFinished = true;
-    to.crossFadeFrom(from, duration, true);
-    to.play();
-
+        to.reset();  
+        to.setEffectiveTimeScale( 1 )
+        to.setEffectiveWeight( 1 )      
+        to.clampWhenFinished = true;
+        to.crossFadeFrom(from, duration, true);
+        to.play();
     }
 
     getNameFromPath = (path) =>{

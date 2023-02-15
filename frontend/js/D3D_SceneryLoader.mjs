@@ -198,10 +198,11 @@ export default class SceneryLoader {
             mergedGeometry.boundsTree = new MeshBVH( mergedGeometry, { lazyGeneration: false } );
             this.bvh = mergedGeometry.boundsTree;
             let collider = new THREE.Mesh( mergedGeometry );
-            collider.material.wireframe = true;
+          /*  collider.material.wireframe = true;
             collider.material.opacity = 0.5;
-            collider.material.transparent = true;
+            collider.material.transparent = true;*/
             if(this.config.visualize===true){
+                console.log('SceneryLoader visualize: ',this.config.visualize);
                 this.visualizer = new MeshBVHVisualizer( collider, 10 );
             }
 

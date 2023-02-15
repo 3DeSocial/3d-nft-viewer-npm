@@ -7,7 +7,7 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { Avatar, SnowFall, PlayerVR, AudioClipRemote, Physics, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { ExtraData3DParser, Avatar, SnowFall, PlayerVR, AudioClipRemote, Physics, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let playerIsOnGround = false;
@@ -628,16 +628,54 @@ const params = {
                     this.initFootball();                    
                 };
                 this.initInventory(options);                
-
                 this.initCameraPlayer();     
 
-                if(that.avatarEnabled()){
-                    that.initPlayerThirdPerson();
+                if(this.avatarEnabled()){
+                    console.log('avatarEnabled, initItem')
+                        this.config.chainAPI.fetchPostDetail({postHashHex:this.config.avatar}).then((res)=>{
+                            res.json().then((json)=>{
+                                let extraDataString = null;
+                                if(json.PostExtraData){
+                                    extraDataString = json.PostExtraData['3DExtraData']
+                                } else if (json.path3D){
+                                    extraDataString = json.path3D
+                                };
+                                if(extraDataString){
+                                    console.log('currentUser:',this.config.currentUser);
+                                    let avatarConfig = {animLoader: true,
+                                                        // TO DO - enable overriding with different folder for animations
+                                                        width: 3, 
+                                                        height:3, 
+                                                        depth:3, 
+                                                        nftPostHashHex:this.config.avatar,
+                                                        extraDataString:extraDataString,
+                                                        owner: { // avatar owner is curretn user
+                                                            ownerName: this.config.currentUser.Username,
+                                                            ownerPublicKey: this.config.currentUser.PublicKeyBase58Check,
+                                                            ownerDescription: this.config.currentUser.Description
+                                                        }
+                                                    };
+                                    console.log('avatarConfig:');
+                                    console.log(avatarConfig);
+
+                                    this.avatar = this.initItem(avatarConfig);
+
+                                    that.initPlayerThirdPerson();
+                                    this.initControls();                                    
+                                } else {
+                                    console.log('no 3Dextra data on post: ',json);
+                                }
+                            })
+
+                        })
                 } else {
+                    console.log('no avatar, firstPerson')
+                    this.config.firstPerson =true;
                     that.initPlayerFirstPerson();
+                    this.initControls();                    
                 }
 
-                this.initControls();
+
                 if ( 'xr' in navigator ) {
                     that.initVR();
                 }   
@@ -680,11 +718,11 @@ const params = {
                 sceneryloadingComplete = true;
                 //that.resizeCanvas();
                 that.loadingScreen.hide();
+              //  that.addListeners();
                 that.audioListener.setMasterVolume(1);
-                if(this.firstPerson){
-                    this.camera.setRotationFromEuler(new THREE.Euler( 0,Math.PI,0, 'XYZ' ));
-                    that.addListeners();
-                } 
+                //if(this.firstPerson){
+                this.camera.setRotationFromEuler(new THREE.Euler( 0,Math.PI,0, 'XYZ' ));
+               // }
             });
 
   
@@ -816,20 +854,19 @@ const params = {
     }
 
     avatarEnabled = () =>{
-        if(that.config.firstPerson){
-            console.log('first person selected')''
-            return false;
-        };
-        if(!this.config.avatarPath){
-            console.log('no avatarPath')
+        if(this.config.firstPerson){
+            console.log('avatarEnabled: first person selected');
             return false;
         };
         if(!this.config.avatar){
             console.log('no avatar selected');
             return false;
-        }
-        return true;
-
+        };
+        if(this.config.avatar){
+            console.log('have avatar: ',this.config.avatar);
+            return true;
+        };
+        return false;
     }
 
     initContainer(parentDivEl){
@@ -861,6 +898,8 @@ const params = {
        // this.camera.add( this.audioListener );
         this.camera.rotation.set(0,0,0);
         this.camera.position.copy(this.sceneryLoader.playerStartPos);
+        this.camera.position.z = this.camera.position.z+2;
+        this.camera.position.y = this.camera.position.y-2;
 
         this.raycaster = new THREE.Raycaster({camera:this.camera});
         this.pRaycaster = new THREE.Raycaster();
@@ -1021,7 +1060,7 @@ const params = {
         window.addEventListener( 'keydown', function ( e ) {
                 switch ( e.code ) {
 
-                    case 'KeyW':
+ case 'KeyW':
                         fwdPressed = true; 
                         that.controlProxy.dir = 'f';                         
 
@@ -1049,11 +1088,10 @@ const params = {
                         that.controlProxy.dir = 'rr';
                         that.controlProxy.rot = 'rr';
                         break;
-                    case 'KeyM': that.throwActiveItem(); break;
+                   // case 'KeyM': that.throwActiveItem(); break;
                     case 'NumpadAdd': that.setMasterVolume(1); break;
                     case 'NumpadSubtract': that.setMasterVolume(0); break;   
                     case 'Numpad0': 
-                        that.resetBall();
                     break;
                     case 'Numpad4': 
                         //that.moveMeshLeft();
@@ -1066,7 +1104,13 @@ const params = {
                     break;    
                     case 'Numpad2': 
                         //that.moveMeshBack();
-                    break;    
+                    break;
+                    case 'NumpadAdd': 
+                        //that.moveMeshBack();
+                    break;                        
+                    case 'NumpadSubtract': 
+                        //that.moveMeshBack();
+                    break;                     
                     case 'Enter':
                         that.throwSnowBall(e, null);
                     break;
@@ -1079,8 +1123,7 @@ const params = {
                     case 'Digit6': that.inventory.setActive(6); break;
                     case 'Digit7': that.inventory.setActive(7); break;
                     case 'Digit8': that.inventory.setActive(8); break;
-                   case 'Space':
-                    e.preventDefault();
+                    case 'Space':
                         if ( that.playerIsOnGround ) {
                             if(that.player.avatar){
                                 that.player.avatar.animLoader.switchAnim('jump');
@@ -1121,7 +1164,7 @@ const params = {
 
             } );
 
-            window.addEventListener( 'keyup', function ( e ) {
+                        window.addEventListener( 'keyup', function ( e ) {
 
                 switch ( e.code ) {
 
@@ -1129,11 +1172,11 @@ const params = {
                     case 'KeyS': bkdPressed = false; break;
                     case 'KeyD': rgtPressed = false; break;
                     case 'KeyA': lftPressed = false; break;
-
+                    case 'Space': spacePressed = false; break;
+                    case 'KeyBPressed': KeyBPressed = false; break;
                 }
 
             } );
-
     }
     moveMeshLeft = () =>{
         if(this.hud.selectedItem){
@@ -2242,19 +2285,18 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             }
         };
 
-            if ( params.firstPerson ) {
+            if ( this.config.firstPerson ) {
 
             this.controls.maxPolarAngle = Infinity;
             this.controls.minDistance = 1e-4;
             this.controls.maxDistance = 1e-4;
 
             } else {
-
+/*
                 this.controls.maxPolarAngle = Math.PI / 2;
-                this.controls.minPolarAngle = Math.PI / 16;
                 this.controls.minDistance = 1;
-                this.controls.maxDistance = 10;
-
+                this.controls.maxDistance = 20;
+*/
             }
 
               if ( this.collider ) {
@@ -3132,36 +3174,40 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
     
     initItem = (opts) =>{
 
-        let nftPostHashHex = opts.nftPostHashHex;
-        let paramString = '';
-        let params  = [];
-        let nftsRoute = '';
-        let itemParams = {
-            three: THREE,
-            scene: this.scene,
-            height: opts.height,
-            width: opts.width,
-            depth: opts.depth,
-            loader: this.loaders.getLoaderForFormat(opts.format),
-            nftPostHashHex: nftPostHashHex,
-            modelsRoute: this.config.modelsRoute,
-            nftsRoute: this.config.nftsRoute,
 
+                let extraParams = { nftPostHashHex: opts.nftPostHashHex,
+                                    extraData3D:opts.extraDataString,
+                                    endPoint:this.config.modelsRoute};
 
-        };
-        if(opts.nftRequestParams){
-            let nftRequestParams = opts.nftRequestParams;
+                let extraDataParser = new ExtraData3DParser(extraParams);
+                let formats = extraDataParser.getAvailableFormats();                    
+                let models = extraDataParser.getModelList();
+                let modelUrl = extraDataParser.getModelPath(0,'any','any');
+                if(modelUrl){
+                    let urlParts = modelUrl.split('.');
+                    let extension = urlParts[urlParts.length-1];
+                    let pathParts =  modelUrl.split('/');
+                    pathParts.pop(); 
+                    let folderPath = pathParts.join('/')+'/'
+                    // combine with computed params
+                    let itemParams = {
+                        ...opts,
+                        ...{animLoader: true,
+                            avatarPath: folderPath, // current minter does not allow subfolders so anims on the same level
+                            loader: this.loaders.getLoaderForFormat(extension),                        
+                            modelUrl: modelUrl,
+                            scene: this.scene,
+                            format: formats[0]}
 
-            Object.keys(nftRequestParams).forEach((key, index) => {
-                params.push(key+'='+nftRequestParams[key]);
-            });
-            paramString = params.join('&');
-            itemParams.nftsRoute = this.config.nftsRoute +'?' +paramString;
-        };
+                    };
 
-        let item = new Item(itemParams);                
+                    let item = new Item(itemParams);                
 
-        return item;
+                    return item;                    
+                } else {
+                    console.log('could not retreive avatar modelUrl');
+                }
+
 
     }
 
@@ -3171,7 +3217,6 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         let urlParts = opts.modelUrl.split('.');
         let extension = urlParts[urlParts.length-1];
         let config = {
-            three: THREE,
             loader: this.loaders.getLoaderForFormat(extension),
             scene: this.scene,
             height: (opts.height)?opts.height:this.config.scaleModelToHeight,
@@ -3627,7 +3672,7 @@ initPlayerFirstPerson = () => {
 
 initPlayerThirdPerson = () => {
 
-     let that = this;
+    let that = this;
     let playerLoader = new GLTFLoader();
     let newPos = null;
     let playerFloor = 0;
@@ -3636,8 +3681,9 @@ initPlayerThirdPerson = () => {
     if(this.sceneryLoader.playerStartPos){
         playerStartPos = new THREE.Vector3(this.sceneryLoader.playerStartPos.x,this.sceneryLoader.playerStartPos.y,this.sceneryLoader.playerStartPos.z);
     }
-    playerFloor = this.sceneryLoader.findFloorAt(playerStartPos, 8, 0);
-    playerStartPos.y = playerFloor;
+        playerFloor = this.sceneryLoader.findFloorAt(playerStartPos, 8, 0);
+        playerStartPos.y = playerFloor;
+
 
     that.player = new THREE.Group();
     that.player.position.copy(playerStartPos);
@@ -3646,6 +3692,7 @@ initPlayerThirdPerson = () => {
         new RoundedBoxGeometry(  1.0, 2.0, 1.0, 10, 0.5),
         new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
     );
+  //  that.character.position.set(0,-1,0);
     //offest the height of the character collider so it is on the floor
     that.character.geometry.translate( 0, -2, 0 );
     that.character.capsuleInfo = {
@@ -3654,42 +3701,39 @@ initPlayerThirdPerson = () => {
     };    
     that.character.rotation.set(0,0,0);
     that.player.add(that.character);
- 
-    let avatar = null;
-    if(this.config.avatarPath){
 
-        let avatarFile = this.config.avatars[this.config.avatar];
-        let path = this.config.avatarPath+this.config.avatar+'/'+avatarFile;
-
-        let itemConfig = { avatar: avatar,
-                            owner: this.config.owner,
-                            avatarPath:this.config.avatarPath+this.config.avatar+'/',
-                            animLoader: true,
-                            scene: this.scene,
-                            format: 'fbx',
-                            height:2,
-                            width:2,
-                            depth:2,
-                            modelUrl: path};
-                            console.log('avatar config modelurl: ',path);
-                            console.log(itemConfig);
-        avatar = that.initAvatar(itemConfig);
         let avatarY = -3;
-        avatar.place(new THREE.Vector3(0,avatarY,0), this.player).then((model,pos)=>{
-            avatar.mesh.updateMatrixWorld();
+        this.avatar.place(new THREE.Vector3(0,avatarY,0), this.player).then((model,pos)=>{
+              //     let avatarHeight = avatar.getImportedObjectSize();
+                 //   avatar.mesh.position.y  = -0.5-(avatarHeight/2); // minus half height minus capsule radius puts it in capsule
+            that.avatar.mesh.updateMatrixWorld();
             that.scene.add( that.player );
+           console.log('that.player.position.y: ',that.player.position.y);
+           console.log('playerFloor: ',playerFloor)
 
             that.player.updateMatrixWorld();
-            that.player.model = avatar.mesh;
-            that.player.avatar = avatar;
-            that.avatars.push(avatar);
+            that.player.model = that.avatar.mesh;
+            that.player.avatar = that.avatar;
+            that.avatars.push(that.avatar);
+            let playerHeight2 = that.getImportedObjectSize(that.player);
+            let Yoffset = playerHeight2;
             that.player.updateMatrixWorld();
-            that.createLabel(this.config.owner.ownerName, that.player, {x:0,y:-0.75,z:0});
+
+
+
+            let avatarLabelHeight = that.player.position.y+(playerHeight2)
+            console.log('playerHeight2: ',playerHeight2);
+            console.log('avatarLabelHeight: ',avatarLabelHeight);
+            that.avatar.mesh.position.y = (-playerHeight2);
+            that.createLabel(this.config.owner.ownerName, that.player, {x:0,y:avatarLabelHeight,z:0});
             this.addListeners();
+            console.log('start animation');
+
             that.animate();
+            //this.camera.lookAt(this.player);
+
         });        
-        this.camera.lookAt(this.player);
-    }
+   //}
     
    
 }
@@ -3710,9 +3754,9 @@ initPlayerThirdPerson = () => {
 
         // Set the font and text for the label
         ctx.font = '40px Helvetica bold';
-        ctx.fillStyle = 'green';
+        ctx.fillStyle = 'white';
         ctx.textAlign = 'center';
-        ctx.fillText(text, canvas.width*0.75, canvas.height / 2, canvas.width);
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2, canvas.width);
 
         // Create a texture from the canvas
         var texture = new THREE.Texture(canvas);
@@ -3926,7 +3970,7 @@ updatePlayer = ( delta )=> {
     let playery = this.player.position.y;
     let playerz = this.player.position.z;
     //this.camPos.set(playerx,(playery),playerz);
-    this.controls.target.set(playerx,(playery-1.5),playerz);
+    this.controls.target.set(playerx,(playery-1),playerz);
     this.camera.position.add( this.controls.target );
   
     // if the player has fallen too far below the level reset their position to the start

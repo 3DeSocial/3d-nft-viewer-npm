@@ -232,17 +232,22 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                 let params;
                 if(path3D.indexOf('.')>-1){ // there is a file extension
                 let modelUrl = extraDataParser.getModelPath(0,'gltf','any');*/
-                let extraDataParser = new ExtraData3DParser({ nftPostHashHex: itemData.postHashHex,
+                let extraParams = { nftPostHashHex: itemData.postHashHex,
                                                               extraData3D:itemData.path3D,
-                                                              endPoint:'https://desodata.azureedge.net/unzipped/'});
+                                                              endPoint:this.config.modelsRoute};
 
-                let spot = that.config.layoutPlotter.getNextFreePos3d();
-                let yPos = that.config.layoutPlotter.findFloorAt(spot.pos,4,0); 
-                spot.pos.y = yPos;
+
+                let extraDataParser = new ExtraData3DParser(extraParams);
+
 
                 let formats = extraDataParser.getAvailableFormats();                    
                 let models = extraDataParser.getModelList();
                 let modelUrl = extraDataParser.getModelPath(0,'gltf','any');
+
+
+                let spot = that.config.layoutPlotter.getNextFreePos3d();
+                let yPos = that.config.layoutPlotter.findFloorAt(spot.pos,4,0); 
+                spot.pos.y = yPos;
 
                 let item = null;  
                 if(modelUrl){
