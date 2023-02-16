@@ -264,7 +264,6 @@ export default class LayoutPlotter  {
         }); 
 
         let circles = (this.sceneryLoader.circles)?this.sceneryLoader.circles:[];
-        console.log('circles 2d: ',circles);
 
             circles.forEach((circle,idx)=>{
                   if(circle.name!='snowmen'){
@@ -304,17 +303,11 @@ export default class LayoutPlotter  {
                         that.posQ.push(spot); 
                     
                     })                    
-                } else {
-                    console.log('skip snowmen')
                 }
                
             }); 
         let circles3d = (this.sceneryLoader.circles3d)?this.sceneryLoader.circles3d:[];
-
-                    console.log('circles 3D: ',circles3d);
-
             circles3d.forEach((circle,idx)=>{
-                console.log('circles3d: ', circle)
                 if(circle.name!='snowmen'){
                     //console.log('initPosQ circle.yOffset',circle.yOffset);
                     circle.center = {x:0,y:0,z:0};
@@ -350,8 +343,6 @@ export default class LayoutPlotter  {
 
                         that.posQ3D.push(spot); 
                     })                    
-                } else {
-                    console.log('skip snowmen')
                 }
                
                
@@ -385,10 +376,7 @@ export default class LayoutPlotter  {
     }
 
     calcCircleSpots = (circle) =>{
-        //        {id:7, pos:{x: 7.6974523925781275, y: -0.5, z: 11.73381267645709}, dims:{width:1.5, height: 3}, rot:{x:0,y:1.57079632679,z:0}},
-        console.log('calcCircleSpots');
 
-        console.log(circle);
         let noItems = circle.maxItems*2; // use double positions then spit into 2 for offet
         let center = circle.center;
         let radius = circle.radius;
@@ -513,7 +501,6 @@ export default class LayoutPlotter  {
         for (var i = noItems - 1; i >= 0; i--) {
             this.calcPointOnCircle(i, noItems, radius);
             if((i % 2)){
-                console.log('plot 3d nft')
 
                 // find floor or surface at this coord in the scenery
                 //  let ceil = this.config.sceneryLoader.findFloorAt(plotPoint, 10, 0);
@@ -522,7 +509,7 @@ export default class LayoutPlotter  {
                 this.plotPoint.setY(floor);
                 let target = center;
                 target.y = floor;
-                console.log('items[',itemIdx,']',items[itemIdx]);
+               // console.log('items[',itemIdx,']',items[itemIdx]);
                 positions.push({nftHex:items[itemIdx].config.nftPostHashHex, plotPoint: this.plotPoint.clone(), target: target});
                 let thisItem = items[itemIdx];
                 this.plotItem(thisItem,this.plotPoint).then((item)=>{
@@ -538,10 +525,7 @@ export default class LayoutPlotter  {
                 })
                 ++itemIdx;                
             } else {
-                console.log('create dividers')
                 let wall = this.createWall(radius,20);
-                console.log(wall);
-                console.log(this.plotPoint);
                     wall.position.copy(this.plotPoint);
                     wall.rotateY(Math.PI/2)
                     this.config.scene.add(wall);

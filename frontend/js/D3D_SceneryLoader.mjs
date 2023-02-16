@@ -71,6 +71,34 @@ export default class SceneryLoader {
         this.snowmen =  this.config.floorPlan.filter(plan => (plan.type == 'circle3d')&&(plan.name =='snowmen'));     
 
     }
+
+    loadSceneryNFT = ()=>{
+        this.config.sceneryPath = this.getSceneryPath(sceneryNFTPost);
+    }
+
+    getSceneryPath = (post)=>{
+        let extraDataString = null;
+
+        if(post.PostExtraData){
+            extraDataString = post.PostExtraData['3DExtraData']
+        } else if (post.path3D){
+            extraDataString = post.path3D
+        };
+
+        let extraParams = { nftPostHashHex: post.nftPostHashHex,
+                            extraData3D:post.extraDataString,
+                            endPoint:this.config.modelsRoute};
+
+        let extraDataParser = new ExtraData3DParser(extraParams);
+        let formats = extraDataParser.getAvailableFormats();                    
+        let models = extraDataParser.getModelList();
+        let modelUrl = extraDataParser.getModelPath(0,'any','any');
+        if(modelUrl){
+            return modelUrl;
+        };
+        return false;
+}
+
 	loadScenery = () =>{
         let that = this;
 
@@ -81,6 +109,14 @@ export default class SceneryLoader {
                 that.centerScene(res.scene);
                 that.addScenery(res);
                 resolve(res.scene);
+            },// called while loading is progressing
+    ( xhr )=> {
+
+        console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+
+    },(err)=>{
+                console.log('could not load scene: ',this.config.sceneryPath);
+                reject(err)
             });
        });
 	}
