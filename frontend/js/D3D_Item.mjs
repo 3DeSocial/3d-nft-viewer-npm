@@ -468,7 +468,7 @@ export default class Item {
                     };
                   
                     this.scaleToFitScene(obj3D, posVector);
-                    this.fixYCoord(obj3D, posVector); 
+                   // this.fixYCoord(obj3D, posVector); 
                     resolve(obj3D);
 
               //  }
@@ -596,8 +596,8 @@ scaleToFitScene = (obj3D, posVector) =>{
         //obj3D.updateWorldMatrix();
 
         cbox.userData.owner = this; //set reference to Item
-        that.scene.add(obj3D);    
         obj3D.position.copy(posVector);
+        that.scene.add(obj3D);    
         cbox.updateMatrixWorld();    
     }
 
