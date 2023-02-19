@@ -641,7 +641,8 @@ const params = {
                                     extraDataString = json.path3D
                                 };
                                 if(extraDataString){
-                                    let avatarConfig = {animLoader: true,
+                                    let avatarConfig = {isAvatar: true,
+                                                        animLoader: true,
                                                         // TO DO - enable overriding with different folder for animations
                                                         width: 3, 
                                                         height:3, 
@@ -893,7 +894,6 @@ const params = {
         let camStartPos = new THREE.Vector3(this.sceneryLoader.playerStartPos.x,this.sceneryLoader.playerStartPos.y,this.sceneryLoader.playerStartPos.z);
         camStartPos.y = camStartPos.y+2; // higher than ground level
         this.camera.position.copy(camStartPos);
-        this.renderer.render(this.scene, this.camera);
 
         this.raycaster = new THREE.Raycaster({camera:this.camera});
         this.pRaycaster = new THREE.Raycaster();
@@ -3699,8 +3699,6 @@ initPlayerThirdPerson = () => {
     that.character.position.copy(offsetStartPos);
     that.scene.add(that.character);
     that.character.updateMatrixWorld();
-
-    that.renderer.render(this.scene, this.camera);
            
     //place avatar in the center of the Player group
    this.avatar.place(playerStartPos).then((model,pos)=>{
@@ -3718,9 +3716,17 @@ initPlayerThirdPerson = () => {
         that.player.avatar = that.avatar;
         
         that.avatars.push(that.avatar);
-        that.createLabel(this.config.owner.ownerName, that.player, {x:0,y:(that.player.position+1.5),z:0});
-    
-        that.camera.lookAt(that.player.position);
+
+        let loggedInUserName = 'Guest';
+        if(this.config.currentUser){
+            loggedInUserName = this.config.currentUser.Username;
+        };
+        that.createLabel(loggedInUserName, that.player, {x:0,y:(that.player.position.y+2),z:0});
+        let lookAtStartPos = that.player.position.clone();
+        lookAtStartPos.setZ(lookAtStartPos.z+10); // look ahead
+        lookAtStartPos.setY(that.player.position.y+1.5); // look ahead
+
+        that.camera.lookAt(lookAtStartPos);
         this.initControls();
         this.addListeners();            
         that.animate();
@@ -3838,7 +3844,6 @@ updatePlayer = ( delta )=> {
                   if(this.player.state!='walk'){
                         if(this.player.avatar.animLoader.switchAnim('walk')){
                             this.player.state = 'walk'                    
-                            console.log('state set: ',this.player.state);
                         }
                   }
                 } 
@@ -3852,7 +3857,6 @@ updatePlayer = ( delta )=> {
                 // state has not been updated to idle yet
                 if(this.player.avatar.animLoader.switchAnim('idle')){
                     this.player.state = 'idle';
-                    console.log('state set: ',this.player.state);
                 };                   
                 break;
             case 'jump':
@@ -3860,7 +3864,6 @@ updatePlayer = ( delta )=> {
             if(this.playerIsOnGround){
                 if(this.player.avatar.animLoader.switchAnim('idle')){
                     this.player.state = 'idle';
-                    console.log('state set: ',this.player.state);
                 };
             };
             break;
@@ -3949,11 +3952,7 @@ updatePlayer = ( delta )=> {
 
     // adjust the camera
     this.camera.position.sub( this.controls.target );
-    let playerx = this.player.position.x;
-    let playery = this.player.position.y;
-    let playerz = this.player.position.z;
-
-    this.controls.target.set(playerx,(playery-1),playerz);
+    this.controls.target.copy(this.player.position);
     this.camera.position.add( this.controls.target );
   
     // if the player has fallen too far below the level reset their position to the start

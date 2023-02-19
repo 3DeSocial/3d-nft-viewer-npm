@@ -265,15 +265,11 @@ export default class Item {
                         .then((model)=>{
                             that.mesh = model;
 
-                             /*if(that.hasAnimations(false)){
-                                that.startAnimation(0,THREE.LoopRepeat);
-                            } else {
-                               console.log('no animations',this.config.postHashHex);
-                                console.log(model);
-                                console.log('root: ');
-                                console.log(that.root);
-                            };*/
-
+                            if(!this.config.isAvatar){
+                                if(that.hasAnimations(false)){                                 
+                                    that.startAnimation(0,THREE.LoopRepeat);
+                                };
+                            }
                             if(that.config.physicsWorld){
                                 that.addToPhysicsWorld();
                             }
@@ -822,7 +818,7 @@ scaleToFitScene = (obj3D, posVector) =>{
     }
 
     startCurrentAnimation = (loopType) => {
-    /*    if(!loopType){
+        if(!loopType){
             loopType = THREE.LoopRepeat
         };
         let that = this;
@@ -844,7 +840,7 @@ scaleToFitScene = (obj3D, posVector) =>{
             } else {
                 //console.log('animation', animIndex, 'doesnt exist');
             }
-        }*/
+        }
     }
 
     stopAnimation = () =>{

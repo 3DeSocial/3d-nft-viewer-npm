@@ -298,6 +298,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                     this.placedItems3D.push(item);
                     that.items3d.push(item); 
                     if(items.length===itemList.length){
+                        console.log('placedItems3D: ',this.placedItems3D);
                         resolve(items);
                     }
                 });
