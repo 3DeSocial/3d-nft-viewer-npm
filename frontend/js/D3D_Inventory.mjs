@@ -298,7 +298,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                     this.placedItems3D.push(item);
                     that.items3d.push(item); 
                     if(items.length===itemList.length){
-                        console.log('placedItems3D: ',this.placedItems3D);
+                      //  console.log('placedItems3D: ',this.placedItems3D);
                         resolve(items);
                     }
                 });
@@ -532,14 +532,14 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
             console.log('no inventory items');
             return false;
         };
-        console.log('checking inventory ',this.items);
+     //   console.log('checking inventory ',this.items);
         let idx = 1;
         let item = this.items[0];
         while((item.config.nftPostHashHex !== nftPostHashHex)&&(idx<this.items.length)){
             item = this.items[idx];
             ++idx;
         };
-        console.log(item.config.nftPostHashHex,'?',nftPostHashHex);
+     //   console.log(item.config.nftPostHashHex,'?',nftPostHashHex);
         if(item.config.nftPostHashHex === nftPostHashHex){
             return item;
         };

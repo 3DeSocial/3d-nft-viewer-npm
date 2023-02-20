@@ -2303,7 +2303,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
 
                 this.controls.maxPolarAngle = Math.PI;
                 this.controls.minDistance = 0.5;
-                this.controls.maxDistance = 10;
+                this.controls.maxDistance = 6;
 
             }
 

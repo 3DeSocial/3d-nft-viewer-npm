@@ -415,7 +415,9 @@ export default class Item {
                 } else {
 */
                     that.mesh = loadedItem;
-                    this.swapMeshForProfilePic();
+                    if(that.config.isAvatar){
+                        this.swapMeshForProfilePic();
+                    }
                     if(that.animLoader){
                         that.mixer = new THREE.AnimationMixer(root);
                         if(root.animations.length>0){

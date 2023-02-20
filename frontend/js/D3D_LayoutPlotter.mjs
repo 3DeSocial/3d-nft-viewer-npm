@@ -48,7 +48,6 @@ export default class LayoutPlotter  {
 
     placeUserAssets = () =>{
         if(this.inventory.has2d()&&(this.inventory.has3d())){
-            console.log('plotting 2D')
             //create outer circle layut for 2D
             if(this.sceneryLoader.hasCircleLayout()){
                 this.plotCircles();
@@ -59,8 +58,6 @@ export default class LayoutPlotter  {
 
         if(this.sceneryLoader.hasListLayout()){
             this.plotList2d();
-        } else {
-            console.log('no list layout');
         };
      /*   if(this.inventory.has3d()){
             console.log('plotting 3D')
@@ -100,8 +97,8 @@ export default class LayoutPlotter  {
             circles2d.forEach((circle, idx)=>{
 
                 let items = itemsToPlace.splice(0,circle.maxItems);
-                console.log('plottin ',items.length,' in circle: ',idx);
-                console.log(items);
+               // console.log('plottin ',items.length,' in circle: ',idx);
+               // console.log(items);
                 if((idx % 2)){
                     that.plotCircle(items,center,circle.radius);
                 } else {
@@ -148,10 +145,10 @@ export default class LayoutPlotter  {
         let lists = this.sceneryLoader.lists;
         let items = this.inventory.getItems2d();
         if(items.length===0){
-            console.log('inventory hs no 2d items');
+            //console.log('inventory hs no 2d items');
             return;
         };
-        console.log('plotList2d: ',lists.length);
+     //   console.log('plotList2d: ',lists.length);
         lists.forEach((list,idx)=>{
             let noPos = list.spots.length;
             let noToPlace = (items.length>list.spots.length)?list.spots.length:items.length;
@@ -187,10 +184,10 @@ export default class LayoutPlotter  {
         let lists = this.sceneryLoader.lists;
         let items = this.inventory.getItems3d();
         if(items.length===0){
-            console.log('inventory hs no 3d items');
+          //  console.log('inventory hs no 3d items');
             return;
         };
-        console.log('plotList3d: ',lists.length);
+       // console.log('plotList3d: ',lists.length);
         lists.forEach((list,idx)=>{
             let noPos = list.spots.length;
             let noToPlace = (items.length>list.spots.length)?list.spots.length:items.length;
@@ -286,11 +283,11 @@ export default class LayoutPlotter  {
 
                         spot.dims = that.defaultDims;
                         if(circle.width){
-                            console.log('circl3 2d widthL '+circle.width)
+                          // console.log('circl3 2d widthL '+circle.width)
 
                             spot.dims.width = circle.width;
                         } else {
-                            console.log('circl3 2d has no width')
+                          //  console.log('circl3 2d has no width')
                         }
                         if(circle.height){
                             spot.dims.height = circle.height;
@@ -327,11 +324,11 @@ export default class LayoutPlotter  {
 
                         spot.dims = that.defaultDims;
                         if(circle.width){
-                            console.log('circl3 3d widthL '+circle.width)
+                        //    console.log('circl3 3d widthL '+circle.width)
 
                             spot.dims.width = circle.width;
                         } else {
-                            console.log('circl3 3d has no width')
+                         //   console.log('circl3 3d has no width')
                         }
                         if(circle.height){
                             spot.dims.height = circle.height;
