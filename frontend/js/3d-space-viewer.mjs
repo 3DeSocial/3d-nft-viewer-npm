@@ -649,12 +649,20 @@ const params = {
                                                         depth:3, 
                                                         nftPostHashHex:this.config.avatar,
                                                         extraDataString:extraDataString,
-                                                        owner: { // avatar owner is curretn user
+                                                        owner: {
+                                                            ownerName: 'Guest',
+                                                            ownerPublicKey: null,
+                                                            ownerDescription: null
+                                                        }
+                                                    };
+
+                                    if(this.config.currentUser){
+                                        avatarConfig.owner = { // avatar owner is curretn user
                                                             ownerName: this.config.currentUser.Username,
                                                             ownerPublicKey: this.config.currentUser.PublicKeyBase58Check,
                                                             ownerDescription: this.config.currentUser.Description
-                                                        }
-                                                    };
+                                                        };                                  
+                                    };
 
                                     that.avatar = this.initItem(avatarConfig);
                                     that.initCameraThirdPerson();
@@ -664,13 +672,13 @@ const params = {
 
                         })
                 } else {
+                    console.log('no avatar enabled');
+                    //No avatar is available, use first person
                     this.config.firstPerson =true;
                     this.initCameraFirstPerson(); 
-                    that.initPlayerThirdPerson();
-                    this.initControls();
-
+                    that.initPlayerFirstPerson();
                 }
-  /* 
+   
                 if ( 'xr' in navigator ) {
                     that.initVR();
                 }   
@@ -713,7 +721,7 @@ const params = {
                 that.audioListener.setMasterVolume(1);
                 //if(this.firstPerson){
               //  this.camera.setRotationFromEuler(new THREE.Euler( 0,Math.PI,0, 'XYZ' ));
-               // }*/
+               // }
             });
 
   
@@ -847,14 +855,19 @@ const params = {
     }
 
     avatarEnabled = () =>{
+        
+        if(!this.config.currentUser){
+            console.log('Not logged in so no avatar availabe');
+            return false;
+        };
 
         if(this.config.firstPerson){
             console.log('avatarEnabled: first person selected');
             return false;
         };
         if(!this.config.avatar){
-            console.log('no avatar selected');
-            return false;
+            console.log('no avatar available')
+           return false;
         };
         if(this.config.avatar){
             console.log('have avatar: ',this.config.avatar);
@@ -905,6 +918,7 @@ const params = {
         this.camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 100 );
         this.camera.updateProjectionMatrix(); 
         let camStartPos = new THREE.Vector3(this.sceneryLoader.playerStartPos.x,this.sceneryLoader.playerStartPos.y,this.sceneryLoader.playerStartPos.z);
+        camStartPos.y = camStartPos.y+2; // higher than ground level        
         this.camera.position.copy(camStartPos);
         this.raycaster = new THREE.Raycaster({camera:this.camera});
         this.pRaycaster = new THREE.Raycaster();
@@ -2287,7 +2301,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
 
             } else {
 
-                this.controls.maxPolarAngle = Math.PI / 2;
+                this.controls.maxPolarAngle = Math.PI;
                 this.controls.minDistance = 0.5;
                 this.controls.maxDistance = 10;
 
@@ -3633,14 +3647,9 @@ initPlayerFirstPerson = () => {
     let playerLoader = new GLTFLoader();
     let newPos = null;
     let playerFloor = 0;
-    let playerStartPos;
+    let playerStartPos = this.calcPlayerStartPos();
+    let offsetStartPos = this.calcOffestStartPos(playerStartPos);
 
-    if(this.sceneryLoader.playerStartPos){
-        playerStartPos = new THREE.Vector3(this.sceneryLoader.playerStartPos.x,this.sceneryLoader.playerStartPos.y,this.sceneryLoader.playerStartPos.z);
-    } else {
-        playerFloor = this.sceneryLoader.findFloorAt(playerStartPos, 8, -4);
-        playerStartPos = new THREE.Vector3(0,playerFloor,0);
-    };
 
     that.player = new THREE.Group();
     that.player.position.copy(playerStartPos);
@@ -3661,8 +3670,9 @@ initPlayerFirstPerson = () => {
     that.character.updateMatrixWorld();
     that.scene.add( that.player );
     that.player.updateMatrixWorld();
+    this.initControls();
+    this.addListeners();            
     that.animate();
-    this.addListeners();
 
 
 
@@ -3674,15 +3684,8 @@ initPlayerThirdPerson = () => {
     let playerLoader = new GLTFLoader();
     let newPos = null;
     let playerFloor = 0;
-    let playerStartPos;
-
-    if(this.sceneryLoader.playerStartPos){
-        playerStartPos = new THREE.Vector3(this.sceneryLoader.playerStartPos.x,this.sceneryLoader.playerStartPos.y,this.sceneryLoader.playerStartPos.z);
-    }
-        playerFloor = this.sceneryLoader.findFloorAt(playerStartPos, 8, -4);
-        playerStartPos.y = playerFloor;
-    let offsetStartPos = playerStartPos.clone();
-    offsetStartPos.setY(offsetStartPos.y+1.5); 
+    let playerStartPos = this.calcPlayerStartPos();
+    let offsetStartPos = this.calcOffestStartPos(playerStartPos);
 
     let raidus = 0.5;
     that.character = new THREE.Mesh(
@@ -3724,18 +3727,39 @@ initPlayerThirdPerson = () => {
         that.createLabel(loggedInUserName, that.player, {x:0,y:(that.player.position.y+2),z:0});
         let lookAtStartPos = that.player.position.clone();
         lookAtStartPos.setZ(lookAtStartPos.z+10); // look ahead
-        lookAtStartPos.setY(that.player.position.y+1.5); // look ahead
+        lookAtStartPos.setY(that.player.position.y); // look ahead
 
-        that.camera.lookAt(lookAtStartPos);
+
         this.initControls();
         this.addListeners();            
+        this.camera.position.copy(offsetStartPos);
+        this.camera.position.z=this.camera.position.z-2;
         that.animate();
+        that.camera.lookAt(lookAtStartPos);
+        console.log('camera looking ahead');
 
     });       
    
     
    
 }
+
+    calcPlayerStartPos = () =>{
+        let playerStartPos = null;
+        if(this.sceneryLoader.playerStartPos){
+            playerStartPos = new THREE.Vector3(this.sceneryLoader.playerStartPos.x,this.sceneryLoader.playerStartPos.y,this.sceneryLoader.playerStartPos.z);
+        }
+        let playerFloor = this.sceneryLoader.findFloorAt(playerStartPos, 8, -4);
+        playerStartPos.y = playerFloor;
+        return playerStartPos;
+    }
+    calcOffestStartPos = (playerStartPos)=>{
+
+        let offsetStartPos = playerStartPos.clone();
+        offsetStartPos.setY(offsetStartPos.y+1.5); 
+        return offsetStartPos;     
+    }
+
     addPlaneAtPos = (posVector, color) =>{
         var geo = new THREE.PlaneBufferGeometry(100, 100);
         var mat = new THREE.MeshPhongMaterial({ color: color, side: THREE.DoubleSide });
@@ -3952,7 +3976,9 @@ updatePlayer = ( delta )=> {
 
     // adjust the camera
     this.camera.position.sub( this.controls.target );
-    this.controls.target.copy(this.player.position);
+    let controlPos = this.player.position.clone();
+    controlPos.setY(controlPos.y+1);
+    this.controls.target.copy(controlPos);
     this.camera.position.add( this.controls.target );
   
     // if the player has fallen too far below the level reset their position to the start
