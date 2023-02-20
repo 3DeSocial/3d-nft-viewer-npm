@@ -208,7 +208,7 @@ class Item2d extends Item {
                   var height = this.height;
                   var width = this.width;
                   let dims = that.calculateAspectRatioFit(width, height, targetWidth,targetHeight);
-                    console.log('spotidx: ', nft.spot.idx,' targetWidth: ', targetWidth,'targetHeight: ',targetHeight, 'dims: ',dims);
+                    //console.log('spotidx: ', nft.spot.idx,' targetWidth: ', targetWidth,'targetHeight: ',targetHeight, 'dims: ',dims);
                   const textureLoader = new THREE.TextureLoader()
                   const texture = textureLoader.load(this.src);
                   const geometry = new THREE.BoxGeometry( dims.width, dims.height, 0.10 );

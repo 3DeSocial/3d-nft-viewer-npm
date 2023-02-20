@@ -3652,7 +3652,7 @@ initPlayerFirstPerson = () => {
 
 
     that.player = new THREE.Group();
-    that.player.position.copy(playerStartPos);
+    that.player.position.copy(offsetStartPos);
     that.player.rotation.set(0,0,0);
     that.character = new THREE.Mesh(
         new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
@@ -3671,7 +3671,8 @@ initPlayerFirstPerson = () => {
     that.scene.add( that.player );
     that.player.updateMatrixWorld();
     this.initControls();
-    this.addListeners();            
+    this.addListeners();   
+ 
     that.animate();
 
 
@@ -3976,8 +3977,15 @@ updatePlayer = ( delta )=> {
 
     // adjust the camera
     this.camera.position.sub( this.controls.target );
+    
     let controlPos = this.player.position.clone();
-    controlPos.setY(controlPos.y+1);
+
+    if(this.config.firstPerson){
+        controlPos.setY(controlPos.y+1);
+    } else {
+        controlPos.setY(controlPos.y);
+    };
+
     this.controls.target.copy(controlPos);
     this.camera.position.add( this.controls.target );
   
