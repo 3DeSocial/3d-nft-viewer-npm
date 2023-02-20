@@ -3670,9 +3670,14 @@ initPlayerFirstPerson = () => {
     that.character.updateMatrixWorld();
     that.scene.add( that.player );
     that.player.updateMatrixWorld();
+    let lookAtStartPos = that.player.position.clone();
+    lookAtStartPos.setZ(lookAtStartPos.z+10); // look ahead
+    lookAtStartPos.setY(that.player.position.y); // look ahead    
     this.initControls();
     this.addListeners();   
- 
+    this.camera.position.copy(offsetStartPos);
+    this.camera.position.z=this.camera.position.z-2;
+    that.camera.lookAt(lookAtStartPos);
     that.animate();
 
 
@@ -3735,9 +3740,8 @@ initPlayerThirdPerson = () => {
         this.addListeners();            
         this.camera.position.copy(offsetStartPos);
         this.camera.position.z=this.camera.position.z-2;
-        that.animate();
         that.camera.lookAt(lookAtStartPos);
-        console.log('camera looking ahead');
+        that.animate();
 
     });       
    
@@ -3977,13 +3981,13 @@ updatePlayer = ( delta )=> {
 
     // adjust the camera
     this.camera.position.sub( this.controls.target );
-    
+
     let controlPos = this.player.position.clone();
 
     if(this.config.firstPerson){
-        controlPos.setY(controlPos.y+1);
-    } else {
         controlPos.setY(controlPos.y);
+    } else {
+        controlPos.setY(controlPos.y+1);
     };
 
     this.controls.target.copy(controlPos);
