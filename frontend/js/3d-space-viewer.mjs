@@ -666,7 +666,12 @@ const params = {
 
                                     that.avatar = this.initItem(avatarConfig);
                                     that.initCameraThirdPerson();
-                                    that.initPlayerThirdPerson();
+                                    that.initPlayerThirdPerson().then(()=>{
+                                        sceneryloadingComplete = true;
+                                        //that.resizeCanvas();
+                                        that.loadingScreen.hide();
+                                    })
+                                    
                                 };
                             })
 
@@ -677,6 +682,7 @@ const params = {
                     this.config.firstPerson =true;
                     this.initCameraFirstPerson(); 
                     that.initPlayerFirstPerson();
+                    that.loadingScreen.hide();                    
                 }
    
                 if ( 'xr' in navigator ) {
@@ -714,9 +720,7 @@ const params = {
 
                 }
 
-                sceneryloadingComplete = true;
-                //that.resizeCanvas();
-                that.loadingScreen.hide();
+
               //  that.addListeners();
                 that.audioListener.setMasterVolume(1);
                 //if(this.firstPerson){
