@@ -18,6 +18,7 @@ import { XRControllerModelFactory } from './frontend/webxr/XRControllerModelFact
 import { MeshBVH, acceleratedRaycast, MeshBVHVisualizer } from './frontend/js/index.module.mjs';
 import { D3DLoaders } from  './frontend/js/D3D_Loaders.mjs';
 import { NFTViewerOverlay } from  './frontend/js/D3D_NFTViewerOverlay.mjs';
+import { NFTImporter } from  './frontend/js/D3D_NFTImporter.mjs'; 
 import { D3DInventory } from  './frontend/js/D3D_Inventory.mjs';
 import { ExtraData3DParser } from  './frontend/js/D3D_ExtraDataParser.mjs';
 import { LayoutPlotter } from  './frontend/js/D3D_LayoutPlotter.mjs';
@@ -31,6 +32,7 @@ import { Avatar } from  './frontend/js/D3D_Avatar.mjs';
 
 
  export {
+   NFTImporter,
     Avatar,
 SnowFall,
 PlayerVR, Physics, AnimLoader, ItemVRM, AudioClip, AudioClipRemote, LoadingScreen, CollisionChecker, MeshBVH, MeshBVHVisualizer, VRButton, NFTViewerOverlay, ChainAPI, HUDBrowser, HUDVR, D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRControls, Item, Item2d, XRControllerModelFactory, SceneryLoader, SkyBoxLoader, LayoutPlotter}
