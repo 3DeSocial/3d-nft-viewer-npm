@@ -275,7 +275,7 @@ const params = {
                     vrType: 'walking',
                     useOwnHandlers: true,
                     lookAtStartPos: {x:0,y:2,z:0},
-                    dLights: [  {name:'above',intensity:1},
+                    lights: [  {name:'above',intensity:1},
                                 {name:'below',intensity:0.5},
                                 {name:'left',intensity:0},
                                 {name:'right',intensity:0},
@@ -632,50 +632,22 @@ const params = {
 
 
                 if(this.avatarEnabled()){
-                        this.config.chainAPI.fetchPostDetail({postHashHex:this.config.avatar}).then((res)=>{
-                            res.json().then((json)=>{
-                                let extraDataString = null;
-                                if(json.PostExtraData){
-                                    extraDataString = json.PostExtraData['3DExtraData']
-                                } else if (json.path3D){
-                                    extraDataString = json.path3D
-                                };
-                                if(extraDataString){
-                                    let avatarConfig = {isAvatar: true,
-                                                        animLoader: true,
-                                                        // TO DO - enable overriding with different folder for animations
-                                                        width: 3, 
-                                                        height:3, 
-                                                        depth:3, 
-                                                        nftPostHashHex:this.config.avatar,
-                                                        extraDataString:extraDataString,
-                                                        owner: {
-                                                            ownerName: 'Guest',
-                                                            ownerPublicKey: null,
-                                                            ownerDescription: null
-                                                        }
-                                                    };
+                    if(!this.nftImporter){
+                        this.nftImporter = new NFTImporter();                  
+                    };
 
-                                    if(this.config.currentUser){
-                                        avatarConfig.owner = { // avatar owner is curretn user
-                                                            ownerName: this.config.currentUser.Username,
-                                                            ownerPublicKey: this.config.currentUser.PublicKeyBase58Check,
-                                                            ownerDescription: this.config.currentUser.Description
-                                                        };                                  
-                                    };
+                    this.nftImporter.import({assetType: 'avatar', postHashHex: postHashHex}).then((avatar)=>{
+                        that.avatar = avatar;
 
-                                    that.avatar = this.initItem(avatarConfig);
-                                    that.initCameraThirdPerson();
-                                    that.initPlayerThirdPerson().then(()=>{
-                                        sceneryloadingComplete = true;
-                                        //that.resizeCanvas();
-                                        that.loadingScreen.hide();
-                                    })
-                                    
-                                };
-                            })
+                        that.initCameraThirdPerson();
+                        that.initPlayerThirdPerson().then(()=>{
+                            sceneryloadingComplete = true;
+                            //that.resizeCanvas();
+                            that.loadingScreen.hide();
+                        })                        
+                    })
 
-                        })
+
                 } else {
                     console.log('no avatar enabled');
                     //No avatar is available, use first person
@@ -788,15 +760,25 @@ const params = {
                 receiveShadow : false},
                 ...that.config.sceneryOptions
             };
-            that.sceneryLoader = new SceneryLoader(sceneryOptions);
-            that.sceneryLoader.loadScenery()
-            .then((gltf)=>{
-                this.collider = that.sceneryLoader.collider;
-                that.sceneryMesh = gltf;
-                resolve(gltf);
-            }).catch((err)=>{
-                console.log(err);
-            })
+
+            if(sceneryOptions.sceneryPostHash){
+                if(!this.nftImporter){
+                    this.nftImporter = new NFTImporter(sceneryOptions);                  
+                };
+
+                this.nftImporter.import({assetType: 'scenery', postHashHex: postHashHex}).then((sceneryLoader)=>{
+                    that.sceneryLoader = sceneryLoader;
+                    that.sceneryLoader.loadScenery()
+                    .then((gltf)=>{
+                        this.collider = that.sceneryLoader.collider;
+                        that.sceneryMesh = gltf;
+                        resolve(gltf);
+                    }).catch((err)=>{
+                        console.log(err);
+                    })
+                })
+            }
+            
         });
     }
 
@@ -1008,13 +990,13 @@ const params = {
     }
 
     initLighting = () =>{
-        let dLights = this.config.dLights;
+        let lights = this.config.lights;
 
 
 
         this.lights = new Lighting({scene:this.scene,
                                         createListeners: false,
-                                        dLights: dLights});   
+                                        lights: lights});   
         //this.addSpotlight();
     }
 
