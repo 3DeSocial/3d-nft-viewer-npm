@@ -4,8 +4,8 @@ export default class Lighting {
 
     constructor(config) {
 
- 		let defaults = {
- 			createListeners: true,
+        let defaults = {
+            createListeners: true,
             scene: null
         };
     
@@ -14,67 +14,120 @@ export default class Lighting {
             ...config
         };
 
-    	if(this.config.scene===null){
-    		throw('D3D Lighting: No Scene available');
-    	};
-    	
-    	this.scene = this.config.scene;
+        if(this.config.scene===null){
+            throw('D3D Lighting: No Scene available');
+        };
+        
+        this.scene = this.config.scene;
 
-        this.initLights();
+        this.initLightsForConfig();
         if(this.config.createListeners){
-     	   this.addListeners();
-    	}
+           this.addListeners();
+        }
 
     }
 
     addListeners = () =>{
 
-    	this.addEventListenerAmbient();
-    	this.addEventListenersDirectional();
+        this.addEventListenerAmbient();
+        this.addEventListenersDirectional();
     }
 
     addEventListenerAmbient = () =>{
-    	let that = this;
-    	let input = document.body.querySelector('input[name="ambient"]');
-    	
-    	if(!input){
-    		return false;
-    	};
+        let that = this;
+        let input = document.body.querySelector('input[name="ambient"]');
+        
+        if(!input){
+            return false;
+        };
 
-    	input.addEventListener('change',(e)=>{
-    		let val = e.target.value;
-    		that.setIntensity('ambient',val);
-    	}, false);
+        input.addEventListener('change',(e)=>{
+            let val = e.target.value;
+            that.setIntensity('ambient',val);
+        }, false);
     }
 
     addEventListenersDirectional = () =>{
 
 
-    	var that = this;
-        this.dLights = Object.keys(this.dLighting);   	
-    	this.dLights.forEach((key, index) => {
-    		that.addEventListenerDirectional(key);
-    	});
+        var that = this;
+        this.lights = Object.keys(this.dLighting);      
+        this.lights.forEach((key, index) => {
+            that.addEventListenerDirectional(key);
+        });
 
     }
 
     addEventListenerDirectional = (lightName) =>{
-    	
-    	let that = this;
-    	let input = document.body.querySelector('input[name="'+lightName+'"]');
-    	
-    	if(!input){
-    		return false;
-    	};
+        
+        let that = this;
+        let input = document.body.querySelector('input[name="'+lightName+'"]');
+        
+        if(!input){
+            return false;
+        };
 
-    	let light = this.dLighting[lightName];
-    	input.addEventListener('change',(e)=>{
-    		let val = e.target.value;
-    		that.setIntensity(lightName, val);
-    	}, false);
+        let light = this.dLighting[lightName];
+        input.addEventListener('change',(e)=>{
+            let val = e.target.value;
+            that.setIntensity(lightName, val);
+        }, false);
 
     }
 
+    initLightsForConfig = () =>{
+        let that = this;
+        this.dLighting = [];
+        if(!this.config.lights){
+            console.log('no lighting config available!');
+            return false;
+        };
+        this.config.lights.forEach((light)=>{
+            that.dLighting[light.name] = light;
+            switch(light.name){
+                case 'ambient':
+                    that.dLighting[light.name].light =  new THREE.AmbientLight(0xffffff, light.intensity);
+                    this.scene.add(that.dLighting[light.name].light);
+                break;
+                case 'above':
+                    that.dLighting[light.name].light =  new THREE.DirectionalLight(0xffffff, light.intensity);
+                    that.dLighting[light.name].light.castShadow = true;
+                    that.dLighting[light.name].light.position.set(0, 40, 0);
+                    this.scene.add(that.dLighting[light.name].light);
+                 break;
+                case 'below':
+                    that.dLighting[light.name].light =  new THREE.DirectionalLight(0xffffff, light.intensity);
+                    that.dLighting[light.name].light.castShadow = true;
+                    that.dLighting[light.name].light.position.set(0, 40, 0);
+                    this.scene.add(that.dLighting[light.name].light);
+                break;
+                case 'left':
+                    that.dLighting[light.name].light =  new THREE.DirectionalLight(0xffffff, light.intensity);
+                    that.dLighting[light.name].light.castShadow = true;
+                    that.dLighting[light.name].light.position.set(-40, 0, 0);
+                    this.scene.add(that.dLighting[light.name].light);
+                break;
+                case 'right':
+                    that.dLighting[light.name].light =  new THREE.DirectionalLight(0xffffff, light.intensity);
+                    that.dLighting[light.name].light.castShadow = true;
+                    that.dLighting[light.name].light.position.set(40, 0, 0);
+                    this.scene.add(that.dLighting[light.name].light);
+                break;
+                case 'front':
+                    that.dLighting[light.name].light =  new THREE.DirectionalLight(0xffffff, light.intensity);
+                    that.dLighting[light.name].light.castShadow = true;
+                    that.dLighting[light.name].light.position.set(0, 0, -40);
+                    this.scene.add(that.dLighting[light.name].light);
+                break;
+                case 'back':
+                    that.dLighting[light.name].light =  new THREE.DirectionalLight(0xffffff, light.intensity);
+                    that.dLighting[light.name].light.castShadow = true;
+                    that.dLighting[light.name].light.position.set(0, 0, 40);
+                    this.scene.add(that.dLighting[light.name].light);
+                break;
+            }
+        }) 
+    }
 
     initLights = () =>{
         //Add lights
@@ -83,7 +136,7 @@ export default class Lighting {
 
         this.dLighting = [];
 
-        const aboveLight = new THREE.DirectionalLight(0xffffff, 0.75);
+     /*   const aboveLight = new THREE.DirectionalLight(0xffffff, 0.75);
         aboveLight.castShadow = true;
         aboveLight.position.set(0, 15, 0);
         this.scene.add(aboveLight);
@@ -108,7 +161,7 @@ export default class Lighting {
         rightLight.position.set(15, 6, 0);
         this.scene.add(rightLight);
         this.dLighting['right'] = rightLight;
-
+*/
         const frontLight = new THREE.DirectionalLight(0xffffff, 0.5);
         this.configureLight(frontLight);
 
@@ -116,13 +169,13 @@ export default class Lighting {
         this.scene.add(frontLight);
         this.dLighting['front'] = frontLight;
 
-        const backLight = new THREE.DirectionalLight(0xffffff, 0.1);
+    /*    const backLight = new THREE.DirectionalLight(0xffffff, 0.1);
         this.configureLight(backLight);
 
         backLight.position.set(0, 6, 15);
         this.scene.add(backLight);
         this.dLighting['back'] = backLight;
-
+*/
     }
 
     switchOffDirectional = () =>{
@@ -133,18 +186,11 @@ export default class Lighting {
 
     switchOnDirectional = () =>{
         let that = this;
-        this.config.dLights.forEach((light)=>{
+        this.config.lights.forEach((light)=>{
             that.dLighting[light.name].intensity = light.intensity;
             console.log('set ',light.name,' to ',light.intensity)
         })
     }    
-    initLightsForConfig = () =>{
-        //Add lights
-        if(this.confg.lights.aLight){
-            this.aLight = new THREE.AmbientLight(0xffffff, 0.5);
-            this.scene.add(this.aLight);
-        }        
-    }
 
     configureLight = (light) =>{
    /*     light.castShadow = true;
@@ -156,27 +202,27 @@ export default class Lighting {
         light.shadow.camera.far = 500;*/
     }
     setDirectionAll(pos){
-    	var that = this;
-        this.dLights = Object.keys(this.dLighting);   	
-    	this.dLights.forEach((key, index) => {
-    		that.dLighting[key].lookAt(pos);
-    	});
+        var that = this;
+        this.lights = Object.keys(this.dLighting);      
+        this.lights.forEach((key, index) => {
+            that.dLighting[key].lookAt(pos);
+        });
     }
 
     setIntensity(lightName, val){
-    	
-    	if(lightName==='ambient'){
-    		this.setIntensityAmb(val);
-    	} else {
-    		this.setIntensityDLight(lightName, val);
-    	};
+        
+        if(lightName==='ambient'){
+            this.setIntensityAmb(val);
+        } else {
+            this.setIntensityDLight(lightName, val);
+        };
     }
     setIntensityAmb(val){
-    	this.aLight.intensity = val;
+        this.aLight.intensity = val;
     }
 
     setIntensityDLight(lightName, val){
-    	this.dLighting[lightName].intensity = val;
+        this.dLighting[lightName].intensity = val;
     }    
 }
 
