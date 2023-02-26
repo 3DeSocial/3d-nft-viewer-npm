@@ -1009,9 +1009,11 @@ const params = {
 
     initLighting = () =>{
 
+        let lights = (this.config.lights)?this.config.lights: this.config.dLights;
+
         this.lights = new Lighting({scene:this.scene,
                                         createListeners: false,
-                                        lights: this.config.lights});   
+                                        lights: lights});   
         //this.addSpotlight();
     }
 
