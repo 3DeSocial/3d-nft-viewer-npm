@@ -550,9 +550,9 @@ const params = {
         this.camera.updateProjectionMatrix();
 
         this.camera.position.copy(this.controls.target).sub(direction);
-        console.log('this.camera.position');
-        console.log(this.camera.position);
+
         this.controls.update();
+        this.resizeCanvas()
     }
 
     centerMeshInScene = (gltfScene) =>{
@@ -887,12 +887,15 @@ const params = {
         };
 
         if(format==='vrm'){
+            console.log('loading VRM');
             config.animLoader = true; //load anims to apply to model
             item = new ItemVRM(config);
         } else {
+            console.log('loading OTHER FORMAT');
+
             item = new Item(config);
         };
-
+console.log('config: ',config);
         return item;
 
     }

@@ -612,7 +612,7 @@ export default class ItemVRM {
                 ( progress ) => ()=>{},//console.log( 'Loading model...', 100.0 * ( progress.loaded / progress.total ), '%' ),
 
                 // called when loading has errors
-                ( error ) => console.error( error, that.config.nft.postHashHex ),
+                ( error ) => console.error( error, that.config ),
             );
           
         })

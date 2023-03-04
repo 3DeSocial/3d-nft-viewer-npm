@@ -35,22 +35,21 @@ export default class NFTImporter {
             this.fetchMeta(nftParams.postHashHex).then((nftMeta)=>{
 
                 let itemConfig = this.processMeta(nftParams, nftMeta);
-
+                let importedItem = null;
                 switch(this.config.assetType){
-
                     case 'scenery':
                         // create config for 3D asset class
-                        let importedItem = new SceneryLoader(itemConfig);
+                        importedItem = new SceneryLoader(itemConfig);
                         break;
                     case 'item':
                     case 'avatar':
                         // create config for 3D asset class
-                        let importedItem = new Item(itemConfig);
+                        importedItem = new Item(itemConfig);
                         break;
                     default:   
-                        let importedItem = new Item(itemConfig);
+                        importedItem = new Item(itemConfig);
                         break;                        
-                    }
+                    
                 };
 
                 resolve(importedItem);
@@ -81,7 +80,8 @@ export default class NFTImporter {
 
             })
         
-        })        
+            })   
+        })     
     }
 
     processMeta = (nftParams, nftMeta) =>{
@@ -123,3 +123,4 @@ export default class NFTImporter {
     } 
 
 }
+export {NFTImporter};
