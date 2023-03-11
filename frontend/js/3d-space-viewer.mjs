@@ -663,7 +663,7 @@ const params = {
                                                         };                                  
                                     };
 
-                                    that.avatar = this.initItem(avatarConfig);
+                                    that.avatar = this.initAvatar(avatarConfig);
                                     that.initCameraThirdPerson();
                                     that.initPlayerThirdPerson();
                                    
@@ -3177,7 +3177,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         return true; //test
     }
     
-    initItem = (opts) =>{
+    initAvatar = (opts) =>{
 
 
                 let extraParams = { nftPostHashHex: opts.nftPostHashHex,
@@ -3803,41 +3803,6 @@ initPlayerThirdPerson = () => {
         // Make the sprite always face the camera
         label.lookAt(this.camera.position);        
     }    
-
-initAvatar = (opts)=>{
-    let item = null;
-
-    let urlParts = opts.modelUrl.split('.');
-    let extension = urlParts[urlParts.length-1];
-    let config = {
-        three: THREE,
-        loader: this.loaders.getLoaderForFormat(extension),
-        scene: this.scene,
-        animLoader: (opts.animLoader)?opts.animLoader:false,
-        height: (opts.height)?opts.height:this.config.scaleModelToHeight,
-        width: (opts.width)?opts.width:this.config.scaleModelToWidth,
-        depth: (opts.depth)?opts.depth:this.config.scaleModelToDepth,
-        modelUrl: opts.modelUrl,
-        modelsRoute: this.config.modelsRoute,
-        nftsRoute: this.config.nftsRoute,
-        format:extension,
-        physicsWorld: (opts.physicsWorld)?opts.physicsWorld:null,
-        avatar: (opts.avatar)?opts.avatar:null,
-        avatarPath: (opts.avatarPath)?opts.avatarPath:null,
-        owner: (opts.owner)?opts.owner:null            
-    }
-
-    if(extension.trim().toLowerCase()==='vrm'){
-        config.animations = this.config.animations;
-        config.animLoader = true;
-        item = new ItemVRM(config);
-    } else {
-        item = new Avatar(config);
-    };
-
-    return item;
-
-}
 
 updatePlayer = ( delta )=> {
 

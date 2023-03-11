@@ -472,7 +472,6 @@ export default class Item {
                 };
                 
                 this.scaleToFitScene(obj3D, posVector);
-                console.log('fixYCoord')
                 this.fixYCoord(obj3D, posVector); 
                 resolve(obj3D);
 
@@ -598,11 +597,11 @@ scaleToFitScene = (obj3D, posVector) =>{
         // center of box is position so move up by 50% of newLengthMeshBounds.y
         //let yOffset = newLengthMeshBounds.y/2;
         //cbox.position.setY(cbox.position.y+yOffset);
-        cbox.add(obj3D);
-        obj3D.updateWorldMatrix();
+        //cbox.add(obj3D);
+        //obj3D.updateWorldMatrix();
 
         cbox.userData.owner = this; //set reference to Item
-        obj3D.position.copy(posVector);
+        //obj3D.position.copy(posVector);
         that.scene.add(cbox);    
         cbox.updateMatrixWorld();    
     }
