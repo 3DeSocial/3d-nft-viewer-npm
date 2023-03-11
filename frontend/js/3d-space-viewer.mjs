@@ -592,7 +592,6 @@ const params = {
 
     initSpace = (options) =>{
         let that = this;
-        let sceneryloadingComplete = false
         let nftLoadingComplete = false;
 
         return new Promise((resolve, reject) => {
@@ -666,12 +665,8 @@ const params = {
 
                                     that.avatar = this.initItem(avatarConfig);
                                     that.initCameraThirdPerson();
-                                    that.initPlayerThirdPerson().then(()=>{
-                                        sceneryloadingComplete = true;
-                                        //that.resizeCanvas();
-                                        that.loadingScreen.hide();
-                                    })
-                                    
+                                    that.initPlayerThirdPerson();
+                                   
                                 };
                             })
 
@@ -3744,6 +3739,8 @@ initPlayerThirdPerson = () => {
         this.camera.position.copy(offsetStartPos);
         this.camera.position.z=this.camera.position.z-2;
         that.camera.lookAt(lookAtStartPos);
+        //that.resizeCanvas();
+        that.loadingScreen.hide();         
         that.animate();
 
     });       
