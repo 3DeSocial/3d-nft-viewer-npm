@@ -466,7 +466,8 @@ export default class Item {
                     };
                   
                     this.scaleToFitScene(obj3D, posVector);
-                   // this.fixYCoord(obj3D, posVector); 
+                    this.fixYCoord(obj3D, posVector); 
+                    console.log('fix ghotss');
                     resolve(obj3D);
 
               //  }

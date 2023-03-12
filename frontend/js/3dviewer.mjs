@@ -50,7 +50,14 @@ const params = {
                     },
                     vrType: 'walking',
                     useOwnHandlers: false,
-                    images: [] //holds user image for adding to scene
+                    images: [], //holds user image for adding to scene
+                    lights: [  {name:'ambient',intensity:0.5},
+                                {name:'above',intensity:0.5},
+                                {name:'below',intensity:0},
+                                {name:'left',intensity:0},
+                                {name:'right',intensity:0},
+                                {name:'front',intensity:0},
+                                {name:'back',intensity:0}]
                 };
         
         this.config = {
@@ -297,8 +304,10 @@ const params = {
     }
 
     initLighting = () =>{
+        let lights = this.config.lights;
         this.lights = new Lighting({scene:this.scene,
-                                        createListeners: true});   
+                                        createListeners: true,
+                                        lights: lights});     
     }
 
     initLoaders = () =>{
