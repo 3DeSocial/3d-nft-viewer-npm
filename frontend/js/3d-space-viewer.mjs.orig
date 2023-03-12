@@ -7,7 +7,7 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { ExtraData3DParser, Avatar, AvatarVRM, SnowFall, PlayerVR, AudioClipRemote, Physics, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { ExtraData3DParser, Avatar, SnowFall, PlayerVR, AudioClipRemote, Physics, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let spacePressed = false, KeyBPressed = false, fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = false, rotlftPressed = false, rotRgtPressed = false;
@@ -631,7 +631,7 @@ const params = {
 
 
                 if(this.avatarEnabled()){
-                        this.config.chainAPI.fetchPostDetail({postHashHex:'afa02ebe8c02c6f8f22ca46031e048b69a6b2add303ffae538bb95bf6adb6db7'}).then((res)=>{
+                        this.config.chainAPI.fetchPostDetail({postHashHex:this.config.avatar}).then((res)=>{
                             res.json().then((json)=>{
                                 let extraDataString = null;
                                 if(json.PostExtraData){
@@ -663,11 +663,18 @@ const params = {
                                                         };                                  
                                     };
 
+<<<<<<< HEAD
+                                    that.avatar = this.initAvatar(avatarConfig);
+                                    that.initCameraThirdPerson();
+                                    that.initPlayerThirdPerson();
+                                   
+=======
                                     that.avatar = this.initAvatarItem(avatarConfig);
                                     that.initCameraThirdPerson();
                                     that.initPlayerThirdPerson();
                                     
-                                   
+                                    
+>>>>>>> avatar_fix
                                 };
                             })
 
@@ -3178,7 +3185,11 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         return true; //test
     }
     
+<<<<<<< HEAD
+    initAvatar = (opts) =>{
+=======
     initAvatarItem = (opts) =>{
+>>>>>>> avatar_fix
 
 
                 let extraParams = { nftPostHashHex: opts.nftPostHashHex,
@@ -3208,12 +3219,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                     };
                     console.log('final avatarParams');
                     console.log(avatarParams);
-                    console.log('avatar format: ',formats[0]);
-                    if(formats[0]==='vrm'){
-                        let item = new AvatarVRM(avatarParams);                
-                    } else {
-                        let item = new Avatar(avatarParams);                
-                    }
+                    let item = new Avatar(avatarParams);                
 
                     return item;                    
                 } else {
@@ -3745,8 +3751,13 @@ initPlayerThirdPerson = () => {
         this.camera.position.copy(offsetStartPos);
         this.camera.position.z=this.camera.position.z-2;
         that.camera.lookAt(lookAtStartPos);
+<<<<<<< HEAD
+        //that.resizeCanvas();
+        that.loadingScreen.hide();         
+=======
         that.loadingScreen.hide();
 
+>>>>>>> avatar_fix
         that.animate();
 
     });       
