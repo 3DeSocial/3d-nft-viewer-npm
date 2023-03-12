@@ -663,9 +663,10 @@ const params = {
                                                         };                                  
                                     };
 
-                                    that.avatar = this.initAvatar(avatarConfig);
+                                    that.avatar = this.initAvatarItem(avatarConfig);
                                     that.initCameraThirdPerson();
                                     that.initPlayerThirdPerson();
+                                    
                                    
                                 };
                             })
@@ -3177,7 +3178,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         return true; //test
     }
     
-    initAvatar = (opts) =>{
+    initAvatarItem = (opts) =>{
 
 
                 let extraParams = { nftPostHashHex: opts.nftPostHashHex,
@@ -3207,7 +3208,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                     };
                     console.log('final avatarParams');
                     console.log(avatarParams);
-                    let item = new Item(avatarParams);                
+                    let item = new Avatar(avatarParams);                
 
                     return item;                    
                 } else {
@@ -3739,8 +3740,8 @@ initPlayerThirdPerson = () => {
         this.camera.position.copy(offsetStartPos);
         this.camera.position.z=this.camera.position.z-2;
         that.camera.lookAt(lookAtStartPos);
-        //that.resizeCanvas();
-        that.loadingScreen.hide();         
+        that.loadingScreen.hide();
+
         that.animate();
 
     });       

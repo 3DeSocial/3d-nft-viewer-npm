@@ -415,54 +415,54 @@ export default class Avatar {
                 } else {
 */
                 that.mesh = loadedItem;
-                if(loadedItem.type === 'Group'){
+                    if(that.config.isAvatar){
                     if(loadedItem.children.length ===1){
                         console.log('using first child of group');
                         that.mesh = loadedItem.children[0];
                     }
                 }                   
                 if(that.config.isAvatar){
-                    this.swapMeshForProfilePic();
-                }
+                        this.swapMeshForProfilePic();
+                    }
                 if(that.animLoader){
                     that.mixer = new THREE.AnimationMixer(root);
-                    if(root.animations.length>0){
-                        console.log('model has some animations on root');
-                        that.animLoader.getDefaultAnim(root,that.mixer);
+                        if(root.animations.length>0){
+                            console.log('model has some animations on root');
+                            that.animLoader.getDefaultAnim(root,that.mixer);
 
-                    } else if(root.model.animations.length>0){
-                        console.log('model has some animations on root.model');
-                        that.animLoader.getDefaultAnim(root.model,that.mixer);
+                        } else if(root.model.animations.length>0){
+                            console.log('model has some animations on root.model');
+                            that.animLoader.getDefaultAnim(root.model,that.mixer);
 
+                        }
+                        if(that.config.avatarPath){
+                            // load fbx animations if there are any
+                            let walkUrl = that.config.avatarPath+'walk.fbx';
+                            let runUrl = that.config.avatarPath+'run.fbx';
+                            let jumpUrl = that.config.avatarPath+'jump.fbx';
+                            let danceUrl = that.config.avatarPath+'dance.fbx';
+                            let danceUrl2 = that.config.avatarPath+'dance2.fbx';                        
+                            let danceUrl3 = that.config.avatarPath+'dance3.fbx';                        
+
+
+                            console.log('walkUrl: ',walkUrl);
+                            console.log('runUrl: ',runUrl);
+                            console.log('jumpUrl: ',jumpUrl);
+                            console.log('danceUrl: ',danceUrl);
+
+                            let promise1 = that.animLoader.loadAnim(walkUrl, that.mixer);
+                            let promise2 = that.animLoader.loadAnim(runUrl, that.mixer);
+                            let promise3 = that.animLoader.loadAnim(jumpUrl, that.mixer);
+                            let promise4 = that.animLoader.loadAnim(danceUrl, that.mixer);
+                            let promise5 = that.animLoader.loadAnim(danceUrl2, that.mixer);
+                            let promise6 = that.animLoader.loadAnim(danceUrl3, that.mixer);
+                            let promises = [promise1,promise2,promise3,promise4,promise5,promise6];
+                            Promise.allSettled(promises).
+                              then((results) => results.forEach((result) => console.log(result.status)));                        
+                             console.log('all animations loaded');
+
+                        }
                     }
-                    if(that.config.avatarPath){
-                        // load fbx animations if there are any
-                        let walkUrl = that.config.avatarPath+'walk.fbx';
-                        let runUrl = that.config.avatarPath+'run.fbx';
-                        let jumpUrl = that.config.avatarPath+'jump.fbx';
-                        let danceUrl = that.config.avatarPath+'dance.fbx';
-                        let danceUrl2 = that.config.avatarPath+'dance2.fbx';                        
-                        let danceUrl3 = that.config.avatarPath+'dance3.fbx';                        
-
-
-                        console.log('walkUrl: ',walkUrl);
-                        console.log('runUrl: ',runUrl);
-                        console.log('jumpUrl: ',jumpUrl);
-                        console.log('danceUrl: ',danceUrl);
-
-                        let promise1 = that.animLoader.loadAnim(walkUrl, that.mixer);
-                        let promise2 = that.animLoader.loadAnim(runUrl, that.mixer);
-                        let promise3 = that.animLoader.loadAnim(jumpUrl, that.mixer);
-                        let promise4 = that.animLoader.loadAnim(danceUrl, that.mixer);
-                        let promise5 = that.animLoader.loadAnim(danceUrl2, that.mixer);
-                        let promise6 = that.animLoader.loadAnim(danceUrl3, that.mixer);
-                        let promises = [promise1,promise2,promise3,promise4,promise5,promise6];
-                        Promise.allSettled(promises).
-                            then((results) => results.forEach((result) => console.log(result.status)));                        
-                            console.log('all animations loaded');
-
-                    }
-                }
                 that.mesh.userData.owner = this;
                 that.mesh.owner = this;                
                 let obj3D = this.convertToObj3D(this.mesh);
