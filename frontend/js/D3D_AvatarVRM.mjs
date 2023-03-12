@@ -1,10 +1,13 @@
 import * as THREE from 'three';
-import * as CANNON from 'cannon-es';
-import { AnimLoader, Physics } from '3d-nft-viewer';
+import { Physics } from '3d-nft-viewer';
+import { ItemVRM } from '3d-nft-viewer';
+import {AnimLoader} from '3d-nft-viewer';
 import { VOXMesh } from "three/examples/jsm/loaders/VOXLoader.js";
-export default class AvatarVRM {
+export default class AvatarVRM extends ItemVRM {
 
     constructor(config){
+
+
         let defaults = {
             modelUrl: '',
             modelsRoute: 'models',
@@ -20,11 +23,15 @@ export default class AvatarVRM {
                 console.log(this);
             }}
         };
-    
+        super();
+
         this.config = {
             ...defaults,
             ...config
         };
+
+   
+
         this.isVRM = false;
 
         this.loader = this.config.loader;
@@ -246,7 +253,7 @@ export default class AvatarVRM {
             if(that.mesh){
                 that.mesh.position.copy(pos);
                 that.scene.add(this.mesh);
-                that.fixYCoord(this.mesh, pos);
+                //that.fixYCoord(this.mesh, pos);
                 if(that.config.physicsWorld){
                     that.addToPhysicsWorld();
                 }
@@ -265,11 +272,15 @@ export default class AvatarVRM {
                         .then((model)=>{
                             that.mesh = model;
 
-                            if(!this.config.isAvatar){
-                                if(that.hasAnimations(false)){                                 
-                                    that.startAnimation(0,THREE.LoopRepeat);
-                                };
-                            }
+                             /*if(that.hasAnimations(false)){
+                                that.startAnimation(0,THREE.LoopRepeat);
+                            } else {
+                               console.log('no animations',this.config.postHashHex);
+                                console.log(model);
+                                console.log('root: ');
+                                console.log(that.root);
+                            };*/
+
                             if(that.config.physicsWorld){
                                 that.addToPhysicsWorld();
                             }
@@ -414,69 +425,24 @@ export default class AvatarVRM {
                     console.log(this.armature);
                 } else {
 */
-<<<<<<< HEAD
-                that.mesh = loadedItem;
-                if(loadedItem.type === 'Group'){
-                    if(loadedItem.children.length ===1){
-                        console.log('using first child of group');
-                        that.mesh = loadedItem.children[0];
-                    }
-                }                   
-                if(that.config.isAvatar){
+                    that.mesh = loadedItem;
                     this.swapMeshForProfilePic();
-                }
-                if(that.animLoader){
-                    that.mixer = new THREE.AnimationMixer(root);
-                    if(root.animations.length>0){
-                        console.log('model has some animations on root');
+                    if(that.animLoader){
+                        that.mixer = new THREE.AnimationMixer(root);
                         that.animLoader.getDefaultAnim(root,that.mixer);
-
-                    } else if(root.model.animations.length>0){
-                        console.log('model has some animations on root.model');
-                        that.animLoader.getDefaultAnim(root.model,that.mixer);
-
-                    }
-                    if(that.config.avatarPath){
-                        // load fbx animations if there are any
                         let walkUrl = that.config.avatarPath+'walk.fbx';
                         let runUrl = that.config.avatarPath+'run.fbx';
                         let jumpUrl = that.config.avatarPath+'jump.fbx';
                         let danceUrl = that.config.avatarPath+'dance.fbx';
                         let danceUrl2 = that.config.avatarPath+'dance2.fbx';                        
                         let danceUrl3 = that.config.avatarPath+'dance3.fbx';                        
-=======
-                    that.mesh = loadedItem;
-                    if(that.config.isAvatar){
-                        this.swapMeshForProfilePic();
-                    }
-                    if(that.animLoader){
-                        that.mixer = new THREE.AnimationMixer(root);
-                        if(root.animations.length>0){
-                            console.log('model has some animations on root');
-                            that.animLoader.getDefaultAnim(root,that.mixer);
-
-                        } else if(root.model.animations.length>0){
-                            console.log('model has some animations on root.model');
-                            that.animLoader.getDefaultAnim(root.model,that.mixer);
-
-                        }
-                        if(that.config.avatarPath){
-                            // load fbx animations if there are any
-                            let walkUrl = that.config.avatarPath+'walk.fbx';
-                            let runUrl = that.config.avatarPath+'run.fbx';
-                            let jumpUrl = that.config.avatarPath+'jump.fbx';
-                            let danceUrl = that.config.avatarPath+'dance.fbx';
-                            let danceUrl2 = that.config.avatarPath+'dance2.fbx';                        
-                            let danceUrl3 = that.config.avatarPath+'dance3.fbx';                        
->>>>>>> avatar_fix
 
 
-                            console.log('walkUrl: ',walkUrl);
-                            console.log('runUrl: ',runUrl);
-                            console.log('jumpUrl: ',jumpUrl);
-                            console.log('danceUrl: ',danceUrl);
+                        console.log('walkUrl: ',walkUrl);
+                        console.log('runUrl: ',runUrl);
+                        console.log('jumpUrl: ',jumpUrl);
+                        console.log('danceUrl: ',danceUrl);
 
-<<<<<<< HEAD
                         let promise1 = that.animLoader.loadAnim(walkUrl, that.mixer);
                         let promise2 = that.animLoader.loadAnim(runUrl, that.mixer);
                         let promise3 = that.animLoader.loadAnim(jumpUrl, that.mixer);
@@ -485,35 +451,12 @@ export default class AvatarVRM {
                         let promise6 = that.animLoader.loadAnim(danceUrl3, that.mixer);
                         let promises = [promise1,promise2,promise3,promise4,promise5,promise6];
                         Promise.allSettled(promises).
-                            then((results) => results.forEach((result) => console.log(result.status)));                        
-                            console.log('all animations loaded');
+                          then((results) => results.forEach((result) => console.log(result.status)));                        
+                         console.log('all animations loaded');
 
-                    }
-                }
-                that.mesh.userData.owner = this;
-                that.mesh.owner = this;                
-                let obj3D = this.convertToObj3D(this.mesh);
-                if(obj3D===false){
-                    console.log('could not convert item for scene');
-                    return false;
-                };
-                
-                this.scaleToFitScene(obj3D, posVector);
-                resolve(obj3D);
-=======
-                            let promise1 = that.animLoader.loadAnim(walkUrl, that.mixer);
-                            let promise2 = that.animLoader.loadAnim(runUrl, that.mixer);
-                            let promise3 = that.animLoader.loadAnim(jumpUrl, that.mixer);
-                            let promise4 = that.animLoader.loadAnim(danceUrl, that.mixer);
-                            let promise5 = that.animLoader.loadAnim(danceUrl2, that.mixer);
-                            let promise6 = that.animLoader.loadAnim(danceUrl3, that.mixer);
-                            let promises = [promise1,promise2,promise3,promise4,promise5,promise6];
-                            Promise.allSettled(promises).
-                              then((results) => results.forEach((result) => console.log(result.status)));                        
-                             console.log('all animations loaded');
-
-                        }
-                    }
+                    } else {
+                        console.log('no that.animLoader on load model');
+                    };
                     that.mesh.userData.owner = this;
                     that.mesh.owner = this;                
                     let obj3D = this.convertToObj3D(loadedItem);
@@ -525,7 +468,6 @@ export default class AvatarVRM {
                     this.scaleToFitScene(obj3D, posVector);
                    // this.fixYCoord(obj3D, posVector); 
                     resolve(obj3D);
->>>>>>> avatar_fix
 
               //  }
                
@@ -546,10 +488,10 @@ onErrorCallback = (e)=> {
 
 swapMeshForProfilePic = () =>{
     let that = this;
-
+    console.log('swapMeshForProfilePic: ',this.config.owner.ownerPublicKey);
     let faceMesh = this.findChildByName(this.mesh, 'ProfilePicHere');
+console.log(this.config.owner);
     if(faceMesh){
-
         this.faceMesh = faceMesh;
         let remoteProfilePic = 'https://node.deso.org/api/v0/get-single-profile-picture/'+this.config.owner.ownerPublicKey;
         this.loadRemoteTexture(remoteProfilePic).then((texture)=>{
@@ -557,8 +499,6 @@ swapMeshForProfilePic = () =>{
             this.faceMesh.material =material;
         })
 
-    } else {
-        console.log('do not use faceMesh - none in model');
     }
 
 }
@@ -642,25 +582,19 @@ scaleToFitScene = (obj3D, posVector) =>{
             z: Math.abs(newMeshBounds.max.z - newMeshBounds.min.z),
         };
         
-       // let cbox = that.createContainerBoxForModel(newLengthMeshBounds.x, newLengthMeshBounds.y, newLengthMeshBounds.z, posVector);
+        let cbox = that.createContainerBoxForModel(newLengthMeshBounds.x, newLengthMeshBounds.y, newLengthMeshBounds.z, posVector);
+        cbox.position.copy(posVector);
 
         // center of box is position so move up by 50% of newLengthMeshBounds.y
         //let yOffset = newLengthMeshBounds.y/2;
         //cbox.position.setY(cbox.position.y+yOffset);
-       // cbox.add(obj3D);
+        //cbox.add(obj3D);
         //obj3D.updateWorldMatrix();
-<<<<<<< HEAD
-        obj3D.userData.owner = this; //set reference to Item
-        obj3D.position.copy(posVector);
-        that.scene.add(obj3D);    
-        obj3D.updateMatrixWorld();    
-=======
 
         cbox.userData.owner = this; //set reference to Item
-        obj3D.position.copy(posVector);
         that.scene.add(obj3D);    
+        obj3D.position.copy(posVector);
         cbox.updateMatrixWorld();    
->>>>>>> avatar_fix
     }
 
     getBoxHelperVertices = (boxHelper) =>{
@@ -768,8 +702,7 @@ scaleToFitScene = (obj3D, posVector) =>{
         let material, vertexColors, geometry;
        // console.log('loaded type: ',loadedType);
         switch(loadedType){
-            case 'Object3D':
-            case 'Mesh':
+            case 'Object3D','Mesh':
             break;
             case 'BufferGeometry':
                 loadedItem.center();
@@ -839,7 +772,6 @@ scaleToFitScene = (obj3D, posVector) =>{
         };
         lowestVertex.applyMatrix4(helper.matrixWorld);
         if(posVector.y !== lowestVertex.y){
-            console.log('fixed y coord');
             let yOffset = lowestVertex.y-posVector.y;
             obj3D.position.setY(obj3D.position.y - yOffset);
         };
@@ -886,7 +818,7 @@ scaleToFitScene = (obj3D, posVector) =>{
     }
 
     startCurrentAnimation = (loopType) => {
-        if(!loopType){
+    /*    if(!loopType){
             loopType = THREE.LoopRepeat
         };
         let that = this;
@@ -908,7 +840,7 @@ scaleToFitScene = (obj3D, posVector) =>{
             } else {
                 //console.log('animation', animIndex, 'doesnt exist');
             }
-        }
+        }*/
     }
 
     stopAnimation = () =>{

@@ -646,7 +646,7 @@ const params = {
                                                         width: 3, 
                                                         height:3, 
                                                         depth:3, 
-                                                        nftPostHashHex:this.config.avatar,
+                                                        nftPostHashHex:'afa02ebe8c02c6f8f22ca46031e048b69a6b2add303ffae538bb95bf6adb6db7',
                                                         extraDataString:extraDataString,
                                                         owner: {
                                                             ownerName: 'Guest',
@@ -2349,7 +2349,9 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         //update all visible items running animations in sceneInventory
         this.avatars.forEach((item)=>{
             if((item.mixer !== null)){
-                item.updateAnimation(delta);
+                if(item.updateAnimation){
+                    item.updateAnimation(delta);
+                }
             }
         })
     }
@@ -3184,7 +3186,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                 let extraParams = { nftPostHashHex: opts.nftPostHashHex,
                                     extraData3D:opts.extraDataString,
                                     endPoint:this.config.modelsRoute};
-
+console.log('extraParams',extraParams);
                 let extraDataParser = new ExtraData3DParser(extraParams);
                 let formats = extraDataParser.getAvailableFormats();                    
                 let models = extraDataParser.getModelList();
@@ -3210,12 +3212,11 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                     console.log(avatarParams);
                     console.log('avatar format: ',formats[0]);
                     if(formats[0]==='vrm'){
-                        let item = new AvatarVRM(avatarParams);                
+                        return new ItemVRM(avatarParams);                
                     } else {
-                        let item = new Avatar(avatarParams);                
+                        return new Avatar(avatarParams);                
                     }
 
-                    return item;                    
                 } else {
                     console.log('could not retreive avatar modelUrl');
                 }
@@ -3722,7 +3723,16 @@ initPlayerThirdPerson = () => {
 
         that.player.rotation.set(0,0,0);         
         that.player.attach(that.character);
-        that.player.attach(that.avatar.mesh);
+        if(!that.avatar.mesh){
+            console.log('no mesh for avatar...',this.avatar)
+        } else {
+            console.log('have avatar mesh to attach.');
+            console.log(that.avatar);
+            console.log('attach scene')
+
+            that.player.attach(that.avatar.mesh.scene);
+        }
+
 
         that.scene.add( that.player );
         that.player.updateMatrixWorld();
