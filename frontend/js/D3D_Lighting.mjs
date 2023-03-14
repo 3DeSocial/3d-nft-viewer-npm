@@ -218,7 +218,7 @@ export default class Lighting {
         };
     }
     setIntensityAmb(val){
-        this.aLight.intensity = val;
+        this.dLighting['ambient'].intensity = val;
     }
 
     setIntensityDLight(lightName, val){

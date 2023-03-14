@@ -6,6 +6,7 @@ export default class Item {
 
     constructor(config){
         let defaults = {
+            snapToFloor: false,
             modelUrl: '',
             modelsRoute: 'models',
             nftsRoute: 'nfts',
@@ -765,6 +766,10 @@ scaleToFitScene = (obj3D, posVector) =>{
     }
 
     fixYCoord = (obj3D, posVector) =>{
+        if(!this.config.snapToFloor){
+            // dont snap to floor
+            return;
+        };
         var helper = new THREE.BoxHelper(obj3D, 0x00ff00);
             helper.update();
 

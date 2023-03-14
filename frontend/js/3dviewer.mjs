@@ -725,13 +725,21 @@ const params = {
                     this.placeModel(this.loadedItem).then((item)=>{
                         this.fitCameraToMesh(item);
                         this.removeLoader(hideElOnLoad);
+                        setTimeout(()=>{
+                            that.resizeCanvas();                    
+                        },1000);
+
                         resolve(item);                        
                     })
                 })
             } else {
                 this.placeModel(this.loadedItem).then((item)=>{
-                    this.removeLoader(hideElOnLoad);
                     this.fitCameraToMesh(item);
+
+                    this.removeLoader(hideElOnLoad);     
+                    setTimeout(()=>{
+                        that.resizeCanvas();                    
+                    },1000);
                     resolve(item);
 
                 })
@@ -855,7 +863,8 @@ const params = {
             loader: this.loaders.getLoaderForFormat(opts.format),
             nftPostHashHex: nftPostHashHex,
             modelsRoute: this.config.modelsRoute,
-            nftsRoute: nftsRoute
+            nftsRoute: nftsRoute,
+            snapToFloor: this.config.useShowroom
 
         };
         if(opts.nftRequestParams){
@@ -892,7 +901,8 @@ const params = {
             modelUrl: modelUrl,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
-            format:format
+            format:format,
+            snapToFloor: this.config.useShowroom
         };
 
         if(format==='vrm'){
