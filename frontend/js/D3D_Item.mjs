@@ -414,67 +414,61 @@ export default class Item {
                     console.log(this.armature);
                 } else {
 */
-                that.mesh = loadedItem;
-                if(loadedItem.type === 'Group'){
-                    if(loadedItem.children.length ===1){
-                        console.log('using first child of group');
-                        that.mesh = loadedItem.children[0];
+                    that.mesh = loadedItem;
+                    if(that.config.isAvatar){
+                        this.swapMeshForProfilePic();
                     }
-                }                   
-                if(that.config.isAvatar){
-                    this.swapMeshForProfilePic();
-                }
-                if(that.animLoader){
-                    that.mixer = new THREE.AnimationMixer(root);
-                    if(root.animations.length>0){
-                        console.log('model has some animations on root');
-                        that.animLoader.getDefaultAnim(root,that.mixer);
+                    if(that.animLoader){
+                        that.mixer = new THREE.AnimationMixer(root);
+                        if(root.animations.length>0){
+                            console.log('model has some animations on root');
+                            that.animLoader.getDefaultAnim(root,that.mixer);
 
-                    } else if(root.model.animations.length>0){
-                        console.log('model has some animations on root.model');
-                        that.animLoader.getDefaultAnim(root.model,that.mixer);
+                        } else if(root.model.animations.length>0){
+                            console.log('model has some animations on root.model');
+                            that.animLoader.getDefaultAnim(root.model,that.mixer);
 
+                        }
+                        if(that.config.avatarPath){
+                            // load fbx animations if there are any
+                            let walkUrl = that.config.avatarPath+'walk.fbx';
+                            let runUrl = that.config.avatarPath+'run.fbx';
+                            let jumpUrl = that.config.avatarPath+'jump.fbx';
+                            let danceUrl = that.config.avatarPath+'dance.fbx';
+                            let danceUrl2 = that.config.avatarPath+'dance2.fbx';                        
+                            let danceUrl3 = that.config.avatarPath+'dance3.fbx';                        
+
+
+                            console.log('walkUrl: ',walkUrl);
+                            console.log('runUrl: ',runUrl);
+                            console.log('jumpUrl: ',jumpUrl);
+                            console.log('danceUrl: ',danceUrl);
+
+                            let promise1 = that.animLoader.loadAnim(walkUrl, that.mixer);
+                            let promise2 = that.animLoader.loadAnim(runUrl, that.mixer);
+                            let promise3 = that.animLoader.loadAnim(jumpUrl, that.mixer);
+                            let promise4 = that.animLoader.loadAnim(danceUrl, that.mixer);
+                            let promise5 = that.animLoader.loadAnim(danceUrl2, that.mixer);
+                            let promise6 = that.animLoader.loadAnim(danceUrl3, that.mixer);
+                            let promises = [promise1,promise2,promise3,promise4,promise5,promise6];
+                            Promise.allSettled(promises).
+                              then((results) => results.forEach((result) => console.log(result.status)));                        
+                             console.log('all animations loaded');
+
+                        }
                     }
-                    if(that.config.avatarPath){
-                        // load fbx animations if there are any
-                        let walkUrl = that.config.avatarPath+'walk.fbx';
-                        let runUrl = that.config.avatarPath+'run.fbx';
-                        let jumpUrl = that.config.avatarPath+'jump.fbx';
-                        let danceUrl = that.config.avatarPath+'dance.fbx';
-                        let danceUrl2 = that.config.avatarPath+'dance2.fbx';                        
-                        let danceUrl3 = that.config.avatarPath+'dance3.fbx';                        
-
-
-                        console.log('walkUrl: ',walkUrl);
-                        console.log('runUrl: ',runUrl);
-                        console.log('jumpUrl: ',jumpUrl);
-                        console.log('danceUrl: ',danceUrl);
-
-                        let promise1 = that.animLoader.loadAnim(walkUrl, that.mixer);
-                        let promise2 = that.animLoader.loadAnim(runUrl, that.mixer);
-                        let promise3 = that.animLoader.loadAnim(jumpUrl, that.mixer);
-                        let promise4 = that.animLoader.loadAnim(danceUrl, that.mixer);
-                        let promise5 = that.animLoader.loadAnim(danceUrl2, that.mixer);
-                        let promise6 = that.animLoader.loadAnim(danceUrl3, that.mixer);
-                        let promises = [promise1,promise2,promise3,promise4,promise5,promise6];
-                        Promise.allSettled(promises).
-                            then((results) => results.forEach((result) => console.log(result.status)));                        
-                            console.log('all animations loaded');
-
-                    }
-                }
-                that.mesh.userData.owner = this;
-                that.mesh.owner = this;                
-                let obj3D = this.convertToObj3D(this.mesh);
-                if(obj3D===false){
-                    console.log('could not convert item for scene');
-                    return false;
-                };
-                
-                this.scaleToFitScene(obj3D, posVector);
+                    that.mesh.userData.owner = this;
+                    that.mesh.owner = this;                
+                    let obj3D = this.convertToObj3D(loadedItem);
+                    if(obj3D===false){
+                        console.log('could not convert item for scene');
+                        return false;
+                    };
+                  
+                    this.scaleToFitScene(obj3D, posVector);
                     this.fixYCoord(obj3D, posVector); 
                     console.log('fix ghotss');
-                resolve(obj3D);
+                    resolve(obj3D);
 
               //  }
                
@@ -591,9 +585,8 @@ scaleToFitScene = (obj3D, posVector) =>{
             z: Math.abs(newMeshBounds.max.z - newMeshBounds.min.z),
         };
         
-       // let cbox = that.createContainerBoxForModel(newLengthMeshBounds.x, newLengthMeshBounds.y, newLengthMeshBounds.z, posVector);
-       let cbox = boxMesh; 
-       cbox.position.copy(posVector);
+        let cbox = that.createContainerBoxForModel(newLengthMeshBounds.x, newLengthMeshBounds.y, newLengthMeshBounds.z, posVector);
+        cbox.position.copy(posVector);
 
         // center of box is position so move up by 50% of newLengthMeshBounds.y
         //let yOffset = newLengthMeshBounds.y/2;
@@ -602,8 +595,8 @@ scaleToFitScene = (obj3D, posVector) =>{
         //obj3D.updateWorldMatrix();
 
         cbox.userData.owner = this; //set reference to Item
-        //obj3D.position.copy(posVector);
-        that.scene.add(cbox);    
+        obj3D.position.copy(posVector);
+        that.scene.add(obj3D);    
         cbox.updateMatrixWorld();    
     }
 
@@ -712,8 +705,7 @@ scaleToFitScene = (obj3D, posVector) =>{
         let material, vertexColors, geometry;
        // console.log('loaded type: ',loadedType);
         switch(loadedType){
-            case 'Object3D':
-            case 'Mesh':
+            case 'Object3D','Mesh':
             break;
             case 'BufferGeometry':
                 loadedItem.center();
@@ -783,7 +775,6 @@ scaleToFitScene = (obj3D, posVector) =>{
         };
         lowestVertex.applyMatrix4(helper.matrixWorld);
         if(posVector.y !== lowestVertex.y){
-            console.log('fixed y coord');
             let yOffset = lowestVertex.y-posVector.y;
             obj3D.position.setY(obj3D.position.y - yOffset);
         };
