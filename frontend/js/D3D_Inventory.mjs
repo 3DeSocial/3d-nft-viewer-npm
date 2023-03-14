@@ -326,7 +326,8 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
             isImage: false,
             layout: opts.layout,
             loadingScreen: this.config.loadingScreen,
-            format: opts.format
+            format: opts.format,
+            snapToFloor: true
         };
 
         if(this.config.physicsWorld){

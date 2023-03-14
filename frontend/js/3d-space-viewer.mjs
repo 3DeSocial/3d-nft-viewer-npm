@@ -3234,6 +3234,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             nftsRoute: this.config.nftsRoute,
             format:extension,
             physicsWorld: (opts.physicsWorld)?opts.physicsWorld:null,
+            snapToFloor: true
         }
 
         if(extension.trim().toLowerCase()==='vrm'){
@@ -3270,7 +3271,8 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             modelUrl: modelUrl,
             modelsRoute: this.config.modelsRoute,
             nftsRoute: this.config.nftsRoute,
-            format:extension
+            format:extension,
+            snapToFloor: true
         });
         return item;
 

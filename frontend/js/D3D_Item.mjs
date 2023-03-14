@@ -768,7 +768,10 @@ scaleToFitScene = (obj3D, posVector) =>{
     fixYCoord = (obj3D, posVector) =>{
         if(!this.config.snapToFloor){
             // dont snap to floor
+            console.log('this.config.snapToFloor: ',this.config.snapToFloor);
             return;
+        } else {
+            console.log('DID snap to floor');
         };
         var helper = new THREE.BoxHelper(obj3D, 0x00ff00);
             helper.update();
