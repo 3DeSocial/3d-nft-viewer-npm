@@ -306,7 +306,7 @@ const params = {
     initLighting = () =>{
         let lights = this.config.lights;
         this.lights = new Lighting({scene:this.scene,
-                                        createListeners: true,
+                                        createListeners: false,
                                         lights: lights});     
     }
 

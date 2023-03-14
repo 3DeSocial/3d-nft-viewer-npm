@@ -188,7 +188,6 @@ export default class Lighting {
         let that = this;
         this.config.lights.forEach((light)=>{
             that.dLighting[light.name].intensity = light.intensity;
-            console.log('set ',light.name,' to ',light.intensity)
         })
     }    
 
@@ -218,11 +217,11 @@ export default class Lighting {
         };
     }
     setIntensityAmb(val){
-        this.dLighting['ambient'].intensity = val;
+        this.dLighting['ambient'].light.intensity = val;
     }
 
     setIntensityDLight(lightName, val){
-        this.dLighting[lightName].intensity = val;
+        this.dLighting[lightName].light.intensity = val;
     }    
 }
 
