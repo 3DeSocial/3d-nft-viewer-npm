@@ -402,31 +402,17 @@ export default class Item {
 
                 if(root.scene){
                     loadedItem = root.scene;
-                    console.log('use scene');
                 } else {
                     loadedItem = root;
-                    console.log('use root');
-
                 };     
 
-            /*               
-                if(that.hasArmature()){
-                    console.log('armature detected');
-                    console.log(this.armature);
-                } else {
-*/
                     that.mesh = loadedItem;
-                    if(that.config.isAvatar){
-                        this.swapMeshForProfilePic();
-                    }
                     if(that.animLoader){
                         that.mixer = new THREE.AnimationMixer(root);
                         if(root.animations.length>0){
-                            console.log('model has some animations on root');
                             that.animLoader.getDefaultAnim(root,that.mixer);
 
                         } else if(root.model.animations.length>0){
-                            console.log('model has some animations on root.model');
                             that.animLoader.getDefaultAnim(root.model,that.mixer);
 
                         }
@@ -454,7 +440,6 @@ export default class Item {
                             let promises = [promise1,promise2,promise3,promise4,promise5,promise6];
                             Promise.allSettled(promises).
                               then((results) => results.forEach((result) => console.log(result.status)));                        
-                             console.log('all animations loaded');
 
                         }
                     }
@@ -500,8 +485,6 @@ swapMeshForProfilePic = () =>{
             this.faceMesh.material =material;
         })
 
-    } else {
-        console.log('do not use faceMesh - none in model');
     }
 
 }
@@ -510,7 +493,6 @@ swapMeshForProfilePic = () =>{
 loadRemoteTexture = (imageUrl) =>{
     let that = this;
     let proxyImageURL = 'https://nftzapi.azurewebsites.net/api/query/getimage?url=' +imageUrl;    
-console.log('load profile pic from: ',proxyImageURL);
     return new Promise((resolve,reject)=>{
         var img = new Image();
             img.onload = function(){
@@ -521,7 +503,6 @@ console.log('load profile pic from: ',proxyImageURL);
 
         img.addEventListener('error', (img, error) =>{
           console.log('could not load image',img.src);
-       //   console.log(error);
           reject(img.src)
         });
         img.src = proxyImageURL;
