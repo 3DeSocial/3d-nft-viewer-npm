@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { browser } from '$app/environment';
 const workerURL = new URL('$lib/gifWorker.js', import.meta.url);
 console.log('created worker url: ',workerURL);
@@ -59,9 +60,9 @@ console.log('gifWorker',gifWorker);
     const frameCount = spriteSheet.frameCount; 
     frameSetLengths.push(frameCount);
 
-    that.gifs[index].spritesheetTexture = spritesheetTexture;
-    that.gifs[index].frames = frames;
-    that.gifs[index].gifCount = that.gifCount;
+    this.gifs[index].spritesheetTexture = spritesheetTexture;
+    this.gifs[index].frames = frames;
+    this.gifs[index].gifCount = this.gifCount;
   });
 
   
@@ -73,43 +74,7 @@ console.log('gifWorker',gifWorker);
     }}
   );
 
-  }
-
-    createSpritesheet = (frames) => {
-        const spritesheetCanvas = document.createElement('canvas');
-        spritesheetCanvas.width = frames[0].dims.width * frames.length;
-        spritesheetCanvas.height = frames[0].dims.height;
-        spritesheetCanvas.style.display = 'none';
-        const ctx = spritesheetCanvas.getContext('2d');
-      
-        frames.forEach((frame, index) => {
-          const frameImageData = new ImageData(
-            new Uint8ClampedArray(frame.patch.buffer),
-            frame.dims.width,
-            frame.dims.height
-          );
-          ctx.putImageData(frameImageData, index * frame.dims.width, 0);
-        });
-      
-        return spritesheetCanvas;
-      }
-      
-      loadGifAsSpritesheet = async (gifItem, index) => {
-        let url = this.config.proxy+gifItem.config.nft.imageURLs[0];
-        const response = await fetch(url);
-        const buffer = await response.arrayBuffer();
-        const gifData = parseGIF(buffer);
-        const frames = decompressFrames(gifData, true);
-      
-        const spritesheetCanvas = this.createSpritesheet(frames);
-        const spritesheetTexture = new THREE.CanvasTexture(spritesheetCanvas);
-        spritesheetTexture.matrixAutoUpdate = true;
-        spritesheetTexture.repeat.set(1 / frames.length, 1);
-        gifItem.spritesheetTexture = spritesheetTexture;
-        gifItem.frames = frames;
-        gifItem.gifCount = this.gifCount;
-        return gifItem;
-      }
+}
 
       loadGifs = async (gifs) => {
 
