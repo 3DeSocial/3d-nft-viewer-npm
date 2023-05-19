@@ -1,4 +1,6 @@
-//import workerURL from '$lib/workers/gifWorker.js?url';
+import { browser } from '$app/environment';
+const workerURL = new URL('$lib/gifWorker.js', import.meta.url);
+console.log('created worker url: ',workerURL);
 let gifWorker = null;
 export default class Giffer {
 
@@ -18,10 +20,13 @@ export default class Giffer {
       this.gifs = [];
     }
 
-  loadWorker = async (workerURL) => {
-    console.log('process.client: ',process.client);
+  loadWorker = async () => {
+    console.log('running in browser? ',browser);
+   // console.log('process.client: ',process.client);
+  // let workerUrl  ='/workers/gifWorker.js';
+   console.log('worker url:',workerURL)
       gifWorker = new Worker(workerURL, { type: "module" });
-
+console.log('gifWorker',gifWorker);
         gifWorker.onmessage = (event) => {
           console.log('event: ',event);
           switch(event.data.method){
@@ -39,11 +44,11 @@ export default class Giffer {
    startAnimation = async (spriteSheetData) => {
     // spritesheet created and recieved back from worker
 
-  const sharedBuffer = new SharedArrayBuffer(Float64Array.BYTES_PER_ELEMENT * (1 + spriteSheetData.length * 5));
-  const sharedArray = new Float64Array(sharedBuffer);
+    const sharedBuffer = new SharedArrayBuffer(Float64Array.BYTES_PER_ELEMENT * (1 + spriteSheetData.length * 5));
+    const sharedArray = new Float64Array(sharedBuffer);
 
-  let frameSetLengths = [];
-  spriteSheetData.forEach((spriteSheet, index) => {
+    let frameSetLengths = [];
+    spriteSheetData.forEach((spriteSheet, index) => {
 
     const imageBitmap = spriteSheet.spriteSheet;
 
@@ -116,6 +121,8 @@ export default class Giffer {
         let gifUrls = this.getGifUrls();
         let payload = {method:'prepareGifs',
         data:gifUrls}
+        console.log('payload: ');
+
         console.log(payload);
         gifWorker.postMessage(payload);  
 

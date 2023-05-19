@@ -573,7 +573,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
 };
 
     initItem2d = (opts) =>{
-
+        console.log('initItem2d');
         let nftPostHashHex = opts.nftPostHashHex;
         let paramString = '';
         let params  = [];
@@ -660,13 +660,13 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         let imageUrl;
         let imageUrls = (itemParams.nft.imageURLs)?itemParams.nft.imageURLs:itemParams.nft.ImageURLs;
             imageUrl = imageUrls[0];                
-    console.log('check imageUrls for gif: ',imageUrl);
         let parts = imageUrl.split('.');
 
         if(parts[parts.length-1].toLowerCase()==='gif'){
             itemParams.isGif = true;
             let item = new Item2d(itemParams);            
             this.gifs.push(item);
+            console.log('gif found: ',imageUrl);
             return item;
         } else {
             itemParams.isGif = false;
