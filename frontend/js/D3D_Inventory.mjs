@@ -19,6 +19,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
             ...defaults,
             ...config
         };
+        this.gifs = [];
         this.items2d = [];
         this.items3d = [];
         this.items = [];
@@ -30,6 +31,179 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         this.center = new THREE.Vector3(0,0,0);
         if((this.config.items3d.length>0)||(this.config.items2d.length>0)){
             this.load();
+        }
+      
+    }
+
+    add = (itemPost) =>{
+        let item = null;         
+        let extraDataParser = this.getParser(itemPost.PostEntryResponse);
+        if(extraDataParser){
+            let formats = extraDataParser.getAvailableFormats();                    
+            let models = extraDataParser.getModelList();
+            let modelUrl = extraDataParser.getModelPath(0,'gltf','any');
+            if(!modelUrl){
+                return false;
+            };
+            let placeItemConfig = {modelUrl: modelUrl,
+                                        nftPostHashHex: itemPost.PostEntryResponse.postHashHex, 
+                                            //pos: spot.pos,
+                                        // rot:spot.rot,
+                                            nft:itemPost.PostEntryResponse,
+                                            width: 3,
+                                            height:3,
+                                            depth:3,
+                                            scene: this.scene,
+                                            format: formats[0]
+                                    };
+                item = this.initItem(placeItemConfig);    
+                this.items3d.push(item); 
+                return item;               
+          }
+
+
+
+        return false;
+    }
+
+    add2D = (itemPost, imgIndex) =>{
+        let item = null;         
+        let itemConfig = {
+            imgIndex: imgIndex,
+            nft: itemPost,
+            width: 2,
+            height: 2,
+            depth: 0.1,
+            scene: this.scene,
+            loader: this.loader,
+            modelsRoute: this.config.modelsRoute,
+            nftsRoute:this.config.nftsRoute,
+            imageProxyUrl:this.config.imageProxyUrl,
+            isImage: true
+        }
+        item = this.initItem2d(itemConfig);
+
+        this.items2d.push(item);     
+        return item;                       
+    }
+
+    convertItemForStorage = (mesh, includeNFT)=>{
+        let postHashHex = null;
+        let item = null;
+        let nft = null;
+        console.log('convertItemForStorage');
+        console.log(mesh);
+
+        if(mesh.isItem){
+            console.log('ITEM detected',mesh);
+            item = mesh;
+            mesh = item.mesh;
+        } else if (mesh.userData.owner){
+            console.log('mesh with owner: ',mesh.userData.owner);
+            item = mesh.userData.owner;    
+            mesh = item.mesh;
+        } else {
+            console.log('cant find item');
+            return false;
+        }
+
+       if(item.config.nft){
+            nft = item.config.nft;
+       };
+
+       postHashHex = nft.postHashHex||nft.PostHashHex;
+    
+        if(!postHashHex){
+            console.log('no hex to save');
+            return false;
+        }
+
+        // Get position, rotation, and scale of the controlled object
+        const position = mesh.position;
+        let rotation1 = mesh.rotation.toArray();
+        let rotation = {x: rotation1[0],y: rotation1[1],z: rotation1[2]};
+        const scale = mesh.scale;
+
+        // Convert the values into the desired format
+        const formattedValues = {
+            postHashHex: postHashHex,
+            pos: { x: position.x, y: position.y, z: position.z },
+            rot: { x: rotation.x, y: rotation.y, z: rotation.z },
+            scale: { x: scale.x, y: scale.y, z: scale.z }
+        };
+
+        if(includeNFT){ // save to idb
+            formattedValues.nft = nft;
+           if(!formattedValues.nft){
+            console.log('WARNING!! NO NFT');
+            return false;
+           }
+        };
+        return formattedValues;
+    }
+
+    remove = (item) =>{
+        this.removeItemByNftPostHashHex(item);
+        let sceneInventoryItems = this.getItemsToSave();
+        console.log('new list to save: ',sceneInventoryItems);
+
+        if(this.config.chainAPI.saveSceneAssets){
+            console.log('attempting scene assest save');
+            this.config.chainAPI.saveSceneAssets(sceneInventoryItems);
+            console.log('update saved, new list: ',sceneInventoryItems);
+        } else {
+            console.log('no chain api to save assets');
+        }
+    }
+
+    removeItemByNftPostHashHex(target, itemsArray) {
+        const targetNftPostHashHex = target.nftPostHashHex;
+        
+        // Find the index of the item with the matching nftPostHashHex
+        let itemIndex = this.items3d.findIndex(item => item.nftPostHashHex === targetNftPostHashHex);
+      
+        // If a matching item is found, remove it from the array
+        if (itemIndex !== -1) {
+            this.items3d.splice(itemIndex, 1);
+            console.log('3d removed');
+
+        }
+        // Find the index of the item with the matching nftPostHashHex
+        itemIndex = this.items2d.findIndex(item => item.nftPostHashHex === targetNftPostHashHex);
+
+        // If a matching item is found, remove it from the array
+        if (itemIndex !== -1) {
+            this.items2d.splice(itemIndex, 1);
+            console.log('2d removed');
+        }
+
+        // Find the index of the item with the matching nftPostHashHex
+        itemIndex = this.items.findIndex(item => item.nftPostHashHex === targetNftPostHashHex);
+
+        // If a matching item is found, remove it from the array
+        if (itemIndex !== -1) {
+            this.items.splice(itemIndex, 1);
+            console.log('all items list removed');
+        }
+
+    }
+    getParser = (PostEntryResponse) =>{
+        if(!PostEntryResponse.PostExtraData){
+            console.log('no PostExtraData: ',PostEntryResponse);
+            return false;
+        }
+        if(!PostEntryResponse.PostExtraData['3DExtraData']){
+            console.log('selected item is not 3d');
+            return false;
+        } else {
+              console.log('parsing.. ',PostEntryResponse.PostExtraData['3DExtraData']);
+            let extraDataParser = new ExtraData3DParser({ nftPostHashHex: PostEntryResponse.PostHashHex,
+                                                              extraData3D:PostEntryResponse.PostExtraData['3DExtraData'],
+                                                              endPoint:'https://desodata.azureedge.net/unzipped/'});
+
+            return extraDataParser;
+
+          
         }
       
     }
@@ -88,7 +262,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         return new Promise((resolve, reject) => {
 
             itemList.forEach((itemData)=>{
-            //    console.log(itemData)
+
                 let item ;
                 let itemConfig;
                 if(itemData.params){
@@ -306,106 +480,97 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         })      
     }
     
-    initItem = (opts) =>{
+   initItem = (opts) => {
+  let itemParams = {
+    three: THREE,
+    scene: this.scene,
+    loadingScreen: this.config.loadingScreen,
+    layout: opts.layout,
+    format: opts.format
+  };
+  
+   itemParams.transformControls = this.config.transformControls;
 
-        let nftPostHashHex = opts.nftPostHashHex;
-        let paramString = '';
-        let params  = [];
-        let nftsRoute = '';
-        let item = null;
-
-        let itemParams = {
-            three: THREE,
-            scene: this.scene,
-            height: opts.height,
-            width: opts.width,
-            depth: opts.depth,
-            nftPostHashHex: nftPostHashHex,
-            modelsRoute: this.config.modelsRoute,
-            nftsRoute: this.config.nftsRoute,
-            isImage: false,
-            layout: opts.layout,
-            loadingScreen: this.config.loadingScreen,
-            format: opts.format,
-            snapToFloor: true
-        };
-
-        if(this.config.physicsWorld){
-            itemParams.physicsWorld = this.config.physicsWorld;
-        };
-
-        if(opts.nft){
-            itemParams.nft = opts.nft;
-        } else {
-            console.warn('initItem: !!!! NO NFT!!!2');
-            console.log(opts);
-        };
-
-        if(opts.modelUrl){
-            itemParams.modelUrl = opts.modelUrl;
-        };
-
-        if(opts.position){
-            itemParams.position = opts.position;
-        }
-
-        if(opts.rotation){
-            itemParams.rotation = opts.rotation;
-        }
-
-        if(opts.width){
-            itemParams.width = opts.width;
-        }
-
-        if(opts.height){
-            itemParams.height = opts.height;
-        }
-
-        if(opts.depth){
-            itemParams.depth = opts.depth;
-        }
-
-        if(opts.mesh){
-            itemParams.mesh = opts.mesh;
-        } else {
-             itemParams.loader = this.config.loaders.getLoaderForFormat(opts.format);
-        };
-
-
-        if(opts.isImage){
-            itemParams.isImage = opts.isImage;
-        };
-
-        if(opts.nftRequestParams){
-            let nftRequestParams = opts.nftRequestParams;
-
-            Object.keys(nftRequestParams).forEach((key, index) => {
-                params.push(key+'='+nftRequestParams[key]);
-            });
-            paramString = params.join('&');
-            itemParams.nftsRoute = this.config.nftsRoute +'?' +paramString;
-            
-            if(!itemParams.nftPostHashHex){
-                console.log('cannot initItem without nftPostHashHex');
-                return false;
-            };
-            if((itemParams.nftsRoute==='')&&(itemParams.modelsRoute==='')){
-                console.log('cannot initItem without either modelsRoute or nftsRoute');
-                return false;
-            };              
-        };
-
-        if(opts.format.toLowerCase()==='vrm'){
-            itemParams.animLoader = this.config.animLoader;
-            item = new ItemVRM(itemParams);
-        } else {
-            item = new Item(itemParams);
-        };
-
-
-        return item;
-
+  if (this.config.physicsWorld) {
+    itemParams.physicsWorld = this.config.physicsWorld;
+  }
+  
+  if (opts.modelUrl) {
+    itemParams.modelUrl = opts.modelUrl;
+  }
+  
+  if (opts.nft) {
+    itemParams.nft = opts.nft;
+  }
+  
+  if (opts.position) {
+    itemParams.position = opts.position;
+  }
+  
+  if (opts.pos) {
+    itemParams.position = opts.pos;
+  } 
+  if (opts.rotation) {
+    itemParams.rotation = opts.rotation;
+  }
+  
+  if (opts.rot) {
+    itemParams.rotation = opts.rot;
+  }
+    
+  if (opts.width) {
+    itemParams.width = opts.width;
+  }
+  
+  if (opts.height) {
+    itemParams.height = opts.height;
+  }
+  
+  if (opts.depth) {
+    itemParams.depth = opts.depth;
+  }
+  
+  if (opts.mesh) {
+    itemParams.mesh = opts.mesh;
+  } else {
+    itemParams.loader = this.config.loaders.getLoaderForFormat(opts.format);
+  }
+  
+  if (opts.isImage) {
+    itemParams.isImage = opts.isImage;
+  }
+  
+  if (opts.nftRequestParams) {
+    let params = [];
+    let nftRequestParams = opts.nftRequestParams;
+    
+    Object.keys(nftRequestParams).forEach((key, index) => {
+      params.push(key + '=' + nftRequestParams[key]);
+    });
+    itemParams.nftsRoute = this.config.nftsRoute + '?' + params.join('&');
+    
+    if (!itemParams.nftPostHashHex) {
+      console.log('cannot initItem without nftPostHashHex');
+      return false;
     }
+    
+    if (itemParams.nftsRoute === '' && itemParams.modelsRoute === '') {
+      console.log('cannot initItem without either modelsRoute or nftsRoute');
+      return false;
+    }
+  }
+  
+  let item;
+  
+  if (opts.format.toLowerCase() === 'vrm') {
+    itemParams.animLoader = this.config.animLoader;
+    item = new ItemVRM(itemParams);
+  } else {
+    item = new Item(itemParams);
+  }
+  
+  return item;
+};
 
     initItem2d = (opts) =>{
 
@@ -427,7 +592,9 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
             layout: opts.layout,
             loadingScreen: this.config.loadingScreen,
             onLoad: ()=>{
-                this.config.loadingScreen.completeLoading();
+                if(this.config.loadingScreen){
+                    this.config.loadingScreen.completeLoading();
+                }
             }
 
         };
@@ -490,7 +657,22 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                 return false;
             };              
         };
-        return new Item2d(itemParams);
+        let imageUrl;
+        let imageUrls = (itemParams.nft.imageURLs)?itemParams.nft.imageURLs:itemParams.nft.ImageURLs;
+            imageUrl = imageUrls[0];                
+    console.log('check imageUrls for gif: ',imageUrl);
+        let parts = imageUrl.split('.');
+
+        if(parts[parts.length-1].toLowerCase()==='gif'){
+            itemParams.isGif = true;
+            let item = new Item2d(itemParams);            
+            this.gifs.push(item);
+            return item;
+        } else {
+            itemParams.isGif = false;
+            return new Item2d(itemParams);            
+        }
+
 
     }
 
@@ -502,6 +684,10 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         return (this.config.items3d.length>0);
     }
 
+    getGifs = () =>{
+        return this.gifs;
+    }
+
     getActiveItem = () =>{
         if(!this.activeItemIdx){
             console.log('no active item');
@@ -511,6 +697,48 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
             return false;
         }
         return this.items[this.activeItemIdx];
+    }
+
+    getAllItems = () =>{
+        let allItems = this.combineUniqueItems(this.items2d, this.items3d);
+        console.log('combined items count: ',allItems.length);
+        console.log('inventry items count: ',this.items.length);
+        return allItems;
+    }
+
+    combineUniqueItems = (array1, array2)=> {
+        const combinedItemsMap = new Map();
+        
+        // Function to add unique items from an array to the combinedItemsMap
+        const addUniqueItems = (array) => {
+          array.forEach((item) => {
+            console.log('combineUniqueItem: ',item);
+            const nftPostHashHex = item.config.nft.postHashHex || item.config.nft.PostHashHex;
+            if (!combinedItemsMap.has(nftPostHashHex)) {
+              combinedItemsMap.set(nftPostHashHex, item);
+            }
+          });
+        };
+      
+        // Add unique items from each array to the combinedItemsMap
+        addUniqueItems(array1);
+        addUniqueItems(array2);
+      
+        // Convert the Map back to an array of objects and return it
+        return Array.from(combinedItemsMap.values());
+    }
+
+    getItemsToSave = () =>{
+        let allItems = this.combineUniqueItems(this.items2d, this.items3d);
+        let that = this;
+        console.log('getItemsToSave, combined:');
+        console.log(allItems)
+        // return array of objects with properties: PostHashHex,pos,rot,scale
+        const itemsToSave = allItems.map((item) =>{
+            return that.convertItemForStorage(item, false);
+        });
+          
+        return itemsToSave;
     }
 
     getItems = () =>{
@@ -533,14 +761,14 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
             console.log('no inventory items');
             return false;
         };
-     //   console.log('checking inventory ',this.items);
+        console.log('checking inventory ',this.items);
         let idx = 1;
         let item = this.items[0];
         while((item.config.nftPostHashHex !== nftPostHashHex)&&(idx<this.items.length)){
             item = this.items[idx];
             ++idx;
         };
-     //   console.log(item.config.nftPostHashHex,'?',nftPostHashHex);
+        console.log(item.config.nftPostHashHex,'?',nftPostHashHex);
         if(item.config.nftPostHashHex === nftPostHashHex){
             return item;
         };

@@ -7,7 +7,7 @@ import anime from 'animejs';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { ExtraData3DParser, Avatar, SnowFall, PlayerVR, AudioClipRemote, Physics, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
+import { Giffer, ExtraData3DParser, Avatar, SnowFall, PlayerVR, AudioClipRemote, Physics, AudioClip, Item, ItemVRM, LoadingScreen, HUDBrowser, HUDVR, SceneryLoader, Lighting, LayoutPlotter, D3DLoaders, D3DInventory, NFTViewerOverlay, VRButton, VRControls } from '3d-nft-viewer';
 let clock, gui, stats, delta;
 let environment, visualizer, player, controls, geometries;
 let spacePressed = false, KeyBPressed = false, fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = false, rotlftPressed = false, rotRgtPressed = false;
@@ -3169,8 +3169,22 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
 
             this.sceneInventory = new D3DInventory(sceneInvConfig);
 
+        //console.log('sceneInvConfig',sceneInvConfig);
+        this.sceneInventory = new D3DInventory(sceneInvConfig);
+        this.gifs = this.sceneInventory.getGifs();
+        if(this.gifs.length>0){
+            console.log('initialize gifs: ',this.gifs.length);
+            this.initGifs();
+        } else {
+            console.log('no gifs to load')
         }
         
+    }
+    }
+    initGifs = ()=>{
+
+        this.giffer = new Giffer({proxy: this.config.imageProxyUrl});
+        this.giffer.loadGifs(this.gifs);
     }
 
     haveVRM = (items3dToRender) =>{
@@ -3178,6 +3192,30 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         return true; //test
     }
     
+    itemCanBePlaced = (itemData) =>{
+        if(!itemData.hasOwnProperty('nft')){
+            console.log('item missing nft prop - not displayable');
+            return false;
+        };
+        if(!itemData.hasOwnProperty('pos')){
+            console.log('item missing pos prop - not displayable');
+
+            return false;
+        }
+        if(!itemData.hasOwnProperty('rot')){
+            console.log('item missing rot prop - not displayable');
+
+            return false;
+        }
+        if(!itemData.hasOwnProperty('scale')){
+            console.log('item missing scale prop - not displayable');
+
+            return false;
+        }          
+
+        return true;             
+    }
+        
     initAvatarItem = (opts) =>{
 
 

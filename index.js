@@ -28,9 +28,11 @@ import { PlayerVR } from  './frontend/js/D3D_PlayerVR.mjs';
 import { Physics } from  './frontend/js/D3D_Physics.mjs'; 
 import { SnowFall } from  './frontend/js/D3D_SnowFall.mjs'; 
 import { Avatar } from  './frontend/js/D3D_Avatar.mjs'; 
+import { Giffer } from  './frontend/js/D3D_Giffer.mjs'; 
 
 
  export {
+    Giffer,
     Avatar,
 SnowFall,
 PlayerVR, Physics, AnimLoader, ItemVRM, AudioClip, AudioClipRemote, LoadingScreen, CollisionChecker, MeshBVH, MeshBVHVisualizer, VRButton, NFTViewerOverlay, ChainAPI, HUDBrowser, HUDVR, D3DInventory, ExtraData3DParser, D3DSpaceViewer, D3DLoaders, D3DNFTViewer, D3DAssetCreator, Lighting, VRControls, Item, Item2d, XRControllerModelFactory, SceneryLoader, SkyBoxLoader, LayoutPlotter}
