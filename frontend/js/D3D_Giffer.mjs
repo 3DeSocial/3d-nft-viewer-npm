@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { browser } from '$app/environment';
 const workerURL = new URL('$lib/gifWorker.js', import.meta.url);
 console.log('created worker url: ',workerURL);
 let gifWorker = null;
@@ -22,17 +21,17 @@ export default class Giffer {
     }
 
   loadWorker = async () => {
-    console.log('running in browser? ',browser);
-   // console.log('process.client: ',process.client);
-  // let workerUrl  ='/workers/gifWorker.js';
-   console.log('worker url:',workerURL)
       gifWorker = new Worker(workerURL, { type: "module" });
-console.log('gifWorker',gifWorker);
         gifWorker.onmessage = (event) => {
           console.log('event: ',event);
           switch(event.data.method){
-            case 'sharedArrayUpdate':
-              this.updateGifs();
+            case 'startFrameTimer':
+              console.log("startFrameTimer!");
+              setInterval(function() {
+
+                this.updateGifs();
+              }, 500);
+              
             break;
             case 'prepareGifs':
               this.startAnimation(event.data.payload);
