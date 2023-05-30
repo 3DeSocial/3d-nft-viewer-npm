@@ -11,6 +11,9 @@ class VRControls {
 		let defaults = {
 			renderer: null,
 			scene: null,
+            cancelRotate: ()=>{
+                
+            },
             flyUp: (data, value)=>{
                                                           
             },
