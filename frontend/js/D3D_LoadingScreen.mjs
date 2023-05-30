@@ -6,7 +6,20 @@ export default class LoadingScreen {
             nftCount: 0,
             loadingMsg: 'Loading...',
             updateMsg: 'Please wait a moment..',
-            description: 'This is a dynamically generated space displaying the latest NFTs created by <span class="ownername">'+config.ownerName+'</span>'
+            description: 'This is a dynamically generated space displaying the latest NFTs created by <span class="ownername">'+config.ownerName+'</span>',
+            renderTemplate:(data) =>{
+                let template = '<div class="inner">';
+                    template +='<h1><span class="ownername">'+data.ownerName+'</span> 3D Exhibition</h1>';
+                    template +='<img class="owner-profile-pic" src="https://node.deso.org/api/v0/get-single-profile-picture/'+data.ownerPublicKey+'"/>';
+                    //template +='<p class="description"><pre>'+data.ownerDescription+'</pre></p>';
+                    template +='<p class="loading-msg">'+data.loadingMsg+'</p>';
+                    template +='<p class="loading-update">'+data.updateMsg+'</p>';
+                    template +='<div class="spinner"></div>';
+                    template +='<div class="social-logo"><p class="devby">3D Developed by</p><img src="/images/logoNFTZ.png"/></div>';						
+                    template +='</div>';
+                return template;
+  
+              }             
         };
     
         this.config = {
@@ -20,19 +33,7 @@ export default class LoadingScreen {
 
     }
 
-    renderTemplate = (data) =>{
-    	data = {...this.config,...data};
-    	let template =  '<div class="inner">';
-    					template +='<h1><span class="ownername">'+data.ownerName+'</span>\'s Gallery</h1>';
-						template +='<img class="owner-profile-pic" src="https://node.deso.org/api/v0/get-single-profile-picture/'+data.ownerPublicKey+'"/>';
-						//template +='<p class="description"><pre>'+data.ownerDescription+'</pre></p>';
-						template +='<p class="loading-msg">'+data.loadingMsg+'</p>';
-						template +='<p class="loading-update">'+data.updateMsg+'</p>';
-						template +='<div class="spinner"></div>';
-						template +='<div class="social-logo"><p class="devby">3D Developed by</p><img src="/images/logoNFTZ.png"/></div>';						
-						template +='</div>';
-        return template
-    }
+
 
     startLoading = (toLoad)=>{
         let that = this;
@@ -59,8 +60,9 @@ export default class LoadingScreen {
 
     render  = (ctrCls) =>{
     	let ctr = document.querySelector(ctrCls);
-
-    	let frag = document.createRange().createContextualFragment(this.renderTemplate());
+        let data = this.config;
+        console.log('render: ',data);
+    	let frag = document.createRange().createContextualFragment(this.config.renderTemplate(data));
     	ctr.appendChild(frag);
 
     }
