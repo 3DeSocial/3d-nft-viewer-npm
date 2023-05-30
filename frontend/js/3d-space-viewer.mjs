@@ -3339,6 +3339,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         this.vrControls = new VRControls({  renderer: this.renderer,
                                             scene:this.scene,
                                             vrType: 'walking',
+                                            speed: this.playerSpeed,
                                             moveUp: (data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;

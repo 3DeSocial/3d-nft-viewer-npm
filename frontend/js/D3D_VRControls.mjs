@@ -11,6 +11,13 @@ class VRControls {
 		let defaults = {
 			renderer: null,
 			scene: null,
+            stickThreshold:0.005,    
+            rotateLeft: ()=>{
+
+            },
+            rotateRight: ()=>{
+
+            },
             cancelRotate: ()=>{
                 
             },
@@ -199,7 +206,7 @@ class VRControls {
                                 // console.log('axes: ',i);
                                 //if thumbstick axis has flyd beyond the minimum threshold from center, windows mixed reality seems to wander up to about .17 with no input
                                     //set the speedFactor per axis, with acceleration when holding above threshold, up to a max speed
-                                    self.speedFactor[i] > 0.5
+                                    self.speedFactor[i] >self.config.stickThreshold
                                         ? (self.speedFactor[i] = 1)
                                         : (self.speedFactor[i] *= 1.001);
                                     //  console.log(value, self.speedFactor[i], i);
@@ -268,7 +275,7 @@ class VRControls {
                 //console.log(hand+ ' stick: right ',data.axes[2]);
                 switch(this.config.vrType){
                     case 'flying':
-                        this.flyRight(data, value);
+                        this.moveRight(data, value);
                     break;
                     default:
                      //   console.log('move right');
@@ -279,7 +286,7 @@ class VRControls {
            //     console.log(hand+ ' stick: left',data.axes[2]);
                 switch(this.config.vrType){
                     case 'flying':
-                        this.flyLeft(data, value);
+                        this.moveLeft(data, value);
                     break;
                     default:
                    //     console.log('move left');
@@ -297,17 +304,17 @@ class VRControls {
               //  console.log(hand+ ' stick: right ',data.axes[2],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
-                        this.flyBackward(data, value);
+                        this.moveBack(data, value);
                     break;
                     default:
-                        this.moveBackward(data, value);
+                        this.moveBack(data, value);
                     break;
                 }
             } else if (data.axes[3] < 0){
               //  console.log(hand + ' stick: forward',data.axes[3],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
-                        this.flyForward(data, value);
+                        this.moveForward(data, value);
                     break;
                     default:
                         this.moveForward(data, value);
@@ -323,11 +330,11 @@ class VRControls {
 
     handleRightThumbstick = (hand, data, value) =>{
         if(this.isOverMovementThreshold(data.axes[2])){
-            if (data.axes[2] > 0) {
-              //  console.log(hand+ ' stick: right ',data.axes[2]);
+            if (data.axes[2] >0) {
+                console.log(hand+ ' stick: right ',data.axes[2]);
                 this.rotateRight(data, value);
             } else if (data.axes[2] < 0) {
-                //console.log(hand+ ' stick: left',data.axes[2]);
+                console.log(hand+ ' stick: left',data.axes[2]);
                 this.rotateLeft(data, value);
             };
         } else {
@@ -340,17 +347,17 @@ class VRControls {
             //    console.log(hand+ ' stick: right ',data.axes[2],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
-                        this.flyBackward(data, value);
+                        this.moveDown(data, value);
                     break;
                     default:
-                        this.moveBackward(data, value);
+                        this.moveBack(data, value);
                     break;
                 }
             } else if (data.axes[3] < 0){
-                //console.log(hand + ' stick: forward',data.axes[3],this.config.vrType);
+                //console.log(hand + ' astick: forward',data.axes[3],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
-                        this.flyForward(data, value);
+                        this.moveUp(data, value);
                     break;
                     default:
                         this.moveForward(data, value);
@@ -364,7 +371,7 @@ class VRControls {
     }
 
     isOverMovementThreshold = (value) =>{
-        if(Math.abs(value)>0.5){
+        if(Math.abs(value)>this.config.stickThreshold){
             return true;
         };
         return false;
@@ -384,7 +391,8 @@ class VRControls {
     }
 
     moveForward = (data, value) =>{
-
+        console.log('moveForward');
+        console.log(this.config.moveForward);
      /*   let nextPos = new THREE.Vector3();
         nextPos.copy(this.dolly.position);
         nextPos.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
@@ -400,7 +408,9 @@ class VRControls {
         this.config.flyBack(data, value);   
 
     }
-    moveBackward = (data, value) => {
+    moveBack = (data, value) => {
+        console.log('moveBack');
+        console.log(this.config.moveBack);        
         this.config.moveBack(data, value);   
     }
 
@@ -448,15 +458,19 @@ class VRControls {
     }
 
     rotateLeft = (data,value) => {
-   // console.log('VRControla rotateLeft')
+         console.log('VRControls rotateLeft')
+         console.log(this.config.rotateLeft);
 
         this.config.rotateLeft(data,value);
+        console.log('VRControls rotatedLeft')
+
     }
 
     rotateRight = (data,value) => {
     console.log('VRControla rotateRight')
         this.config.rotateRight(data,value);
     console.log('rotated right');
+    console.log(this.config.rotateRight);
     }
 
     triggerLeft = (data, value) => {

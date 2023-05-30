@@ -7,7 +7,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { VRMLoaderPlugin } from '@pixiv/three-vrm';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-import {ItemVRM, Item, Lighting, SceneryLoader, NFTViewerOverlay, D3DLoaders, VRButton, VRControls, SkyBoxLoader} from '3d-nft-viewer';
+import {PlayerVR, ItemVRM, Item, Lighting, SceneryLoader, NFTViewerOverlay, D3DLoaders, VRButton, VRControls, SkyBoxLoader} from '3d-nft-viewer';
 
 let clock, gui, stats, delta;
 let environment, collider, visualizer, player, controls, geometries;
@@ -21,8 +21,8 @@ const params = {
     displayBVH: false,
     visualizeDepth: 10,
     gravity: - 30,
-    playerSpeed: 10,
-    physicsSteps: 5,
+    playerSpeed: 8,
+    physicsSteps: 10,
     useShowroom: true
 
 };
@@ -485,22 +485,20 @@ const params = {
              if ( this.collider ) {
                 this.collider.visible = params.displayCollider;
              //   visualizer.visible = params.displayBVH;
-
+            };
                 const physicsSteps = params.physicsSteps;
 
                 for ( let i = 0; i < physicsSteps; i ++ ) {
 
                     if (this.renderer.xr.isPresenting === true) {
-                        if(this.vrType==="walking"){
-                           this.updatePlayerVR( delta / physicsSteps );
-                        }
+                        this.updatePlayerVR( delta / physicsSteps );
                     } else {
                        this.updatePlayer( delta / physicsSteps );
                     }
 
                 };
             }
-        };
+
             // TODO: limit the camera movement based on the this.collider
             // raycast in direction of camera and move it if it's further than the closest point
 
@@ -834,7 +832,9 @@ const params = {
     start3D = () =>{
         // start animation / controls
         //this.parentDivEl.children[0].setAttribute('style','display:none;');                    
-      //  this.renderer.domElement.setAttribute('style','display:inline-block;');            
+      //  this.renderer.domElement.setAttribute('style','display:inline-block;');       
+        this.initPlayerFirstPerson()
+
         this.addListeners();   
         this.initVR();
         this.animate();        
@@ -919,12 +919,12 @@ const params = {
     initVR = () =>{
 
         let that = this;
-        
+        params.gravity = 0;
         VRButton.registerSessionGrantedListener();        
         let vrBtnOptions = { btnCtr : 'div.view-vr-btn',
                              viewer: this,
                              onStartSession: ()=>{
-                                let vrType = 'walking';
+                                let vrType = 'flying';
 
                                 that.initVRSession(vrType);                                
                             } }
@@ -937,7 +937,8 @@ const params = {
         this.controlProxy = {};
         this.vrControls = new VRControls({  renderer: this.renderer,
                                             scene:this.scene,
-                                            vrType: 'walking',
+                                            vrType: vrType,
+                                            speed: params.playerSpeed,
                                             moveUp: (data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
@@ -962,16 +963,21 @@ const params = {
                                                 that.controlProxy.dir = 'r';
                                             },
                                             moveForward:(data, value)=>{
+                                                console.log('control proxy moveForward');
+
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'f';                                                   
                                             },
                                             moveBack:(data, value)=>{
+                                                console.log('control proxy moveBack');
+
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'b';
                                             },
                                             rotateLeft: (data, value)=>{
+
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.rot = 'rl';
@@ -1006,8 +1012,7 @@ const params = {
                                             onSelectEndLeft: (e,controller)=>{
                                             },
                                             onSelectStartRight: (e,controller)=>{
-                                               console.log(controller.line);
-                                               this.throwSnowBall(e,controller)
+                                   
 
                                             },
                                             onSelectEndRight: (e,controller)=>{
@@ -1018,8 +1023,7 @@ const params = {
                                         grips: this.vrControls.grips,
                                         camera: this.camera,
                                         controlProxy: this.controlProxy,
-                                        playerStartPos: this.player.position.clone(),
-                                        sceneCollider: this.sceneryLoader.collider});
+                                        playerStartPos: this.player.position.clone()});
 
         this.scene.add(this.playerVR.dolly);
         this.removePlayer();
@@ -1037,8 +1041,6 @@ const params = {
         let vrTypeSelect = document.getElementById('vrType');
         if(vrTypeSelect){
             selectedVrType = vrTypeSelect.options[vrTypeSelect.selectedIndex].value;
-        } else {
-            console.log('no vr type selection so fly by default');
         };
         return selectedVrType;
     }
@@ -1483,6 +1485,7 @@ initPlayerThirdPerson = () => {
 
     updatePlayerVR = (delta) =>{
         if(!this.playerVR){
+            console.log('no player VR')
             return false;
         };
 

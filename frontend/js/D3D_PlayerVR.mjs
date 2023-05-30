@@ -11,7 +11,8 @@ export default class PlayerVR {
             modelUrl: '',
             modelsRoute: 'models',
             nftsRoute: 'nfts',
-            castShadow: true     
+            castShadow: true,
+            speed: 8
         };
     
         this.config = {
@@ -25,7 +26,6 @@ export default class PlayerVR {
         this.buildDolly();
         this.dir = new THREE.Vector3();
         this.q = new THREE.Quaternion();        // rotation
-        this.speed = 0.25;
         this.proxy = this.config.controlProxy;
         this.oldPos = new THREE.Vector3();
         this.newPos = new THREE.Vector3();        
@@ -35,14 +35,15 @@ export default class PlayerVR {
         this.tempVector = new THREE.Vector3(0,0,0);
         this.rightVector = new THREE.Vector3(0,0,0);
         this.worldDir = new THREE.Vector3();
-
-        this.collisionChecker = new CollisionChecker({  sceneCollider: this.config.sceneCollider,
-                                                        playerCollider: this.playerCollider,
-                                                        dollyProxy: this.dolly,
-                                                        updatePos: (pos) =>{
-                                                            this.setPos(pos)
-                                                        }
-                                                    });
+        if(this.sceneCollider){
+            this.collisionChecker = new CollisionChecker({  sceneCollider: this.config.sceneCollider,
+                                                            playerCollider: this.playerCollider,
+                                                            dollyProxy: this.dolly,
+                                                            updatePos: (pos) =>{
+                                                                this.setPos(pos)
+                                                            }
+                                                        });
+        }
        // this.loadModels();
 
 
@@ -126,7 +127,7 @@ export default class PlayerVR {
         this.dolly.getWorldDirection(this.worldDir);
         this.rightVector.crossVectors( this.worldDir, this.upVector ).normalize();
         
-        let speedFactor = delta*this.speed;
+        let speedFactor = delta*this.config.speed;
 
         switch(this.proxy.dir){
             case 'f':
@@ -146,6 +147,18 @@ export default class PlayerVR {
                 console.log(this.rightVector, speedFactor);                
                 this.dolly.position.addScaledVector( this.rightVector, -speedFactor );
             break;
+            case 'u':
+                console.log('move dolly right');
+
+                console.log(this.rightVector, speedFactor);                
+                this.dolly.position.addScaledVector( this.rightVector, -speedFactor );
+            break;         
+            case 'd':
+                console.log('move dolly right');
+
+                console.log(this.rightVector, speedFactor);                
+                this.dolly.position.addScaledVector( this.rightVector, -speedFactor );
+            break;                
         default: 
             break;
         }           
@@ -157,9 +170,12 @@ export default class PlayerVR {
                 switch(this.proxy.rot){
                     case 'rr':
                         this.proxy.isRotating = true;
+                        console.log('rotating doll now...')
                         this.dolly.rotateY(-Math.PI/4)
                     break;
                     case 'rl':
+                        console.log('rotating doll now...')
+
                         this.proxy.isRotating = true;                      
                         this.dolly.rotateY(Math.PI/4)
                     break;  
@@ -167,8 +183,9 @@ export default class PlayerVR {
                 this.proxy.rot = null;                
             }
         }
-
-        this.collisionChecker.checkCollisions(delta);
+        if(this.sceneCollider){
+            this.collisionChecker.checkCollisions(delta);
+        }
     }
 
     setPos = (pos)=>{
