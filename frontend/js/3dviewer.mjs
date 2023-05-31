@@ -938,6 +938,14 @@ const params = {
                                             scene:this.scene,
                                             vrType: vrType,
                                             speed: params.playerSpeed,
+                                            updateProxyLeftStick: (leftStickData, leftStickValue)=>{
+                                                that.controlProxy.leftStickData = leftStickData;
+                                                that.controlProxy.leftStickValue = leftStickValue;
+                                            },
+                                            updateProxyRightStick: (rightStickData, rightStickValue)=>{
+                                                that.controlProxy.rightStickData = rightStickData;
+                                                that.controlProxy.rightStickValue = rightStickValue;
+                                            },                                            
                                             moveUp: (data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
@@ -1021,7 +1029,8 @@ const params = {
                                             }                                            
                                         });
 
-        this.playerVR = new PlayerVR({  controllers: this.vrControls.controllers,
+        this.playerVR = new PlayerVR({  vrType: vrType,
+                                        controllers: this.vrControls.controllers,
                                         grips: this.vrControls.grips,
                                         camera: this.camera,
                                         controlProxy: this.controlProxy,
@@ -1492,9 +1501,7 @@ initPlayerThirdPerson = () => {
             console.log('no player VR')
             return false;
         };
-        if(this.controlProxy.dir){
-            this.playerVR.moveDolly(delta);
-        }
+         this.playerVR.moveDolly(delta);
     }
 
     reset = ()=> {

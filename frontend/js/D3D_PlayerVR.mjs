@@ -125,13 +125,69 @@ export default class PlayerVR {
             console.log('no dolly!!!');
             return false;
         };
-        console.log('moveDolly');
+          
+        if(!this.proxy.leftStickData){
+            console.log('no leftstickdata');
+            return false;
+        };
+        if(!this.proxy.rightStickData){
+            console.log('no rightStickData');            
+            return false;
+        };
         this.dolly.getWorldDirection(this.worldDir);
         this.rightVector.crossVectors( this.worldDir, this.upVector ).normalize();
         
         let speedFactor = delta*this.config.speed;
-        console.log('moveDolly, speedFactor: ',speedFactor);
-        switch(this.proxy.dir){
+        let rotationSpeedFactor = delta * (this.config.speed/4);
+
+        // Get axis values from the controllers
+
+      
+        let leftAxis = this.proxy.leftStickData.axes;
+        let rightAxis = this.proxy.rightStickData.axes;
+        
+
+        // Calculate movement vector based on left controller axis input
+        let movementVector = new THREE.Vector3();
+        if (leftAxis[2] < 0) {
+            // Move right
+            movementVector.addScaledVector(this.rightVector, speedFactor);
+        } else if (leftAxis[2] > 0) {
+            // Move left
+            movementVector.addScaledVector(this.rightVector, -speedFactor);
+        }
+
+        if (leftAxis[3] > 0) {
+            // Move backward
+            movementVector.addScaledVector(this.worldDir, speedFactor);
+        } else if (leftAxis[3] < 0) {
+            // Move forward
+            movementVector.addScaledVector(this.worldDir, -speedFactor);
+        }
+
+        // Update dolly position
+        this.dolly.position.add(movementVector);
+
+        if(this.config.vrType==='flying'){
+            // Handle up and down movement based on right controller axis input
+            if (rightAxis[3] > 0) {
+                // Move up
+                this.dolly.position.y += speedFactor;
+            } else if (rightAxis[3] < 0) {
+                // Move down
+                this.dolly.position.y -= speedFactor;
+            };
+        }
+        
+        if (rightAxis[2] > 0) {
+            // Rotate right
+            this.dolly.rotation.y -= rotationSpeedFactor;
+        } else if (rightAxis[2] < 0) {
+            // Rotate left
+            this.dolly.rotation.y += rotationSpeedFactor;
+        };
+        
+     /*   switch(this.proxy.dir){
             case 'f':
                 console.log('move dolly forward');
 
@@ -186,7 +242,7 @@ export default class PlayerVR {
                 };
                 this.proxy.rot = null;                
             }
-        }
+        }*/
         if(this.sceneCollider){
             this.collisionChecker.checkCollisions(delta);
         }

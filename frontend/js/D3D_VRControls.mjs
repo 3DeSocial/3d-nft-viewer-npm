@@ -11,7 +11,7 @@ class VRControls {
 		let defaults = {
 			renderer: null,
 			scene: null,
-            stickThreshold:0.005,    
+            stickThreshold:0.5,    
             rotateLeft: ()=>{
 
             },
@@ -232,8 +232,10 @@ class VRControls {
                                     if (i == 2) {
                                         //left and right axis on thumbsticks
                                         if (data.handedness == 'left') {
+                                            self.config.updateProxyLeftStick(data,value);                                            
                                             this.handleLeftController(data, value);
                                         } else {
+                                            self.config.updateProxyRightStick(data,value);                                            
                                             this.handleRightController(data, value);
 
                                         }
@@ -241,12 +243,14 @@ class VRControls {
                                     if (i == 3) {
                                         //up and down axis on thumbsticks
                                         if (data.handedness == 'left') {
+                                            self.config.updateProxyLeftStick(data,value);                                              
                                             this.handleLeftController(data, value);
                                         } else {
+                                            self.config.updateProxyRightStick(data,value);                                            
                                             this.handleRightController(data, value);
+
                                         }
                                     }
-                               
                             });
                         }
                         this.prevGamePads.set(source, data);
@@ -256,6 +260,7 @@ class VRControls {
         }
 
     handleLeftController = (data, value) =>{
+        //this.config.updateProxyLeftStick(data, value);        
         this.handleLeftThumbstick('left',data, value);
 
     }
@@ -273,7 +278,6 @@ class VRControls {
 
     handleRightController = (data, value) =>{
         this.handleRightThumbstick('right',data, value);
-
     }
 
     handleRightControllerButtons = (data, value, i) =>{
@@ -313,10 +317,7 @@ class VRControls {
                     break;
                 }
             };
-        } else {
-            this.config.stopMoving();
         }
-
         if(this.isOverMovementThreshold(data.axes[3])){
              //   console.log(hand+ ' stick: back',data.axes[3]);
             if(data.axes[3] > 0){
@@ -340,8 +341,6 @@ class VRControls {
                     break;
                 }             
             };
-        } else {
-            this.config.stopMoving();
         }
 
       
@@ -356,8 +355,6 @@ class VRControls {
                 console.log(hand+ ' handleRightThumbstick: left',data.axes[2]);
                 this.rotateLeft(data, value);
             };
-        } else {
-            this.config.cancelRotate();
         }
 
         if(this.isOverMovementThreshold(data.axes[3])){
@@ -382,8 +379,6 @@ class VRControls {
                     break;
                 }             
             };
-        } else {
-            this.config.stopMoving();
         }
 
     }
