@@ -439,7 +439,7 @@ export default class Item {
                             let promise6 = that.animLoader.loadAnim(danceUrl3, that.mixer);
                             let promises = [promise1,promise2,promise3,promise4,promise5,promise6];
                             Promise.allSettled(promises).
-                              then((results) => results.forEach((result) => //console.log(result.status)));                        
+                              then((results) => results.forEach((result) => console.log(result.status)));                        
 
                         }
                     }
