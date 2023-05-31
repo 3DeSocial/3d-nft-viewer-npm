@@ -110,10 +110,10 @@ export default class PlayerVR {
     buildPlayerCollider = () =>{
         let pColl = new THREE.Mesh(
             new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
-            new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.5})
+            new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
         );
 
-        pColl.geometry.translate( 0, -1, 0 );
+        /*pColl.geometry.translate( 0, -0.25, 0 );*/
         pColl.capsuleInfo = {
             radius: 1,
             segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )

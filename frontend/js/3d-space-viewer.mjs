@@ -3423,7 +3423,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                                         });
                                         
         this.playerVR = new PlayerVR({ 
-                                        speed: (params.playerSpeed/4),
+                                        speed: (params.playerSpeed/8),
                                         vrType: 'walking',
                                         controllers: this.vrControls.controllers,
                                         grips: this.vrControls.grips,
