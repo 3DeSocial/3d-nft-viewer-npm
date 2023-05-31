@@ -35,7 +35,8 @@ export default class PlayerVR {
         this.tempVector = new THREE.Vector3(0,0,0);
         this.rightVector = new THREE.Vector3(0,0,0);
         this.worldDir = new THREE.Vector3();
-        if(this.sceneCollider){
+        if(this.config.sceneCollider){
+            console.log('created collision checker');
             this.collisionChecker = new CollisionChecker({  sceneCollider: this.config.sceneCollider,
                                                             playerCollider: this.playerCollider,
                                                             dollyProxy: this.dolly,
@@ -109,7 +110,7 @@ export default class PlayerVR {
     buildPlayerCollider = () =>{
         let pColl = new THREE.Mesh(
             new RoundedBoxGeometry(  1.0, 1.0, 1.0, 10, 0.5),
-            new THREE.MeshStandardMaterial({ transparent: true, opacity: 0})
+            new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.5})
         );
 
         pColl.geometry.translate( 0, -1, 0 );
@@ -243,7 +244,7 @@ export default class PlayerVR {
                 this.proxy.rot = null;                
             }
         }*/
-        if(this.sceneCollider){
+        if(this.config.sceneCollider){
             this.collisionChecker.checkCollisions(delta);
         }
     }

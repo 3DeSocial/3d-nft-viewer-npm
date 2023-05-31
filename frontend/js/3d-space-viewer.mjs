@@ -736,7 +736,6 @@ const params = {
     initSnowMen = () =>{
         let that = this;
         let snowMenLayout = this.sceneryLoader.snowmen;
-        console.log('snowMenLayoutL: ',snowMenLayout)
             this.targetSpots = this.layoutPlotter.calcCircleSpots(snowMenLayout[0]);
             this.snowMen = [];
             this.spawnSnowMan();
@@ -3339,7 +3338,14 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         this.vrControls = new VRControls({  renderer: this.renderer,
                                             scene:this.scene,
                                             vrType: 'walking',
-                                            speed: this.playerSpeed,
+                                            updateProxyLeftStick: (leftStickData, leftStickValue)=>{
+                                                that.controlProxy.leftStickData = leftStickData;
+                                                that.controlProxy.leftStickValue = leftStickValue;
+                                            },
+                                            updateProxyRightStick: (rightStickData, rightStickValue)=>{
+                                                that.controlProxy.rightStickData = rightStickData;
+                                                that.controlProxy.rightStickValue = rightStickValue;
+                                            },   
                                             moveUp: (data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
@@ -3415,8 +3421,11 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                                             onSelectEndRight: (e,controller)=>{
                                             }                                            
                                         });
-
-        this.playerVR = new PlayerVR({  controllers: this.vrControls.controllers,
+                                        
+        this.playerVR = new PlayerVR({ 
+                                        speed: (params.playerSpeed/4),
+                                        vrType: 'walking',
+                                        controllers: this.vrControls.controllers,
                                         grips: this.vrControls.grips,
                                         camera: this.camera,
                                         controlProxy: this.controlProxy,
