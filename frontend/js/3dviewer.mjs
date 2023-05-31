@@ -5,7 +5,6 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { VRMLoaderPlugin } from '@pixiv/three-vrm';
-import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 import {PlayerVR, ItemVRM, Item, Lighting, SceneryLoader, NFTViewerOverlay, D3DLoaders, VRButton, VRControls, SkyBoxLoader} from '3d-nft-viewer';
 
@@ -942,12 +941,15 @@ const params = {
                                             moveUp: (data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
-                                                that.controlProxy.dir = 'u';                                                
+                                                that.controlProxy.dir = 'u';  
+                                                console.log('moveUp proxy', that.controlProxy);                                            
                                             },
                                             moveDown:(data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'd';
+                                                console.log('moveDown proxy', that.controlProxy);                                            
+
                                             },
                                             moveLeft:(data, value)=>{
                                                 console.log('moveLeft triggered');
@@ -1037,7 +1039,7 @@ const params = {
     }
 
     getVrTypeFromUI = () =>{
-        let selectedVrType = 'flying';
+        let selectedVrType = 'walking';
         let vrTypeSelect = document.getElementById('vrType');
         if(vrTypeSelect){
             selectedVrType = vrTypeSelect.options[vrTypeSelect.selectedIndex].value;
@@ -1054,11 +1056,13 @@ const params = {
                                             camera: this.camera,
                                             player: this.player,
                                             playerStartPos: this.config.playerStartPos,
-                                            vrType: this.vrType,
+                                            vrType: 'walking',
                                             moveUp: (data)=>{
+                                                console.log('here?')
                                                 return;
                                             },
                                             moveDown:(data)=>{
+                                                console.log('and here?')
                                                 return;
                                             },
                                             moveLeft:(data)=>{
@@ -1488,8 +1492,9 @@ initPlayerThirdPerson = () => {
             console.log('no player VR')
             return false;
         };
-
-        this.playerVR.moveDolly(delta);
+        if(this.controlProxy.dir){
+            this.playerVR.moveDolly(delta);
+        }
     }
 
     reset = ()=> {

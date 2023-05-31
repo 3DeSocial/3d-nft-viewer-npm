@@ -80,7 +80,7 @@ export default class PlayerVR {
 
     buildDolly = () =>{
 //this.config.playerStartPos.y = 60;
-        let startY = this.config.playerStartPos.y-0.5;
+        let startY = this.config.playerStartPos.y-1;
         this.camera.position.set( 0, 0, 0 );
         this.camera.rotation.set(0,Math.PI,0);
 
@@ -88,8 +88,8 @@ export default class PlayerVR {
 //console.log('buildDolly this.config.playerStartPos');
 //console.log(this.config.playerStartPos);
         this.dolly.position.copy(this.config.playerStartPos);
-        this.dolly.rotation.set(0,Math.PI,0);
-
+        this.dolly.rotation.set(0,0,0);
+        this.dolly.position.y = startY;
         this.dolly.add( this.camera );
 
         this.dolly.add(this.config.controllers[0]);
@@ -122,18 +122,24 @@ export default class PlayerVR {
 
     moveDolly = (delta) =>{
         if(!this.dolly){
+            console.log('no dolly!!!');
             return false;
         };
+        console.log('moveDolly');
         this.dolly.getWorldDirection(this.worldDir);
         this.rightVector.crossVectors( this.worldDir, this.upVector ).normalize();
         
         let speedFactor = delta*this.config.speed;
-
+        console.log('moveDolly, speedFactor: ',speedFactor);
         switch(this.proxy.dir){
             case 'f':
+                console.log('move dolly forward');
+
                 this.dolly.position.addScaledVector( this.worldDir, -speedFactor );
             break;
             case 'b':
+                console.log('move dolly back');
+
                 this.dolly.position.addScaledVector( this.worldDir, speedFactor );
             break;
             case 'l':
@@ -143,25 +149,23 @@ export default class PlayerVR {
             break;
             case 'r':
                 console.log('move dolly right');
-
                 console.log(this.rightVector, speedFactor);                
                 this.dolly.position.addScaledVector( this.rightVector, -speedFactor );
             break;
             case 'u':
-                console.log('move dolly right');
-
-                console.log(this.rightVector, speedFactor);                
-                this.dolly.position.addScaledVector( this.rightVector, -speedFactor );
+                console.log('move dolly up');
+                console.log(this.upVector, speedFactor);
+                this.dolly.position.addScaledVector( this.upVector, speedFactor );
             break;         
             case 'd':
-                console.log('move dolly right');
-
-                console.log(this.rightVector, speedFactor);                
-                this.dolly.position.addScaledVector( this.rightVector, -speedFactor );
+                console.log('move dolly down');
+                console.log(this.upVector, speedFactor);
+                this.dolly.position.addScaledVector( this.upVector, -speedFactor );
             break;                
         default: 
             break;
-        }           
+        }
+         
 
 
         if(this.proxy.rot){
