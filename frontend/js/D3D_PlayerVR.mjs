@@ -36,7 +36,7 @@ export default class PlayerVR {
         this.rightVector = new THREE.Vector3(0,0,0);
         this.worldDir = new THREE.Vector3();
         if(this.config.sceneCollider){
-            console.log('created collision checker');
+            //console.log('created collision checker');
             this.collisionChecker = new CollisionChecker({  sceneCollider: this.config.sceneCollider,
                                                             playerCollider: this.playerCollider,
                                                             dollyProxy: this.dolly,
@@ -81,13 +81,13 @@ export default class PlayerVR {
 
     buildDolly = () =>{
 //this.config.playerStartPos.y = 60;
-        let startY = this.config.playerStartPos.y-1;
+        let startY = this.config.playerStartPos.y;
         this.camera.position.set( 0, 0, 0 );
         this.camera.rotation.set(0,Math.PI,0);
 
         this.dolly = new THREE.Group();
-//console.log('buildDolly this.config.playerStartPos');
-//console.log(this.config.playerStartPos);
+////console.log('buildDolly this.config.playerStartPos');
+////console.log(this.config.playerStartPos);
         this.dolly.position.copy(this.config.playerStartPos);
         this.dolly.rotation.set(0,0,0);
         this.dolly.position.y = startY;
@@ -123,23 +123,23 @@ export default class PlayerVR {
 
     moveDolly = (delta) =>{
         if(!this.dolly){
-            console.log('no dolly!!!');
+            //console.log('no dolly!!!');
             return false;
         };
           
         if(!this.proxy.leftStickData){
-            console.log('no leftstickdata');
+            //console.log('no leftstickdata');
             return false;
         };
         if(!this.proxy.rightStickData){
-            console.log('no rightStickData');            
+            //console.log('no rightStickData');            
             return false;
         };
         this.dolly.getWorldDirection(this.worldDir);
         this.rightVector.crossVectors( this.worldDir, this.upVector ).normalize();
         
         let speedFactor = delta*this.config.speed;
-        let rotationSpeedFactor = delta * (this.config.speed/4);
+        let rotationSpeedFactor = delta * (this.config.speed/8);
 
         // Get axis values from the controllers
 
@@ -190,33 +190,33 @@ export default class PlayerVR {
         
      /*   switch(this.proxy.dir){
             case 'f':
-                console.log('move dolly forward');
+                //console.log('move dolly forward');
 
                 this.dolly.position.addScaledVector( this.worldDir, -speedFactor );
             break;
             case 'b':
-                console.log('move dolly back');
+                //console.log('move dolly back');
 
                 this.dolly.position.addScaledVector( this.worldDir, speedFactor );
             break;
             case 'l':
-                console.log('move dolly left');
-                console.log(this.rightVector, speedFactor);
+                //console.log('move dolly left');
+                //console.log(this.rightVector, speedFactor);
                 this.dolly.position.addScaledVector( this.rightVector, speedFactor );
             break;
             case 'r':
-                console.log('move dolly right');
-                console.log(this.rightVector, speedFactor);                
+                //console.log('move dolly right');
+                //console.log(this.rightVector, speedFactor);                
                 this.dolly.position.addScaledVector( this.rightVector, -speedFactor );
             break;
             case 'u':
-                console.log('move dolly up');
-                console.log(this.upVector, speedFactor);
+                //console.log('move dolly up');
+                //console.log(this.upVector, speedFactor);
                 this.dolly.position.addScaledVector( this.upVector, speedFactor );
             break;         
             case 'd':
-                console.log('move dolly down');
-                console.log(this.upVector, speedFactor);
+                //console.log('move dolly down');
+                //console.log(this.upVector, speedFactor);
                 this.dolly.position.addScaledVector( this.upVector, -speedFactor );
             break;                
         default: 
@@ -231,11 +231,11 @@ export default class PlayerVR {
                 switch(this.proxy.rot){
                     case 'rr':
                         this.proxy.isRotating = true;
-                        console.log('rotating doll now...')
+                        //console.log('rotating doll now...')
                         this.dolly.rotateY(-Math.PI/4)
                     break;
                     case 'rl':
-                        console.log('rotating doll now...')
+                        //console.log('rotating doll now...')
 
                         this.proxy.isRotating = true;                      
                         this.dolly.rotateY(Math.PI/4)
@@ -258,7 +258,7 @@ export default class PlayerVR {
         const loader = new GLTFLoader();
     loader.setPath('./characters/');
     loader.load('astrid.glb', (gltf) => {
-    console.log(gltf);
+    //console.log(gltf);
     let char = gltf.scene;
       //gltf.scale.setScalar(0.1);
       char.traverse(c => {
@@ -269,11 +269,11 @@ export default class PlayerVR {
       this._params.scene.add(this._target);
 
       this._mixer = new THREE.AnimationMixer(this._target);
-          console.log('gltf character loaded');
-        console.log(gltf);
+          //console.log('gltf character loaded');
+        //console.log(gltf);
 
         const clip = gltf.animations[0];
-        console.log(clip);
+        //console.log(clip);
         const action = this._mixer.clipAction(clip);
 
         this._animations['run'] = {
@@ -286,7 +286,7 @@ export default class PlayerVR {
 
     
     reset = ()=> {
-console.log('player reset');
+//console.log('player reset');
         this.playerVelocity.set( 0, 0, 0 );
         this.player.position.set( 0, 5, 5 );
         this.camera.position.set(0, 6.5, 5);
@@ -299,8 +299,8 @@ console.log('player reset');
 
     addToScene = (model) =>{
         this.scene.add(model);
-        console.log('model added to scene');
-        console.log(this.scene);
+        //console.log('model added to scene');
+        //console.log(this.scene);
     }
 
 }

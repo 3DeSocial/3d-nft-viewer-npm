@@ -80,7 +80,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                                                             height:this.config.height,
                                                             depth:this.config.depth}});
         let center = this.center;
-        //console.log('initItems: ',itemList,noPositions);
+        ////console.log('initItems: ',itemList,noPositions);
 
         let noNfts = itemList.length;
         let noNftsToPlace = Math.min(noPositions,noNfts);
@@ -88,7 +88,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         return new Promise((resolve, reject) => {
 
             itemList.forEach((itemData)=>{
-            //    console.log(itemData)
+            //    //console.log(itemData)
                 let item ;
                 let itemConfig;
                 if(itemData.params){
@@ -129,8 +129,8 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                     itemConfig.nft = itemData.nft;        
                     if(itemData.nft.isAudio){
                         itemConfig.isAudio = itemData.nft.isAudio;               
-                       // console.log('audio found: ');
-                       // console.log(itemData);
+                       // //console.log('audio found: ');
+                       // //console.log(itemData);
                     };
                 };
                 itemConfig.imageProxyUrl = that.config.imageProxyUrl;
@@ -141,7 +141,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                 item.initMesh(itemConfig).then((nftImgData)=>{
                   let spot = nftImgData.spot;
                     let halfHeight = nftImgData.height/2;
-                  //  console.log('halfHeight: ',halfHeight,nftImgData);
+                  //  //console.log('halfHeight: ',halfHeight,nftImgData);
                         spot.pos.y = spot.pos.y+halfHeight;
 
                      item.place(spot.pos).then((mesh,pos)=>{
@@ -167,7 +167,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
 
 
                 }).catch(err=>{
-                   // console.log('no image, skip NFT');
+                   // //console.log('no image, skip NFT');
                 })           
                
                
@@ -192,9 +192,9 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         let items = [];
         return new Promise((resolve, reject) => {
 
-              //  console.log('initItems');
+              //  //console.log('initItems');
             itemList.forEach((itemData)=>{
-              //  console.log(itemData)
+              //  //console.log(itemData)
                 let itemConfig;
                 if(itemData.params){
                     itemConfig = itemData.params;
@@ -224,9 +224,9 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
 
 
                 if(!itemData.path3D){
-                    console.log('no path3D on itemData');
-                    console.log(itemData);
-                    console.log(itemConfig);
+                    //console.log('no path3D on itemData');
+                    //console.log(itemData);
+                    //console.log(itemConfig);
                 };
                 /*let path3D = versions[0];
                 let params;
@@ -261,12 +261,12 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                                                 depth:3,
                                                 scene: that.scene,
                                                 format: formats[0]});
-                  //  console.log('item returned. have modelUrl: ',modelUrl, ' format: ',formats[0]);
+                  //  //console.log('item returned. have modelUrl: ',modelUrl, ' format: ',formats[0]);
                 } else {
 
 
                     let versions = extraDataParser.getAvailableVersions(0,'gltf');
-                 //   console.log('versions:', versions);
+                 //   //console.log('versions:', versions);
                     if( versions[0]){
                        let path3D = versions[0];
                     }
@@ -276,14 +276,14 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                         format: 'gltf'
                       };
                     item = this.initItem({nftRequestParams: nftRequestParams, nftPostHashHex: itemData.postHashHex, pos:spot.pos, rot:spot.rot, nft:itemData, width: 3, height:3, depth:3, scene: that.scene, format: formats[0]});
-                   // console.log('item API request requried for modelUrl: ',modelUrl, ' format: ',formats[0]);
+                   // //console.log('item API request requried for modelUrl: ',modelUrl, ' format: ',formats[0]);
 
                 }      
 
-             //   console.log('placing item of format ',formats[0]);
-               // console.log(item);
+             //   //console.log('placing item of format ',formats[0]);
+               // //console.log(item);
                 item.place(spot.pos).then((mesh,pos)=>{
-                 //   console.log('placed at ',spot.pos,mesh);
+                 //   //console.log('placed at ',spot.pos,mesh);
                     if(spot.rot){                    
                         if(item.isVRM){
                             mesh.scene.rotateY(spot.rot.y);
@@ -298,7 +298,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
                     this.placedItems3D.push(item);
                     that.items3d.push(item); 
                     if(items.length===itemList.length){
-                      //  console.log('placedItems3D: ',this.placedItems3D);
+                      //  //console.log('placedItems3D: ',this.placedItems3D);
                         resolve(items);
                     }
                 });
@@ -338,7 +338,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
             itemParams.nft = opts.nft;
         } else {
             console.warn('initItem: !!!! NO NFT!!!2');
-            console.log(opts);
+            //console.log(opts);
         };
 
         if(opts.modelUrl){
@@ -386,11 +386,11 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
             itemParams.nftsRoute = this.config.nftsRoute +'?' +paramString;
             
             if(!itemParams.nftPostHashHex){
-                console.log('cannot initItem without nftPostHashHex');
+                //console.log('cannot initItem without nftPostHashHex');
                 return false;
             };
             if((itemParams.nftsRoute==='')&&(itemParams.modelsRoute==='')){
-                console.log('cannot initItem without either modelsRoute or nftsRoute');
+                //console.log('cannot initItem without either modelsRoute or nftsRoute');
                 return false;
             };              
         };
@@ -437,8 +437,8 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
         if(opts.nft){
             itemParams.nft = opts.nft;
         } else {
-            //console.log('initItem2d !!!! NO NFT!!!');
-           // console.log(opts);
+            ////console.log('initItem2d !!!! NO NFT!!!');
+           // //console.log(opts);
             itemParams.nft = opts
         };
         if(opts.spot){
@@ -482,11 +482,11 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
             itemParams.nftsRoute = this.config.nftsRoute +'?' +paramString;
             
             if(!itemParams.nftPostHashHex){
-                console.log('cannot initItem without nftPostHashHex');
+                //console.log('cannot initItem without nftPostHashHex');
                 return false;
             };
             if((itemParams.nftsRoute==='')&&(itemParams.modelsRoute==='')){
-                console.log('cannot initItem without either modelsRoute or nftsRoute');
+                //console.log('cannot initItem without either modelsRoute or nftsRoute');
                 return false;
             };              
         };
@@ -504,7 +504,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
 
     getActiveItem = () =>{
         if(!this.activeItemIdx){
-            console.log('no active item');
+            //console.log('no active item');
             return false;
         };
         if(!this.items[this.activeItemIdx]){
@@ -530,17 +530,17 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
     }
     getItemByHash = (nftPostHashHex) =>{
         if(!this.items){
-            console.log('no inventory items');
+            //console.log('no inventory items');
             return false;
         };
-     //   console.log('checking inventory ',this.items);
+     //   //console.log('checking inventory ',this.items);
         let idx = 1;
         let item = this.items[0];
         while((item.config.nftPostHashHex !== nftPostHashHex)&&(idx<this.items.length)){
             item = this.items[idx];
             ++idx;
         };
-     //   console.log(item.config.nftPostHashHex,'?',nftPostHashHex);
+     //   //console.log(item.config.nftPostHashHex,'?',nftPostHashHex);
         if(item.config.nftPostHashHex === nftPostHashHex){
             return item;
         };
@@ -554,7 +554,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
     setActive = (index)=> {
         if(this.items[index]){
             this.activeItemIdx = index;
-            console.log('Item ',index,' is active.');
+            //console.log('Item ',index,' is active.');
         }
     }
 

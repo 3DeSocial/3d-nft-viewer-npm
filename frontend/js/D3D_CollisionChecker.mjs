@@ -95,7 +95,7 @@ export default class CollisionChecker  {
 
         // if the player was primarily adjusted vertically we assume it's on something we should consider ground
         this.playerIsOnGround = deltaVector.y > Math.abs( delta * this.playerVelocity.y * 0.25 );
-        //console.log('this.playerIsOnGround: ', this.playerIsOnGround);
+        ////console.log('this.playerIsOnGround: ', this.playerIsOnGround);
         if(this.playerIsOnGround){
             this.playerCollider.material.color.set(0xff0000);
         } else {

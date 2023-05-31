@@ -40,11 +40,11 @@ class VRControls {
                
             },
             moveUp: (data, value)=>{
-                console.log('empty moveUp');
+                //console.log('empty moveUp');
 
             },
             moveDown:(data, value)=>{
-              console.log('empty move down');
+              //console.log('empty move down');
             },
             moveLeft:(data, value)=>{
                 
@@ -222,13 +222,13 @@ class VRControls {
 
                             data.axes.forEach((value, i) => {
                                 //handlers for thumbsticks
-                                // console.log('axes: ',i);
+                                // //console.log('axes: ',i);
                                 //if thumbstick axis has flyd beyond the minimum threshold from center, windows mixed reality seems to wander up to about .17 with no input
                                     //set the speedFactor per axis, with acceleration when holding above threshold, up to a max speed
                                     self.speedFactor[i] >self.config.stickThreshold
                                         ? (self.speedFactor[i] = 1)
                                         : (self.speedFactor[i] *= 1.001);
-                                    //  console.log(value, self.speedFactor[i], i);
+                                    //  //console.log(value, self.speedFactor[i], i);
                                     if (i == 2) {
                                         //left and right axis on thumbsticks
                                         if (data.handedness == 'left') {
@@ -295,33 +295,33 @@ class VRControls {
 
         if(this.isOverMovementThreshold(data.axes[2])){
             if (data.axes[2] > 0) {
-                console.log(hand+ ' stick: right ',data.axes[2]);
+                //console.log(hand+ ' stick: right ',data.axes[2]);
                 switch(this.config.vrType){
                     case 'flying':
                         this.moveRight(data, value);
                     break;
                     default:
-                     //   console.log('move right');
+                     //   //console.log('move right');
                         this.moveRight(data, value);
                     break;
                 }
             } else if (data.axes[2] < 0) {
-                console.log(hand+ ' stick: left',data.axes[2]);
+                //console.log(hand+ ' stick: left',data.axes[2]);
                 switch(this.config.vrType){
                     case 'flying':
                         this.moveLeft(data, value);
                     break;
                     default:
-                   //     console.log('move left');
+                   //     //console.log('move left');
                         this.moveLeft(data, value);
                     break;
                 }
             };
         }
         if(this.isOverMovementThreshold(data.axes[3])){
-             //   console.log(hand+ ' stick: back',data.axes[3]);
+             //   //console.log(hand+ ' stick: back',data.axes[3]);
             if(data.axes[3] > 0){
-                console.log(hand+ ' stick: back ',data.axes[3],this.config.vrType);
+                //console.log(hand+ ' stick: back ',data.axes[3],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
                         this.moveBack(data, value);
@@ -331,7 +331,7 @@ class VRControls {
                     break;
                 }
             } else if (data.axes[3] < 0){
-                console.log(hand + ' stick: forward',data.axes[3],this.config.vrType);
+                //console.log(hand + ' stick: forward',data.axes[3],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
                         this.moveForward(data, value);
@@ -349,17 +349,17 @@ class VRControls {
     handleRightThumbstick = (hand, data, value) =>{
         if(this.isOverMovementThreshold(data.axes[2])){
             if (data.axes[2] >0) {
-                console.log(hand+ ' handleRightThumbstick: right ',data.axes[2]);
+                //console.log(hand+ ' handleRightThumbstick: right ',data.axes[2]);
                 this.rotateRight(data, value);
             } else if (data.axes[2] < 0) {
-                console.log(hand+ ' handleRightThumbstick: left',data.axes[2]);
+                //console.log(hand+ ' handleRightThumbstick: left',data.axes[2]);
                 this.rotateLeft(data, value);
             };
         }
 
         if(this.isOverMovementThreshold(data.axes[3])){
             if(data.axes[3] < 0){
-                console.log(hand+ ' handleRightThumbstick: moveDown ',data.axes[3],this.config.vrType);
+                //console.log(hand+ ' handleRightThumbstick: moveDown ',data.axes[3],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
                         this.moveDown(data, value);
@@ -369,7 +369,7 @@ class VRControls {
                     break;
                 }
             } else if (data.axes[3]>  0){
-                console.log(hand + ' handleRightThumbstick: moveUp',data.axes[3],this.config.vrType);
+                //console.log(hand + ' handleRightThumbstick: moveUp',data.axes[3],this.config.vrType);
                 switch(this.config.vrType){
                     case 'flying':
                         this.moveUp(data, value);
@@ -404,8 +404,8 @@ class VRControls {
     }
 
     moveForward = (data, value) =>{
-        console.log('moveForward');
-        console.log(this.config.moveForward);
+        //console.log('moveForward');
+        //console.log(this.config.moveForward);
      /*   let nextPos = new THREE.Vector3();
         nextPos.copy(this.dolly.position);
         nextPos.x -= this.cameraVector.x * this.speedFactor[3] * data.axes[3];
@@ -422,8 +422,8 @@ class VRControls {
 
     }
     moveBack = (data, value) => {
-        console.log('moveBack');
-        console.log(this.config.moveBack);        
+        //console.log('moveBack');
+        //console.log(this.config.moveBack);        
         this.config.moveBack(data, value);   
     }
 
@@ -450,18 +450,18 @@ class VRControls {
     }
 
     flyUp = (data, value) => {
-        console.log('call this.config.moveUp ');
+        //console.log('call this.config.moveUp ');
         this.config.moveUp(data, value);   
 
     }
 
     moveUp = (data, value) => {
-        console.log('call this.config.moveUp ');
+        //console.log('call this.config.moveUp ');
         this.config.moveUp(data, value);   
     }
 
     flyDown = (data, value) =>{
-        console.log('call this.config.moveDown ');
+        //console.log('call this.config.moveDown ');
 
         this.config.moveDown(data, value);   
 
@@ -469,26 +469,26 @@ class VRControls {
     }
 
     moveDown = (data, value) => {
-        console.log('call this.config.moveDown ');
+        //console.log('call this.config.moveDown ');
 
         this.config.moveDown(data, value);   
         
     }
 
     rotateLeft = (data,value) => {
-         console.log('VRControls rotateLeft')
-         console.log(this.config.rotateLeft);
+         //console.log('VRControls rotateLeft')
+         //console.log(this.config.rotateLeft);
 
         this.config.rotateLeft(data,value);
-        console.log('VRControls rotatedLeft')
+        //console.log('VRControls rotatedLeft')
 
     }
 
     rotateRight = (data,value) => {
-    console.log('VRControla rotateRight')
+    //console.log('VRControla rotateRight')
         this.config.rotateRight(data,value);
-    console.log('rotated right');
-    console.log(this.config.rotateRight);
+    //console.log('rotated right');
+    //console.log(this.config.rotateRight);
     }
 
     triggerLeft = (data, value) => {
@@ -542,9 +542,9 @@ class VRControls {
                             if (value !== old.buttons[i] || Math.abs(value) > 0.8) {
                                 //check if it is 'all the way pushed'
                                 if (value === 1) {
-                                    //console.log("Button" + i + "Down");
+                                    ////console.log("Button" + i + "Down");
                                     if (data.handedness == 'left') {
-                                        //console.log("Left Paddle Down");
+                                        ////console.log("Left Paddle Down");
                                         if (i == 1) {
                                             self.dolly.rotateY(-THREE.MathUtils.degToRad(1));
                                         }
@@ -555,23 +555,23 @@ class VRControls {
                                             self.dolly.position.z = 0;
                                         }
                                     } else {
-                                        //console.log("Right Paddle Down");
+                                        ////console.log("Right Paddle Down");
                                         if (i == 1) {
                                             self.dolly.rotateY(THREE.MathUtils.degToRad(1));
                                         }
                                     }
                                 } else {
-                                    // console.log("Button" + i + "Up");
+                                    // //console.log("Button" + i + "Up");
 
                                     if (i == 1) {
                                         //use the paddle buttons to rotate
                                         if (data.handedness == 'left') {
-                                            //console.log("Left Paddle Down");
+                                            ////console.log("Left Paddle Down");
                                             self.dolly.rotateY(
                                                 -THREE.MathUtils.degToRad(Math.abs(value))
                                             );
                                         } else {
-                                            //console.log("Right Paddle Down");
+                                            ////console.log("Right Paddle Down");
                                             self.dolly.rotateY(
                                                 THREE.MathUtils.degToRad(Math.abs(value))
                                             );
@@ -582,19 +582,19 @@ class VRControls {
                         });
                         data.axes.forEach((value, i) => {
                             //handlers for thumbsticks
-                            // console.log('axes: ',i);
+                            // //console.log('axes: ',i);
                             //if thumbstick axis has moved beyond the minimum threshold from center, windows mixed reality seems to wander up to about .17 with no input
                             if (Math.abs(value) > 0.1) {
                                 //set the speedFactor per axis, with acceleration when holding above threshold, up to a max speed
                                 self.speedFactor[i] > 1
                                     ? (self.speedFactor[i] = 1)
                                     : (self.speedFactor[i] *= 1.001);
-                                //  console.log(value, self.speedFactor[i], i);
+                                //  //console.log(value, self.speedFactor[i], i);
                                 if (i == 2) {
-                                    //   console.log('data.handedness: '+data.handedness);
+                                    //   //console.log('data.handedness: '+data.handedness);
                                     //left and right axis on thumbsticks
                                     if (data.handedness == 'left') {
-                                        //   (data.axes[2] > 0) ? console.log('left on left thumbstick') : console.log('right on left thumbstick')
+                                        //   (data.axes[2] > 0) ? //console.log('left on left thumbstick') : //console.log('right on left thumbstick')
 
                                         //move our dolly
                                         //we reverse the vectors 90degrees so we can do straffing side to side movement
@@ -623,8 +623,8 @@ class VRControls {
                                     );
                                 }*
                                     } else {
-                                        //    console.log('RH ata.axes[2]: '+data.axes[2]);
-                                        //    (data.axes[2] > 0) ? console.log('left on right thumbstick') : console.log('right on right thumbstick'); // !!!THIS WORKS!!!
+                                        //    //console.log('RH ata.axes[2]: '+data.axes[2]);
+                                        //    (data.axes[2] > 0) ? //console.log('left on right thumbstick') : //console.log('right on right thumbstick'); // !!!THIS WORKS!!!
                                         self.dolly.rotateY(-THREE.MathUtils.degToRad(data.axes[2]));
                                     }
                                     // self.controls.update();
@@ -633,7 +633,7 @@ class VRControls {
                                 if (i == 3) {
                                     //up and down axis on thumbsticks
                                     if (data.handedness == 'left') {
-                                        // (data.axes[3] > 0) ? console.log('up on left thumbstick') : console.log('down on left thumbstick')
+                                        // (data.axes[3] > 0) ? //console.log('up on left thumbstick') : //console.log('down on left thumbstick')
                                         self.dolly.position.y -= self.speedFactor[i] * data.axes[3];
                                         //provide haptic feedback if available in browser
                                         /*  if (
@@ -650,7 +650,7 @@ class VRControls {
                                     );
                                 }*
                                     } else {
-                                        // (data.axes[3] > 0) ? console.log('up on right thumbstick') : console.log('down on right thumbstick')
+                                        // (data.axes[3] > 0) ? //console.log('up on right thumbstick') : //console.log('down on right thumbstick')
                                         self.dolly.position.x -=
                                             self.cameraVector.x *
                                             self.speedFactor[i] *

@@ -98,7 +98,7 @@ const params = {
         };
         if(format.toLowerCase()==='vrm'){
             this.scene.add( this.helperRoot );
-            console.log('vrm detected in viewer, using new method');
+            //console.log('vrm detected in viewer, using new method');
             loader.register( ( parser ) => {
 
             return new VRMLoaderPlugin( parser, { helperRoot: this.helperRoot, autoUpdateHumanBones: true } );
@@ -110,7 +110,7 @@ const params = {
     }
 
     setVrType = (vrType) => {
-        console.log('vrType: ',vrType);
+        //console.log('vrType: ',vrType);
         this.vrType = vrType;
     }
     
@@ -203,7 +203,7 @@ const params = {
     }
 
     restrictCameraToRoom = () => {
-        console.log('restrictCameraToRoom', this.config.controls);
+        //console.log('restrictCameraToRoom', this.config.controls);
         this.controls.maxDistance = this.config.controls.maxDistance;
         this.controls.maxPolarAngle = this.config.controls.maxPolarAngle;
         this.controls.update();  
@@ -405,7 +405,7 @@ const params = {
 
     onLostContext = (e)=>{
         e.preventDefault();
-        console.log('lost Context!', e);
+        //console.log('lost Context!', e);
         this.renderer.setAnimationLoop(null);
     }
 
@@ -540,7 +540,7 @@ const params = {
         const fitWidthDistance = fitHeightDistance / this.camera.aspect;
 
         const distance = this.config.fitOffset * Math.max(fitHeightDistance, fitWidthDistance);
-        console.log('calculated camera distance: ', distance);
+        //console.log('calculated camera distance: ', distance);
         this.distance = distance;
 
         const direction = this.controls.target.clone()
@@ -556,8 +556,8 @@ const params = {
         this.camera.updateProjectionMatrix();
 
         this.camera.position.copy(this.controls.target).sub(direction);
-        console.log('this.camera.position');
-        console.log(this.camera.position);
+        //console.log('this.camera.position');
+        //console.log(this.camera.position);
         this.controls.update();
     }
 
@@ -686,9 +686,9 @@ const params = {
                 previewImg.style.display = 'none';
                 this.renderer.domElement.style.display = 'inline-block';
                 if(item.mixer){
-                console.log('this item has a mixer');
+                //console.log('this item has a mixer');
             } else {
-                console.log('this item has NO animation mixer');
+                //console.log('this item has NO animation mixer');
 
             }
             });
@@ -748,7 +748,7 @@ const params = {
 
     loadSceneryWithCollider= () =>{
         let that = this;
-        console.log('loadSceneryWithCollider');
+        //console.log('loadSceneryWithCollider');
         return new Promise((resolve,reject)=>{
             this.sceneryLoader = new SceneryLoader({
                 sceneScale: that.config.sceneScale,
@@ -785,7 +785,7 @@ const params = {
                 this.loadSceneryWithCollider().then((item)=>{
                     this.restrictCameraToRoom();
                     this.placeModel(item).then(()=>{
-                        console.log('model placed by viewer');
+                        //console.log('model placed by viewer');
                         this.removeLoader(hideElOnLoad);
                         resolve(item);
                     })
@@ -794,7 +794,7 @@ const params = {
 
             } else {
                 this.placeModel(item).then(()=>{
-                    console.log('no scenery: model placed by viewer');                    
+                    //console.log('no scenery: model placed by viewer');                    
                     this.removeLoader(hideElOnLoad);
                     resolve(item);
 
@@ -950,37 +950,37 @@ const params = {
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'u';  
-                                                console.log('moveUp proxy', that.controlProxy);                                            
+                                                //console.log('moveUp proxy', that.controlProxy);                                            
                                             },
                                             moveDown:(data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'd';
-                                                console.log('moveDown proxy', that.controlProxy);                                            
+                                                //console.log('moveDown proxy', that.controlProxy);                                            
 
                                             },
                                             moveLeft:(data, value)=>{
-                                                console.log('moveLeft triggered');
+                                                //console.log('moveLeft triggered');
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'l';  
                                             },                                            
                                             moveRight:(data, value)=>{
-                                                console.log('moveright triggered');
+                                                //console.log('moveright triggered');
 
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'r';
                                             },
                                             moveForward:(data, value)=>{
-                                                console.log('control proxy moveForward');
+                                                //console.log('control proxy moveForward');
 
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'f';                                                   
                                             },
                                             moveBack:(data, value)=>{
-                                                console.log('control proxy moveBack');
+                                                //console.log('control proxy moveBack');
 
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
@@ -1017,7 +1017,7 @@ const params = {
                                                 that.controlProxy.rot = null;
                                             },
                                             onSelectStartLeft: (e,controller)=>{
-                                               console.log(controller.line);
+                                               //console.log(controller.line);
                                             },
                                             onSelectEndLeft: (e,controller)=>{
                                             },
@@ -1067,11 +1067,11 @@ const params = {
                                             playerStartPos: this.config.playerStartPos,
                                             vrType: 'walking',
                                             moveUp: (data)=>{
-                                                console.log('here?')
+                                                //console.log('here?')
                                                 return;
                                             },
                                             moveDown:(data)=>{
-                                                console.log('and here?')
+                                                //console.log('and here?')
                                                 return;
                                             },
                                             moveLeft:(data)=>{
@@ -1168,7 +1168,7 @@ const params = {
     addClickListenerFullScreen = (ctr, el, modelUrl) => {
         let that = this;
 
-        //console.log('adding listener for '+modelUrl);
+        ////console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
@@ -1180,7 +1180,7 @@ const params = {
     addClickListenerVR = (ctr, el, modelUrl) => {
         let that = this;
 
-        //console.log('adding listener for '+modelUrl);
+        ////console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
@@ -1247,8 +1247,8 @@ const params = {
                 };
 
             }).catch(err => {
-                console.log(err);
-                console.log(response); 
+                //console.log(err);
+                //console.log(response); 
             });
         };
 
@@ -1321,7 +1321,7 @@ initPlayerThirdPerson = () => {
     };    
     item.place(newPos).then((model,pos)=>{
    
-         console.log('placed model: ');
+         //console.log('placed model: ');
         // character
        
        // this.character.copy(pos);
@@ -1383,9 +1383,9 @@ initPlayerThirdPerson = () => {
 
     }
     if(this.moveTo){
-        console.log('moving from ',this.player.position);
+        //console.log('moving from ',this.player.position);
         this.moveTo.setY(this.player.position.y);
-        console.log('moving to selectedPoint: ',this.moveTo);
+        //console.log('moving to selectedPoint: ',this.moveTo);
 
         this.player.position.copy(this.moveTo);
         this.moveTo = false;
@@ -1477,8 +1477,8 @@ initPlayerThirdPerson = () => {
            let playery = this.player.position.y;
            let playerz = this.player.position.z;
 
-        //   console.log('playerpos');
-          // console.log(playerx,playery,playerz);
+        //   //console.log('playerpos');
+          // //console.log(playerx,playery,playerz);
          
             this.dolly.position.set(playerx,(playery+0.15),playerz);
 
@@ -1498,7 +1498,7 @@ initPlayerThirdPerson = () => {
 
     updatePlayerVR = (delta) =>{
         if(!this.playerVR){
-            console.log('no player VR')
+            //console.log('no player VR')
             return false;
         };
          this.playerVR.moveDolly(delta);

@@ -673,7 +673,7 @@ const params = {
 
                         })
                 } else {
-                    console.log('no avatar enabled');
+                    //console.log('no avatar enabled');
                     //No avatar is available, use first person
                     this.config.firstPerson =true;
                     this.initCameraFirstPerson(); 
@@ -790,7 +790,7 @@ const params = {
                 that.sceneryMesh = gltf;
                 resolve(gltf);
             }).catch((err)=>{
-                console.log(err);
+                //console.log(err);
             })
         });
     }
@@ -856,20 +856,20 @@ const params = {
     avatarEnabled = () =>{
         
         if(!this.config.currentUser){
-            console.log('Not logged in so no avatar availabe');
+            //console.log('Not logged in so no avatar availabe');
             return false;
         };
 
         if(this.config.firstPerson){
-            console.log('avatarEnabled: first person selected');
+            //console.log('avatarEnabled: first person selected');
             return false;
         };
         if(!this.config.avatar){
-            console.log('no avatar available')
+            //console.log('no avatar available')
            return false;
         };
         if(this.config.avatar){
-            console.log('have avatar: ',this.config.avatar);
+            //console.log('have avatar: ',this.config.avatar);
             return true;
         };
         return false;
@@ -972,7 +972,7 @@ const params = {
         if(el){
            el.appendChild(this.renderer.domElement);
         } else {
-            console.log('no el so hide');
+            //console.log('no el so hide');
             this.renderer.domElement.style.display = 'none';
             this.el.appendChild(this.renderer.domElement);
         };
@@ -1052,7 +1052,7 @@ const params = {
                 confirmDiamond.addEventListener('click',(e)=>{
                             let diamondCount = this.hud.getDiamondsToSendCount();
 
-                console.log('sending '+diamondCount+' to ',that.hud.selectedItem.config.nft.postHashHex);
+                //console.log('sending '+diamondCount+' to ',that.hud.selectedItem.config.nft.postHashHex);
                 this.config.chainAPI.sendDiamonds(that.hud.selectedItem.config.nft.postHashHex, diamondCount);
             })
         };
@@ -1240,7 +1240,7 @@ checkMouseDown = (e) =>{
         if(!action.selectedPoint){          
             return false;
         };
-       // console.log('action.btnIndex: ',action.btnIndex);
+       // //console.log('action.btnIndex: ',action.btnIndex);
         switch(parseInt(action.btnIndex)){
             case 1:
 
@@ -1255,7 +1255,7 @@ checkMouseDown = (e) =>{
         if(!action.selectedPoint){
             return false;
         };
-       // console.log('action.btnIndex: ',action.btnIndex);
+       // //console.log('action.btnIndex: ',action.btnIndex);
         switch(parseInt(action.btnIndex)){
             case 1:
                 fwdPressed = false;
@@ -1301,12 +1301,12 @@ checkMouseDown = (e) =>{
                 this.displayInHUD(nftDisplayData);            
             }
 
-            //console.log(action.selection.object.userData.owner.config.nft);
-            //console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
-            //console.log('body: ',action.selection.object.userData.owner.config.nft.body);
+            ////console.log(action.selection.object.userData.owner.config.nft);
+            ////console.log('owner: ',action.selection.object.userData.owner.config.nft.profileEntryResponse.username);
+            ////console.log('body: ',action.selection.object.userData.owner.config.nft.body);
 
         } else {
-           // console.log('no owner: ', action.selection.object);
+           // //console.log('no owner: ', action.selection.object);
             if(this.hud){
                 this.hud.clear();
             }
@@ -1379,7 +1379,7 @@ checkMouseDown = (e) =>{
                             })
                            
                         }).catch((err)=>{
-                            console.log('errpr getting audio data');
+                            //console.log('errpr getting audio data');
                         });
 
                     }
@@ -1417,7 +1417,7 @@ checkMouseDown = (e) =>{
                 if(this.sounds.throwSound){
                    this.sounds.throwSound.play();
                 } else {
-                    console.log('no throwSound');
+                    //console.log('no throwSound');
                 }
                 let x = ( e.clientX / window.innerWidth ) * 2 - 1;
                 let y = - ( e.clientY / window.innerHeight ) * 2 + 1;
@@ -1436,27 +1436,27 @@ checkMouseDown = (e) =>{
     parseAudioData = (audioData)=>{
         let tracks = [];
         let info = {};
-        console.log('audio detected!');
+        //console.log('audio detected!');
         let audioExtraData = audioData;
            if(audioExtraData){
             audioData = JSON.parse(audioExtraData)
-            console.log('audioData',audioData)
+            //console.log('audioData',audioData)
             if(audioData && audioData.TrackCount > 0){
                 tracks = JSON.parse(audioData.Tracks)
                 //if (previewMode){
                     tracks = tracks.map(x=> { x.trackFile = x.trackFile.replaceAll(' ','%2520');return x });
                 //}
             
-                console.log('tracks player',tracks);
+                //console.log('tracks player',tracks);
 
 
-                console.log('title', audioData.Title)
+                //console.log('title', audioData.Title)
 
                 info.title = audioData.Title
                 info.author = audioData.Author
                 info.category = audioData.MusicCategory
                 info.subcategory = audioData.MusicSubCategory
-                console.log('info',info);
+                //console.log('info',info);
             }
         }
         return tracks;
@@ -1469,7 +1469,7 @@ checkMouseDown = (e) =>{
 
     playAudioNFTTrack = async (postHashHex, fullUrl) =>{
         let that = this;
-        console.log('playAudioNFTTrack');
+        //console.log('playAudioNFTTrack');
         if(this.currentAudio){
             this.currentAudio.pause();
             this.currentAudio.src = fullUrl
@@ -1478,7 +1478,7 @@ checkMouseDown = (e) =>{
             this.currentAudio = new Audio();  
             //https://desodata.azureedge.net/unzipped/1588d17557a44cdbdfaf2d8cbb62df4c1336eae46f3e043309d4edecbec6d3a5/Paradigm%2520Shift%2520Master.wav'
             // https://desodata.azureedge.net/unzipped/1588d17557a44cdbdfaf2d8cbb62df4c1336eae46f3e043309d4edecbec6d3a5/Paradigm%20Shift%20Master.wav
-            console.log('set src to: ',fullUrl);
+            //console.log('set src to: ',fullUrl);
             this.currentAudio.src = fullUrl
             this.currentAudio.type = 'audio/wav'
         }
@@ -1486,17 +1486,17 @@ checkMouseDown = (e) =>{
 
         try {
             await this.currentAudio.play();
-            console.log('Playing using set src...',this.currentAudio.src);
+            //console.log('Playing using set src...',this.currentAudio.src);
             this.isPlayingAudio = true;
             this.currentAudioHash = postHashHex;
         } catch (err) {
-            console.log('Failed to play...' + err);
+            //console.log('Failed to play...' + err);
             this.isPlayingAudio = false;            
         }
         
 
 
- /*       console.log('create trackClip');
+ /*       //console.log('create trackClip');
             let trackClip = new AudioClipRemote({
                         path: fullUrl,
                         mesh: this.sceneryMesh,
@@ -1505,17 +1505,17 @@ checkMouseDown = (e) =>{
                             that.playingTrack = null;
                         }
                     });
-            console.log('about to play: ', fullUrl);
+            //console.log('about to play: ', fullUrl);
             trackClip.play();
-            console.log('playing');
+            //console.log('playing');
             this.audioTracks[postHashHex] = trackClip;
             this.playingTrack = this.audioTracks[postHashHex];*/
 
     }
 
     targetFootballPlayer = (item) =>{
-        console.log('targeted player');
-        console.log(item);
+        //console.log('targeted player');
+        //console.log(item);
         this.actionTargetItem = item;
         this.actionTargetMesh = item.mesh;        
     }
@@ -1551,7 +1551,7 @@ checkMouseDown = (e) =>{
 
         that.ghost.place(this.actionTargetPos).then((mesh,pos)=>{
             mesh.lookAt(this.camera.position);
-            console.log('play hit');
+            //console.log('play hit');
             that.ghostSounds.hit.play();        
 
         })
@@ -1651,7 +1651,7 @@ checkMouseDown = (e) =>{
                 if(el){
                     el.style.display = 'inline-block';
                 } else {
-                    console.log('not found: ',selector);
+                    //console.log('not found: ',selector);
                 }                
             })
         }
@@ -1668,7 +1668,7 @@ checkMouseDown = (e) =>{
                 if(el){
                    el.style.display = 'none';
                 } else {
-                    console.log('not found: ',selector);
+                    //console.log('not found: ',selector);
                 }
             })
         }
@@ -1688,7 +1688,7 @@ checkMouseDown = (e) =>{
             if(this.actionTargetItem){
                 if(this.actionTargetItem.config.nft){
                     let heartStatus = this.toggleHeart();
-                    console.log(' new heartStatus:' ,heartStatus);
+                    //console.log(' new heartStatus:' ,heartStatus);
                     if(heartStatus){
                         start = this.player.position.clone();
                         start.y--;
@@ -1711,8 +1711,8 @@ checkMouseDown = (e) =>{
                         }
                     }
                 } else {
-                    console.log('target probably ghost');
-                    console.log(that.actionTarget);
+                    //console.log('target probably ghost');
+                    //console.log(that.actionTarget);
                     start = this.player.position.clone();
                     start.y--;
 
@@ -1720,7 +1720,7 @@ checkMouseDown = (e) =>{
                     item.audioGive.play();
                 }
             } else {
-                console.log('no actionTargetItem - cant check heart status');
+                //console.log('no actionTargetItem - cant check heart status');
             }
             
             if(!start){
@@ -1840,7 +1840,7 @@ checkMouseDown = (e) =>{
             })
 
         } else {
-            console.log('no active item');
+            //console.log('no active item');
         }   
     }
 
@@ -1856,7 +1856,7 @@ checkMouseDown = (e) =>{
     checkMouseDbl = (e) =>{
 
         let action = this.raycast(e);
-       // console.log('action.btnIndex: ',action.btnIndex);
+       // //console.log('action.btnIndex: ',action.btnIndex);
         
      //   this.updateOverlayPos(action.selectedPoint);
         switch(parseInt(action.btnIndex)){
@@ -1865,7 +1865,7 @@ checkMouseDown = (e) =>{
                     if(this.sounds.throwSound){
                        this.sounds.throwSound.play();
                     } else {
-                        console.log('no throwSound');
+                        //console.log('no throwSound');
                     }
                     let x = ( e.clientX / window.innerWidth ) * 2 - 1;
                     let y = - ( e.clientY / window.innerHeight ) * 2 + 1;
@@ -1921,10 +1921,10 @@ checkMouseDown = (e) =>{
     updateOverlayPos = (pos) =>{
         let posText = 'x: '+pos.x+' y: '+pos.y+' z: '+pos.z;
         document.querySelector('span#pos-display').innerHTML = posText;
-     /*   console.log('camera status');
-        console.log(this.camera);
-        console.log('controls status');
-        console.log(this.controls)        */
+     /*   //console.log('camera status');
+        //console.log(this.camera);
+        //console.log('controls status');
+        //console.log(this.controls)        */
     }
     raycastAhead = ( ) => {
 
@@ -1960,9 +1960,9 @@ checkMouseDown = (e) =>{
             } else {
                 btnIndex = e.which;
             };
-            //console.log(e.which);
+            ////console.log(e.which);
         } else if ("button" in e){  // IE, Opera 
-            console.log(e.button);
+            //console.log(e.button);
             isRightMB = e.button == 2; 
             if(isRightMB){
                  btnIndex = 1;
@@ -2001,7 +2001,7 @@ checkMouseDown = (e) =>{
         }
 
         } catch (error) {
-          console.log(error);
+          //console.log(error);
           return false;
 
         }
@@ -2056,7 +2056,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             if(hit.point.z===selectedPoint.z){
                 return true;
             } else {
-                //console.log('hit.point.z',hit.point.z,'selectedPoint.z',selectedPoint.z)
+                ////console.log('hit.point.z',hit.point.z,'selectedPoint.z',selectedPoint.z)
                 return false;
             };
            // this.scene.add(new THREE.ArrowHelper( this.raycaster.ray.direction, this.raycaster.ray.origin, 1000, Math.random() * 0xffffff ));
@@ -2190,7 +2190,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
 
     onLostContext = (e)=>{
         e.preventDefault();
-        console.log('lost!', e);
+        //console.log('lost!', e);
         this.renderer.setAnimationLoop(null);
     }
 
@@ -2250,7 +2250,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             this.camera.aspect = this.parentDivElWidth/this.parentDivElHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
-            console.log('resizeCanvas');
+            //console.log('resizeCanvas');
         };
 
         this.controls.update();
@@ -2306,7 +2306,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             }
 
               if ( this.collider ) {
-//console.log('got this.collider');
+////console.log('got this.collider');
                 this.collider.visible = params.debug;
                 if(this.sceneryLoader.visualizer){
                    this.sceneryLoader.visualizer.visible = params.debug;
@@ -2476,7 +2476,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
         let that = this;
         let targetEl = document.querySelector('.'+this.config.previewCtrCls);
         let previewImg = targetEl.querySelector('img');
-        console.log('previewImg',previewImg);
+        //console.log('previewImg',previewImg);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
@@ -2633,7 +2633,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             this.footballPlayer.physicsBody.addEventListener("collide",function(e){
                 let contact = e.contact;
                 if(!that.claimed){
-                    console.log('HIT!!!');
+                    //console.log('HIT!!!');
                     let spot = that.footballPlayer.mesh.position.clone()
                     spot.y = 10;
                     that.addSpotlight(spot, that.footballPlayer.mesh);                     
@@ -3117,19 +3117,19 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             
             let maxItems =this.layoutPlotter.getMaxItemCount();
             let items2d = options.sceneAssets.filter(nft => ((!nft.is3D)&&(nft.imageURLs[0])));     
-            console.log('items2d: ', items2d);
+            //console.log('items2d: ', items2d);
 
             let maxItems3D =this.layoutPlotter.getMaxItemCount3D();
-            console.log('maxItems3D: ',maxItems3D);
+            //console.log('maxItems3D: ',maxItems3D);
             let items3d = options.sceneAssets.filter(nft => nft.is3D);
-            console.log('items3d: ', items3d);
+            //console.log('items3d: ', items3d);
 
             let spookyNFTs = options.sceneAssets.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'||nft.postHashHex=='8e0bbd53cd4932294649c109957167e385367836f0ec39cc4cc3d04691fffca7'));
             this.ghosts = spookyNFTs.filter(nft => (nft.postHashHex == '53f8b46d41415f192f9256a34f40f333f9bede5e24b03e73ae0e737bd6c53d49'));
 
             items3d = items3d.concat(spookyNFTs)
             let items3dToRender = items3d.slice(0,maxItems3D);   
-            console.log('items3dToRender: ',items3dToRender);
+            //console.log('items3dToRender: ',items3dToRender);
           /*  if(items2d.length===0){
                 items2d = items3d.slice(maxItems3D);
                 //display 2d images of 3d items if there are no more 2d images
@@ -3205,13 +3205,13 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                             format: formats[0]}
 
                     };
-                    console.log('final avatarParams');
-                    console.log(avatarParams);
+                    //console.log('final avatarParams');
+                    //console.log(avatarParams);
                     let item = new Avatar(avatarParams);                
 
                     return item;                    
                 } else {
-                    console.log('could not retreive avatar modelUrl');
+                    //console.log('could not retreive avatar modelUrl');
                 }
 
 
@@ -3357,13 +3357,13 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                                                 that.controlProxy.dir = 'd';
                                             },
                                             moveLeft:(data, value)=>{
-                                                console.log('moveLeft triggered');
+                                                //console.log('moveLeft triggered');
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'l';  
                                             },                                            
                                             moveRight:(data, value)=>{
-                                                console.log('moveright triggered');
+                                                //console.log('moveright triggered');
 
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
@@ -3409,12 +3409,12 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                                                 that.controlProxy.rot = null;
                                             },
                                             onSelectStartLeft: (e,controller)=>{
-                                               console.log(controller.line);
+                                               //console.log(controller.line);
                                             },
                                             onSelectEndLeft: (e,controller)=>{
                                             },
                                             onSelectStartRight: (e,controller)=>{
-                                               console.log(controller.line);
+                                               //console.log(controller.line);
                                                this.throwSnowBall(e,controller)
 
                                             },
@@ -3480,7 +3480,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
     addClickListenerViewDetails = (el) => {
         let that = this;
 
-        //console.log('adding listener for '+modelUrl);
+        ////console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
@@ -3498,7 +3498,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
     addClickListenerGiveDiamond = (el) => {
         let that = this;
 
-        //console.log('adding listener for '+modelUrl);
+        ////console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
@@ -3512,7 +3512,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
     addClickListenerGiveHeart = (el) => {
         let that = this;
 
-        //console.log('adding listener for '+modelUrl);
+        ////console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
@@ -3526,7 +3526,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
     addClickListenerBuyNow = (el) => {
         let that = this;
 
-        //console.log('adding listener for '+modelUrl);
+        ////console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
@@ -3541,7 +3541,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
     addClickListenerViewPage = (el) => {
         let that = this;
 
-        //console.log('adding listener for '+modelUrl);
+        ////console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
@@ -3555,7 +3555,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
     addClickListenerFullScreen = (el) => {
         let that = this;
 
-        //console.log('adding listener for '+modelUrl);
+        ////console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
@@ -3576,7 +3576,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
     addClickListenerVR = (ctr, el, modelUrl) => {
         let that = this;
 
-        //console.log('adding listener for '+modelUrl);
+        ////console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
@@ -3645,8 +3645,8 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                 };
 
             }).catch(err => {
-                console.log(err);
-                console.log(response);
+                //console.log(err);
+                //console.log(response);
             });
         };
 
@@ -3916,7 +3916,7 @@ updatePlayer = ( delta )=> {
             if ( distance < capsuleInfo.radius ) {
                 const depth = capsuleInfo.radius - distance;
                 const direction = capsulePoint.sub( triPoint ).normalize();
-               //console.log('distance: ',distance,' radius: ',capsuleInfo.radius,' depth: ',depth,' direction: ',direction);
+               ////console.log('distance: ',distance,' radius: ',capsuleInfo.radius,' depth: ',depth,' direction: ',direction);
 
                 this.tempSegment.start.addScaledVector( direction, depth );
                 this.tempSegment.end.addScaledVector( direction, depth );

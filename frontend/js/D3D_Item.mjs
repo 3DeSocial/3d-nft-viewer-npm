@@ -14,11 +14,11 @@ export default class Item {
             isImage: false,
             // override the actions array to set click handlers
             actions: {'click': function(e){ 
-                console.log('clicked');
-                console.log(this);
+                //console.log('clicked');
+                //console.log(this);
             },'dblclick': function(e){
-                console.log('dblclick');
-                console.log(this);
+                //console.log('dblclick');
+                //console.log(this);
             }}
         };
     
@@ -30,7 +30,7 @@ export default class Item {
 
         this.loader = this.config.loader;
         if(!this.loader && this.config.is3D){
-            console.log('cannot init item without loader is 3d? ',this.config.is3D,' hex: ',this.config.postHashHex);
+            //console.log('cannot init item without loader is 3d? ',this.config.is3D,' hex: ',this.config.postHashHex);
         };
         this.scene = this.config.scene;
         this.height = this.config.height;
@@ -51,33 +51,33 @@ export default class Item {
         this.rotVelocity = new THREE.Vector3();
         this.nftDisplayData = this.parseNFTDisplayData();
         if(this.config.modelUrl){
-            console.log('check modelUrl');
+            //console.log('check modelUrl');
             this.getFormatFromModelUrl();
         } else {
-           // console.log('no modelUrl');
+           // //console.log('no modelUrl');
         }
         if(this.config.physicsWorld){
             this.initPhysics();
         } else {
-           // console.log('nophysicsWorld');
+           // //console.log('nophysicsWorld');
 
         }
         this.anims = [];
         if(this.config.animLoader){
-            console.log('config has animLoader');
+            //console.log('config has animLoader');
             this.animLoader = this.initAnimLoader({animHashes:[ '287cb636f6a8fc869f5c0f992fa2608a2332226c6251b1dc6908c827ab87eee4',
                                                                     '8d931cbd0fda4e794c3154d42fb6aef7cf094481ad83a83e97be8113cd702b85',
                                                                     '95c405260688db9fbb76d126334ee911a263352c58dbb77b6d562750c5ce1ed2',
                                                                     '1a27c2f8a2672adbfdb4df7b31586a890b7f3a95b49a6937edc01de5d74072f2']});
-            console.log('we have this.animLoader');
+            //console.log('we have this.animLoader');
         } else {
-            console.log('config has NO animLoader');
+            //console.log('config has NO animLoader');
 
         }
     }
 
     initPhysics = () =>{
-        console.log('initPhysics');
+        //console.log('initPhysics');
         this.physics = new Physics({world:this.config.physicsWorld, scene:this.config.scene});
     }
 
@@ -156,7 +156,7 @@ export default class Item {
         }
 
         if(!scene.children){
-            console.log('scene has no children');
+            //console.log('scene has no children');
             return false;
         }
    
@@ -226,7 +226,7 @@ export default class Item {
             .then((model)=>{
                 resolve(model);
             }).catch((err=>{
-                console.log( err);
+                //console.log( err);
             }))
         })
     
@@ -260,7 +260,7 @@ export default class Item {
                         reject('Invalid ModelUrl in ExtraData: '+modelUrl);
                         return;
                     } else {
-                        //console.log('validated modelUrl: ',modelUrl);
+                        ////console.log('validated modelUrl: ',modelUrl);
                         that.modelUrl = modelUrl;
                         that.placeModel(pos)
                         .then((model)=>{
@@ -281,7 +281,7 @@ export default class Item {
                         })
                     };
                 }).catch(err =>{
-                    console.log(err);
+                    //console.log(err);
                 })
             }
         });
@@ -319,8 +319,8 @@ export default class Item {
         this.scene.remove(this.mesh.children[0]);
     }
     moveTo = (pos)=>{
-       // console.log('current: ',this.mesh.position);
-       // console.log('moveto: ',pos);
+       // //console.log('current: ',this.mesh.position);
+       // //console.log('moveto: ',pos);
         this.mesh.position.copy(pos);
     }
 
@@ -357,7 +357,7 @@ export default class Item {
                 return;
             } else {
                 let url = this.config.nftsRoute;
-                console.log('fetchModelUrl: ',this.config.nftsRoute);
+                //console.log('fetchModelUrl: ',this.config.nftsRoute);
                 if(url.trim()===''){
                     reject('No nftsRoute or modelUrl exists for this item');
                     return;
@@ -382,7 +382,7 @@ export default class Item {
     }
 
     initAnimLoader = (config) =>{
-        console.log('initAnimLoader');
+        //console.log('initAnimLoader');
         let animLoader = new AnimLoader(config);
         return animLoader;
     }
@@ -392,8 +392,8 @@ export default class Item {
         let that = this;
 
         return new Promise((resolve,reject)=>{
-           // console.log('fetchModel: ',modelUrl);
-           // console.log('that.loader: ',that.loader);            
+           // //console.log('fetchModel: ',modelUrl);
+           // //console.log('that.loader: ',that.loader);            
 
 
             that.loader.load(modelUrl, (root)=> {
@@ -426,10 +426,10 @@ export default class Item {
                             let danceUrl3 = that.config.avatarPath+'dance3.fbx';                        
 
 
-                            console.log('walkUrl: ',walkUrl);
-                            console.log('runUrl: ',runUrl);
-                            console.log('jumpUrl: ',jumpUrl);
-                            console.log('danceUrl: ',danceUrl);
+                            //console.log('walkUrl: ',walkUrl);
+                            //console.log('runUrl: ',runUrl);
+                            //console.log('jumpUrl: ',jumpUrl);
+                            //console.log('danceUrl: ',danceUrl);
 
                             let promise1 = that.animLoader.loadAnim(walkUrl, that.mixer);
                             let promise2 = that.animLoader.loadAnim(runUrl, that.mixer);
@@ -439,7 +439,7 @@ export default class Item {
                             let promise6 = that.animLoader.loadAnim(danceUrl3, that.mixer);
                             let promises = [promise1,promise2,promise3,promise4,promise5,promise6];
                             Promise.allSettled(promises).
-                              then((results) => results.forEach((result) => console.log(result.status)));                        
+                              then((results) => results.forEach((result) => //console.log(result.status)));                        
 
                         }
                     }
@@ -447,7 +447,7 @@ export default class Item {
                     that.mesh.owner = this;                
                     let obj3D = this.convertToObj3D(loadedItem);
                     if(obj3D===false){
-                        console.log('could not convert item for scene');
+                        //console.log('could not convert item for scene');
                         return false;
                     };
                   
@@ -468,8 +468,8 @@ export default class Item {
 
 onProgressCallback = ()=> {}
 onErrorCallback = (e)=> {
-    console.log('loading error');
-    console.log(e);
+    //console.log('loading error');
+    //console.log(e);
 }
 
 swapMeshForProfilePic = () =>{
@@ -502,7 +502,7 @@ loadRemoteTexture = (imageUrl) =>{
         };
 
         img.addEventListener('error', (img, error) =>{
-          console.log('could not load image',img.src);
+          //console.log('could not load image',img.src);
           reject(img.src)
         });
         img.src = proxyImageURL;
@@ -521,9 +521,9 @@ scaleToFitScene = (obj3D, posVector) =>{
 
     let that = this;
 
-        //console.log('posVector:',posVector);
+        ////console.log('posVector:',posVector);
         let boxMesh = this.createContainerBox(posVector);
-        console.log(boxMesh);
+        //console.log(boxMesh);
         let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
 
         let meshBounds = null    
@@ -559,7 +559,7 @@ scaleToFitScene = (obj3D, posVector) =>{
         };
         
         let newMeshBounds = new THREE.Box3().setFromObject( obj3D );
-        //console.log('newMeshBounds',newMeshBounds);
+        ////console.log('newMeshBounds',newMeshBounds);
         let newLengthMeshBounds = {
             x: Math.abs(newMeshBounds.max.x - newMeshBounds.min.x),
             y: Math.abs(newMeshBounds.max.y - newMeshBounds.min.y),
@@ -595,7 +595,7 @@ scaleToFitScene = (obj3D, posVector) =>{
                 lowestVertex = new THREE.Vector3(x,y,z);
             }
         }
-        //console.log('lowest point in helper: ',lowest);
+        ////console.log('lowest point in helper: ',lowest);
         return lowestVertex;
     }
 
@@ -637,7 +637,7 @@ scaleToFitScene = (obj3D, posVector) =>{
 
     createContainerBoxForModel = (width, height, depth, posVector) =>{
         const geometry = new THREE.BoxGeometry(width, height, depth);
-      //  console.log('createContainerBoxForModel: ', width, height, depth);
+      //  //console.log('createContainerBoxForModel: ', width, height, depth);
         if(!this.config.color){
             this.config.color = 0xff3333;
         };
@@ -684,7 +684,7 @@ scaleToFitScene = (obj3D, posVector) =>{
     convertToObj3D = (loadedItem) =>{
         let loadedType = loadedItem.type;
         let material, vertexColors, geometry;
-       // console.log('loaded type: ',loadedType);
+       // //console.log('loaded type: ',loadedType);
         switch(loadedType){
             case 'Object3D','Mesh':
             break;
@@ -733,7 +733,7 @@ scaleToFitScene = (obj3D, posVector) =>{
                 }
             break;
             default: 
-                console.log('unknown type: ',loadedType);
+                //console.log('unknown type: ',loadedType);
             return false;
         };
         return this.configureImportedObject(loadedItem);
@@ -771,11 +771,11 @@ scaleToFitScene = (obj3D, posVector) =>{
         };
         if(this.anims[name].action){
             this.anims[name].action.play();
-            console.log('play anim actin:', name);    
-            console.log(this.anims[name].action);
+            //console.log('play anim actin:', name);    
+            //console.log(this.anims[name].action);
             return true;
         } else {
-            console.log('no anim ACTION for:', name);
+            //console.log('no anim ACTION for:', name);
 
             return false;
         }
@@ -822,11 +822,11 @@ scaleToFitScene = (obj3D, posVector) =>{
                 this.action.play();
                 this.animRunning = true;
                 this.mixer.addEventListener('finished',(e)=>{
-                    //console.log('animation not running now');                    
+                    ////console.log('animation not running now');                    
                     that.setAnimRunning(false);
                 }, false);
             } else {
-                //console.log('animation', animIndex, 'doesnt exist');
+                ////console.log('animation', animIndex, 'doesnt exist');
             }
         }
     }
@@ -841,7 +841,7 @@ scaleToFitScene = (obj3D, posVector) =>{
 
     setAnimRunning =(value)=>{
         this.animRunning = value;
-        console.log('animation running set to: ',value);
+        //console.log('animation running set to: ',value);
     }
 
     shouldBeCentered = (children) =>{
@@ -869,7 +869,7 @@ scaleToFitScene = (obj3D, posVector) =>{
     }
 
     getImportedObjectSize = () =>{
-        console.log('get size of this mesh');
+        //console.log('get size of this mesh');
         let box = new THREE.Box3().setFromObject(this.mesh);
         let center = new THREE.Vector3();
         let size = new THREE.Vector3();
@@ -920,7 +920,7 @@ scaleToFitScene = (obj3D, posVector) =>{
             if ( child.isMesh ) {
                 child.geometry.computeBoundingBox()
                 meshBounds = child.geometry.boundingBox;
-              //  console.log(meshBounds);
+              //  //console.log(meshBounds);
             }
         });
         return meshBounds;

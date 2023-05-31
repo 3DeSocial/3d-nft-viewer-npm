@@ -16,11 +16,11 @@ class Item2d extends Item {
             depth:0.1,
             // override the actions array to set click handlers
             actions: {'click': function(e){ 
-                console.log('clicked');
-                console.log(this);
+                //console.log('clicked');
+                //console.log(this);
             },'dblclick': function(e){
-                console.log('dblclick');
-                console.log(this);
+                //console.log('dblclick');
+                //console.log(this);
             }}
         };
 
@@ -69,7 +69,7 @@ class Item2d extends Item {
             return false;
         };
         if(!nft.profileEntryResponse){
-            console.log('no nft.profileEntryResponse');
+            //console.log('no nft.profileEntryResponse');
             return {};
         };
         let data = {
@@ -149,7 +149,7 @@ class Item2d extends Item {
             .then((model)=>{
                 resolve(model);
             }).catch((err=>{
-                console.log( err);
+                //console.log( err);
             }))
         })
     
@@ -175,8 +175,8 @@ class Item2d extends Item {
                 };
                 resolve(this.mesh, pos);
             } else{
-                console.log('no mesh to place');
-                console.log(this);
+                //console.log('no mesh to place');
+                //console.log(this);
             }
         });
 
@@ -208,7 +208,7 @@ class Item2d extends Item {
                   var height = this.height;
                   var width = this.width;
                   let dims = that.calculateAspectRatioFit(width, height, targetWidth,targetHeight);
-                    //console.log('spotidx: ', nft.spot.idx,' targetWidth: ', targetWidth,'targetHeight: ',targetHeight, 'dims: ',dims);
+                    ////console.log('spotidx: ', nft.spot.idx,' targetWidth: ', targetWidth,'targetHeight: ',targetHeight, 'dims: ',dims);
                   const textureLoader = new THREE.TextureLoader()
                   const texture = textureLoader.load(this.src);
                   const geometry = new THREE.BoxGeometry( dims.width, dims.height, 0.10 );
@@ -220,8 +220,8 @@ class Item2d extends Item {
             };
 
             img.addEventListener('error', (img, error) =>{
-            //  console.log('could not load image',img.src);
-           //   console.log(error);
+            //  //console.log('could not load image',img.src);
+           //   //console.log(error);
               reject(img.src)
             });
             img.src = proxyImageURL;
@@ -276,8 +276,8 @@ class Item2d extends Item {
         this.scene.remove(this.mesh.children[0]);
     }
     moveTo = (pos)=>{
-       // console.log('current: ',this.mesh.position);
-       // console.log('moveto: ',pos);
+       // //console.log('current: ',this.mesh.position);
+       // //console.log('moveto: ',pos);
         this.mesh.position.copy(pos);
     }
 
@@ -356,7 +356,7 @@ class Item2d extends Item {
                 that.mesh.userData.owner = this;
                 let obj3D = this.convertToObj3D(loadedItem);
                 if(obj3D===false){
-                    console.log('could not convert item for scene');
+                    //console.log('could not convert item for scene');
                     return false;
                 };
               
@@ -374,15 +374,15 @@ class Item2d extends Item {
 
 onProgressCallback = ()=> {}
 onErrorCallback = (e)=> {
-    console.log('loading error');
-    console.log(e);
+    //console.log('loading error');
+    //console.log(e);
 }
 
 scaleToFitScene = (obj3D, posVector) =>{
 
     let that = this;
 
-        //console.log('posVector:',posVector);
+        ////console.log('posVector:',posVector);
         let boxMesh = this.createContainerBox(posVector);
         let sceneBounds = new THREE.Box3().setFromObject( boxMesh );
 
@@ -419,7 +419,7 @@ scaleToFitScene = (obj3D, posVector) =>{
         };
         
         let newMeshBounds = new THREE.Box3().setFromObject( obj3D );
-        //console.log('newMeshBounds',newMeshBounds);
+        ////console.log('newMeshBounds',newMeshBounds);
         let newLengthMeshBounds = {
             x: Math.abs(newMeshBounds.max.x - newMeshBounds.min.x),
             y: Math.abs(newMeshBounds.max.y - newMeshBounds.min.y),
@@ -460,7 +460,7 @@ scaleToFitScene = (obj3D, posVector) =>{
                 lowestVertex = new THREE.Vector3(x,y,z);
             }
         }
-        //console.log('lowest point in helper: ',lowest);
+        ////console.log('lowest point in helper: ',lowest);
         return lowestVertex;
     }
 
@@ -502,7 +502,7 @@ scaleToFitScene = (obj3D, posVector) =>{
 
     createContainerBoxForModel = (width, height, depth, posVector) =>{
         const geometry = new THREE.BoxGeometry(width, height, depth);
-      //  console.log('createContainerBoxForModel: ', width, height, depth);
+      //  //console.log('createContainerBoxForModel: ', width, height, depth);
         if(!this.config.color){
             this.config.color = 0xff3333;
         };
@@ -545,7 +545,7 @@ scaleToFitScene = (obj3D, posVector) =>{
     convertToObj3D = (loadedItem) =>{
         let loadedType = loadedItem.type;
         let material, vertexColors, geometry;
-       // console.log('loaded type: ',loadedType);
+       // //console.log('loaded type: ',loadedType);
         switch(loadedType){
             case 'Object3D','Mesh':
             break;
@@ -594,7 +594,7 @@ scaleToFitScene = (obj3D, posVector) =>{
                 }
             break;
             default: 
-                console.log('unknown type: ',loadedType);
+                //console.log('unknown type: ',loadedType);
             return false;
         };
         return this.configureImportedObject(loadedItem);
@@ -619,7 +619,7 @@ scaleToFitScene = (obj3D, posVector) =>{
 
         if(posVector.y !== lowestVertex.y){
             let yOffset = this.height/2;
-            //console.log('yOffset: ',yOffset);
+            ////console.log('yOffset: ',yOffset);
             obj3D.position.setY(obj3D.position.y + yOffset);
         };
     }
@@ -748,7 +748,7 @@ scaleToFitScene = (obj3D, posVector) =>{
             if ( child.isMesh ) {
                 child.geometry.computeBoundingBox()
                 meshBounds = child.geometry.boundingBox;
-              //  console.log(meshBounds);
+              //  //console.log(meshBounds);
             }
         });
         return meshBounds;
@@ -757,7 +757,7 @@ scaleToFitScene = (obj3D, posVector) =>{
     getPosition = () =>{
         let copiedPos = new THREE.Vector3();
             copiedPos.copy(this.mesh.position);
-          //  console.log('item pos: ', copiedPos);
+          //  //console.log('item pos: ', copiedPos);
             return copiedPos;
     }
 
@@ -771,8 +771,8 @@ scaleToFitScene = (obj3D, posVector) =>{
 
     addToScene = (model) =>{
         this.scene.add(model);
-     //   console.log('model added to scene');
-       // console.log(this.scene);
+     //   //console.log('model added to scene');
+       // //console.log(this.scene);
     }
 
 }
