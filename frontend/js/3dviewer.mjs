@@ -831,11 +831,12 @@ const params = {
     start3D = () =>{
         // start animation / controls
         //this.parentDivEl.children[0].setAttribute('style','display:none;');                    
-      //  this.renderer.domElement.setAttribute('style','display:inline-block;');       
-        this.initPlayerFirstPerson()
-
-        this.addListeners();   
-        this.initVR();
+      //  this.renderer.domElement.setAttribute('style','display:inline-block;');      
+        if(this.config.vrType!='none'){
+            this.initPlayerFirstPerson()
+            this.initVR();
+        };
+        this.addListeners();          
         this.animate();        
     }
 
@@ -1260,14 +1261,16 @@ initPlayerFirstPerson = () => {
     let playerLoader = new GLTFLoader();
     let newPos = null;
     let playerFloor = 0;
-    let playerStartPos;
+    let playerStartPos = new THREE.Vector3(0,0,0);
     that.player = new THREE.Group();
 
     if(this.config.playerStartPos){
-        playerStartPos = new THREE.Vector3(this.config.playerStartPos.x,this.config.playerStartPos.y,this.config.playerStartPos.z);
+        playerStartPos.set(this.config.playerStartPos.x,this.config.playerStartPos.y,this.config.playerStartPos.z);
     } else {
-        playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(0,0,0), 2, -1);
-        playerStartPos = new THREE.Vector3(0,playerFloor,0);
+        if(this.sceneryLoader){
+            playerFloor = this.sceneryLoader.findFloorAt(new THREE.Vector3(0,0,0), 2, -1);
+            playerStartPos.set(0,playerFloor,0);
+        }
     };
 
     that.player = new THREE.Group();
