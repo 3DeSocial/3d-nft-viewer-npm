@@ -5,6 +5,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { VRMLoaderPlugin } from '@pixiv/three-vrm';
+import { USDZExporter } from "three/addons/exporters/USDZExporter.js";
 
 import {PlayerVR, ItemVRM, Item, Lighting, SceneryLoader, NFTViewerOverlay, D3DLoaders, VRButton, VRControls, SkyBoxLoader} from '3d-nft-viewer';
 
@@ -31,6 +32,7 @@ const params = {
     constructor(config) {
 
         let defaults = {
+                    usdzLinkId: false,
                     animations: ['/mixamo/Arm_Stretching.fbx', '/mixamo/Looking_Around.fbx','/mixamo/Strut_Walking.fbx','/mixamo/Dancing_Twerk.fbx','/mixamo/Flair.fbx','/mixamo/Headspin_Start.fbx','/mixamo/HipHop_Dancing.fbx','/mixamo/Strut_Walking.fbx','/mixamo/Victory.fbx'],
                     firstPerson: true,
                     bgColor: 0x000000,
@@ -838,6 +840,20 @@ const params = {
         };
         this.addListeners();          
         this.animate();        
+        if(this.config.usdzLinkId){
+            this.generateUSDZLink();
+        }
+    }
+
+    generateUSDZLink = async () =>{
+        this.quickLookStatus = 'Generating Apple QuickLook';
+        const exporter = new USDZExporter();
+        const arraybuffer = await exporter.parse( nftViewer.scene );
+        const blob = new Blob( [ arraybuffer ], { type: 'application/octet-stream' } );
+        let link = document.getElementById(this.config.usdzLinkId);
+        link.href = URL.createObjectURL( blob );
+        console.log('generateUSDZLink complete');
+
     }
 
 
