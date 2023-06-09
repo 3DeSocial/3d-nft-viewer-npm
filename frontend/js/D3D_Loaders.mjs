@@ -11,7 +11,7 @@ import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 import { GCodeLoader } from "three/examples/jsm/loaders/GCodeLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { HDRCubeTextureLoader } from "three/examples/jsm/loaders/HDRCubeTextureLoader.js";
-import { IFCLoader } from "three/examples/jsm/loaders/IFCLoader.js";
+//import { IFCLoader } from "three/examples/jsm/loaders/IFCLoader.js";
 import { KMZLoader } from "three/examples/jsm/loaders/KMZLoader.js";
 import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { KTXLoader } from "three/examples/jsm/loaders/KTXLoader.js";
@@ -30,7 +30,7 @@ import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { PCDLoader } from "three/examples/jsm/loaders/PCDLoader.js";
 import { PDBLoader } from "three/examples/jsm/loaders/PDBLoader.js";
 import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader.js";
-import { PRWMLoader } from "three/examples/jsm/loaders/PRWMLoader.js";
+//import { PRWMLoader } from "three/examples/jsm/loaders/PRWMLoader.js";
 import { PVRLoader } from "three/examples/jsm/loaders/PVRLoader.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
@@ -109,11 +109,11 @@ export default class D3DLoaders {
 
                 break;
             case 'hdrcubetexture': return new HDRCubeTextureLoader(this.loadingManager); break;
-            case 'ifc': 
+      /*      case 'ifc': 
                 let ifcLoader = new IFCLoader(this.loadingManager);
                     ifcLoader.ifcManager.setWasmPath( './libs/ifc/' );
                 return ifcLoader;
-            break;
+            break;*/
             case 'kmz': return new KMZLoader(this.loadingManager); break;
             case 'ktx2': return new KTX2Loader(this.loadingManager); break;
             case 'ldraw','mpd': return new LDrawLoader(this.loadingManager); break;

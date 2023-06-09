@@ -5,7 +5,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { VRMLoaderPlugin } from '@pixiv/three-vrm';
-import { USDZExporter } from "three/addons/exporters/USDZExporter.js";
+import { USDZExporter } from "three/examples/jsm/exporters/USDZExporter.js";
 
 import {PlayerVR, ItemVRM, Item, Lighting, SceneryLoader, NFTViewerOverlay, D3DLoaders, VRButton, VRControls, SkyBoxLoader} from '3d-nft-viewer';
 
@@ -848,7 +848,7 @@ const params = {
     generateUSDZLink = async () =>{
         this.quickLookStatus = 'Generating Apple QuickLook';
         const exporter = new USDZExporter();
-        const arraybuffer = await exporter.parse( nftViewer.scene );
+        const arraybuffer = await exporter.parse(  this.scene );
         const blob = new Blob( [ arraybuffer ], { type: 'application/octet-stream' } );
         let link = document.getElementById(this.config.usdzLinkId);
         link.href = URL.createObjectURL( blob );
@@ -859,8 +859,7 @@ const params = {
 
     initInventory = () =>{
 
-        this.inventory = new D3DInventory({ three: THREE,
-                                            items: this.config.items,
+        this.inventory = new D3DInventory({ items: this.config.items,
                                             scene: this.scene,
                                             loader: this.loader});
     }

@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/3DeSocial/3d-nft-viewer-npm#readme",
   "dependencies": {
-    "three": "^0.144.0",
+    "three": "^0.153.0",
     "animejs": "^3.2.1",
     "axios": "^0.27.1",
     "cannon-es": "^0.20.0",
