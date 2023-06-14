@@ -467,7 +467,7 @@ const params = {
 
         if (this.renderer.xr.isPresenting === true) {
             this.vrControls.checkControllers();
-   
+        }
 
             if ( params.firstPerson ) {
 
@@ -486,7 +486,8 @@ const params = {
              if ( this.collider ) {
                 this.collider.visible = params.displayCollider;
              //   visualizer.visible = params.displayBVH;
-            };
+
+
                 const physicsSteps = params.physicsSteps;
 
                 for ( let i = 0; i < physicsSteps; i ++ ) {
@@ -494,12 +495,12 @@ const params = {
                     if (this.renderer.xr.isPresenting === true) {
                         this.updatePlayerVR( delta / physicsSteps );
                     } else {
-                       this.updatePlayer( delta / physicsSteps );
+                        this.updatePlayer( delta / physicsSteps );
                     }
 
                 };
-            }
-
+                
+            };
             // TODO: limit the camera movement based on the this.collider
             // raycast in direction of camera and move it if it's further than the closest point
 
