@@ -469,38 +469,27 @@ const params = {
             this.vrControls.checkControllers();
         }
 
-            if ( params.firstPerson ) {
-
-                this.controls.maxPolarAngle = Math.PI;
-                this.controls.minDistance = 1e-4;
-                this.controls.maxDistance = 1e-4;
-
-            } else {
-
-                this.controls.maxPolarAngle = Math.PI / 2;
-                this.controls.minDistance = 1;
-                this.controls.maxDistance = 20;
-
-            }
 
              if ( this.collider ) {
                 this.collider.visible = params.displayCollider;
              //   visualizer.visible = params.displayBVH;
+            }
+
+            const physicsSteps = params.physicsSteps;
 
 
-                const physicsSteps = params.physicsSteps;
-
-                for ( let i = 0; i < physicsSteps; i ++ ) {
-
-                    if (this.renderer.xr.isPresenting === true) {
-                        this.updatePlayerVR( delta / physicsSteps );
-                    } else {
-                        this.updatePlayer( delta / physicsSteps );
-                    }
-
+            if (this.renderer.xr.isPresenting === true) {
+                for ( let i = 0; i < physicsSteps; i ++ ) {                    
+                    this.updatePlayerVR( delta / physicsSteps );
                 };
+            } else {
+                for ( let i = 0; i < physicsSteps; i ++ ) {                    
+                    this.updatePlayer( delta / physicsSteps );
+                };                    
+            }
+
+          
                 
-            };
             // TODO: limit the camera movement based on the this.collider
             // raycast in direction of camera and move it if it's further than the closest point
 
@@ -541,9 +530,8 @@ const params = {
         const maxSize = Math.max(size.x, size.y, size.z);
         const fitHeightDistance = maxSize / (2 * Math.atan(Math.PI * this.camera.fov / 360));
         const fitWidthDistance = fitHeightDistance / this.camera.aspect;
-
+        
         const distance = this.config.fitOffset * Math.max(fitHeightDistance, fitWidthDistance);
-        //console.log('calculated camera distance: ', distance);
         this.distance = distance;
 
         const direction = this.controls.target.clone()
@@ -553,14 +541,11 @@ const params = {
 
         this.controls.maxDistance = distance * 10;
         this.controls.target.copy(center);
-
         this.camera.near = distance / 100;
         this.camera.far = distance * 100;
         this.camera.updateProjectionMatrix();
 
         this.camera.position.copy(this.controls.target).sub(direction);
-        //console.log('this.camera.position');
-        //console.log(this.camera.position);
         this.controls.update();
     }
 
@@ -847,13 +832,11 @@ const params = {
     }
 
     generateUSDZLink = async () =>{
-        this.quickLookStatus = 'Generating Apple QuickLook';
         const exporter = new USDZExporter();
         const arraybuffer = await exporter.parse(  this.scene );
         const blob = new Blob( [ arraybuffer ], { type: 'application/octet-stream' } );
         let link = document.getElementById(this.config.usdzLinkId);
         link.href = URL.createObjectURL( blob );
-        console.log('generateUSDZLink complete');
 
     }
 
@@ -941,7 +924,6 @@ const params = {
                              viewer: this,
                              onStartSession: ()=>{
                                 let vrType = 'flying';
-
                                 that.initVRSession(vrType);                                
                             } }
         let vrButtonEl = VRButton.createButton(this.renderer, vrBtnOptions);
@@ -954,27 +936,25 @@ const params = {
         this.vrControls = new VRControls({  renderer: this.renderer,
                                             scene:this.scene,
                                             vrType: vrType,
-                                            speed: params.playerSpeed,
                                             updateProxyLeftStick: (leftStickData, leftStickValue)=>{
                                                 that.controlProxy.leftStickData = leftStickData;
                                                 that.controlProxy.leftStickValue = leftStickValue;
+
                                             },
                                             updateProxyRightStick: (rightStickData, rightStickValue)=>{
                                                 that.controlProxy.rightStickData = rightStickData;
                                                 that.controlProxy.rightStickValue = rightStickValue;
-                                            },                                            
+                                            },   
                                             moveUp: (data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
-                                                that.controlProxy.dir = 'u';  
-                                                //console.log('moveUp proxy', that.controlProxy);                                            
+                                                that.controlProxy.dir = 'u';          
+
                                             },
                                             moveDown:(data, value)=>{
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'd';
-                                                //console.log('moveDown proxy', that.controlProxy);                                            
-
                                             },
                                             moveLeft:(data, value)=>{
                                                 //console.log('moveLeft triggered');
@@ -990,21 +970,16 @@ const params = {
                                                 that.controlProxy.dir = 'r';
                                             },
                                             moveForward:(data, value)=>{
-                                                //console.log('control proxy moveForward');
-
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'f';                                                   
                                             },
                                             moveBack:(data, value)=>{
-                                                //console.log('control proxy moveBack');
-
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.dir = 'b';
                                             },
                                             rotateLeft: (data, value)=>{
-
                                                 that.controlProxy.data = data;
                                                 that.controlProxy.value = value;
                                                 that.controlProxy.rot = 'rl';
@@ -1039,20 +1014,28 @@ const params = {
                                             onSelectEndLeft: (e,controller)=>{
                                             },
                                             onSelectStartRight: (e,controller)=>{
-                                   
+                                               //console.log(controller.line);
 
                                             },
                                             onSelectEndRight: (e,controller)=>{
                                             }                                            
                                         });
 
-        this.playerVR = new PlayerVR({  vrType: vrType,
-                                        controllers: this.vrControls.controllers,
-                                        grips: this.vrControls.grips,
-                                        camera: this.camera,
-                                        controlProxy: this.controlProxy,
-                                        playerStartPos: this.player.position.clone()});
+                                        let playerVRParams = { 
+                                            speed: (params.playerSpeed/2),
+                                            vrType: 'flying',
+                                            controllers: this.vrControls.controllers,
+                                            grips: this.vrControls.grips,
+                                            camera: this.camera,
+                                            controlProxy: this.controlProxy,
+                                            playerStartPos: this.player.position.clone()
+                                        };
 
+                                        if(this.sceneryLoader){
+                                            params.sceneCollider= this.sceneryLoader.collider;
+                                        };
+                                        
+        this.playerVR = new PlayerVR(playerVRParams);
         this.scene.add(this.playerVR.dolly);
         this.removePlayer();
 
@@ -1065,60 +1048,12 @@ const params = {
     }
 
     getVrTypeFromUI = () =>{
-        let selectedVrType = 'walking';
+        let selectedVrType = 'flying';
         let vrTypeSelect = document.getElementById('vrType');
         if(vrTypeSelect){
             selectedVrType = vrTypeSelect.options[vrTypeSelect.selectedIndex].value;
         };
         return selectedVrType;
-    }
-
-    buildDolly = (vrType) =>{
-        if(vrType){
-            this.setVrType(vrType);
-        };
-        this.vrControls = new VRControls({  scene:this.scene,
-                                            renderer: this.renderer,
-                                            camera: this.camera,
-                                            player: this.player,
-                                            playerStartPos: this.config.playerStartPos,
-                                            vrType: 'walking',
-                                            moveUp: (data)=>{
-                                                //console.log('here?')
-                                                return;
-                                            },
-                                            moveDown:(data)=>{
-                                                //console.log('and here?')
-                                                return;
-                                            },
-                                            moveLeft:(data)=>{
-                                                lftPressed = true;
-                                            },
-                                            moveRight:(data)=>{
-                                                rgtPressed = true;
-                                                return;
-                                            },
-                                            moveForward:(data)=>{
-                                                fwdPressed = true;
-                                                return;
-                                            },
-                                            moveBack:(data)=>{
-                                                bkdPressed = true;
-                                                return;
-
-                                            },
-                                            rotateLeft: (data, value)=>{
-                                                this.dolly.rotateY(THREE.MathUtils.degToRad(Math.abs(value)));
-                                                this.player.rotateY(THREE.MathUtils.degToRad(Math.abs(value)));
-                                                return;
-                                            },
-                                            rotateRight: (data, value)=>{
-                                                this.dolly.rotateY(-THREE.MathUtils.degToRad(Math.abs(value)));
-                                                this.player.rotateY(-THREE.MathUtils.degToRad(Math.abs(value)));
-                                                return;
-                                            }
-                                        });
-            this.dolly = this.vrControls.buildControllers();
     }
 
     getFloorLevel = (meshToCheck) =>{
@@ -1411,79 +1346,83 @@ initPlayerThirdPerson = () => {
     };
     this.player.updateMatrixWorld();
 
-    // adjust player position based on collisions
-    const capsuleInfo = this.character.capsuleInfo;
-    this.tempBox.makeEmpty();
-    this.tempMat.copy( this.collider.matrixWorld ).invert();
-    this.tempSegment.copy( capsuleInfo.segment );
+    if(this.collider){
 
-    // get the position of the capsule in the local space of the this.collider
-    this.tempSegment.start.applyMatrix4( this.player.matrixWorld ).applyMatrix4( this.tempMat );
-    this.tempSegment.end.applyMatrix4( this.player.matrixWorld ).applyMatrix4( this.tempMat );
+        // adjust player position based on collisions
+        const capsuleInfo = this.character.capsuleInfo;
+        this.tempBox.makeEmpty();
+        this.tempMat.copy( this.collider.matrixWorld ).invert();
+        this.tempSegment.copy( capsuleInfo.segment );
 
-    // get the axis aligned bounding box of the capsule
-    this.tempBox.expandByPoint( this.tempSegment.start );
-    this.tempBox.expandByPoint( this.tempSegment.end );
+        // get the position of the capsule in the local space of the this.collider
+        this.tempSegment.start.applyMatrix4( this.player.matrixWorld ).applyMatrix4( this.tempMat );
+        this.tempSegment.end.applyMatrix4( this.player.matrixWorld ).applyMatrix4( this.tempMat );
 
-    this.tempBox.min.addScalar( - capsuleInfo.radius );
-    this.tempBox.max.addScalar( capsuleInfo.radius );
+        // get the axis aligned bounding box of the capsule
+        this.tempBox.expandByPoint( this.tempSegment.start );
+        this.tempBox.expandByPoint( this.tempSegment.end );
 
-    this.collider.geometry.boundsTree.shapecast( {
+        this.tempBox.min.addScalar( - capsuleInfo.radius );
+        this.tempBox.max.addScalar( capsuleInfo.radius );
 
-        intersectsBounds: box => box.intersectsBox( this.tempBox ),
+        this.collider.geometry.boundsTree.shapecast( {
 
-        intersectsTriangle: tri => {
+            intersectsBounds: box => box.intersectsBox( this.tempBox ),
 
-            // check if the triangle is intersecting the capsule and adjust the
-            // capsule position if it is.
-            const triPoint = this.tempVector;
-            const capsulePoint = this.tempVector2;
+            intersectsTriangle: tri => {
 
-            const distance = tri.closestPointToSegment( this.tempSegment, triPoint, capsulePoint );
-            if ( distance < capsuleInfo.radius ) {
+                // check if the triangle is intersecting the capsule and adjust the
+                // capsule position if it is.
+                const triPoint = this.tempVector;
+                const capsulePoint = this.tempVector2;
 
-                const depth = capsuleInfo.radius - distance;
-                const direction = capsulePoint.sub( triPoint ).normalize();
+                const distance = tri.closestPointToSegment( this.tempSegment, triPoint, capsulePoint );
+                if ( distance < capsuleInfo.radius ) {
 
-                this.tempSegment.start.addScaledVector( direction, depth );
-                this.tempSegment.end.addScaledVector( direction, depth );
+                    const depth = capsuleInfo.radius - distance;
+                    const direction = capsulePoint.sub( triPoint ).normalize();
+
+                    this.tempSegment.start.addScaledVector( direction, depth );
+                    this.tempSegment.end.addScaledVector( direction, depth );
+
+                }
 
             }
 
+        } );
+
+        // get the adjusted position of the capsule this.collider in world space after checking
+        // triangle collisions and moving it. capsuleInfo.segment.start is assumed to be
+        // the origin of the player model.
+        const newPosition = this.tempVector;
+        newPosition.copy( this.tempSegment.start ).applyMatrix4( this.collider.matrixWorld );
+
+        // check how much the this.collider was moved
+        const deltaVector = this.tempVector2;
+        deltaVector.subVectors( newPosition, this.player.position );
+
+
+        // if the player was primarily adjusted vertically we assume it's on something we should consider ground
+        this.playerIsOnGround = deltaVector.y > Math.abs( delta * this.playerVelocity.y * 0.25 );
+
+        const offset = Math.max( 0.0, deltaVector.length() - 1e-5 );
+        deltaVector.normalize().multiplyScalar( offset );
+
+        // adjust the player model
+        this.player.position.add( deltaVector );
+
+        if ( ! this.playerIsOnGround ) {
+
+            deltaVector.normalize();
+            this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
+
+        } else {
+
+            this.playerVelocity.set( 0, 0, 0 );
+
         }
-
-    } );
-
-    // get the adjusted position of the capsule this.collider in world space after checking
-    // triangle collisions and moving it. capsuleInfo.segment.start is assumed to be
-    // the origin of the player model.
-    const newPosition = this.tempVector;
-    newPosition.copy( this.tempSegment.start ).applyMatrix4( this.collider.matrixWorld );
-
-    // check how much the this.collider was moved
-    const deltaVector = this.tempVector2;
-    deltaVector.subVectors( newPosition, this.player.position );
-
-    // if the player was primarily adjusted vertically we assume it's on something we should consider ground
-    this.playerIsOnGround = deltaVector.y > Math.abs( delta * this.playerVelocity.y * 0.25 );
-
-    const offset = Math.max( 0.0, deltaVector.length() - 1e-5 );
-    deltaVector.normalize().multiplyScalar( offset );
-
-    // adjust the player model
-    this.player.position.add( deltaVector );
-
-    if ( ! this.playerIsOnGround ) {
-
-        deltaVector.normalize();
-        this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
-
-    } else {
-
-        this.playerVelocity.set( 0, 0, 0 );
-
     }
-
+    
     // adjust the camera
     this.camera.position.sub( this.controls.target );
     this.controls.target.copy( this.player.position );
@@ -1517,7 +1456,6 @@ initPlayerThirdPerson = () => {
 
     updatePlayerVR = (delta) =>{
         if(!this.playerVR){
-            //console.log('no player VR')
             return false;
         };
          this.playerVR.moveDolly(delta);
