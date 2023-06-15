@@ -38,6 +38,7 @@ import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import { TDSLoader } from "three/examples/jsm/loaders/TDSLoader.js";
 import { TGALoader } from "three/examples/jsm/loaders/TGALoader.js";
 import { TiltLoader } from "three/examples/jsm/loaders/TiltLoader.js";
+import { USDZLoader }  from "three/examples/jsm/loaders/USDZLoader.js";
 import { VOXLoader, VOXMesh } from "three/examples/jsm/loaders/VOXLoader.js";
 import { VRMLLoader } from "three/examples/jsm/loaders/VRMLLoader.js";
 import { VTKLoader } from "three/examples/jsm/loaders/VTKLoader.js";
@@ -144,6 +145,7 @@ export default class D3DLoaders {
             case 'tga': return new TGALoader(this.loadingManager); break;
             case 'ttf': return new TTFLoader(this.loadingManager); break;
             case 'tilt': return new TiltLoader(this.loadingManager); break;
+            case 'usdz': return new USDZLoader(this.loadingManager); break;
             case 'vox': return new VOXLoader(this.loadingManager); break;
             case 'vrm': return new GLTFLoader(this.loadingManager); break;            
             case 'vrml': case 'wrl': return new VRMLLoader(this.loadingManager); break;

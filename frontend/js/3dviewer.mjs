@@ -469,15 +469,13 @@ const params = {
             this.vrControls.checkControllers();
         }
 
-
-             if ( this.collider ) {
+        if ( this.collider ) {
                 this.collider.visible = params.displayCollider;
              //   visualizer.visible = params.displayBVH;
-            }
+        }
 
-            const physicsSteps = params.physicsSteps;
-
-
+        const physicsSteps = params.physicsSteps;
+        if(this.player){
             if (this.renderer.xr.isPresenting === true) {
                 for ( let i = 0; i < physicsSteps; i ++ ) {                    
                     this.updatePlayerVR( delta / physicsSteps );
@@ -487,7 +485,7 @@ const params = {
                     this.updatePlayer( delta / physicsSteps );
                 };                    
             }
-
+        }
           
                 
             // TODO: limit the camera movement based on the this.collider
@@ -715,7 +713,13 @@ const params = {
                         },1000);
 
                         resolve(item);                        
+                    }).catch(err=>{
+                        console.log(err);
+                        reject(err)
                     })
+                }).catch(err=>{
+                    console.log(err);
+                    reject(err)
                 })
             } else {
                 this.placeModel(this.loadedItem).then((item)=>{
@@ -727,6 +731,9 @@ const params = {
                     },1000);
                     resolve(item);
 
+                }).catch(err=>{
+                    console.log(err);
+                    reject(err)
                 })
             };
         });
