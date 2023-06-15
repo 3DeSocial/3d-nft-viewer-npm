@@ -3415,7 +3415,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
                                             },
                                             onSelectStartRight: (e,controller)=>{
                                                //console.log(controller.line);
-                                               this.throwSnowBall(e,controller)
+                                               //this.throwSnowBall(e,controller)
 
                                             },
                                             onSelectEndRight: (e,controller)=>{
