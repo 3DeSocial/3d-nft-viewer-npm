@@ -481,9 +481,11 @@ const params = {
                     this.updatePlayerVR( delta / physicsSteps );
                 };
             } else {
-                for ( let i = 0; i < physicsSteps; i ++ ) {                    
-                    this.updatePlayer( delta / physicsSteps );
-                };                    
+                if(this.useShowroom==='true'){
+                    for ( let i = 0; i < physicsSteps; i ++ ) {                    
+                        this.updatePlayer( delta / physicsSteps );
+                    };
+                }
             }
         }
           
