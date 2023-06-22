@@ -186,42 +186,63 @@ class Item2d extends Item {
         let that = this;
      
         return new Promise(( resolve, reject ) => {
+            let nft = itemConfig.nft;
+            let imageUrl;
+            let imageUrls = (nft.imageURLs)?nft.imageURLs:nft.ImageURLs;
+            if(itemConfig.imgIndex){
+                imageUrl = imageUrls[idx];
+            } else {
+                imageUrl = imageUrls[0];                
+            }
 
-            let imageUrl = nft.imageURLs[0];
             if(!imageUrl){
-                reject('No image for NFT ',this.config.nftPostHashHex);
+                console.log('Cannot display - no image for NFT ', itemConfig);
+                reject('Cannot display - no image for NFT ',this.config.nftPostHashHex);
                 return false;
             };
             let proxyImageURL = that.config.imageProxyUrl +imageUrl;
-            let nftData = nft;
-            var img = new Image();
+                var img = new Image();
                let targetWidth = this.width;
-
-            if(nft.spot.dims.width){
-                targetWidth = nft.spot.dims.width;
+            if(nft.spot){
+                if(nft.spot.dims.width){
+                    targetWidth = nft.spot.dims.width;
+                }
             }
             let targetHeight = this.height;
-            if(nft.spot.dims.height){
-               targetHeight = nft.spot.dims.height;
+            if(nft.spot){
+                if(nft.spot.dims.height){
+                targetHeight = nft.spot.dims.height;
+                }
             }
-                img.onload = function(){
-                  var height = this.height;
-                  var width = this.width;
-                  let dims = that.calculateAspectRatioFit(width, height, targetWidth,targetHeight);
-                    ////console.log('spotidx: ', nft.spot.idx,' targetWidth: ', targetWidth,'targetHeight: ',targetHeight, 'dims: ',dims);
-                  const textureLoader = new THREE.TextureLoader()
-                  const texture = textureLoader.load(this.src);
-                  const geometry = new THREE.BoxGeometry( dims.width, dims.height, 0.10 );
-                  const materials = that.createMats(texture);
-                  const nftMesh = new THREE.Mesh( geometry, materials );
-                  that.mesh = nftMesh;
-                  let nftImgData = {is3D:nft.is3D, nft:nftData, mesh: nftMesh, imageUrl: imageUrl, width:dims.width, height:dims.height, spot:that.config.spot};
-                  resolve(nftImgData);
+
+            img.onload = function(){
+                var height = this.height;
+                var width = this.width;
+                let dims = that.calculateAspectRatioFit(width, height, targetWidth,targetHeight);
+            
+                const textureLoader = new THREE.TextureLoader()
+                const texture = textureLoader.load(this.src);
+                const geometry = new THREE.BoxGeometry( dims.width, dims.height, 0.10 );
+                const materials = that.createMats(texture);
+                let nftMesh = null;
+                if(that.spritesheetTexture){
+                    const materials = that.createMats(that.spritesheetTexture, that.offset);
+                    nftMesh = new THREE.Mesh( geometry, materials );
+
+                } else {
+                    const materials = that.createMats(texture, 0);
+                    nftMesh = new THREE.Mesh( geometry, materials );
+                }
+
+
+                that.mesh = nftMesh;                
+                 let nftImgData = {is3D:itemConfig.is3D, nft:nft, mesh: nftMesh, imageUrl: imageUrl, width:dims.width, height:dims.height, spot:that.config.spot};
+                 resolve(nftImgData);
             };
 
             img.addEventListener('error', (img, error) =>{
-            //  //console.log('could not load image',img.src);
-           //   //console.log(error);
+              console.log('could not load image',img.src);
+               console.log(error);
               reject(img.src)
             });
             img.src = proxyImageURL;
@@ -230,13 +251,14 @@ class Item2d extends Item {
     }
 
     createMats = (texture) =>{
+
         var topside = new THREE.MeshBasicMaterial({color: '#AAAAAA'});
         var bottomside = new THREE.MeshBasicMaterial({color: '#AAAAAA'});        
         var leftside = new THREE.MeshBasicMaterial({color: '#AAAAAA'}); 
         var rightside = new THREE.MeshBasicMaterial({color: '#AAAAAA'});
         var backside = new THREE.MeshBasicMaterial( { map: texture } );
         var frontside = new THREE.MeshBasicMaterial( { map: texture } );
-
+       
         var materials = [
           rightside,          // Right side
           leftside,          // Left side
@@ -540,6 +562,18 @@ scaleToFitScene = (obj3D, posVector) =>{
             boxMesh.position.copy(posVector);
 
         return boxMesh;
+    }
+
+    updateTexture(newTexture) {
+        // Assuming 'mesh' is a reference to the mesh object whose texture you want to update
+        if(!this.mesh){
+            return false;
+        };
+        this.mesh.material.map = newTexture;
+    
+        // Set this flag to tell Three.js to update the GPU texture
+        this.mesh.material.needsUpdate = true;
+        console.log('updateTexture: ',newTexture,' on ', this.mesh);
     }
 
     convertToObj3D = (loadedItem) =>{
