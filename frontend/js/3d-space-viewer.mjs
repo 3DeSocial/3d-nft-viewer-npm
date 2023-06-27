@@ -2332,8 +2332,12 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
             // raycast in direction of camera and move it if it's further than the closest point
 
         //this.controls.update();
-        this.updateAnimations(delta);
+        if(this.giffer){
+            let elapsedTime = this.clock.getElapsedTime();
+            this.giffer.updateGifs(elapsedTime);
+        }
 
+        this.updateAnimations(delta);
         this.renderer.render(this.scene, this.camera);
         this.updateAvatarAnimations(delta);        
         //this.hud.render();
@@ -3181,9 +3185,12 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
     }
     }
     initGifs = ()=>{
-
-        this.giffer = new Giffer({proxy: this.config.imageProxyUrl});
-        this.giffer.loadGifs(this.gifs);
+        console.log('initGifs SW?');
+console.log(this.config.messageServiceWorker);
+        this.giffer = new Giffer({proxy: this.config.imageProxyUrl,
+                                messageServiceWorker: this.config.messageServiceWorker,
+                                gifs: this.gifs});
+        //this.giffer.loadGifs(this.gifs);
     }
 
     haveVRM = (items3dToRender) =>{

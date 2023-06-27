@@ -184,19 +184,21 @@ class Item2d extends Item {
 
     initMesh = async(nft) =>{
         let that = this;
-     
+        console.log('in initMesh');
+        console.log(nft);
         return new Promise(( resolve, reject ) => {
-            let nft = itemConfig.nft;
+            console.log('in promise')
             let imageUrl;
             let imageUrls = (nft.imageURLs)?nft.imageURLs:nft.ImageURLs;
-            if(itemConfig.imgIndex){
-                imageUrl = imageUrls[idx];
+            console.log('imageUrls: ',imageUrls);
+            if(nft.imgIndex){
+                imageUrl = imageUrls[nft.imgIndex];
             } else {
                 imageUrl = imageUrls[0];                
             }
-
+            console.log('init mesh imageUrl: ',imageUrl);
             if(!imageUrl){
-                console.log('Cannot display - no image for NFT ', itemConfig);
+                console.log('Cannot display - no image for NFT ', nft);
                 reject('Cannot display - no image for NFT ',this.config.nftPostHashHex);
                 return false;
             };
@@ -219,24 +221,22 @@ class Item2d extends Item {
                 var height = this.height;
                 var width = this.width;
                 let dims = that.calculateAspectRatioFit(width, height, targetWidth,targetHeight);
-            
+                this.dims = dims;
                 const textureLoader = new THREE.TextureLoader()
                 const texture = textureLoader.load(this.src);
                 const geometry = new THREE.BoxGeometry( dims.width, dims.height, 0.10 );
-                const materials = that.createMats(texture);
                 let nftMesh = null;
                 if(that.spritesheetTexture){
-                    const materials = that.createMats(that.spritesheetTexture, that.offset);
+                    const materials = that.createMats(that.spritesheetTexture);
                     nftMesh = new THREE.Mesh( geometry, materials );
-
                 } else {
-                    const materials = that.createMats(texture, 0);
+                    const materials = that.createMats(texture);
                     nftMesh = new THREE.Mesh( geometry, materials );
                 }
 
 
                 that.mesh = nftMesh;                
-                 let nftImgData = {is3D:itemConfig.is3D, nft:nft, mesh: nftMesh, imageUrl: imageUrl, width:dims.width, height:dims.height, spot:that.config.spot};
+                 let nftImgData = {is3D:nft.is3D, nft:nft, mesh: nftMesh, imageUrl: imageUrl, width:dims.width, height:dims.height, spot:that.config.spot};
                  resolve(nftImgData);
             };
 
@@ -245,19 +245,31 @@ class Item2d extends Item {
                console.log(error);
               reject(img.src)
             });
-            img.src = proxyImageURL;
+           img.src = proxyImageURL;
 
         })
     }
 
-    createMats = (texture) =>{
+    setSpritesheetCanvas = (spritesheetTexture, dims )=>{
+        this.spritesheetTexture = spritesheetTexture;
+        if(this.mesh){
+            console.log('this.mesh height: ',this.mesh.geometry.height,' texture height: ',spritesheetTexture.height, ' original height: ',dims.height);
 
+            this.updateMats(this.spritesheetTexture)
+            console.log('setSpritesheetCanvas: updated texture mats ok ');
+        }
+    }
+
+    createMats = (texture) =>{
+        let backside, frontside;
         var topside = new THREE.MeshBasicMaterial({color: '#AAAAAA'});
         var bottomside = new THREE.MeshBasicMaterial({color: '#AAAAAA'});        
         var leftside = new THREE.MeshBasicMaterial({color: '#AAAAAA'}); 
         var rightside = new THREE.MeshBasicMaterial({color: '#AAAAAA'});
-        var backside = new THREE.MeshBasicMaterial( { map: texture } );
-        var frontside = new THREE.MeshBasicMaterial( { map: texture } );
+
+            backside = new THREE.MeshBasicMaterial( { map: texture } );
+            frontside = new THREE.MeshBasicMaterial( { map: texture } );
+
        
         var materials = [
           rightside,          // Right side
@@ -270,6 +282,26 @@ class Item2d extends Item {
 
         return materials;
     }
+
+    updateMats = (texture) =>{
+        console.log('texture');
+        console.log(texture);
+        var backside = new THREE.MeshBasicMaterial( { map: texture } );   
+      /*  const spriteHeight = this.mesh.geometry.parameters.height; // Get the height of the mesh
+        const textureHeight = texture.image.height;
+        console.log('textureHeight: ',textureHeight);
+        const repeatY = spriteHeight / textureHeight;
+        backside.map.repeat.y = 1; */
+        var frontside = new THREE.MeshBasicMaterial( { map: texture } );
+        //frontside.map.repeat.y = repeatY; 
+console.log('no repeat texture');
+        this.mesh.material[4] = backside;
+        this.mesh.material[4].needsUpdate = true;
+
+        this.mesh.material[5] = frontside;
+        this.mesh.material[5].needsUpdate = true;
+        
+    }    
 
     calculateAspectRatioFit = (srcWidth, srcHeight, maxWidth, maxHeight) => {
 
