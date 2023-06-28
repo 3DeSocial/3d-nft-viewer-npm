@@ -899,7 +899,7 @@ const params = {
     }
     initCameraFirstPerson = () =>{
         // camera setup
-        this.camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 100 );
+        this.camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
         this.camera.updateProjectionMatrix(); 
        // this.camera.add( this.audioListener );
         this.camera.rotation.set(0,0,0);
@@ -1298,7 +1298,9 @@ checkMouseDown = (e) =>{
                 if(item.config.spot){
                     nftDisplayData.spot = item.config.spot;
                 };
-                this.displayInHUD(nftDisplayData);            
+                this.displayInHUD(nftDisplayData);
+                console.log('changing rotation for idx ',nftDisplayData.spot.id,' currently ',item.mesh.rotation);
+//                item.mesh.rotateY(Math.PI);
             }
 
             ////console.log(action.selection.object.userData.owner.config.nft);
@@ -2295,7 +2297,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
 
             this.controls.maxPolarAngle = Infinity;
             this.controls.minDistance = 1e-4;
-            this.controls.maxDistance = 1e-4;
+            this.controls.maxDistance = Infinity;
 
             } else {
 
@@ -3185,8 +3187,7 @@ isOnWall = (raycaster, selectedPoint, meshToCheck) =>{
     }
     }
     initGifs = ()=>{
-        console.log('initGifs SW?');
-console.log(this.config.messageServiceWorker);
+
         this.giffer = new Giffer({proxy: this.config.imageProxyUrl,
                                 messageServiceWorker: this.config.messageServiceWorker,
                                 gifs: this.gifs});

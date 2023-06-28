@@ -184,21 +184,16 @@ class Item2d extends Item {
 
     initMesh = async(nft) =>{
         let that = this;
-        console.log('in initMesh');
-        console.log(nft);
+
         return new Promise(( resolve, reject ) => {
-            console.log('in promise')
             let imageUrl;
             let imageUrls = (nft.imageURLs)?nft.imageURLs:nft.ImageURLs;
-            console.log('imageUrls: ',imageUrls);
             if(nft.imgIndex){
                 imageUrl = imageUrls[nft.imgIndex];
             } else {
                 imageUrl = imageUrls[0];                
             }
-            console.log('init mesh imageUrl: ',imageUrl);
             if(!imageUrl){
-                console.log('Cannot display - no image for NFT ', nft);
                 reject('Cannot display - no image for NFT ',this.config.nftPostHashHex);
                 return false;
             };
@@ -227,7 +222,7 @@ class Item2d extends Item {
                 const geometry = new THREE.BoxGeometry( dims.width, dims.height, 0.10 );
                 let nftMesh = null;
                 if(that.spritesheetTexture){
-                    const materials = that.createMats(that.spritesheetTexture);
+                    const materials = that.createMats(that.spritesheetTexture, that.spritesheetTextureFlipped);
                     nftMesh = new THREE.Mesh( geometry, materials );
                 } else {
                     const materials = that.createMats(texture);
@@ -250,27 +245,94 @@ class Item2d extends Item {
         })
     }
 
-    setSpritesheetCanvas = (spritesheetTexture, dims )=>{
-        this.spritesheetTexture = spritesheetTexture;
-        if(this.mesh){
-            console.log('this.mesh height: ',this.mesh.geometry.height,' texture height: ',spritesheetTexture.height, ' original height: ',dims.height);
+    initMeshGif = async(nft) =>{
+        let that = this;
 
-            this.updateMats(this.spritesheetTexture)
-            console.log('setSpritesheetCanvas: updated texture mats ok ');
-        }
+        return new Promise(( resolve, reject ) => {
+            let imageUrl;
+            let imageUrls = (nft.imageURLs)?nft.imageURLs:nft.ImageURLs;
+            if(nft.imgIndex){
+                imageUrl = imageUrls[nft.imgIndex];
+            } else {
+                imageUrl = imageUrls[0];                
+            }
+            if(!imageUrl){
+                reject('Cannot display - no image for NFT ',this.config.nftPostHashHex);
+                return false;
+            };
+            let proxyImageURL = that.config.imageProxyUrl +imageUrl;
+                var img = new Image();
+               let targetWidth = this.width;
+            if(nft.spot){
+                if(nft.spot.dims.width){
+                    targetWidth = nft.spot.dims.width;
+                }
+            }
+            let targetHeight = this.height;
+            if(nft.spot){
+                if(nft.spot.dims.height){
+                targetHeight = nft.spot.dims.height;
+                }
+            }
+                var frameHeight = that.originalDims.height;
+                var framewidth = that.originalDims.width;
+
+                let dims = that.calculateAspectRatioFit(framewidth, frameHeight, targetWidth,targetHeight);
+                that.dims = dims; //scaled target dims
+
+                const geometry = new THREE.BoxGeometry( dims.width, dims.height, 0.10 );
+              
+              //  that.spritesheetTexture.wrapS = THREE.RepeatWrapping;
+             //   that.spritesheetTexture.wrapT = THREE.RepeatWrapping;
+             ////   that.spritesheetTexture.repeat.set(1 / that.frameCount, 1);
+                let nftMesh = null;
+               /* let spritesheetTexture = new THREE.Texture(that.imageBitmap);
+                spritesheetTexture.wrapS = THREE.RepeatWrapping;   
+                spritesheetTexture.wrapT = THREE.RepeatWrapping;   
+                spritesheetTexture.repeat.set( 1, 1);
+                spritesheetTexture.needsUpdate = true;
+*/
+                // Create a canvas and draw the ImageBitmap to it
+                let canvas = document.createElement('canvas');
+                canvas.width = that.imageBitmap.width;
+                canvas.height = that.imageBitmap.height;
+                let ctx = canvas.getContext('2d');
+                ctx.drawImage(that.imageBitmap, 0, 0);
+
+                // Convert the canvas to a data URL
+                let dataURL = canvas.toDataURL();
+                canvas = null;
+                // Create texture for material
+                const textureLoader = new THREE.TextureLoader()
+
+                var texture = textureLoader.load( dataURL );
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set(1 / that.frameCount, 1);
+                console.log(texture);
+                const materials = that.createMats(texture, that.spritesheetTextureFlipped);
+                nftMesh = new THREE.Mesh( geometry, materials );
+
+                that.mesh = nftMesh;                
+                let nftImgData = {is3D:nft.is3D, nft:nft, mesh: nftMesh, imageUrl: imageUrl, width:dims.width, height:dims.height, spot:that.config.spot};
+                resolve(nftImgData);
+
+        })
+    }
+    setSpritesheetCanvas = (spritesheetTexture, spritesheetTextureFlipped, dims )=>{
+        this.spritesheetTexture = spritesheetTexture;
+        this.spritesheetTextureFlipped = spritesheetTextureFlipped;
     }
 
-    createMats = (texture) =>{
+
+    createMats = (texture, flippedTexture) =>{
         let backside, frontside;
         var topside = new THREE.MeshBasicMaterial({color: '#AAAAAA'});
         var bottomside = new THREE.MeshBasicMaterial({color: '#AAAAAA'});        
         var leftside = new THREE.MeshBasicMaterial({color: '#AAAAAA'}); 
         var rightside = new THREE.MeshBasicMaterial({color: '#AAAAAA'});
-
             backside = new THREE.MeshBasicMaterial( { map: texture } );
             frontside = new THREE.MeshBasicMaterial( { map: texture } );
-
-       
         var materials = [
           rightside,          // Right side
           leftside,          // Left side
@@ -279,6 +341,7 @@ class Item2d extends Item {
           backside,            // Back side
           frontside          // Front side          
         ];
+
 
         return materials;
     }

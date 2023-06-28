@@ -32,14 +32,11 @@ export default class Giffer {
               that.swRegistration  = registration;
               
               navigator.serviceWorker.addEventListener('message', (event) => {
-                console.log('message recieved from worker: ');
-                console.log(event);
+
                 // event.data contains the data sent from the service worker
                 const method = (event.data.method)?event.data.method:null;
                 switch(method){
                   case 'fetchGifs':
-                    console.log('gifs fetched!');
-                    console.log(event.data);
                     if(event.data.payload.length===0){
                       console.log('no data returned - no animation')
                     } else {
@@ -51,17 +48,12 @@ export default class Giffer {
                 
 
               });
-              console.log('message listerner set up in giffe0, calling load gifs');
               that.loadGifs(this.config.gifs)
             })
             .catch(error => {
               console.error('Failed to get Service Worker registration:', error);
             });
-        } else {
-          console.log('sw not in nav');
         }
-      } else {
-        console.log('navigator not available');
       }
       
     }
@@ -75,7 +67,7 @@ export default class Giffer {
       }
     }
 
-    /*
+    /*  // Web Worker version
   loadWorker = async () => {
       gifWorker = new Worker(workerURL, { type: "module" });
         gifWorker.onmessage = (event) => {
@@ -106,13 +98,14 @@ export default class Giffer {
       console.log(spriteSheet);
 
       const imageBitmap = spriteSheet.spriteSheet;
+console.log('canvas texture not texture');
 
-      const spritesheetTexture = new THREE.Texture(imageBitmap);
-      spritesheetTexture.repeat.set(1 / spriteSheet.frameCount, 1);
-      spritesheetTexture.needsUpdate = true;    
 
+     // this.previewSheet(imageBitmap);
+
+console.log('no repeat');
       const frameCount = spriteSheet.frameCount; 
-      console.log('framecount: ',frameCount);
+
       let xOffsetFrames = [];
       for (let i = 0; i < frameCount; i++) {
         let xOffset = i / frameCount;
@@ -121,19 +114,25 @@ export default class Giffer {
 
       let gifToUpdate = this.findGif(spriteSheet.postHashHex)
       
-      gifToUpdate.setSpritesheetCanvas(spritesheetTexture,spriteSheet.dims );
+    //  gifToUpdate.setSpritesheetCanvas(spritesheetTexture,spritesheetTextureFlipped,spriteSheet.dims );
       gifToUpdate.frames = frames;
       gifToUpdate.frameCount = frameCount;      
       gifToUpdate.gifCount = this.gifCount;
       gifToUpdate.xOffsetFrames = xOffsetFrames;
+      gifToUpdate.originalDims = spriteSheet.dims;
+      gifToUpdate.imageBitmap = imageBitmap;
+      gifToUpdate.initMeshGif(gifToUpdate.meshParams).then((nftImgData)=>{
 
-      gifToUpdate.initMesh(gifToUpdate.meshParams).then((nftImgData)=>{
-        let spot = nftImgData.spot;
-        let halfHeight = nftImgData.height/2;
-            spot.pos.y = spot.pos.y+halfHeight;
-            gifToUpdate.place(spot.pos).then((mesh,pos)=>{
+      let spot = nftImgData.spot;
+      let halfHeight = nftImgData.height/2;
+
+          spot.pos.y = spot.pos.y+halfHeight;
+          console.log('no height ajust');
+
+          gifToUpdate.place(spot.pos).then((mesh,pos)=>{
               if(spot.rot){
                 mesh.rotateY(spot.rot.y);
+            console.log('no rotation');
               } else {
                 if(spot.layoutType){
                   if(spot.layoutType==='circle'){
@@ -144,11 +143,11 @@ export default class Giffer {
                   }
               }
             });
-        });
-        console.log('giffer: initGifs complete!');
-    })
+        })
+    });
+    console.log('giffer: initGifs complete!');
    }
-
+/*
 startAnimation = async (spriteSheetData) => {
   // spritesheet created and recieved back from worker
   console.log('giffer: startAnimation, no spritsheets: ',spriteSheetData.length);
@@ -158,10 +157,9 @@ startAnimation = async (spriteSheetData) => {
     console.log(spriteSheet);
 
     const imageBitmap = spriteSheet.spriteSheet;
-
+    this.previewSheet(imageBitmap);
     const spritesheetTexture = new THREE.Texture(imageBitmap);
-    spritesheetTexture.repeat.set(1 / spriteSheet.frameCount, 1);
-    spritesheetTexture.needsUpdate = true;    
+
 
     const frameCount = spriteSheet.frameCount; 
     console.log('framecount: ',frameCount);
@@ -185,8 +183,28 @@ startAnimation = async (spriteSheetData) => {
   console.log('giffer: startAnimation complete!');
 
 
-}
+}*/
+previewSheet = (imageBitmap) =>{
+  // Assuming you have an ImageBitmap object named 'imageBitmap'
 
+  // Create a canvas and draw the ImageBitmap to it
+  let canvas = document.createElement('canvas');
+  canvas.width = imageBitmap.width;
+  canvas.height = imageBitmap.height;
+  let ctx = canvas.getContext('2d');
+  ctx.drawImage(imageBitmap, 0, 0);
+
+  // Convert the canvas to a data URL
+  let dataURL = canvas.toDataURL();
+    // Create texture for material
+    var texture = THREE.ImageUtils.loadTexture( dataURL );
+  // Set the src attribute of the img tag to the data URL
+  let img = document.createElement('img'); // Select your img element
+  img.src = dataURL;
+  document.getElementsByClassName('main-wrapper')[0].appendChild(img);
+  console.log('appended preview')
+
+}
 findGif = (postHashHexToFind) =>{
   // Assuming this.gifs[] contains an array of objects with property postHashHex
   console.log('findGif: ',postHashHexToFind);
@@ -226,21 +244,21 @@ findGif = (postHashHexToFind) =>{
   getGifUrls = () =>{
     let gifUrls = [];
     this.gifs.forEach((gifItem, index) => {
-      if(gifItem.config.spot){
-        let url = this.config.proxy+gifItem.config.nft.imageURLs[0];
-        console.log('gifItem config');
+    console.log('check hash: ',gifItem.config.nft.postHashHex);
+    if(gifItem.config.spot){
+      let url = this.config.proxy+gifItem.config.nft.imageURLs[0];
+      console.log('gifItem config');
 
-        console.log(gifItem.config);
-        let targetDims = gifItem.config.spot.dims;
-        console.log('targetDims: '+targetDims);
-        let params = {url:url,
-          targetDims:targetDims,
-          postHashHex: gifItem.config.nft.postHashHex};
-          console.log(params);
-          gifUrls.push(params);
-      } else {
-        console.log('no spot');
-      }
+      console.log(gifItem.config);
+      let targetDims = gifItem.config.spot.dims;
+      let params = {url:url,
+        targetDims:targetDims,
+        postHashHex: gifItem.config.nft.postHashHex};
+        console.log(params);
+        gifUrls.push(params);
+    }
+
+    
     });
     return gifUrls;
   }
@@ -260,8 +278,8 @@ findGif = (postHashHexToFind) =>{
               const frameIndex = Math.floor(elapsedTime / frameSpeedFactor) % frameCount;
               const xOffset = frameIndex / frameCount;
               // Update the xOffset in the mesh material
-              gifItem.mesh.material[4].map.offset.x = xOffset;
-              gifItem.mesh.material[4].needsUpdate = true;
+              //gifItem.mesh.material[4].map.offset.x = xOffset;
+              //gifItem.mesh.material[4].needsUpdate = true;
               // Update the xOffset in the mesh material
               gifItem.mesh.material[5].map.offset.x = xOffset;
               gifItem.mesh.material[5].needsUpdate = true;
