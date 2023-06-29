@@ -608,9 +608,10 @@ const params = {
 
 
             this.loadScenery().then(()=>{
+                this.initInventory(options);                
         
 
-            let throwSound = new AudioClip({
+                let throwSound = new AudioClip({
                                 path: '/audio/throw.mp3',
                                 mesh: that.sceneryLoader.sceneryMesh,
                                 listener: that.audioListener
@@ -622,13 +623,9 @@ const params = {
 
                 if(this.config.footballMode===true){
                     if(this.config.showBall){
-
+                        this.initFootball();                    
                     };
-                    this.initFootball();                    
                 };
-
-                this.initInventory(options);                
-
 
                 if(this.avatarEnabled()){
                         this.config.chainAPI.fetchPostDetail({postHashHex:this.config.avatar}).then((res)=>{
@@ -3803,8 +3800,6 @@ initPlayerThirdPerson = () => {
         that.animate();
 
     });       
-   
-    
    
 }
 

@@ -27,7 +27,6 @@ export default class LayoutPlotter  {
 
     }
 
-
     findFloorAt = (plotPoint, ceilingY, floorY) =>{
         this.posVector.set(plotPoint.x, plotPoint.y, plotPoint.z);
         return this.config.sceneryLoader.findFloorAt(this.posVector, ceilingY, floorY);
@@ -179,7 +178,7 @@ export default class LayoutPlotter  {
         });
     }
 
- plotList3d = () =>{
+    plotList3d = () =>{
         this.sceneryLoader.loadFloorPlan(); 
         let lists = this.sceneryLoader.lists;
         let items = this.inventory.getItems3d();
@@ -206,11 +205,12 @@ export default class LayoutPlotter  {
 
                     item.spot = list.spots[i];
                     item.spot.idx = i;
+                    let floorY = this.findFloorAt(plotPoint, 2, -2);
+                        plotPoint.setY(floorY);
                     this.plotItem(item,plotPoint).then((item)=>{
                         if(item.spot.rot){
                             item.mesh.rotateY(item.spot.rot.y);
-                        }       
-
+                        }
                     })
                 }
             };

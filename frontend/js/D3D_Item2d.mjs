@@ -60,7 +60,6 @@ class Item2d extends Item {
             }
         };           
         this.nftDisplayData = this.parseNFTDisplayData();
-
     }
 
     parseNFTDisplayData = () =>{

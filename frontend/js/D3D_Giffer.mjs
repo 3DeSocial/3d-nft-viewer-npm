@@ -207,7 +207,6 @@ previewSheet = (imageBitmap) =>{
 }
 findGif = (postHashHexToFind) =>{
   // Assuming this.gifs[] contains an array of objects with property postHashHex
-  console.log('findGif: ',postHashHexToFind);
   const specificObject = this.gifs.find((obj) => obj.config.nft.postHashHex === postHashHexToFind);
 
   if (specificObject) {
@@ -215,8 +214,6 @@ findGif = (postHashHexToFind) =>{
     return specificObject
   } else {
     // No object with the matching postHashHex value was found
-    console.log('Object not found: ',postHashHexToFind);
-
     return false;
     
   }
@@ -228,15 +225,12 @@ findGif = (postHashHexToFind) =>{
     let that = this;
     this.gifs =gifs;
     this.gifCount = this.gifs.length;        
-    console.log('loadGifs: ',this.gifs.length);
 
     let gifUrls = this.getGifUrls();
 
     let payload = {method:'fetchGifs',
                     data: gifUrls};
 
-    console.log('payload: ');
-    console.log(payload);
     this.messageServiceWorker(payload);  
 
   }
@@ -244,17 +238,12 @@ findGif = (postHashHexToFind) =>{
   getGifUrls = () =>{
     let gifUrls = [];
     this.gifs.forEach((gifItem, index) => {
-    console.log('check hash: ',gifItem.config.nft.postHashHex);
     if(gifItem.config.spot){
       let url = this.config.proxy+gifItem.config.nft.imageURLs[0];
-      console.log('gifItem config');
-
-      console.log(gifItem.config);
       let targetDims = gifItem.config.spot.dims;
       let params = {url:url,
         targetDims:targetDims,
         postHashHex: gifItem.config.nft.postHashHex};
-        console.log(params);
         gifUrls.push(params);
     }
 
