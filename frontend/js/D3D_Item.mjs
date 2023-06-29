@@ -759,9 +759,9 @@ scaleToFitScene = (obj3D, posVector) =>{
             return;
         };*/
         var helper = new THREE.BoxHelper(obj3D, 0x00ff00);
-        this.scene.add(helper);
+      //  this.scene.add(helper);
            helper.update();
-           helper.updateMatrixWorld()
+         // helper.updateMatrixWorld()
 
         let lowestVertex = this.getBoxHelperVertices(helper);
         if(!lowestVertex){

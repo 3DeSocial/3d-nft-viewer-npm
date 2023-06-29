@@ -23,7 +23,7 @@ export default class Giffer {
 
     getWorkerReference = () =>{
       let that = this;
-      console.log('getWorkerReference');
+      //console.log('getWorkerReference');
       if(navigator){
         // Get the service worker registration
         if ('serviceWorker' in navigator) {
@@ -38,7 +38,7 @@ export default class Giffer {
                 switch(method){
                   case 'fetchGifs':
                     if(event.data.payload.length===0){
-                      console.log('no data returned - no animation')
+                      //console.log('no data returned - no animation')
                     } else {
                       this.initGifs(event.data.payload);
 
@@ -59,7 +59,7 @@ export default class Giffer {
     }
 
     messageServiceWorker = (message)=>{
-      console.log('messageServiceWorker this.swRegistration:',this.swRegistration);
+      //console.log('messageServiceWorker this.swRegistration:',this.swRegistration);
       if (this.swRegistration && this.swRegistration.active) {
         this.swRegistration.active.postMessage(message);
       } else {
@@ -71,10 +71,10 @@ export default class Giffer {
   loadWorker = async () => {
       gifWorker = new Worker(workerURL, { type: "module" });
         gifWorker.onmessage = (event) => {
-          console.log('event: ',event);
+          //console.log('event: ',event);
           switch(event.data.method){
             case 'startFrameTimer':
-              console.log("startFrameTimer!");
+              //console.log("startFrameTimer!");
               setInterval(function() {
 
                 this.updateGifs();
@@ -91,19 +91,19 @@ export default class Giffer {
     
    initGifs = async (spriteSheetData) => {
     // spritesheet created and recieved back from worker
-    console.log('giffer: startAnimation, no spritsheets: ',spriteSheetData.length);
+    //console.log('giffer: startAnimation, no spritsheets: ',spriteSheetData.length);
 
     spriteSheetData.forEach((spriteSheet, index) => {
-      console.log('process spritesheet: ',index);
-      console.log(spriteSheet);
+      //console.log('process spritesheet: ',index);
+      //console.log(spriteSheet);
 
       const imageBitmap = spriteSheet.spriteSheet;
-console.log('canvas texture not texture');
+//console.log('canvas texture not texture');
 
 
      // this.previewSheet(imageBitmap);
 
-console.log('no repeat');
+//console.log('no repeat');
       const frameCount = spriteSheet.frameCount; 
 
       let xOffsetFrames = [];
@@ -127,12 +127,12 @@ console.log('no repeat');
       let halfHeight = nftImgData.height/2;
 
           spot.pos.y = spot.pos.y+halfHeight;
-          console.log('no height ajust');
+          //console.log('no height ajust');
 
           gifToUpdate.place(spot.pos).then((mesh,pos)=>{
               if(spot.rot){
                 mesh.rotateY(spot.rot.y);
-            console.log('no rotation');
+            //console.log('no rotation');
               } else {
                 if(spot.layoutType){
                   if(spot.layoutType==='circle'){
@@ -145,16 +145,16 @@ console.log('no repeat');
             });
         })
     });
-    console.log('giffer: initGifs complete!');
+    //console.log('giffer: initGifs complete!');
    }
 /*
 startAnimation = async (spriteSheetData) => {
   // spritesheet created and recieved back from worker
-  console.log('giffer: startAnimation, no spritsheets: ',spriteSheetData.length);
+  //console.log('giffer: startAnimation, no spritsheets: ',spriteSheetData.length);
 
   spriteSheetData.forEach((spriteSheet, index) => {
-    console.log('process spritesheet: ',index);
-    console.log(spriteSheet);
+    //console.log('process spritesheet: ',index);
+    //console.log(spriteSheet);
 
     const imageBitmap = spriteSheet.spriteSheet;
     this.previewSheet(imageBitmap);
@@ -162,7 +162,7 @@ startAnimation = async (spriteSheetData) => {
 
 
     const frameCount = spriteSheet.frameCount; 
-    console.log('framecount: ',frameCount);
+    //console.log('framecount: ',frameCount);
     let xOffsetFrames = [];
     for (let i = 0; i < frameCount; i++) {
       let xOffset = i / frameCount;
@@ -176,11 +176,11 @@ startAnimation = async (spriteSheetData) => {
     gifToUpdate.frameCount = frameCount;      
     gifToUpdate.gifCount = this.gifCount;
     gifToUpdate.xOffsetFrames = xOffsetFrames;
-    console.log('gifToUpdate',gifToUpdate);
+    //console.log('gifToUpdate',gifToUpdate);
 
 
   });
-  console.log('giffer: startAnimation complete!');
+  //console.log('giffer: startAnimation complete!');
 
 
 }*/
@@ -202,7 +202,7 @@ previewSheet = (imageBitmap) =>{
   let img = document.createElement('img'); // Select your img element
   img.src = dataURL;
   document.getElementsByClassName('main-wrapper')[0].appendChild(img);
-  console.log('appended preview')
+  //console.log('appended preview')
 
 }
 findGif = (postHashHexToFind) =>{
