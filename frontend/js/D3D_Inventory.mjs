@@ -495,6 +495,7 @@ import { Item, Item2d, ItemVRM, ChainAPI, ExtraData3DParser } from '3d-nft-viewe
     initItem = (opts) => {
 
         let itemParams = {
+            snapToFloor:true,
             three: THREE,
             scene: this.scene,
             loadingScreen: this.config.loadingScreen,

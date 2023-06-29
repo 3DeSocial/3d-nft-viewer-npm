@@ -568,17 +568,25 @@ scaleToFitScene = (obj3D, posVector) =>{
         
         let cbox = that.createContainerBoxForModel(newLengthMeshBounds.x, newLengthMeshBounds.y, newLengthMeshBounds.z, posVector);
         cbox.position.copy(posVector);
-
+        console.log('cbox not box placed at: ',posVector);
         // center of box is position so move up by 50% of newLengthMeshBounds.y
-        //let yOffset = newLengthMeshBounds.y/2;
-        //cbox.position.setY(cbox.position.y+yOffset);
-        //cbox.add(obj3D);
-        //obj3D.updateWorldMatrix();
-
+        let yOffset = newLengthMeshBounds.y/2;
+        cbox.position.setY(cbox.position.y+yOffset);
+        cbox.add(obj3D);
+        obj3D.updateWorldMatrix();
+        console.log('cbox move up 50% - adding cbox not object 3d now');
         cbox.userData.owner = this; //set reference to Item
-        obj3D.position.copy(posVector);
-        that.scene.add(obj3D);    
+        that.scene.add(cbox);     
         cbox.updateMatrixWorld();    
+
+        let outerPos = cbox.localToWorld(obj3D.position.clone());
+        console.log('true pos: ',outerPos);
+        this.scene.add(obj3D);
+        obj3D.position.copy(outerPos);
+        that.scene.remove(cbox);
+        console.log('box removed');
+
+
     }
 
     getBoxHelperVertices = (boxHelper) =>{
@@ -595,7 +603,7 @@ scaleToFitScene = (obj3D, posVector) =>{
                 lowestVertex = new THREE.Vector3(x,y,z);
             }
         }
-        ////console.log('lowest point in helper: ',lowest);
+        console.log('lowest point in helper: ',lowest);
         return lowestVertex;
     }
 
@@ -746,21 +754,23 @@ scaleToFitScene = (obj3D, posVector) =>{
     }
 
     fixYCoord = (obj3D, posVector) =>{
-        if(!this.config.snapToFloor){
-            // dont snap to floor
+      /*  if(!this.config.snapToFloor){
+            console.log('dont snap to floor: ',this.config.nft.postHashHex);
             return;
-        };
+        };*/
         var helper = new THREE.BoxHelper(obj3D, 0x00ff00);
-            helper.update();
+        this.scene.add(helper);
+           helper.update();
+           helper.updateMatrixWorld()
 
         let lowestVertex = this.getBoxHelperVertices(helper);
         if(!lowestVertex){
-
             return false;
         };
-        lowestVertex.applyMatrix4(helper.matrixWorld);
+        helper.localToWorld(lowestVertex.clone());
+
         if(posVector.y !== lowestVertex.y){
-            let yOffset = lowestVertex.y-posVector.y;
+            let yOffset = lowestVertex.y - posVector.y;
             obj3D.position.setY(obj3D.position.y - yOffset);
         };
     }
